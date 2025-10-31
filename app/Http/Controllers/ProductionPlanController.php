@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ProductionPlan; // Modelimizi kullanıyoruz
+use App\Models\ProductionPlan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon; // YENİ: Tarih işlemleri için
+use Carbon\Carbon;
 
 class ProductionPlanController extends Controller
 {

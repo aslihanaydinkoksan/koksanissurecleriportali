@@ -13,7 +13,7 @@ class BirimController extends Controller
         $this->middleware('auth');
         $this->middleware('role:admin');
     }
-    
+
     /**
      * Tüm birimleri listeler ve ekleme formu gösterir.
      */

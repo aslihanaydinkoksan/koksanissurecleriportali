@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule; // Plakanın benzersizliği için
+use Illuminate\Validation\Rule;
 
 class VehicleController extends Controller
 {
@@ -122,37 +122,21 @@ class VehicleController extends Controller
     }
 
     /**
-     * Belirtilen aracı siler (veya pasife alır - tercih size kalmış).
+     * Belirtilen aracı siler
      * Şimdilik direkt silme yapıyoruz.
      */
     public function destroy(Vehicle $vehicle)
     {
         // YETKİ KONTROLÜ ('hizmet' ve 'admin')
         $this->authorize('access-department', 'hizmet');
-        if (Auth::user()->role !== 'admin') {
-            return redirect()->route('service.vehicles.index')
-                ->with('error', 'Bu işlemi yapma yetkiniz bulunmamaktadır.');
-        }
 
-        // ÖNEMLİ: Eğer araçla ilişkili atamalar varsa silmeyi engellemek
-        // veya kullanıcıyı uyarmak daha güvenli olabilir. Şimdilik siliyoruz.
-        // if ($vehicle->assignments()->exists()) {
-        //     return back()->with('error', 'Bu araca atanmış görevler varken silemezsiniz.');
-        // }
+        /*if ($vehicle->assignments()->exists()) {
+            return back()->with('error', 'Bu araca atanmış görevler varken silemezsiniz.');
+        }*/
 
         $vehicle->delete();
 
         return redirect()->route('service.vehicles.index')
             ->with('success', 'Araç başarıyla silindi.');
     }
-
-    /**
-     * Show metoduna şimdilik ihtiyacımız yok, genellikle edit yeterli olur.
-     * İstenirse eklenebilir.
-     */
-    // public function show(Vehicle $vehicle)
-    // {
-    //     $this->authorize('access-department', 'hizmet');
-    //     // ...
-    // }
 }

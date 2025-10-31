@@ -166,6 +166,8 @@
         padding: 2px 6px;
         font-weight: 600;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
+        cursor: pointer;
+        user-select: none;
     }
 
     .fc-event:hover {
@@ -580,10 +582,22 @@
                                                 </td>
                                                 <td><?php echo e($user->created_at->format('d/m/Y H:i')); ?></td>
                                                 <td>
-                                                    <?php if(Auth::user()->role === 'admin' || $user->role !== 'admin'): ?>
-                                                        <a href="<?php echo e(route('users.edit', $user->id)); ?>"
-                                                            class="btn btn-sm btn-secondary">✏️ Düzenle</a>
-                                                    <?php endif; ?>
+                                                    <div class="d-flex flex-column gap-1">
+                                                        <?php if(Auth::user()->role === 'admin' || $user->role !== 'admin'): ?>
+                                                            <a href="<?php echo e(route('users.edit', $user->id)); ?>"
+                                                                class="btn btn-sm btn-secondary">✏️ Düzenle</a>
+                                                        <?php endif; ?>
+                                                        <?php if(Auth::user()->role === 'admin' && Auth::user()->id !== $user->id && $user->role !== 'admin'): ?>
+                                                            <form action="<?php echo e(route('users.destroy', $user->id)); ?>"
+                                                                method="POST"
+                                                                onsubmit="return confirm('<?php echo e($user->name); ?> adlı kullanıcıyı silmek istediğinizden emin misiniz?');">
+                                                                <?php echo csrf_field(); ?>
+                                                                <?php echo method_field('DELETE'); ?>
+                                                                <button type="submit" class="btn btn-sm btn-danger">🗑️
+                                                                    Sil</button>
+                                                            </form>
+                                                        <?php endif; ?>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
@@ -629,6 +643,31 @@
             const modalOnayKaldirForm = document.getElementById('modalOnayKaldirForm');
             const modalOnayBadge = document.getElementById('modalOnayBadge');
 
+            // === YARDIMCI FONKSİYON: Tarih/Saat Ayırıcı (Blade Hatası Düzeltilmiş) ===
+            /**
+             * Bir tarih-saat dizesini (örn: "19.05.2025 11:30") 
+             * tarih ve saat olarak ayırır.
+             * @param {string} dateTimeString - Ayırılacak dize.
+             * @returns {{ date: string, time: string }}
+             */
+            function splitDateTime(dateTimeString) {
+                const dt = String(dateTimeString || ''); // String'e dönüştür ve null/undefined kontrolü yap
+                const parts = dt.split(' ');
+                const date = parts[0] || '-';
+                let time = parts[1] || '-';
+
+                // Eğer tarih yoksa (sadece '-' ise) veya saat kısmı boşsa ('') saati de gösterme
+                if (date === '-' || time === '') {
+                    time = '-';
+                }
+
+                return {
+                    date: date,
+                    time: time
+                };
+            }
+
+
             // === YENİ: Evrensel Modal Açma Fonksiyonu ===
             function openUniversalModal(props) {
                 if (!props || !props.eventType) {
@@ -648,7 +687,6 @@
                 }
 
                 // ===== SİLME BUTONU GÜNCELLEMESİ =====
-                // Admin kontrolünü kaldır. Sadece deleteUrl'in varlığını kontrol et.
                 if (modalDeleteForm) {
                     if (props.deleteUrl) { // Kontrol basitleştirildi
                         modalDeleteForm.action = props.deleteUrl;
@@ -721,36 +759,27 @@
                     html +=
                         `<div class="col-md-6"><p><strong>⚖️ Kargo Miktarı:</strong> ${props.details['Kargo Miktarı'] || '-'}</p></div>`;
                     html += '</div><hr><div class="row">'; // Yeni satır
-                    // --- DÜZELTİLMİŞ BLOK BAŞLANGICI ---
 
-                    // Çıkış Tarihi ve Saatini ayır
-                    const cikisDateTime = String(props.details['Çıkış Tarihi'] || ''); // String'e dönüştür
-                    const cikisParts = cikisDateTime.split(' ');
-                    const cikisTarihi = cikisParts[0] || '-';
-                    const cikisSaati = cikisParts[1] || '-';
+                    // --- GÜNCELLENMİŞ TARİH/SAAT BLOKU ('shipment') ---
 
-                    // Tahmini Varış Tarihi ve Saatini ayır
-                    const varisDateTime = String(props.details['Tahmini Varış'] || ''); // String'e dönüştür
-                    const varisParts = varisDateTime.split(' ');
-                    const varisTarihi = varisParts[0] || '-';
-                    const varisSaati = varisParts[1] || '-';
+                    const cikis = splitDateTime(props.details['Çıkış Tarihi']);
+                    const varis = splitDateTime(props.details['Tahmini Varış']);
 
                     // Ayrılmış HTML'i oluştur
                     html += '<div class="col-md-6">';
-                    html += `    <p><strong>📅 Çıkış Tarihi:</strong> ${cikisTarihi}</p>`;
-                    if (cikisSaati !== '-' && cikisTarihi !== '-' && cikisSaati !== '') {
-                        html += `    <p><strong>🕒 Çıkış Saati:</strong> ${cikisSaati}</p>`;
+                    html += `    <p><strong>📅 Çıkış Tarihi:</strong> ${cikis.date}</p>`;
+                    if (cikis.time !== '-') {
+                        html += `    <p><strong>🕒 Çıkış Saati:</strong> ${cikis.time}</p>`;
                     }
                     html += '</div>';
 
                     html += '<div class="col-md-6">';
-                    html += `    <p><strong>📅 Tahmini Varış:</strong> ${varisTarihi}</p>`;
-                    if (varisSaati !== '-' && varisTarihi !== '-' && varisSaati !== '') {
-                        html += `    <p><strong>🕒 Varış Saati:</strong> ${varisSaati}</p>`;
+                    html += `    <p><strong>📅 Tahmini Varış:</strong> ${varis.date}</p>`;
+                    if (varis.time !== '-') {
+                        html += `    <p><strong>🕒 Varış Saati:</strong> ${varis.time}</p>`;
                     }
                     html += '</div>';
-
-                    // --- DÜZELTİLMİŞ BLOK BİTİŞİ ---
+                    // --- GÜNCELLENMİŞ BLOK BİTİŞİ ---
 
                 }
                 // Diğer departmanlar için butonları gizle ve basit içerik oluştur
@@ -782,25 +811,73 @@
                     }
                     // Hizmet Etkinlik İçeriği
                     else if (props.eventType === 'service_event') {
+
+                        // --- GÜNCELLENMİŞ TARİH/SAAT BLOKU ('service_event') ---
                         html += `<div class="col-md-12">`;
-                        html += `<p><strong>Etkinlik Tipi:</strong> ${props.details['Etkinlik Tipi'] || '-'}</p>`;
-                        html += `<p><strong>Konum:</strong> ${props.details['Konum'] || '-'}</p>`;
-                        html += `<p><strong>Başlangıç:</strong> ${props.details['Başlangıç'] || '-'}</p>`;
-                        html += `<p><strong>Bitiş:</strong> ${props.details['Bitiş'] || '-'}</p>`;
-                        html += `<p><strong>Kayıt Yapan:</strong> ${props.details['Kayıt Yapan'] || '-'}</p>`;
+                        html +=
+                            `    <p><strong>Etkinlik Tipi:</strong> ${props.details['Etkinlik Tipi'] || '-'}</p>`;
+                        html += `    <p><strong>Konum:</strong> ${props.details['Konum'] || '-'}</p>`;
+                        html += `</div>`; // Close the first part
+
+                        // Tarih ve saatleri ayır
+                        const baslangic = splitDateTime(props.details['Başlangıç']);
+                        const bitis = splitDateTime(props.details['Bitiş']);
+
+                        html += '<div class="col-md-6">'; // Start left column
+                        html += `    <p><strong>📅 Başlangıç Tarihi:</strong> ${baslangic.date}</p>`;
+                        if (baslangic.time !== '-') {
+                            html += `    <p><strong>🕒 Başlangıç Saati:</strong> ${baslangic.time}</p>`;
+                        }
+                        html += '</div>'; // End left column
+
+                        html += '<div class="col-md-6">'; // Start right column
+                        html += `    <p><strong>📅 Bitiş Tarihi:</strong> ${bitis.date}</p>`;
+                        if (bitis.time !== '-') {
+                            html += `    <p><strong>🕒 Bitiş Saati:</strong> ${bitis.time}</p>`;
+                        }
+                        html += '</div>'; // End right column
+
+                        // Kalan bilgiyi ekle
+                        html += `<div class="col-md-12 mt-3">`;
+                        html += `    <p><strong>Kayıt Yapan:</strong> ${props.details['Kayıt Yapan'] || '-'}</p>`;
                         html += `</div>`;
+                        // --- GÜNCELLENMİŞ BLOK BİTİŞİ ---
+
                     }
                     // Hizmet Araç Atama İçeriği
                     else if (props.eventType === 'vehicle_assignment') {
-                        html += `<div class="col-md-12">`;
-                        html += `<p><strong>Araç:</strong> ${props.details['Araç'] || '-'}</p>`;
-                        html += `<p><strong>Görev:</strong> ${props.details['Görev'] || '-'}</p>`;
-                        html += `<p><strong>Yer:</strong> ${props.details['Yer'] || '-'}</p>`;
-                        html += `<p><strong>Talep Eden:</strong> ${props.details['Talep Eden'] || '-'}</p>`;
-                        html += `<p><strong>Başlangıç:</strong> ${props.details['Başlangıç'] || '-'}</p>`;
-                        html += `<p><strong>Bitiş:</strong> ${props.details['Bitiş'] || '-'}</p>`;
-                        html += `<p><strong>Kayıt Yapan:</strong> ${props.details['Kayıt Yapan'] || '-'}</p>`;
+
+                        // --- GÜNCELLENMİŞ TARİH/SAAT BLOKU ('vehicle_assignment') ---
+                        html += `<div class="col-md-12">`; // Info block
+                        html += `    <p><strong>Araç:</strong> ${props.details['Araç'] || '-'}</p>`;
+                        html += `    <p><strong>Görev:</strong> ${props.details['Görev'] || '-'}</p>`;
+                        html += `    <p><strong>Yer:</strong> ${props.details['Yer'] || '-'}</p>`;
+                        html += `    <p><strong>Talep Eden:</strong> ${props.details['Talep Eden'] || '-'}</p>`;
+                        html += `</div>`; // End info block
+
+                        // Tarih ve saatleri ayır
+                        const baslangic = splitDateTime(props.details['Başlangıç']);
+                        const bitis = splitDateTime(props.details['Bitiş']);
+
+                        html += '<div class="col-md-6">'; // Start left column
+                        html += `    <p><strong>📅 Başlangıç Tarihi:</strong> ${baslangic.date}</p>`;
+                        if (baslangic.time !== '-') {
+                            html += `    <p><strong>🕒 Başlangıç Saati:</strong> ${baslangic.time}</p>`;
+                        }
+                        html += '</div>'; // End left column
+
+                        html += '<div class="col-md-6">'; // Start right column
+                        html += `    <p><strong>📅 Bitiş Tarihi:</strong> ${bitis.date}</p>`;
+                        if (bitis.time !== '-') {
+                            html += `    <p><strong>🕒 Bitiş Saati:</strong> ${bitis.time}</p>`;
+                        }
+                        html += '</div>'; // End right column
+
+                        // Kalan bilgiyi ekle
+                        html += `<div class="col-md-12 mt-3">`;
+                        html += `    <p><strong>Kayıt Yapan:</strong> ${props.details['Kayıt Yapan'] || '-'}</p>`;
                         html += `</div>`;
+                        // --- GÜNCELLENMİŞ BLOK BİTİŞİ ---
                     }
                 }
 
@@ -832,6 +909,7 @@
                 detailModal.show();
             }
 
+            // Gerekli değilse bu eski değişkenleri kaldırabiliriz, ancak zararı yok
             const editButton = document.getElementById('editShipmentButton');
             const exportButton = document.getElementById('exportExcelButton');
             const onayForm = document.getElementById('onayForm');
@@ -839,21 +917,9 @@
             const deleteForm = document.getElementById('deleteShipmentForm');
 
 
-            // --- GÜNCELLENEN KISIM BAŞLANGICI ---
-            function openModalOrLink(info) {
-                info.jsEvent.preventDefault(); // Varsayılanı engelle
-
-                // Eğer olayın URL'i varsa (Üretim, Etkinlik, Atama için ekledik)
-                if (info.event.url) {
-                    window.location.href = info.event.url; // Aynı sekmede düzenleme sayfasına git
-                    // Veya yeni sekmede açmak için: window.open(info.event.url);
-                }
-                // URL yoksa (Sevkiyatlar için), modalı aç
-                else if (info.event.extendedProps && info.event.extendedProps.id) {
-                    openModalForEvent(info.event.extendedProps); // Mevcut modal açma fonksiyonunuz
-                }
-            }
-
+            // --- eventClick fonksiyonu openModalOrLink'i değil, YENİ openUniversalModal'i çağırmalı ---
+            // 'openModalOrLink' fonksiyonu eski (artık kullanılmayan) 'openModalForEvent' fonksiyonunu çağırıyor.
+            // Bu nedenle, doğrudan 'openUniversalModal'i çağırmak daha temiz ve doğru.
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 locale: 'tr',
@@ -882,7 +948,16 @@
                 },
                 eventClick: function(info) {
                     info.jsEvent.preventDefault();
-                    openUniversalModal(info.event.extendedProps);
+
+                    // GÜNCELLEME:
+                    // Diğer departmanlar (üretim, hizmet) için URL varsa direkt yönlendir,
+                    // URL yoksa (lojistik) modalı aç.
+                    if (info.event.url) {
+                        window.location.href = info.event.url;
+                    } else {
+                        // Lojistik (veya URL'i olmayan diğer etkinlikler) için evrensel modalı aç
+                        openUniversalModal(info.event.extendedProps);
+                    }
                 }
             });
             calendar.render();

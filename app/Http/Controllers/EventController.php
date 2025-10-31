@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule; // YENİ: Rule validasyonu için eklendi
+use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 
 class EventController extends Controller

@@ -35,6 +35,7 @@ Route::middleware(['auth', 'role:admin,yönetici'])->prefix('users')->group(func
     Route::post('/', [UserController::class, 'store'])->name('users.store');
     Route::get('/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
     Route::put('/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 });
 
 // --- SEVKİYAT YÖNETİMİ ROTALARI ---

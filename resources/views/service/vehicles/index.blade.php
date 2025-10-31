@@ -287,7 +287,7 @@
                                                                 class="fas fa-edit"></i></a>
                                                     @endif
 
-                                                    @if (Auth::user()->role === 'admin')
+                                                    @can('access-department', 'hizmet')
                                                         <form action="{{ route('service.vehicles.destroy', $vehicle) }}"
                                                             method="POST" class="d-inline"
                                                             onsubmit="return confirm('Bu aracı silmek istediğinizden emin misiniz? Araca ait tüm geçmiş atamalar da silinebilir!');">
@@ -296,7 +296,7 @@
                                                             <button type="submit" class="btn btn-sm btn-danger"
                                                                 title="Sil"><i class="fas fa-trash"></i></button>
                                                         </form>
-                                                    @endif
+                                                    @endcan
                                                 </td>
                                             </tr>
                                         @endforeach

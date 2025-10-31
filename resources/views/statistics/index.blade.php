@@ -272,7 +272,7 @@
                     </div>
                 </div>
             </div>
-            <p class="text-center mt-4" style="color:#fff;">Daha fazla hizmet istatistiği eklenecektir.</p>
+            <p class="text-center mt-4" style="color:#fff;">Daha fazla idari işler istatistiği eklenecektir.</p>
 
             {{-- Diğer Durumlar --}}
         @else
@@ -689,7 +689,7 @@
             }
             // --- Hizmet Grafikleri ---
             else if (departmentSlug === 'hizmet') {
-                console.log('Hizmet grafikleri çiziliyor...');
+                console.log('İdari İşler grafikleri çiziliyor...');
 
                 if (chartData.event_type_pie && document.querySelector("#event-type-pie-chart")) {
                     new ApexCharts(document.querySelector("#event-type-pie-chart"), {
@@ -726,7 +726,7 @@
                     }).render();
                 }
 
-                console.log('Hizmet grafikleri tamamlandı');
+                console.log('İdari İşler grafikleri tamamlandı');
             }
 
         }); // DOMContentLoaded sonu

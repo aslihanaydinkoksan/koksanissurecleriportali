@@ -536,13 +536,7 @@ class HomeController extends Controller
             'departmentSlug'
         ));
     }
-    // ===============================================
-    // GÜNCELLENEN WELCOME METODU BİTİŞİ
-    // ===============================================
 
-    // ===============================================
-    // DÜZELTİLMİŞ showStatistics METODU
-    // ===============================================
     public function showStatistics(Request $request)
     {
         $user = Auth::user();
@@ -783,6 +777,7 @@ class HomeController extends Controller
                 DB::raw('COUNT(*) as count')
             )
                 ->where('start_time', '>=', $statsStartDate)
+                ->where('start_time', '<=', $endDate)
                 ->whereNotNull('start_time')
                 ->groupBy('year', 'month')
                 ->orderBy('year')
@@ -840,8 +835,6 @@ class HomeController extends Controller
         ));
     }
 
-
-    // --- Normalize Fonksiyonları (Mevcut kodunuz) ---
     private function normalizeCargoContent($cargo)
     {
         if (empty($cargo)) {
@@ -879,12 +872,8 @@ class HomeController extends Controller
         ];
         return $vehicleMapping[$normalized] ?? $normalized;
     }
-
-    // YENİ: EventController'daki listeyi almak için public helper
-    // (veya private yapıp showStatistics içinde $this->getEventTypes() olarak çağır)
     public function getEventTypes()
     {
-        // EventController'daki private $eventTypes listesinin aynısı
         return [
             'toplanti' => 'Toplantı',
             'egitim' => 'Eğitim',
@@ -895,8 +884,6 @@ class HomeController extends Controller
             'diger' => 'Diğer',
         ];
     }
-
-    // Bu fonksiyon mevcut index'te kullanılmıyor, ancak normalize'de var, kalsın.
     private function getEventColor($aracTipi)
     {
         switch (strtolower($aracTipi)) {

@@ -1,164 +1,318 @@
 
 
+
+
 <?php $__env->startSection('title', 'Genel KÖKSAN Takvimi'); ?>
+
+
 
 <style>
     /* === home.blade.php'den Kopyalanan Stiller Başlangıç === */
 
+
+
     /* Ana içerik alanına animasyonlu arka plan */
+
     #app>main.py-4 {
+
         padding: 2.5rem 0 !important;
+
         /* Padding'i home gibi yapalım */
+
         min-height: calc(100vh - 72px);
+
         background: linear-gradient(-45deg,
+
                 #dbe4ff,
+
                 #fde2ff,
+
                 #d9fcf7,
+
                 #fff0d9);
+
         background-size: 400% 400%;
+
         animation: gradientWave 18s ease infinite;
+
     }
+
+
 
     @keyframes gradientWave {
+
         0% {
+
             background-position: 0% 50%;
+
         }
+
+
 
         50% {
+
             background-position: 100% 50%;
+
         }
+
+
 
         100% {
+
             background-position: 0% 50%;
+
         }
+
     }
+
+
 
     /* Modern Frosted Glass Kart (Takvim için kullanılacak) */
+
     .create-shipment-card {
+
         /* Bu class adını kullanalım ki stil aynı olsun */
+
         border-radius: 1.25rem;
+
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+
         border: 1px solid rgba(255, 255, 255, 0.4);
+
         background-color: rgba(255, 255, 255, 0.85);
+
         backdrop-filter: blur(10px);
+
         -webkit-backdrop-filter: blur(10px);
+
         transition: transform 0.2s ease, box-shadow 0.2s ease;
+
         margin-bottom: 1.5rem;
+
         /* Altına boşluk ekleyelim */
+
     }
+
+
 
     .create-shipment-card .card-header {
+
         background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+
         border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+
         font-weight: 700;
+
         font-size: 1.1rem;
+
         color: #2d3748;
+
         padding: 1.25rem 1.5rem;
+
         border-radius: 1.25rem 1.25rem 0 0;
+
     }
+
+
 
     .create-shipment-card .card-body {
+
         padding: 1.5rem;
+
         /* Kartın iç boşluğu */
+
         color: #2d3748;
+
     }
+
+
 
     /* FullCalendar Özelleştirmeleri (home.blade.php'den) */
+
     #calendar {
+
         /* Arka planı ve padding'i card-body'den alacak, bu yüzden sadeleştirelim */
+
         background: transparent;
+
         /* Arka planı şeffaf yap */
+
         border-radius: 0;
+
         /* Köşeyi card-body ayarlar */
+
         padding: 0;
+
         /* Padding'i card-body ayarlar */
+
     }
+
+
 
     .fc .fc-button-primary {
+
         background: linear-gradient(135deg, #667EEA, #764BA2);
+
         border: none;
+
         border-radius: 0.5rem;
+
         font-weight: 600;
+
         text-transform: uppercase;
+
         font-size: 0.85rem;
+
         letter-spacing: 0.5px;
+
         transition: all 0.2s ease;
+
         color: white;
+
     }
+
+
 
     .fc .fc-button-primary:hover {
+
         background: linear-gradient(135deg, #764BA2, #667EEA);
+
         transform: translateY(-1px);
+
         box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+
         color: white;
+
     }
+
+
 
     .fc .fc-button-primary:not(:disabled).fc-button-active,
+
     .fc .fc-button-primary:not(:disabled):active {
+
         background: linear-gradient(135deg, #764BA2, #667EEA);
+
         color: white;
+
     }
+
+
 
     .fc-event {
+
         border-radius: 0.5rem;
+
         border: none !important;
+
         padding: 2px 6px;
+
         font-weight: 600;
+
         transition: transform 0.2s ease, box-shadow 0.2s ease;
+
         cursor: pointer;
+        user-select: none;
+
         font-size: 0.8em;
+
     }
+
+
 
     .fc-event:hover {
+
         transform: scale(1.05);
+
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
     }
+
+
 
     .fc .fc-daygrid-day-number {
+
         font-weight: 600;
+
         color: #4a5568;
+
     }
+
+
 
     .fc .fc-col-header-cell-cushion {
+
         /* Hafta günleri (Pzt, Salı vb.) */
+
         font-weight: 700;
+
         color: #2d3748;
+
         text-transform: uppercase;
+
         font-size: 0.85rem;
+
         letter-spacing: 0.5px;
+
         text-decoration: none;
+
     }
 
+
+
     .fc .fc-daygrid-day.fc-day-today {
+
         /* Bugünkü günün arka planı */
+
         background: rgba(102, 126, 234, 0.1) !important;
+
     }
 </style>
 
+
+
 <?php $__env->startSection('content'); ?>
+
     <div class="container">
+
         <div class="row justify-content-center">
+
             
+
             <div class="col-md-11">
+
                 
+
                 <div class="card create-shipment-card">
+
                     
+
                     <div class="card-header">
+
                         📅 Genel KÖKSAN Takvimi
+
                     </div>
+
                     
+
                     <div class="card-body">
+
                         <div id='calendar'></div>
+
                     </div>
+
                 </div>
+
             </div>
+
         </div>
+
     </div>
+
     <?php echo $__env->make('partials.calendar-modal', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+
 <?php $__env->stopSection(); ?>
-
 <?php $__env->startSection('page_scripts'); ?>
-
     
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.13/index.global.min.js'></script>
     <script>
@@ -179,6 +333,31 @@
             const modalOnayForm = document.getElementById('modalOnayForm');
             const modalOnayKaldirForm = document.getElementById('modalOnayKaldirForm');
             const modalOnayBadge = document.getElementById('modalOnayBadge');
+
+            // === YARDIMCI FONKSİYON: Tarih/Saat Ayırıcı ===
+            /**
+             * Bir tarih-saat dizesini (örn: "19.05.2025 11:30") 
+             * tarih ve saat olarak ayırır.
+             * @param {string} dateTimeString - Ayırılacak dize.
+             * @returns {{ date: string, time: string }}
+             */
+            function splitDateTime(dateTimeString) {
+                const dt = String(dateTimeString || ''); // String'e dönüştür ve null/undefined kontrolü yap
+                const parts = dt.split(' ');
+                const date = parts[0] || '-';
+                let time = parts[1] || '-';
+
+                // Eğer tarih yoksa (sadece '-' ise) veya saat kısmı boşsa ('') saati de gösterme
+                if (date === '-' || time === '') {
+                    time = '-';
+                }
+
+                return {
+                    date: date,
+                    time: time
+                };
+            }
+
 
             // === Evrensel Modal Açma Fonksiyonu  ===
             function openUniversalModal(props) {
@@ -254,32 +433,27 @@
                         `<div class="col-md-6"><p><strong>⚖️ Kargo Miktarı:</strong> ${props.details['Kargo Miktarı'] || '-'}</p></div>`;
                     html += '</div><hr><div class="row">'; // Yeni satır
 
-                    // Çıkış Tarihi ve Saatini ayır
-                    const cikisDateTime = String(props.details['Çıkış Tarihi'] || ''); // String'e dönüştür
-                    const cikisParts = cikisDateTime.split(' ');
-                    const cikisTarihi = cikisParts[0] || '-';
-                    const cikisSaati = cikisParts[1] || '-';
-
-                    // Tahmini Varış Tarihi ve Saatini ayır
-                    const varisDateTime = String(props.details['Tahmini Varış'] || ''); // String'e dönüştür
-                    const varisParts = varisDateTime.split(' ');
-                    const varisTarihi = varisParts[0] || '-';
-                    const varisSaati = varisParts[1] || '-';
+                    // === DEĞİŞİKLİK BAŞLANGIÇ: 'shipment' TÜRÜ İÇİN ===
+                    // Tarih ve saatleri ayır
+                    const cikis = splitDateTime(props.details['Çıkış Tarihi']);
+                    const varis = splitDateTime(props.details['Tahmini Varış']);
 
                     // Ayrılmış HTML'i oluştur
                     html += '<div class="col-md-6">';
-                    html += `    <p><strong>📅 Çıkış Tarihi:</strong> ${cikisTarihi}</p>`;
-                    if (cikisSaati !== '-' && cikisTarihi !== '-' && cikisSaati !== '') {
-                        html += `    <p><strong>🕒 Çıkış Saati:</strong> ${cikisSaati}</p>`;
+                    html += `    <p><strong>📅 Çıkış Tarihi:</strong> ${cikis.date}</p>`;
+                    if (cikis.time !== '-') {
+                        html += `    <p><strong>🕒 Çıkış Saati:</strong> ${cikis.time}</p>`;
                     }
                     html += '</div>';
 
                     html += '<div class="col-md-6">';
-                    html += `    <p><strong>📅 Tahmini Varış:</strong> ${varisTarihi}</p>`;
-                    if (varisSaati !== '-' && varisTarihi !== '-' && varisSaati !== '') {
-                        html += `    <p><strong>🕒 Varış Saati:</strong> ${varisSaati}</p>`;
+                    html += `    <p><strong>📅 Tahmini Varış:</strong> ${varis.date}</p>`;
+                    if (varis.time !== '-') {
+                        html += `    <p><strong>🕒 Varış Saati:</strong> ${varis.time}</p>`;
                     }
                     html += '</div>';
+                    // === DEĞİŞİKLİK BİTİŞ ===
+
                 } else {
                     modalExportButton.style.display = 'none';
                     modalOnayForm.style.display = 'none';
@@ -301,11 +475,63 @@
                         }
                         html += `</div>`;
                     } else if (props.eventType === 'service_event') {
+                        // === DEĞİŞİKLİK BAŞLANGIÇ: 'service_event' TÜRÜ İÇİN ===
                         html +=
-                            `<div class="col-md-12"><p><strong>🤩Etkinlik Tipi:</strong> ${props.details['Etkinlik Tipi'] || '-'}</p><p><strong>📍Konum:</strong> ${props.details['Konum'] || '-'}</p><p><strong>🚩Başlangıç:</strong> ${props.details['Başlangıç'] || '-'}</p><p><strong>🚩Bitiş:</strong> ${props.details['Bitiş'] || '-'}</p><p><strong>👩🏻‍💻Kayıt Yapan:</strong> ${props.details['Kayıt Yapan'] || '-'}</p></div>`;
+                            `<div class="col-md-12"><p><strong>🤩Etkinlik Tipi:</strong> ${props.details['Etkinlik Tipi'] || '-'}</p><p><strong>📍Konum:</strong> ${props.details['Konum'] || '-'}</p></div>`;
+
+                        // Tarih ve saatleri ayır
+                        const baslangic = splitDateTime(props.details['Başlangıç']);
+                        const bitis = splitDateTime(props.details['Bitiş']);
+
+                        // İki sütunlu tarih/saat alanı oluştur
+                        html += '<div class="col-md-6">';
+                        html += `    <p><strong>📅 Başlangıç Tarihi:</strong> ${baslangic.date}</p>`;
+                        if (baslangic.time !== '-') {
+                            html += `    <p><strong>🕒 Başlangıç Saati:</strong> ${baslangic.time}</p>`;
+                        }
+                        html += '</div>';
+                        html += '<div class="col-md-6">';
+                        html += `    <p><strong>📅 Bitiş Tarihi:</strong> ${bitis.date}</p>`;
+                        if (bitis.time !== '-') {
+                            html += `    <p><strong>🕒 Bitiş Saati:</strong> ${bitis.time}</p>`;
+                        }
+                        html += '</div>';
+
+                        html +=
+                            `<div class="col-md-12 mt-3"><p><strong>👩🏻‍💻Kayıt Yapan:</strong> ${props.details['Kayıt Yapan'] || '-'}</p></div>`;
+                        // === DEĞİŞİKLİK BİTİŞ ===
+
                     } else if (props.eventType === 'vehicle_assignment') {
+                        // === DEĞİŞİKLİK BAŞLANGIÇ: 'vehicle_assignment' TÜRÜ İÇİN ===
                         html +=
-                            `<div class="col-md-12"><p><strong>🚘Araç:</strong> ${props.details['Araç'] || '-'}</p><p><strong>📋Görev:</strong> ${props.details['Görev'] || '-'}</p><p><strong>Yer:</strong> ${props.details['Yer'] || '-'}</p><p><strong>Talep Eden:</strong> ${props.details['Talep Eden'] || '-'}</p><p><strong>Başlangıç:</strong> ${props.details['Başlangıç'] || '-'}</p><p><strong>Bitiş:</strong> ${props.details['Bitiş'] || '-'}</p><p><strong>Kayıt Yapan:</strong> ${props.details['Kayıt Yapan'] || '-'}</p></div>`;
+                            `<div class="col-md-12">
+                                <p><strong>🚘Araç:</strong> ${props.details['Araç'] || '-'}</p>
+                                <p><strong>📋Görev:</strong> ${props.details['Görev'] || '-'}</p>
+                                <p><strong>Yer:</strong> ${props.details['Yer'] || '-'}</p>
+                                <p><strong>Talep Eden:</strong> ${props.details['Talep Eden'] || '-'}</p>
+                            </div>`; // Tarihler hariç diğer bilgiler
+
+                        // Tarih ve saatleri ayır
+                        const baslangic = splitDateTime(props.details['Başlangıç']);
+                        const bitis = splitDateTime(props.details['Bitiş']);
+
+                        // İki sütunlu tarih/saat alanı
+                        html += '<div class="col-md-6">';
+                        html += `    <p><strong>📅 Başlangıç Tarihi:</strong> ${baslangic.date}</p>`;
+                        if (baslangic.time !== '-') {
+                            html += `    <p><strong>🕒 Başlangıç Saati:</strong> ${baslangic.time}</p>`;
+                        }
+                        html += '</div>';
+                        html += '<div class="col-md-6">';
+                        html += `    <p><strong>📅 Bitiş Tarihi:</strong> ${bitis.date}</p>`;
+                        if (bitis.time !== '-') {
+                            html += `    <p><strong>🕒 Bitiş Saati:</strong> ${bitis.time}</p>`;
+                        }
+                        html += '</div>';
+
+                        html +=
+                            `<div class="col-md-12 mt-3"><p><strong>Kayıt Yapan:</strong> ${props.details['Kayıt Yapan'] || '-'}</p></div>`; // Kalan bilgi
+                        // === DEĞİŞİKLİK BİTİŞ ===
                     }
                 }
                 html += '</div>';
@@ -341,6 +567,8 @@
                     day: 'Gün',
                     list: 'Liste'
                 },
+                // BURASI ÖNEMLİ: Bu satırın Blade tarafından yorumlanması gerekiyor,
+                // bu yüzden @verbatim kullanmıyoruz.
                 events: '<?php echo e(route('web.calendar.events')); ?>', // AJAX rotası
                 eventTimeFormat: {
                     hour: '2-digit',

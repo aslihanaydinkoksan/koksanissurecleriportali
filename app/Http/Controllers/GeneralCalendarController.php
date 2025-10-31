@@ -8,9 +8,8 @@ use App\Models\ProductionPlan;
 use App\Models\Event;
 use App\Models\VehicleAssignment;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Storage; // YENİ: Dosya yolu için
-use Illuminate\Support\Str; // YENİ: Normalize fonksiyonları için
-// YENİ: Helper metodları (getEventTypes) çağırmak için
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Gate;

@@ -81,14 +81,6 @@
                             </li>
 
                             @can('access-department', 'lojistik')
-                                <li class="nav-item me-2">
-                                    <a class="nav-link fw-bold" href="{{ route('shipments.create') }}">
-                                        <i class="fa-solid fa-truck-fast me-1" style="color: #FBD38D;"></i>
-                                        Yeni Sevkiyat
-                                    </a>
-                                </li>
-
-                                <!-- GÜNCELLENEN KISIM (BAŞLANGIÇ) -->
                                 <li class="nav-item dropdown me-2">
                                     <a class="nav-link dropdown-toggle fw-bold" href="#" id="navbarDropdownProducts"
                                         role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -96,6 +88,9 @@
                                         Sevkiyatlar
                                     </a>
                                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownProducts">
+                                        <li><a class="dropdown-item fw-bold" href="{{ route('shipments.create') }}">
+                                                <i class="fa-solid fa-truck-fast me-1" style="color: #FBD38D;"></i>
+                                                Yeni Sevkiyat Ekle</a></li>
                                         <li><a class="dropdown-item fw-bold" href="{{ route('products.list') }}">
                                                 <i class="fa-solid fa-truck-ramp-box me-1" style="color: #4FD1C5"></i>
                                                 Sevkiyat Listesi</a></li>
@@ -107,7 +102,6 @@
                                 <li class="nav-item dropdown me-2">
                                     <a class="nav-link dropdown-toggle fw-bold" href="#" id="navbarDropdownProduction"
                                         role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        {{-- İkonu ve rengi Lojistik'ten farklılaştıralım --}}
                                         <i class="fa-solid fa-industry" style="color: #4FD1C5;"></i>
                                         Üretim
                                     </a>
@@ -132,7 +126,7 @@
                                     <a class="nav-link dropdown-toggle fw-bold" href="#" id="navbarDropdownService"
                                         role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                         <i class="fa-solid fa-concierge-bell" style="color: #F093FB;"></i>
-                                        Hizmet
+                                        İdari İşler
                                     </a>
                                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownService">
                                         <li>
@@ -147,7 +141,6 @@
                                                 Etkinlik Listesi
                                             </a>
                                         </li>
-                                        {{-- YENİ: Araç Listesi Linki --}}
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
@@ -210,7 +203,6 @@
     </div>
 
     @yield('page_scripts')
-    {{-- Sonra Bootstrap yüklensin --}}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

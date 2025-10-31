@@ -57,7 +57,7 @@ class VehicleAssignmentController extends Controller
      */
     public function create()
     {
-        // Yetki kontrolü yok
+
         $vehicles = Vehicle::where('is_active', true)->orderBy('plate_number')->get();
         if ($vehicles->isEmpty()) {
             return redirect()->route('service.vehicles.index')
@@ -118,21 +118,15 @@ class VehicleAssignmentController extends Controller
             $targetDepartureTime = Carbon::tomorrow($localTimezone)->setTimeFromTimeString($firstSchedule->departure_time);
             // $targetDepartureTime = 31.10.2025 09:00:00 (Europe/Istanbul)
         }
-        // === ZAMAN DİLİMİ DÜZELTMESİ SONU ===
 
-        // Veritabanına kaydet
-        // $targetDepartureTime nesnesi Istanbul saat diliminde.
-        // Veritabanı (datetime) sütununa kaydederken Laravel bunu otomatik olarak UTC'ye çevirecektir.
-        // (örn: 31.10.2025 06:00:00 UTC olarak) Bu doğru bir davranıştır.
         $validatedData['user_id'] = Auth::id();
         $validatedData['start_time'] = $targetDepartureTime;
         $validatedData['end_time'] = $targetDepartureTime->copy()->addHour();
-
         VehicleAssignment::create($validatedData);
 
         // Başarı mesajında, saati tekrar lokal (Istanbul) formatında göster
         return redirect()->route('service.assignments.index')
-            ->with('success', 'Araç görevi talebiniz başarıyla oluşturuldu (' . $targetDepartureTime->format('d M H:i') . ' seferine eklendi).');
+            ->with('success', 'Araç görevi talebiniz başarıyla oluşturuldu (' . $targetDepartureTime->translatedFormat('d M H:i') . ' seferine eklendi).');
     }
 
 

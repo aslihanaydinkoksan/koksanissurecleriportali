@@ -7,14 +7,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
-use App\Models\Department; // Bu satır sizde zaten vardı, harika.
+use App\Models\Department;
+
 
 class UserController extends Controller
 {
     public function create()
     {
-        $departments = Department::all(); // YENİ EKLENDİ
-        return view('users.create', compact('departments')); // GÜNCELLENDİ
+        $departments = Department::all();
+        return view('users.create', compact('departments'));
     }
 
     public function store(Request $request)
@@ -35,15 +36,13 @@ class UserController extends Controller
             return redirect()->back()->withErrors(['role' => 'Yönetici rolündeki kullanıcılar Admin atayamaz.'])->withInput();
         }
 
-        // --- GÜNCELLEME BURADA (Daha güvenli veri ataması) ---
         $data = $request->only('name', 'email', 'role');
         $data['password'] = Hash::make($request->password);
 
-        // Rol 'kullanıcı' ise departmanı ata, değilse NULL ata
         if ($request->role === 'kullanıcı') {
             $data['department_id'] = $request->department_id;
         } else {
-            $data['department_id'] = null; // Admin ve Yönetici için NULL
+            $data['department_id'] = null;
         }
 
         User::create($data);
@@ -57,8 +56,8 @@ class UserController extends Controller
             return redirect()->route('home')->with('error', 'Admin kullanıcıları sadece başka bir Admin tarafından düzenlenebilir.');
         }
 
-        $departments = Department::all(); // YENİ EKLENDİ
-        return view('users.edit', compact('user', 'departments')); // GÜNCELLENDİ
+        $departments = Department::all();
+        return view('users.edit', compact('user', 'departments'));
     }
 
     public function update(Request $request, User $user)
@@ -85,7 +84,6 @@ class UserController extends Controller
 
         $data = $request->only('name', 'email', 'role');
 
-        // Rol 'kullanıcı' ise departmanı ata, değilse NULL ata
         if ($request->role === 'kullanıcı') {
             $data['department_id'] = $request->department_id;
         } else {
@@ -124,5 +122,14 @@ class UserController extends Controller
 
         $user->update($data);
         return redirect()->route('profile.edit')->with('success', 'Profil bilgileriniz başarıyla güncellendi!');
+    }
+
+    public function destroy(User $user)
+    {
+        if (Auth::user()->role !== 'admin') {
+            return redirect()->back()->with('error', 'Kullanıcı silme yetkiniz bulunmamaktadır.');
+        }
+        $user->delete();
+        return redirect()->route('home')->with('success', $user->name . ' adlı kullanıcı başarıyla silindi.');
     }
 }
