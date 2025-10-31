@@ -177,13 +177,6 @@ class EventController extends Controller
         // YETKİ KONTROLÜ (Adım 1): 'hizmet' birimi
         $this->authorize('access-department', 'hizmet');
 
-        // YETKİ KONTROLÜ (Adım 2): 'admin' rolü
-        /*
-        if (Auth::user()->role !== 'admin') {
-            return redirect()->route('service.events.index')
-                ->with('error', 'Bu işlemi yapma yetkiniz bulunmamaktadır.');
-        }
-        */
 
         $event->delete();
 

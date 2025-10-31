@@ -95,22 +95,13 @@ Route::middleware(['auth'])->prefix('service')->name('service.')->group(function
     Route::get('/events/{event}/edit', [EventController::class, 'edit'])->name('events.edit');
     Route::put('/events/{event}', [EventController::class, 'update'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
-    // Araçlar (Vehicles) CRUD
     Route::resource('vehicles', VehicleController::class);
-    // Bu tek satır, index, create, store, show, edit, update, destroy rotalarını otomatik oluşturur.
-    // Araç Atamaları (Vehicle Assignments) CRUD
     Route::resource('assignments', VehicleAssignmentController::class);
-    // Bu da aynı şekilde assignments için tüm CRUD rotalarını oluşturur.
-    // İPUCU: Belki atamaları listelerken belirli bir araca göre filtrelemek isteyebiliriz.
-    // Örnek: Route::get('vehicles/{vehicle}/assignments', [VehicleAssignmentController::class, 'indexForVehicle'])->name('vehicles.assignments.index');
-    // Şimdilik sadece temel resource rotalarını ekliyoruz.
     Route::resource('schedules', ServiceScheduleController::class);
 });
 
 // --- Genel KÖKSAN Takvimi Rotası (Giriş yapmış herkes erişebilir) ---
-Route::middleware('auth')->group(function () { // auth grubu içinde olduğundan emin olun
-    // Genel KÖKSAN Takvimi Gösterme Rotası
+Route::middleware('auth')->group(function () {
     Route::get('/general-calendar', [GeneralCalendarController::class, 'showCalendar'])->name('general.calendar');
-    // YENİ EKLENDİ: Genel Takvim Veri Getirme Rotası (web için)
     Route::get('/calendar-events-data', [GeneralCalendarController::class, 'getEvents'])->name('web.calendar.events');
 });
