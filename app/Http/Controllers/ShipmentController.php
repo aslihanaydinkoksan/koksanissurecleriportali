@@ -50,7 +50,7 @@ class ShipmentController extends Controller
             'ek_dosya' => [
                 'nullable',
                 'file',
-                'mimes:doc,docx,xls,xlsx,pdf,jpg,jpeg,png',
+                'mimes:doc,docx,xls,xlsx,pdf,jpg,jpeg,png,txt',
                 'max:5120',
             ],
         ]);
@@ -110,7 +110,7 @@ class ShipmentController extends Controller
             'cikis_tarihi' => 'required|date',
             'tahmini_varis_tarihi' => 'required|date|after_or_equal:cikis_tarihi',
             'aciklamalar' => 'nullable|string',
-            'ek_dosya' => ['nullable', 'file', 'mimes:doc,docx,xls,xlsx,pdf,jpg,jpeg,png', 'max:5120'],
+            'ek_dosya' => ['nullable', 'file', 'mimes:doc,docx,xls,xlsx,pdf,jpg,jpeg,png,txt', 'max:5120'],
             'dosya_sil' => 'nullable|boolean',
         ]);
 
