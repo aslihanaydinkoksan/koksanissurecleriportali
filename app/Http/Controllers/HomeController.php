@@ -77,6 +77,7 @@ class HomeController extends Controller
                     'eventType' => 'shipment', // Evrensel modal için tip
                     'title' => '🚚 Sevkiyat Detayı: ' . $normalizedKargo, // Modal başlığı
                     'id' => $shipment->id,
+                    'user_id' => $shipment->user_id,
                     'editUrl' => route('shipments.edit', $shipment->id),
                     'deleteUrl' => route('shipments.destroy', $shipment->id),
                     'exportUrl' => route('shipments.export', $shipment->id),
@@ -127,6 +128,7 @@ class HomeController extends Controller
                         'eventType' => 'production',
                         'title' => '📅 Üretim Planı Detayı',
                         'id' => $plan->id,
+                        'user_id' => $plan->user_id,
                         'editUrl' => route('production.plans.edit', $plan->id),
                         'deleteUrl' => route('production.plans.destroy', $plan->id),
                         'details' => [
@@ -154,6 +156,7 @@ class HomeController extends Controller
                         'eventType' => 'service_event',
                         'title' => '🎉 Etkinlik Detayı: ' . $event->title,
                         'id' => $event->id,
+                        'user_id' => $event->user_id,
                         'editUrl' => route('service.events.edit', $event->id),
                         'deleteUrl' => route('service.events.destroy', $event->id),
                         'details' => [

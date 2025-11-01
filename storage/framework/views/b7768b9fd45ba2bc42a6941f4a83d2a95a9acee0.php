@@ -461,6 +461,10 @@
                     </div>
                     <div class="card-body">
                         <div id="calendar" data-events='<?php echo json_encode($events, 15, 512) ?>'
+                            data-is-authorized="<?php echo e(in_array(Auth::user()->role, ['admin', 'yönetici']) ? 'true' : 'false'); ?>"
+                            data-current-user-id="<?php echo e(Auth::id()); ?>">
+                        </div>
+                        <div id="calendar" data-events='<?php echo json_encode($events, 15, 512) ?>'
                             data-is-authorized="<?php echo e(in_array(Auth::user()->role, ['admin', 'yönetici']) ? 'true' : 'false'); ?>">
                         </div>
                     </div>
@@ -630,6 +634,7 @@
 
             var calendarEl = document.getElementById('calendar');
             const isAuthorized = calendarEl.dataset.isAuthorized === 'true';
+            const currentUserId = parseInt(calendarEl.dataset.currentUserId, 10); // YENİ EKLENDİ
             const eventsData = JSON.parse(calendarEl.dataset.events || '[]');
             const appTimezone = calendarEl.dataset.timezone;
             // === YENİ: Evrensel Modal Elementleri ===
@@ -677,25 +682,42 @@
 
                 // 1. Başlığı ayarla
                 modalTitle.textContent = props.title || 'Detaylar';
+                let showButtons = false;
 
-                // ===== DÜZENLE BUTONU GÜNCELLEMESİ =====
-                if (props.editUrl && props.editUrl !== '#') {
+                if (props.eventType === 'production' || props.eventType === 'service_event' || props.eventType ===
+                    'vehicle_assignment') {
+                    if (isAuthorized) { // Admin veya Yönetici ise her zaman göster
+                        showButtons = true;
+                    } else if (props.user_id) { // Etkinlikte 'user_id' (oluşturan) varsa
+                        showButtons = (props.user_id === currentUserId); // Sadece oluşturan kişi ise göster
+                    } else {
+                        // user_id prop'u eklenmemişse (ve admin değilse) güvenlik için gizle
+                        showButtons = false;
+                        console.warn(
+                            `'${props.eventType}' etkinliğinde 'user_id' prop'u eksik. Butonlar gizlendi.`);
+                    }
+                } else {
+                    // Diğer etkinlik türleri (örn: 'shipment') için varsayılan olarak göster
+                    showButtons = true;
+                }
+
+                // Düzenle Butonu
+                if (showButtons && props.editUrl && props.editUrl !== '#') {
                     modalEditButton.href = props.editUrl;
                     modalEditButton.style.display = 'inline-block';
                 } else {
                     modalEditButton.style.display = 'none';
                 }
 
-                // ===== SİLME BUTONU GÜNCELLEMESİ =====
+                // Silme Butonu
                 if (modalDeleteForm) {
-                    if (props.deleteUrl) { // Kontrol basitleştirildi
+                    if (showButtons && props.deleteUrl) {
                         modalDeleteForm.action = props.deleteUrl;
                         modalDeleteForm.style.display = 'inline-block';
                     } else {
                         modalDeleteForm.style.display = 'none';
                     }
                 }
-                // ===================================
 
                 // 3. İçeriği oluştur
                 let html = '<div class="row">';

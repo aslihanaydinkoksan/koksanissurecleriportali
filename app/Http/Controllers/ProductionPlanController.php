@@ -10,17 +10,15 @@ use Carbon\Carbon;
 class ProductionPlanController extends Controller
 {
     /**
-     * Üretim planlarını listeler. (GÜNCELLENDİ)
+     * Üretim planlarını listeler. 
      */
-    public function index(Request $request) // YENİ: Request $request eklendi
+    public function index(Request $request)
     {
         // YETKİ KONTROLÜ
         $this->authorize('access-department', 'uretim');
 
-        // Temel sorguyu başlat
         $query = ProductionPlan::with('user');
 
-        // --- FİLTRELEME MANTIĞI ---
         if ($request->filled('plan_title')) {
             $query->where('plan_title', 'LIKE', '%' . $request->input('plan_title') . '%');
         }
@@ -40,7 +38,6 @@ class ProductionPlanController extends Controller
             } catch (\Exception $e) { /* Geçersiz tarihi yoksay */
             }
         }
-        // --- FİLTRELEME SONU ---
 
         // Planları, en yeniden eskiye doğru getir.
         $plans = $query->orderBy('week_start_date', 'desc')
@@ -54,7 +51,6 @@ class ProductionPlanController extends Controller
 
     /**
      * Yeni bir üretim planı oluşturma formunu gösterir.
-     * (Sıradaki adımda bu view'ı oluşturacağız)
      */
     public function create()
     {
@@ -72,31 +68,22 @@ class ProductionPlanController extends Controller
         // YETKİ KONTROLÜ: Sadece 'uretim' birimi erişebilir
         $this->authorize('access-department', 'uretim');
 
-        // VALIDASYON: 
-        // plan_details'ı bir array olarak doğruluyoruz, çünkü JSON'a kaydedeceğiz.
-        // Bu, formda "Makine 1", "Ürün A", "Adet 100" gibi dinamik satırlarımız
-        // olacağı varsayımına dayanır.
         $validatedData = $request->validate([
             'plan_title' => 'required|string|max:255',
             'week_start_date' => 'required|date',
-            'plan_details' => 'nullable|array', // plan_details bir dizi olmalı
+            'plan_details' => 'nullable|array',
 
-            // Eğer plan_details gönderildiyse, içindeki her elemanın bu kurallara uyması gerekir:
             'plan_details.*.machine' => 'required_with:plan_details|string|max:255',
             'plan_details.*.product' => 'required_with:plan_details|string|max:255',
             'plan_details.*.quantity' => 'required_with:plan_details|numeric|min:1',
         ]);
 
-        // ShipmentController'dan kopyalanan mantık: user_id'yi ekle
+
         $validatedData['user_id'] = Auth::id();
 
-        // Not: Dosya yüklemeyi (ek_dosya) şimdilik atladım. 
-        // Üretim planları için de gerekirse, ShipmentController'daki
-        // 'store' metodundan o kısmı kopyalayabiliriz.
 
         ProductionPlan::create($validatedData);
 
-        // ShipmentController'daki gibi 'create' sayfasına geri yönlendirme
         return redirect()->route('production.plans.create')
             ->with('success', 'Haftalık üretim planı başarıyla oluşturuldu!');
     }
@@ -110,6 +97,11 @@ class ProductionPlanController extends Controller
         // YETKİ KONTROLÜ: Sadece 'uretim' birimi erişebilir
         $this->authorize('access-department', 'uretim');
 
+        if (Auth::id() !== $productionPlan->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
+            return redirect()->route('production.plans.index')
+                ->with('error', 'Bu planı sadece oluşturan kişi düzenleyebilir.');
+        }
+
         return view('production.plans.edit', compact('productionPlan'));
     }
 
@@ -121,7 +113,12 @@ class ProductionPlanController extends Controller
         // YETKİ KONTROLÜ: Sadece 'uretim' birimi erişebilir
         $this->authorize('access-department', 'uretim');
 
-        // Validasyon (store ile aynı)
+        if (Auth::id() !== $productionPlan->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
+            return redirect()->route('production.plans.index')
+                ->with('error', 'Bu planı sadece oluşturan kişi güncelleyebilir.');
+        }
+
+
         $validatedData = $request->validate([
             'plan_title' => 'required|string|max:255',
             'week_start_date' => 'required|date',
@@ -133,7 +130,7 @@ class ProductionPlanController extends Controller
 
         $productionPlan->update($validatedData);
 
-        // Güncellemeden sonra liste sayfasına yönlendirmek daha mantıklıdır
+
         return redirect()->route('production.plans.index')
             ->with('success', 'Üretim planı başarıyla güncellendi.');
     }
@@ -146,11 +143,10 @@ class ProductionPlanController extends Controller
         // YETKİ KONTROLÜ (Adım 1): Sadece 'uretim' birimi erişebilir
         $this->authorize('access-department', 'uretim');
 
-        // YETKİ KONTROLÜ (Adım 2): ShipmentController'daki 'admin' kuralı
-        /*if (Auth::user()->role !== 'admin') {
+        if (Auth::id() !== $productionPlan->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
             return redirect()->route('production.plans.index')
-                ->with('error', 'Bu işlemi yapma yetkiniz bulunmamaktadır.');
-        }*/
+                ->with('error', 'Bu planı sadece oluşturan kişi silebilir.');
+        }
 
         $productionPlan->delete();
 

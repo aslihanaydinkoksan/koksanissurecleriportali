@@ -140,6 +140,10 @@ class EventController extends Controller
     {
         // YETKİ KONTROLÜ
         $this->authorize('access-department', 'hizmet');
+        if (Auth::id() !== $event->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
+            return redirect()->route('home')
+                ->with('error', 'Bu etkinliği sadece oluşturan kişi düzenleyebilir.');
+        }
 
         $eventTypes = $this->eventTypes;
         return view('service.events.edit', compact('event', 'eventTypes'));
@@ -152,6 +156,10 @@ class EventController extends Controller
     {
         // YETKİ KONTROLÜ
         $this->authorize('access-department', 'hizmet');
+        if (Auth::id() !== $event->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
+            return redirect()->route('home')
+                ->with('error', 'Bu etkinliği sadece oluşturan kişi düzenleyebilir.');
+        }
 
         // Validasyon (store ile aynı)
         $validatedData = $request->validate([
@@ -176,7 +184,10 @@ class EventController extends Controller
     {
         // YETKİ KONTROLÜ (Adım 1): 'hizmet' birimi
         $this->authorize('access-department', 'hizmet');
-
+        if (Auth::id() !== $event->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
+            return redirect()->route('home')
+                ->with('error', 'Bu etkinliği sadece oluşturan kişi silebilir.');
+        }
 
         $event->delete();
 

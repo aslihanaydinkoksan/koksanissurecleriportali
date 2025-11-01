@@ -297,7 +297,9 @@
 
                     <div class="card-body">
 
-                        <div id='calendar'></div>
+                        <div id='calendar' data-current-user-id="{{ Auth::id() }}"
+                            data-is-authorized="{{ in_array(Auth::user()->role, ['admin', 'yönetici']) ? 'true' : 'false' }}">
+                            ></div>
 
                     </div>
 
@@ -334,6 +336,10 @@
             const modalOnayKaldirForm = document.getElementById('modalOnayKaldirForm');
             const modalOnayBadge = document.getElementById('modalOnayBadge');
 
+            var calendarElGlobal = document.getElementById('calendar'); // Global referans
+            const currentUserId = parseInt(calendarElGlobal.dataset.currentUserId, 10);
+            const isAuthorized = calendarElGlobal.dataset.isAuthorized === 'true';
+
             // === YARDIMCI FONKSİYON: Tarih/Saat Ayırıcı ===
             /**
              * Bir tarih-saat dizesini (örn: "19.05.2025 11:30") 
@@ -367,15 +373,36 @@
                     return;
                 }
                 modalTitle.textContent = props.title || 'Detaylar';
-                if (props.editUrl && props.editUrl !== '#') {
+                let showButtons = false;
+                if (props.eventType === 'production' || props.eventType === 'service_event' || props.eventType ===
+                    'vehicle_assignment') {
+                    if (isAuthorized) { // Admin veya Yönetici ise her zaman göster
+                        showButtons = true;
+                    } else if (props.user_id) { // Etkinlikte 'user_id' (oluşturan) varsa
+                        showButtons = (props.user_id === currentUserId); // Sadece oluşturan kişi ise göster
+                    } else {
+                        // user_id prop'u eklenmemişse (ve admin değilse) güvenlik için gizle
+                        showButtons = false;
+                        console.warn(
+                        `'${props.eventType}' etkinliğinde 'user_id' prop'u eksik. Butonlar gizlendi.`);
+                    }
+                } else {
+                    // Diğer etkinlik türleri (örn: 'shipment') için varsayılan olarak göster
+                    // (Bu türlerin kendi iç modal logikleri olabilir, örn: 'onay' butonu)
+                    showButtons = true;
+                }
+
+                // Düzenle Butonu
+                if (showButtons && props.editUrl && props.editUrl !== '#') {
                     modalEditButton.href = props.editUrl;
                     modalEditButton.style.display = 'inline-block';
                 } else {
                     modalEditButton.style.display = 'none';
                 }
 
+                // Silme Butonu
                 if (modalDeleteForm) {
-                    if (props.deleteUrl) {
+                    if (showButtons && props.deleteUrl) {
                         modalDeleteForm.action = props.deleteUrl;
                         modalDeleteForm.style.display = 'inline-block';
                     } else {

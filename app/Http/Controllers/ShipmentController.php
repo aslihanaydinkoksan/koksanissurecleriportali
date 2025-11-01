@@ -74,6 +74,10 @@ class ShipmentController extends Controller
         // YENİ EKLENDİ: Kullanıcının 'lojistik' birimine erişimi var mı?
         $this->authorize('access-department', 'lojistik');
         $birimler = Birim::orderBy('ad')->get();
+        if (Auth::id() !== $shipment->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
+            return redirect()->route('home')
+                ->with('error', 'Bu sevkiyatı sadece oluşturan kişi düzenleyebilir.');
+        }
         return view('shipments.edit', compact('shipment', 'birimler'));
     }
 
@@ -84,6 +88,10 @@ class ShipmentController extends Controller
     {
         // YENİ EKLENDİ: Kullanıcının 'lojistik' birimine erişimi var mı?
         $this->authorize('access-department', 'lojistik');
+        if (Auth::id() !== $shipment->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
+            return redirect()->route('home')
+                ->with('error', 'Bu sevkiyatı sadece oluşturan kişi düzenleyebilir.');
+        }
         $validatedData = $request->validate([
             'arac_tipi' => 'required|string|in:tır,gemi,kamyon',
             'plaka' => 'nullable|string|max:255',
@@ -213,11 +221,11 @@ class ShipmentController extends Controller
     {
         // YENİ EKLENDİ: Kullanıcının 'lojistik' birimine erişimi var mı?
         $this->authorize('access-department', 'lojistik');
-        // Güvenlik: Sadece 'admin' rolündeki kullanıcının silme işlemi yapabildiğinden emin oluyoruz.
-        /*if (Auth::user()->role !== 'admin') {
-            return redirect()->route('home')->with('error', 'Bu işlemi yapma yetkiniz bulunmamaktadır.');
-        } */
-        // Soft delete işlemini gerçekleştir.
+
+        if (Auth::id() !== $shipment->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
+            return redirect()->route('home')
+                ->with('error', 'Bu sevkiyatı sadece oluşturan kişi silebilir.');
+        }
         $shipment->delete();
 
         return redirect()->route('home')->with('success', 'Sevkiyat kaydı başarıyla silindi.');
