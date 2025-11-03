@@ -1,5 +1,7 @@
 @extends('layouts.app')
-
+<h1 style="background: red; color: white; padding: 20px; font-size: 30px; z-index: 9999; position: relative;">
+    DEBUG TEST: Sunucunun okuduğu APP_URL şudur: [{{ config('app.url') }}]
+</h1>
 @section('title', 'Köksan Tedarik Yönetimi')
 
 <style>
