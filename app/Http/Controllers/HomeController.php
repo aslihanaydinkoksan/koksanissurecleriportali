@@ -24,9 +24,7 @@ class HomeController extends Controller
         $this->middleware('auth');
     }
 
-    // ===============================================
-    // GÜNCELLENMİŞ INDEX METODU
-    // ===============================================
+
     public function index(Request $request)
     {
         // --- Departman Bilgisi ---
@@ -34,11 +32,11 @@ class HomeController extends Controller
         $departmentSlug = $user->department?->slug;
         $departmentName = $user->department?->name ?? 'Genel';
 
-        $events = []; // Takvim olayları
+        $events = [];
         $now = Carbon::now();
         $appTimezone = config('app.timezone');
 
-        // --- Departmana Göre Filtrelenmiş Takvim Verileri ---
+
 
         // Lojistik Departmanı
         if ($departmentSlug === 'lojistik') {
@@ -74,8 +72,8 @@ class HomeController extends Controller
                 $normalizedAracTipi = $this->normalizeVehicleType($shipment->arac_tipi);
 
                 $extendedProps = [
-                    'eventType' => 'shipment', // Evrensel modal için tip
-                    'title' => '🚚 Sevkiyat Detayı: ' . $normalizedKargo, // Modal başlığı
+                    'eventType' => 'shipment',
+                    'title' => '🚚 Sevkiyat Detayı: ' . $normalizedKargo,
                     'id' => $shipment->id,
                     'user_id' => $shipment->user_id,
                     'editUrl' => route('shipments.edit', $shipment->id),
@@ -83,7 +81,7 @@ class HomeController extends Controller
                     'exportUrl' => route('shipments.export', $shipment->id),
                     'onayUrl' => route('shipments.onayla', $shipment->id),
                     'onayKaldirUrl' => route('shipments.onayiGeriAl', $shipment->id),
-                    'details' => [ // Dinamik modal içeriği için
+                    'details' => [
                         'Araç Tipi' => $normalizedAracTipi,
                         'Plaka' => $shipment->plaka,
                         'Dorse Plakası' => $shipment->dorse_plakasi,
@@ -117,13 +115,13 @@ class HomeController extends Controller
         }
         // Üretim Departmanı
         elseif ($departmentSlug === 'uretim') {
-            $plans = ProductionPlan::with('user')->get(); // Oluşturanı da alalım
+            $plans = ProductionPlan::with('user')->get();
             foreach ($plans as $plan) {
                 $events[] = [
                     'title' => 'Üretim: ' . $plan->plan_title,
                     'start' => $plan->week_start_date->startOfDay()->toIso8601String(),
                     'end'   => $plan->week_start_date->copy()->addDay()->startOfDay()->toIso8601String(),
-                    'color' => '#4FD1C5', // Üretim rengi
+                    'color' => '#4FD1C5',
                     'extendedProps' => [
                         'eventType' => 'production',
                         'title' => '📅 Üretim Planı Detayı',
@@ -134,7 +132,7 @@ class HomeController extends Controller
                         'details' => [
                             'Plan Başlığı' => $plan->plan_title,
                             'Hafta Başlangıcı' => $plan->week_start_date->format('d.m.Y'),
-                            'Plan Detayları' => $plan->plan_details, // JS'de tabloya çevrilecek
+                            'Plan Detayları' => $plan->plan_details,
                             'Oluşturan' => $plan->user?->name,
                             'Kayıt Tarihi' => $plan->created_at->format('d.m.Y H:i'),
                         ]
@@ -177,7 +175,6 @@ class HomeController extends Controller
                     'eventType' => 'vehicle_assignment',
                     'title' => '🚗 Araç Atama Detayı',
                     'id' => $assignment->id,
-                    // DİKKAT: Düzenleme linkini de yetkiye bağlayalım
                     'editUrl' => Gate::allows('manage-assignment', $assignment) ? route('service.assignments.edit', $assignment->id) : null,
                     'details' => [
                         'Araç' => $assignment->vehicle?->plate_number . ' (' . $assignment->vehicle?->type . ')',
@@ -202,7 +199,7 @@ class HomeController extends Controller
                 ];
             }
         }
-        // --- Takvim Verileri Sonu ---
+
 
 
         // --- Departmana Özel İstatistik Verileri ---
@@ -293,14 +290,7 @@ class HomeController extends Controller
             'chartData'
         ));
     }
-    // ===============================================
-    // INDEX METODU BİTİŞİ
-    // ===============================================
 
-
-    // ===============================================
-    // GÜNCELLENEN WELCOME METODU BAŞLANGICI
-    // ===============================================
     public function welcome()
     {
         $user = Auth::user();
@@ -312,13 +302,13 @@ class HomeController extends Controller
         $chartData = [];
         $chartTitle = "Genel Veri Akışı";
 
-        // DEBUG: Departman bilgisini logla
+
         Log::info('Welcome sayfası yükleniyor', [
             'user_id' => $user->id,
             'department_slug' => $departmentSlug
         ]);
 
-        // --- Departmana Göre Veri Hazırla ---
+
 
         if ($departmentSlug === 'lojistik') {
             $welcomeTitle = "Bugün Yaklaşan Sevkiyatlar";
@@ -366,7 +356,6 @@ class HomeController extends Controller
             foreach ($plans as $plan) {
                 if (is_array($plan->plan_details)) {
                     foreach ($plan->plan_details as $detail) {
-                        // ÖNEMLİ: Tüm değerleri string'e çevir
                         $machine = trim(strval($detail['machine'] ?? 'Bilinmiyor'));
                         $productRaw = $detail['product'] ?? 'Bilinmiyor';
 
@@ -395,11 +384,11 @@ class HomeController extends Controller
             foreach ($flowCounts as $machine => $products) {
                 foreach ($products as $product => $weight) {
                     if ($weight > 0) {
-                        // ÖNEMLİ: Tüm değerlerin string olduğundan emin ol
+
                         $chartData[] = [
-                            strval($machine),  // Kaynak (string)
-                            strval($product),  // Hedef (string)
-                            (int)$weight       // Ağırlık (integer)
+                            strval($machine),
+                            strval($product),
+                            (int)$weight
                         ];
                     }
                 }
@@ -516,14 +505,14 @@ class HomeController extends Controller
             }
         }
 
-        // SON KONTROL: Hiçbir durumda chartData boş kalmasın
+
         if (empty($chartData)) {
             Log::error('Welcome sayfası için hiç Sankey verisi üretilemedi!');
             $chartData[] = ['Sistem', 'Veri Bulunamadı', 1];
             $chartTitle = '⚠️ Grafik Verisi Bulunamadı';
         }
 
-        // DEBUG: Final veriyi logla
+
         Log::info('Welcome view\'e gönderilen veri', [
             'chartData_count' => count($chartData),
             'chartData_sample' => array_slice($chartData, 0, 5),
