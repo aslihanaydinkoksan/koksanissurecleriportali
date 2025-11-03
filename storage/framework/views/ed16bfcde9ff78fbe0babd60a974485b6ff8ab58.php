@@ -208,4 +208,4 @@
 </body>
 
 </html>
-<?php /**PATH C:\Users\aslihan.aydin\Desktop\tedarik-yonetimi\tedarik-yonetimi\resources\views/layouts/app.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\xampp\htdocs\koksanissurecleriportali\resources\views/layouts/app.blade.php ENDPATH**/ ?>
