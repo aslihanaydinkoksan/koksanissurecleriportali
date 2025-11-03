@@ -101,7 +101,7 @@ class HomeController extends Controller
                         'Çıkış Tarihi' => $cikisTarihi ? $cikisTarihi->format('d.m.Y H:i') : '-',
                         'Tahmini Varış' => $varisTarihi ? $varisTarihi->format('d.m.Y H:i') : '-',
                         'Açıklamalar' => $shipment->aciklamalar,
-                        'Dosya Yolu' => $shipment->dosya_yolu ? Storage::url($shipment->dosya_yolu) : null,
+                        'Dosya Yolu' => $shipment->dosya_yolu ? asset('storage/' . $shipment->dosya_yolu) : null,
                         'Onay Durumu' => $shipment->onaylanma_tarihi ? $shipment->onaylanma_tarihi->format('d.m.Y H:i') : null,
                         'Onaylayan' => $shipment->onaylayanKullanici?->name,
                     ]
