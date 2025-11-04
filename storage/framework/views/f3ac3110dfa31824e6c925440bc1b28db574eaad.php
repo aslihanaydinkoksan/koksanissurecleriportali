@@ -1,6 +1,6 @@
-@extends('layouts.app')
 
-@section('title', 'Hoş Geldiniz')
+
+<?php $__env->startSection('title', 'Hoş Geldiniz'); ?>
 
 <style>
     /* ... (Mevcut CSS stiliniz aynı kalır) ... */
@@ -133,28 +133,28 @@
     }
 </style>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-12">
 
-                {{-- Hoş Geldiniz Mesajı --}}
+                
                 <div class="card create-shipment-card mb-4">
-                    {{-- ... (card-body ve list-group kısmı aynı kalır, Adım 10'da zaten güncellenmişti) ... --}}
+                    
                     <div class="card-body p-4">
 
                         <div class="row align-items-center mb-3">
                             <div class="col-md-7">
-                                <h2 class="card-title mb-0">Hoş Geldiniz, {{ Auth::user()->name }}!</h2>
-                                <p class="mb-0 text-muted fs-5">{{ Auth::user()->department?->name ?? 'Genel' }} Departmanı
+                                <h2 class="card-title mb-0">Hoş Geldiniz, <?php echo e(Auth::user()->name); ?>!</h2>
+                                <p class="mb-0 text-muted fs-5"><?php echo e(Auth::user()->department?->name ?? 'Genel'); ?> Departmanı
                                 </p>
                             </div>
                             <div class="col-md-5 text-md-end mt-2 mt-md-0">
-                                <a href="{{ route('statistics.index') }}" class="btn btn-light ms-2">
+                                <a href="<?php echo e(route('statistics.index')); ?>" class="btn btn-light ms-2">
                                     <i class="fa-solid fa-chart-simple me-1" style="color: #A78BFA;"></i> İstatistikler
                                     &raquo;
                                 </a>
-                                <a href="{{ route('home') }}" class="btn btn-light ms-2">
+                                <a href="<?php echo e(route('home')); ?>" class="btn btn-light ms-2">
                                     <i class="fa-solid fa-calendar-alt me-1" style="color: #F093FB"></i> Takvim &raquo;
                                 </a>
                             </div>
@@ -164,10 +164,11 @@
 
                         <h4 class="mt-4">
                             <i class="fa-solid fa-clock me-1" style="color: #A78BFA;"></i>
-                            {{ $welcomeTitle }}
+                            <?php echo e($welcomeTitle); ?>
+
                         </h4>
 
-                        @php
+                        <?php
                             // İkon haritası (Aynı kalır)
                             $iconMap = [
                                 'gemi' => ['icon' => 'fa-ship', 'class' => 'icon-gemi'],
@@ -185,55 +186,55 @@
                                 'gezi' => ['icon' => 'fa-map-signs', 'class' => 'icon-gezi'],
                                 'diger' => ['icon' => 'fa-calendar-star', 'class' => 'icon-etkinlik-genel'],
                             ];
-                        @endphp
+                        ?>
 
                         <div class="list-group mt-3">
-                            @forelse($todayItems as $item)
-                                {{-- Lojistik VEYA Varsayılan (Admin) Gösterimi --}}
-                                @if ($departmentSlug === 'lojistik' || is_null($departmentSlug) || in_array(Auth::user()->role, ['admin', 'yönetici']))
-                                    @php
+                            <?php $__empty_1 = true; $__currentLoopData = $todayItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                                
+                                <?php if($departmentSlug === 'lojistik' || is_null($departmentSlug) || in_array(Auth::user()->role, ['admin', 'yönetici'])): ?>
+                                    <?php
                                         $aracTipi = strtolower($item->arac_tipi ?? '');
                                         $iconInfo = $iconMap[$aracTipi] ?? [
                                             'icon' => 'fa-question-circle',
                                             'class' => 'text-muted',
                                         ];
-                                    @endphp
+                                    ?>
                                     <div class="list-group-item d-flex align-items-center py-3">
                                         <div class="me-3"><i
-                                                class="fa-solid {{ $iconInfo['icon'] }} fa-2x vehicle-icon {{ $iconInfo['class'] }}"></i>
+                                                class="fa-solid <?php echo e($iconInfo['icon']); ?> fa-2x vehicle-icon <?php echo e($iconInfo['class']); ?>"></i>
                                         </div>
                                         <div class="d-flex flex-column flex-grow-1">
-                                            <h5 class="mb-1 fw-bold">Yaklaşan {{ $item->kargo_icerigi }} Sevkiyatı</h5>
-                                            <p class="mb-0 text-muted"><strong>Araç:</strong> {{ ucfirst($aracTipi) }} <span
+                                            <h5 class="mb-1 fw-bold">Yaklaşan <?php echo e($item->kargo_icerigi); ?> Sevkiyatı</h5>
+                                            <p class="mb-0 text-muted"><strong>Araç:</strong> <?php echo e(ucfirst($aracTipi)); ?> <span
                                                     class="mx-2">|</span> <strong>Varış Saati:</strong> <span
-                                                    class="fw-bold text-dark">{{ \Carbon\Carbon::parse($item->tahmini_varis_tarihi)->format('H:i') }}</span>
+                                                    class="fw-bold text-dark"><?php echo e(\Carbon\Carbon::parse($item->tahmini_varis_tarihi)->format('H:i')); ?></span>
                                             </p>
                                         </div>
-                                        <a href="{{ route('home') }}?open_modal={{ $item->id }}"
+                                        <a href="<?php echo e(route('home')); ?>?open_modal=<?php echo e($item->id); ?>"
                                             class="btn btn-outline-secondary btn-sm">Detay <i
                                                 class="fa-solid fa-arrow-right-long ms-1"></i></a>
                                     </div>
 
-                                    {{-- Üretim Gösterimi --}}
-                                @elseif($departmentSlug === 'uretim')
-                                    @php $iconInfo = $iconMap['uretim']; @endphp
+                                    
+                                <?php elseif($departmentSlug === 'uretim'): ?>
+                                    <?php $iconInfo = $iconMap['uretim']; ?>
                                     <div class="list-group-item d-flex align-items-center py-3">
                                         <div class="me-3"><i
-                                                class="fa-solid {{ $iconInfo['icon'] }} fa-2x vehicle-icon {{ $iconInfo['class'] }}"></i>
+                                                class="fa-solid <?php echo e($iconInfo['icon']); ?> fa-2x vehicle-icon <?php echo e($iconInfo['class']); ?>"></i>
                                         </div>
                                         <div class="d-flex flex-column flex-grow-1">
-                                            <h5 class="mb-1 fw-bold">{{ $item->plan_title }}</h5>
+                                            <h5 class="mb-1 fw-bold"><?php echo e($item->plan_title); ?></h5>
                                             <p class="mb-0 text-muted"><strong>Başlangıç:</strong>
-                                                {{ $item->week_start_date->format('d.m.Y') }}</p>
+                                                <?php echo e($item->week_start_date->format('d.m.Y')); ?></p>
                                         </div>
-                                        <a href="{{ route('home') }}?open_modal={{ $item->id }}"
+                                        <a href="<?php echo e(route('home')); ?>?open_modal=<?php echo e($item->id); ?>"
                                             class="btn btn-outline-secondary btn-sm">Detay <i
                                                 class="fa-solid fa-arrow-right-long ms-1"></i></a>
                                     </div>
 
-                                    {{-- Hizmet Gösterimi (Etkinlik veya Atama) --}}
-                                @elseif($departmentSlug === 'hizmet')
-                                    @php
+                                    
+                                <?php elseif($departmentSlug === 'hizmet'): ?>
+                                    <?php
                                         $isEvent = $item instanceof \App\Models\Event;
                                         $itemType = $isEvent ? $item->event_type : 'aracgorevi';
                                         $iconInfo =
@@ -248,43 +249,44 @@
                                         $detayLink = $isEvent
                                             ? route('service.events.edit', $item->id)
                                             : route('service.assignments.edit', $item->id);
-                                    @endphp
+                                    ?>
                                     <div class="list-group-item d-flex align-items-center py-3">
                                         <div class="me-3"><i
-                                                class="fa-solid {{ $iconInfo['icon'] }} fa-2x vehicle-icon {{ $iconInfo['class'] }}"></i>
+                                                class="fa-solid <?php echo e($iconInfo['icon']); ?> fa-2x vehicle-icon <?php echo e($iconInfo['class']); ?>"></i>
                                         </div>
                                         <div class="d-flex flex-column flex-grow-1">
-                                            <h5 class="mb-1 fw-bold">{{ $baslik }}</h5>
+                                            <h5 class="mb-1 fw-bold"><?php echo e($baslik); ?></h5>
                                             <p class="mb-0 text-muted"><strong>Konum:</strong>
-                                                {{ $item->location ?? ($item->destination ?? '-') }} <span
+                                                <?php echo e($item->location ?? ($item->destination ?? '-')); ?> <span
                                                     class="mx-2">|</span> <strong>Saat:</strong> <span
-                                                    class="fw-bold text-dark">{{ $saat }}</span></p>
+                                                    class="fw-bold text-dark"><?php echo e($saat); ?></span></p>
                                         </div>
-                                        <a href="{{ route('home') }}?open_modal={{ $item->id }}">Detay <i
+                                        <a href="<?php echo e(route('home')); ?>?open_modal=<?php echo e($item->id); ?>">Detay <i
                                                 class="fa-solid fa-arrow-right-long ms-1"></i></a>
                                     </div>
-                                @endif
+                                <?php endif; ?>
 
-                            @empty
-                                {{-- Görev yoksa gösterilecek ortak mesaj --}}
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                                
                                 <div class="list-group-item d-flex align-items-center py-3">
                                     <i class="fa-solid fa-info-circle fa-2x me-3 text-muted"></i>
                                     <h5 class="mb-0 text-muted">Bugün için planlanmış bir görev bulunmamaktadır.</h5>
                                 </div>
-                            @endforelse
+                            <?php endif; ?>
                         </div>
 
                     </div>
                 </div>
                 <div class="card create-shipment-card">
-                    {{-- YENİ: Dinamik Grafik Başlığı --}}
+                    
                     <div class="card-header">
-                        📊 {{ $chartTitle ?? 'Genel Veri Akışı' }}
+                        📊 <?php echo e($chartTitle ?? 'Genel Veri Akışı'); ?>
+
                     </div>
                     <div class="card-body">
 
-                        {{-- Artık @if @elseif kontrolü yok --}}
-                        <div id="sankey-chart" data-sankey='@json($chartData)'
+                        
+                        <div id="sankey-chart" data-sankey='<?php echo json_encode($chartData, 15, 512) ?>'
                             style="width: 100%; height: 500px;">
                             <p class="text-center text-muted p-5">Grafik yükleniyor...</p>
                         </div>
@@ -295,9 +297,9 @@
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('page_scripts')
+<?php $__env->startSection('page_scripts'); ?>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function() {
@@ -495,4 +497,6 @@
             }
         });
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp\htdocs\koksanissurecleriportali\resources\views/welcome.blade.php ENDPATH**/ ?>

@@ -163,23 +163,6 @@
                                                 name="varis_noktasi"
                                                 value="{{ old('varis_noktasi', $shipment->varis_noktasi ?? '') }}">
                                         </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Sevkiyat Türü</label>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="radio" name="shipment_type"
-                                                    id="type_import" value="import" checked>
-                                                <label class="form-check-label" for="type_import">
-                                                    İthalat
-                                                </label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="radio" name="shipment_type"
-                                                    id="type_export" value="export">
-                                                <label class="form-check-label" for="type_export">
-                                                    İhracat
-                                                </label>
-                                            </div>
-                                        </div>
                                     </div>
 
                                     <div id="gemiAlanlari" style="display: none;">
@@ -195,8 +178,8 @@
                                         <div class="mb-3">
                                             <label for="gemi_adi" class="form-label">Gemi Adı (*)</label>
                                             <input type="text"
-                                                class="form-control @error('gemi_adi') is-invalid @enderror"
-                                                id="gemi_adi" name="gemi_adi" value="{{ old('gemi_adi') }}">
+                                                class="form-control @error('gemi_adi') is-invalid @enderror" id="gemi_adi"
+                                                name="gemi_adi" value="{{ old('gemi_adi') }}">
                                             @error('gemi_adi')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -205,8 +188,7 @@
                                             <label for="kalkis_limani" class="form-label">Kalkış Limanı (*)</label>
                                             <input type="text"
                                                 class="form-control @error('kalkis_limani') is-invalid @enderror"
-                                                id="kalkis_limani" name="kalkis_limani"
-                                                value="{{ old('kalkis_limani') }}">
+                                                id="kalkis_limani" name="kalkis_limani" value="{{ old('kalkis_limani') }}">
                                             @error('kalkis_limani')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -219,23 +201,6 @@
                                             @error('varis_limani')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Sevkiyat Türü</label>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="radio" name="shipment_type"
-                                                    id="type_import" value="import" checked>
-                                                <label class="form-check-label" for="type_import">
-                                                    İthalat
-                                                </label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="radio" name="shipment_type"
-                                                    id="type_export" value="export">
-                                                <label class="form-check-label" for="type_export">
-                                                    İhracat
-                                                </label>
-                                            </div>
                                         </div>
                                     </div>
 
@@ -302,7 +267,25 @@
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
-
+                                    <div class="mb-3">
+                                        <label class="form-label">Sevkiyat Türü</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="shipment_type"
+                                                id="type_import" value="import"
+                                                {{ old('shipment_type', 'import') == 'import' ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="type_import">
+                                                İthalat
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="shipment_type"
+                                                id="type_export" value="export"
+                                                {{ old('shipment_type') == 'export' ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="type_export">
+                                                İhracat
+                                            </label>
+                                        </div>
+                                    </div>
                                     {{-- Ek Dosya Alanı --}}
                                     <div class="mb-3">
                                         <label for="ek_dosya" class="form-label">Ek Dosya (Opsiyonel)</label>
