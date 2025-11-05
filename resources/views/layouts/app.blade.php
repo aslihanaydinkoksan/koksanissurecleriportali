@@ -8,7 +8,7 @@
 
     <title>@yield('title') | {{ config('app.name') }}</title>
 
-    <link rel="icon" type="image/png" href="{{ asset('koksan.png') }}">
+    <link rel="icon" href="{{ asset('koksan.png') }}" type="image/png">
 
     <link rel="dns-prefetch" href="//fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=Nunito" rel="stylesheet">
