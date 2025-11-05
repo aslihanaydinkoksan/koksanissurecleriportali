@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Köksan Tedarik Yönetimi')
+@section('title', 'Benim Takvimim')
 
 <style>
     /* ... (TÜM CSS STİLLERİNİZ BURADA AYNI KALIYOR) ... */
