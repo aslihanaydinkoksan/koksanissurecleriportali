@@ -299,7 +299,7 @@
 
                         <div id='calendar' data-current-user-id="<?php echo e(Auth::id()); ?>"
                             data-is-authorized="<?php echo e(in_array(Auth::user()->role, ['admin', 'yönetici']) ? 'true' : 'false'); ?>">
-                            ></div>
+                        </div>
 
                     </div>
 
@@ -384,7 +384,7 @@
                         // user_id prop'u eklenmemişse (ve admin değilse) güvenlik için gizle
                         showButtons = false;
                         console.warn(
-                        `'${props.eventType}' etkinliğinde 'user_id' prop'u eksik. Butonlar gizlendi.`);
+                            `'${props.eventType}' etkinliğinde 'user_id' prop'u eksik. Butonlar gizlendi.`);
                     }
                 } else {
                     // Diğer etkinlik türleri (örn: 'shipment') için varsayılan olarak göster
