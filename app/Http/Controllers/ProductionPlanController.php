@@ -3,26 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Models\ProductionPlan;
+use App\Models\Birim;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class ProductionPlanController extends Controller
 {
-    /**
-     * Üretim planlarını listeler. 
-     */
     public function index(Request $request)
     {
-        // YETKİ KONTROLÜ
         $this->authorize('access-department', 'uretim');
 
         $query = ProductionPlan::with('user');
         $filters = $request->all();
-        $user = Auth::user(); // Giriş yapan kullanıcıyı al
+        $user = Auth::user();
         $isImportantFilter = $request->input('is_important', 'all');
 
-        // Bu filtreyi sadece admin veya yönetici ise uygula
         if ($isImportantFilter !== 'all' && $user && in_array($user->role, ['admin', 'yönetici'])) {
 
             if ($isImportantFilter === 'yes') {
@@ -30,7 +26,6 @@ class ProductionPlanController extends Controller
             } elseif ($isImportantFilter === 'no') {
                 $query->where('is_important', false);
             }
-            // 'all' ise hiçbir şey yapma
         }
 
         if ($request->filled('plan_title')) {
@@ -41,7 +36,7 @@ class ProductionPlanController extends Controller
             try {
                 $dateFrom = Carbon::parse($request->input('date_from'))->startOfDay();
                 $query->where('week_start_date', '>=', $dateFrom);
-            } catch (\Exception $e) { /* Geçersiz tarihi yoksay */
+            } catch (\Exception $e) {
             }
         }
 
@@ -49,37 +44,28 @@ class ProductionPlanController extends Controller
             try {
                 $dateTo = Carbon::parse($request->input('date_to'))->endOfDay();
                 $query->where('week_start_date', '<=', $dateTo);
-            } catch (\Exception $e) { /* Geçersiz tarihi yoksay */
+            } catch (\Exception $e) {
             }
         }
-
-        // Planları, en yeniden eskiye doğru getir.
         $plans = $query->orderBy('week_start_date', 'desc')
             ->paginate(15);
-
-        // Filtre değerlerini view'a geri yolla
         $filters = $request->only(['plan_title', 'date_from', 'date_to', 'is_important']);
 
         return view('production.plans.index', compact('plans', 'filters'));
     }
 
-    /**
-     * Yeni bir üretim planı oluşturma formunu gösterir.
-     */
     public function create()
     {
-        // YETKİ KONTROLÜ: Sadece 'uretim' birimi erişebilir
         $this->authorize('access-department', 'uretim');
 
-        return view('production.plans.create');
-    }
+        // YENİ EKLENDİ: Birimleri veritabanından çek
+        $birimler = Birim::orderBy('ad')->get();
 
-    /**
-     * Yeni üretim planını veritabanında saklar.
-     */
+        // View'a birimleri gönder
+        return view('production.plans.create', compact('birimler'));
+    }
     public function store(Request $request)
     {
-        // YETKİ KONTROLÜ: Sadece 'uretim' birimi erişebilir
         $this->authorize('access-department', 'uretim');
 
         $validatedData = $request->validate([
@@ -90,6 +76,8 @@ class ProductionPlanController extends Controller
             'plan_details.*.machine' => 'required_with:plan_details|string|max:255',
             'plan_details.*.product' => 'required_with:plan_details|string|max:255',
             'plan_details.*.quantity' => 'required_with:plan_details|numeric|min:1',
+            // YENİ VALIDASYON KURALI EKLENDİ
+            'plan_details.*.birim_id' => 'required_with:plan_details|integer|exists:birims,id',
         ]);
 
 
@@ -102,13 +90,9 @@ class ProductionPlanController extends Controller
             ->with('success', 'Haftalık üretim planı başarıyla oluşturuldu!');
     }
 
-
-    /**
-     * Belirtilen üretim planını düzenleme formunu gösterir.
-     */
     public function edit(ProductionPlan $productionPlan)
     {
-        // YETKİ KONTROLÜ: Sadece 'uretim' birimi erişebilir
+
         $this->authorize('access-department', 'uretim');
 
         if (Auth::id() !== $productionPlan->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
@@ -116,15 +100,17 @@ class ProductionPlanController extends Controller
                 ->with('error', 'Bu planı sadece oluşturan kişi düzenleyebilir.');
         }
 
-        return view('production.plans.edit', compact('productionPlan'));
+        // YENİ EKLENDİ: Birimleri düzenleme formu için de çek
+        $birimler = Birim::orderBy('ad')->get();
+
+        // View'a birimleri gönder
+        return view('production.plans.edit', compact('productionPlan', 'birimler'));
     }
 
-    /**
-     * Veritabanındaki belirtilen üretim planını günceller.
-     */
+
     public function update(Request $request, ProductionPlan $productionPlan)
     {
-        // YETKİ KONTROLÜ: Sadece 'uretim' birimi erişebilir
+
         $this->authorize('access-department', 'uretim');
 
         if (Auth::id() !== $productionPlan->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
@@ -140,6 +126,8 @@ class ProductionPlanController extends Controller
             'plan_details.*.machine' => 'required_with:plan_details|string|max:255',
             'plan_details.*.product' => 'required_with:plan_details|string|max:255',
             'plan_details.*.quantity' => 'required_with:plan_details|numeric|min:1',
+            // YENİ VALIDASYON KURALI EKLENDİ
+            'plan_details.*.birim_id' => 'required_with:plan_details|integer|exists:birims,id',
         ]);
 
         $productionPlan->update($validatedData);
@@ -149,12 +137,8 @@ class ProductionPlanController extends Controller
             ->with('success', 'Üretim planı başarıyla güncellendi.');
     }
 
-    /**
-     * Belirtilen üretim planını veritabanından siler.
-     */
     public function destroy(ProductionPlan $productionPlan)
     {
-        // YETKİ KONTROLÜ (Adım 1): Sadece 'uretim' birimi erişebilir
         $this->authorize('access-department', 'uretim');
 
         if (Auth::id() !== $productionPlan->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {

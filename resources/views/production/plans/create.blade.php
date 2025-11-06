@@ -66,7 +66,9 @@
         align-items: center;
     }
 
-    .plan-detail-row .form-control {
+    /* GÜNCELLENDİ: .form-select de flex: 1 almalı */
+    .plan-detail-row .form-control,
+    .plan-detail-row .form-select {
         flex: 1;
         /* Alanların eşit büyümesini sağlar */
     }
@@ -140,7 +142,8 @@
 
                                 {{-- Sağ Sütun (Dinamik Plan Detayları) --}}
                                 <div class="col-md-6">
-                                    <label class="form-label">Plan Detayları (Makine, Ürün, Adet)</label>
+                                    {{-- GÜNCELLENDİ: Label metni --}}
+                                    <label class="form-label">Plan Detayları (Makine, Ürün, Miktar, Birim)</label>
 
                                     {{-- Hata durumunda eski verileri doldurmak için --}}
                                     @if ($errors->has('plan_details.*'))
@@ -167,11 +170,25 @@
                                                         placeholder="Ürün Kodu/Adı" value="{{ $details['product'] ?? '' }}"
                                                         required>
 
+                                                    {{-- GÜNCELLENDİ: "Adet" -> "Miktar" --}}
                                                     <input type="number"
                                                         name="plan_details[{{ $index }}][quantity]"
                                                         class="form-control @error('plan_details.' . $index . '.quantity') is-invalid @enderror"
-                                                        placeholder="Adet" value="{{ $details['quantity'] ?? '' }}"
+                                                        placeholder="Miktar" value="{{ $details['quantity'] ?? '' }}"
                                                         required min="1">
+
+                                                    {{-- YENİ EKLENDİ: Birim Dropdown --}}
+                                                    <select name="plan_details[{{ $index }}][birim_id]"
+                                                        class="form-select @error('plan_details.' . $index . '.birim_id') is-invalid @enderror"
+                                                        required>
+                                                        <option value="" disabled>Birim Seçin</option>
+                                                        @foreach ($birimler as $birim)
+                                                            <option value="{{ $birim->id }}"
+                                                                {{ isset($details['birim_id']) && $details['birim_id'] == $birim->id ? 'selected' : '' }}>
+                                                                {{ $birim->ad }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
 
                                                     <button type="button"
                                                         class="btn btn-danger btn-sm remove-plan-row">&times;</button>
@@ -184,6 +201,10 @@
                                                     <div class="invalid-feedback d-block mb-2">{{ $message }}</div>
                                                 @enderror
                                                 @error('plan_details.' . $index . '.quantity')
+                                                    <div class="invalid-feedback d-block mb-2">{{ $message }}</div>
+                                                @enderror
+                                                {{-- YENİ EKLENDİ: Birim hata mesajı --}}
+                                                @error('plan_details.' . $index . '.birim_id')
                                                     <div class="invalid-feedback d-block mb-2">{{ $message }}</div>
                                                 @enderror
                                             @endforeach
@@ -209,8 +230,11 @@
 @endsection
 
 @section('page_scripts')
-    {{-- Sevkiyat formundaki eski JavaScript'in yerine bu eklendi --}}
+    {{-- TAMAMEN GÜNCELLENDİ --}}
     <script>
+        // Controller'dan gelen $birimler değişkenini JavaScript'e JSON olarak aktarıyoruz
+        const allBirimler = @json($birimler);
+
         document.addEventListener('DOMContentLoaded', function() {
 
             // Satır ekleme ve silme işlemleri için benzersiz bir index tutucu.
@@ -220,17 +244,33 @@
             const wrapper = document.getElementById('plan-details-wrapper');
             const addButton = document.getElementById('add-plan-row');
 
+            // Birimler için HTML <option> listesini oluşturan yardımcı fonksiyon
+            function getBirimOptions() {
+                let optionsHtml = '<option value="" selected disabled>Birim Seçin</option>';
+                allBirimler.forEach(birim => {
+                    optionsHtml += `<option value="${birim.id}">${birim.ad}</option>`;
+                });
+                return optionsHtml;
+            }
+
             // "Satır Ekle" butonuna tıklandığında
             addButton.addEventListener('click', function() {
+                // Her defasında taze bir birim <option> listesi al
+                const birimOptions = getBirimOptions();
+
                 // Yeni satırın HTML şablonu
+                // GÜNCELLENDİ: placeholder="Miktar" ve <select> eklendi
                 const newRow = `
             <div class="plan-detail-row">
                 <input type="text" name="plan_details[${rowIndex}][machine]" class="form-control" placeholder="Makine Adı" required>
                 <input type="text" name="plan_details[${rowIndex}][product]" class="form-control" placeholder="Ürün Kodu/Adı" required>
-                <input type="number" name="plan_details[${rowIndex}][quantity]" class="form-control" placeholder="Adet" required min="1">
+                <input type="number" name="plan_details[${rowIndex}][quantity]" class="form-control" placeholder="Miktar" required min="1">
+                <select name="plan_details[${rowIndex}][birim_id]" class="form-select" required>
+                    ${birimOptions}
+                </select>
                 <button type="button" class="btn btn-danger btn-sm remove-plan-row">&times;</button>
             </div>
-        `;
+            `;
 
                 // Yeni satırı kapsayıcıya ekle
                 wrapper.insertAdjacentHTML('beforeend', newRow);
