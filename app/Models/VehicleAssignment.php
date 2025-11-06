@@ -19,12 +19,14 @@ class VehicleAssignment extends Model
         'start_time',
         'end_time',
         'notes',
+        'is_important',
     ];
 
     // Tarih alanlarını Carbon nesnesi yap
     protected $casts = [
         'start_time' => 'datetime',
         'end_time' => 'datetime',
+        'is_important' => 'boolean',
     ];
 
     // Bu atamanın hangi araca ait olduğunu belirtir

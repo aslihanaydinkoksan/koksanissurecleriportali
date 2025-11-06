@@ -57,6 +57,14 @@
                     ✓ Onaylandı (<span id="modalOnayBadgeTarih"></span> - <span id="modalOnayBadgeKullanici"></span>)
                 </span>
 
+                <div id="modalImportantCheckboxContainer" class="form-check form-switch me-auto" style="display: none;">
+                    <input class="form-check-input" type="checkbox" role="switch" id="modalImportantCheckbox"
+                        data-model-id="" data-model-type="">
+                    <label class="form-check-label" for="modalImportantCheckbox">
+                        <strong>👈 Önemli Olarak İşaretle</strong>
+                    </label>
+                </div>
+
                 
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
             </div>

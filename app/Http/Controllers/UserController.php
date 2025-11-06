@@ -36,14 +36,25 @@ class UserController extends Controller
             return redirect()->back()->withErrors(['role' => 'Yönetici rolündeki kullanıcılar Admin atayamaz.'])->withInput();
         }
 
-        $data = $request->only('name', 'email', 'role');
+        // =========================================================
+        // DÜZELTME 1: 'department_id' $data dizisine eklendi.
+        // =========================================================
+        $data = $request->only('name', 'email', 'role', 'department_id');
         $data['password'] = Hash::make($request->password);
 
+        // =========================================================
+        // DÜZELTME 2: Hatalı if/else bloğu kaldırıldı.
+        // =========================================================
+        // Validation (nullable) kuralı, 'admin' veya 'yönetici' için 
+        // "Birim Seçiniz" (boş string) gönderilirse bunu 'null' olarak 
+        // veritabanına zaten doğru şekilde kaydedecektir.
+        /*
         if ($request->role === 'kullanıcı') {
-            $data['department_id'] = $request->department_id;
+             $data['department_id'] = $request->department_id;
         } else {
-            $data['department_id'] = null;
+             $data['department_id'] = null; // HATA BURADAYDI
         }
+        */
 
         User::create($data);
 
@@ -82,13 +93,21 @@ class UserController extends Controller
             return redirect()->back()->withErrors(['role' => 'Yönetici rolündeki kullanıcılar Admin atayamaz.'])->withInput();
         }
 
-        $data = $request->only('name', 'email', 'role');
+        // =========================================================
+        // DÜZELTME 3: 'department_id' $data dizisine eklendi.
+        // =========================================================
+        $data = $request->only('name', 'email', 'role', 'department_id');
 
+        // =========================================================
+        // DÜZELTME 4: Hatalı if/else bloğu kaldırıldı.
+        // =========================================================
+        /*
         if ($request->role === 'kullanıcı') {
             $data['department_id'] = $request->department_id;
         } else {
-            $data['department_id'] = null;
+            $data['department_id'] = null; // HATA BURADAYDI
         }
+        */
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);

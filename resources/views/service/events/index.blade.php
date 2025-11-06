@@ -151,6 +151,47 @@
     .btn-clear-filter {
         padding: 0.5rem 1.25rem;
     }
+
+    /* ... (mevcut genel stil kurallarınız) ... */
+
+    /* YENİ VE GELİŞTİRİLMİŞ: Önemli satırları vurgulamak için */
+    .row-important {
+        /* Daha belirgin bir arka plan rengi, ancak yine de hafif */
+        --bs-table-accent-bg: rgba(255, 235, 238, 0.8);
+        /* Açık pembe tonu, biraz şeffaf */
+        background-color: var(--bs-table-accent-bg) !important;
+        /* Önemli! Striped override */
+
+        /* Metin rengini belirginleştir ama çok koyu yapma */
+        color: #c0392b;
+        /* Koyu kırmızımsı ton */
+        font-weight: 600;
+
+        /* Hafif bir gölge efekti (isteğe bağlı, kaldırabilirsiniz) */
+        box-shadow: inset 0 0 5px rgba(252, 98, 117, 0.1);
+        /* İç gölge */
+
+        transition: all 0.2s ease-in-out;
+        /* Animasyonlu geçişler */
+    }
+
+    /* Önemli satırın üzerine gelindiğinde (hover) arka planı daha belirgin yap */
+    .table-hover>tbody>tr.row-important:hover {
+        --bs-table-accent-bg: rgba(255, 220, 224, 0.95);
+        /* Biraz daha koyu pembe */
+        background-color: var(--bs-table-accent-bg) !important;
+        /* Önemli! Striped override */
+        transform: translateY(-2px);
+        /* Hafif yukarı kayma efekti */
+        box-shadow: inset 0 0 8px rgba(252, 98, 117, 0.2), 0 2px 5px rgba(0, 0, 0, 0.05);
+        /* Daha belirgin gölge */
+    }
+
+    /* Önemli satırlardaki hücrelerin metin rengini korumak için */
+    .row-important td {
+        color: #c0392b;
+        /* Metin rengini koru */
+    }
 </style>
 
 @section('content')
@@ -185,30 +226,60 @@
                             {{-- Form action güncellendi --}}
                             <form method="GET" action="{{ route('service.events.index') }}">
                                 <div class="row">
+                                    @php
+                                        $isAdminOrManager = in_array(Auth::user()->role, ['admin', 'yönetici']);
+                                    @endphp
+
                                     {{-- Etkinlik Başlığı Filtresi --}}
-                                    <div class="col-md-4">
+                                    <div class="{{ $isAdminOrManager ? 'col-md-3' : 'col-md-4' }}">
                                         <label for="title" class="form-label">Etkinlik Başlığı (Ara)</label>
                                         <input type="text" class="form-control form-control-sm" id="title"
                                             name="title" value="{{ $filters['title'] ?? '' }}"
                                             placeholder="Etkinlik başlığı girin...">
                                     </div>
 
-                                    {{-- YENİ: Etkinlik Tipi Filtresi --}}
-                                    <div class="col-md-4">
+                                    {{-- Etkinlik Tipi Filtresi --}}
+                                    <div class="{{ $isAdminOrManager ? 'col-md-3' : 'col-md-4' }}">
                                         <label for="event_type" class="form-label">Etkinlik Tipi</label>
                                         <select class="form-select form-select-sm" id="event_type" name="event_type">
                                             <option value="all"
-                                                {{ ($filters['event_type'] ?? 'all') == 'all' ? 'selected' : '' }}>Tümü
+                                                {{ ($filters['event_type'] ?? 'all') == 'all' ? 'selected' : '' }}>
+                                                Tümü
                                             </option>
                                             @foreach ($eventTypes as $key => $value)
                                                 <option value="{{ $key }}"
                                                     {{ ($filters['event_type'] ?? '') == $key ? 'selected' : '' }}>
-                                                    {{ $value }}</option>
+                                                    {{ $value }}
+                                                </option>
                                             @endforeach
                                         </select>
                                     </div>
 
-                                    {{-- Tarih Aralığı (col-md-2 yapıldı) --}}
+                                    {{-- Önem Durumu Filtresi (Sadece Admin/Yönetici) --}}
+                                    @if ($isAdminOrManager)
+                                        <div class="col-md-2">
+                                            <label for="is_important" class="form-label" style="color: #dc3545;">
+                                                <i class="fas fa-bell"></i> Önem Durumu
+                                            </label>
+                                            <select class="form-select form-select-sm" id="is_important"
+                                                name="is_important">
+                                                <option value="all"
+                                                    {{ ($filters['is_important'] ?? 'all') == 'all' ? 'selected' : '' }}>
+                                                    Tümü
+                                                </option>
+                                                <option value="yes"
+                                                    {{ ($filters['is_important'] ?? '') == 'yes' ? 'selected' : '' }}>
+                                                    Sadece Önemliler
+                                                </option>
+                                                <option value="no"
+                                                    {{ ($filters['is_important'] ?? '') == 'no' ? 'selected' : '' }}>
+                                                    Önemli Olmayanlar
+                                                </option>
+                                            </select>
+                                        </div>
+                                    @endif
+
+                                    {{-- Tarih Aralığı Filtresi --}}
                                     <div class="col-md-2">
                                         <label for="date_from" class="form-label">Başlangıç Tarihi</label>
                                         <input type="date" class="form-control form-control-sm" id="date_from"
@@ -220,7 +291,7 @@
                                             name="date_to" value="{{ $filters['date_to'] ?? '' }}">
                                     </div>
 
-                                    {{-- Butonlar (col-md-12'ye alındı) --}}
+                                    {{-- Butonlar --}}
                                     <div class="col-md-12 d-flex align-items-end justify-content-end gap-2 mt-3">
                                         <a href="{{ route('service.events.index') }}"
                                             class="btn btn-secondary btn-clear-filter btn-sm">
@@ -266,7 +337,7 @@
                                     <tbody>
                                         {{-- Döngü güncellendi: $events as $event --}}
                                         @foreach ($events as $event)
-                                            <tr>
+                                            <tr class="{{ $event->is_important ? 'row-important' : '' }}">
                                                 {{-- Tablo verileri güncellendi --}}
                                                 <td class="ps-3">{{ $event->title }}</td>
                                                 <td>

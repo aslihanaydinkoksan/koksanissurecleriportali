@@ -1,10 +1,8 @@
 
 
-<?php $__env->startSection('title', 'Köksan Tedarik Yönetimi'); ?>
+<?php $__env->startSection('title', 'Benim Takvimim'); ?>
 
 <style>
-    /* ... (TÜM CSS STİLLERİNİZ BURADA AYNI KALIYOR) ... */
-    /* Ana içerik alanına animasyonlu arka plan */
     #app>main.py-4 {
         padding: 2.5rem 0 !important;
         min-height: calc(100vh - 72px);
@@ -27,7 +25,6 @@
         }
     }
 
-    /* Modern Frosted Glass Kart */
     .create-shipment-card {
         border-radius: 1.25rem;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
@@ -78,7 +75,7 @@
         box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
 
-    /* Animasyonlu Gradient Buton */
+
     .btn-animated-gradient {
         background: linear-gradient(-45deg, #667EEA, #F093FB, #4FD1C5, #FBD38D);
         background-size: 400% 400%;
@@ -100,7 +97,6 @@
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
     }
 
-    /* Modern Alert Stilleri */
     .alert {
         border-radius: 1rem;
         border: none;
@@ -133,7 +129,7 @@
         border-left: 4px solid #f56565;
     }
 
-    /* FullCalendar Özelleştirmeleri */
+
     #calendar {
         background: rgba(255, 255, 255, 0.5);
         border-radius: 1rem;
@@ -194,7 +190,7 @@
         background: rgba(102, 126, 234, 0.1) !important;
     }
 
-    /* Modern Tablo Stilleri */
+
     .table {
         border-collapse: separate;
         border-spacing: 0 0.5rem;
@@ -237,7 +233,7 @@
         border-radius: 0 0.5rem 0.5rem 0;
     }
 
-    /* Modern Badge Stilleri */
+
     .badge {
         padding: 0.5rem 1rem;
         border-radius: 2rem;
@@ -262,7 +258,6 @@
         background: linear-gradient(135deg, #48BB78, #38A169) !important;
     }
 
-    /* Modern Buton Stilleri */
     .btn {
         border-radius: 0.75rem;
         font-weight: 600;
@@ -313,7 +308,7 @@
         color: white;
     }
 
-    /* Modal Özelleştirmeleri */
+
     .modal-content {
         border-radius: 1.25rem;
         border: none;
@@ -366,7 +361,7 @@
         border-radius: 0 0 1.25rem 1.25rem;
     }
 
-    /* İstatistik Kartı İyileştirmeleri */
+
     #stats-card-body {
         padding: 1.5rem;
     }
@@ -396,7 +391,7 @@
         transform: translateX(3px);
     }
 
-    /* Responsive Düzenlemeler */
+
     @media (max-width: 768px) {
         .create-shipment-card .card-header {
             font-size: 1rem;
@@ -414,12 +409,12 @@
         }
     }
 
-    /* Smooth Scroll */
+
     html {
         scroll-behavior: smooth;
     }
 
-    /* Loading Spinner Animasyonu */
+
     @keyframes spin {
         0% {
             transform: rotate(0deg);
@@ -433,11 +428,37 @@
     .spinner-border {
         animation: spin 0.75s linear infinite;
     }
+
+    .event-important-pulse {
+        /* "Kutucuk" görünümü için bir kenarlık veya gölge */
+        border: 2px solid #ff4136 !important;
+        /* !important, fc-event'i ezmek için */
+        box-shadow: 0 0 0 rgba(255, 65, 54, 0.4);
+        /* Gölgenin başlangıç durumu */
+
+        /* Animasyon tanımı */
+        animation: pulse-animation 2s infinite;
+    }
+
+    /* Animasyon Keyframes */
+    @keyframes pulse-animation {
+        0% {
+            box-shadow: 0 0 0 0 rgba(255, 65, 54, 0.7);
+        }
+
+        70% {
+            box-shadow: 0 0 0 10px rgba(255, 65, 54, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(255, 65, 54, 0);
+        }
+    }
 </style>
 
 <?php $__env->startSection('content'); ?>
     <div class="container">
-        
+
         <?php if(session('success')): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 <strong>✓</strong> <?php echo e(session('success')); ?>
@@ -454,11 +475,9 @@
         <?php endif; ?>
 
         <div class="row">
-            
             <div class="col-md-8">
                 <div class="card create-shipment-card">
                     <div class="card-header">
-                        
                         📅 <?php echo e($departmentName); ?> Takvimi
                     </div>
                     <div class="card-body">
@@ -473,10 +492,9 @@
                 </div>
             </div>
 
-            
+
             <div class="col-md-4">
                 <?php if(in_array(Auth::user()->role, ['admin', 'yönetici'])): ?>
-                    
                     <div class="card create-shipment-card mb-3">
                         <div class="card-header">⚡ <?php echo e(__('Hızlı Eylemler')); ?></div>
                         <div class="card-body">
@@ -489,10 +507,6 @@
                         </div>
                     </div>
                 <?php endif; ?>
-
-                
-                
-                
                 <?php if(!empty($chartData)): ?>
                     <div class="card create-shipment-card">
                         <div class="card-header">
@@ -500,32 +514,24 @@
 
                         </div>
                         <div class="card-body" id="stats-card-body">
-
-                            
                             <?php if($departmentSlug === 'lojistik'): ?>
                                 <div id="hourly-chart-lojistik"></div>
                                 <hr>
                                 <div id="daily-chart-lojistik"></div>
-                                
                             <?php elseif($departmentSlug === 'uretim'): ?>
                                 <div id="weekly-plans-chart"></div>
                                 <hr>
                                 <p class="text-muted text-center small mt-3">Yakında daha fazla üretim istatistiği
                                     eklenecektir.</p>
-                                
                             <?php elseif($departmentSlug === 'hizmet'): ?>
                                 <div id="daily-events-chart"></div>
                                 <hr>
                                 <div id="daily-assignments-chart"></div>
-                                
                             <?php else: ?>
                                 <p class="text-center">Bu departman için özel istatistikler henüz tanımlanmamıştır.</p>
                             <?php endif; ?>
 
-                            
-                             
                             <?php if(Route::has('statistics.index')): ?>
-                                
                                 <hr>
                                 <div class="text-center">
                                     <a href="<?php echo e(route('statistics.index')); ?>">Daha Fazla İstatistik Görüntüle</a>
@@ -534,16 +540,13 @@
                         </div>
                     </div>
                 <?php endif; ?>
-                
-                
-                
             </div>
         </div>
 
-        
+
         <?php if(in_array(Auth::user()->role, ['admin', 'yönetici'])): ?>
             <div class="row mt-4" id="userListContainer" style="display: none;">
-                <div class="col-md-8"> 
+                <div class="col-md-8">
                     <div class="card create-shipment-card">
                         <div class="card-header">
                             👥 <?php echo e(__('Sistemdeki Mevcut Kullanıcılar')); ?>
@@ -618,7 +621,6 @@
                         </div>
                     </div>
                 </div>
-                
                 <div class="col-md-4"></div>
             </div>
         <?php endif; ?>
@@ -630,16 +632,18 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.13/index.global.min.js'></script>
     <script>
+        function getCsrfToken() {
+            return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        }
         document.addEventListener('DOMContentLoaded', function() {
-            // ... (colorPalette, calendarEl, modal kodları, FullCalendar başlatma aynı kalır) ...
             const colorPalette = ['#A78BFA', '#60D9A0', '#FDB4C8', '#FFB84D', '#9DECF9'];
 
             var calendarEl = document.getElementById('calendar');
             const isAuthorized = calendarEl.dataset.isAuthorized === 'true';
-            const currentUserId = parseInt(calendarEl.dataset.currentUserId, 10); // YENİ EKLENDİ
+            const currentUserId = parseInt(calendarEl.dataset.currentUserId, 10);
             const eventsData = JSON.parse(calendarEl.dataset.events || '[]');
             const appTimezone = calendarEl.dataset.timezone;
-            // === YENİ: Evrensel Modal Elementleri ===
+
             var detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
             const modalTitle = document.getElementById('modalTitle');
             const modalBody = document.getElementById('modalDynamicBody');
@@ -649,6 +653,8 @@
             const modalOnayForm = document.getElementById('modalOnayForm');
             const modalOnayKaldirForm = document.getElementById('modalOnayKaldirForm');
             const modalOnayBadge = document.getElementById('modalOnayBadge');
+            const modalImportantContainer = document.getElementById('modalImportantCheckboxContainer');
+            const modalImportantCheckbox = document.getElementById('modalImportantCheckbox');
 
             // === YARDIMCI FONKSİYON: Tarih/Saat Ayırıcı (Blade Hatası Düzeltilmiş) ===
             /**
@@ -658,12 +664,12 @@
              * @returns {{ date: string, time: string }}
              */
             function splitDateTime(dateTimeString) {
-                const dt = String(dateTimeString || ''); // String'e dönüştür ve null/undefined kontrolü yap
+                const dt = String(dateTimeString || '');
                 const parts = dt.split(' ');
                 const date = parts[0] || '-';
                 let time = parts[1] || '-';
 
-                // Eğer tarih yoksa (sadece '-' ise) veya saat kısmı boşsa ('') saati de gösterme
+
                 if (date === '-' || time === '') {
                     time = '-';
                 }
@@ -674,32 +680,43 @@
                 };
             }
 
-
-            // === YENİ: Evrensel Modal Açma Fonksiyonu ===
             function openUniversalModal(props) {
                 if (!props || !props.eventType) {
                     console.error("Modal için geçersiz veri:", props);
                     return;
                 }
+                if (isAuthorized) {
+                    // Checkbox'ı görünür yap
+                    modalImportantContainer.style.display = 'block';
 
-                // 1. Başlığı ayarla
+                    // Gelen veriye göre 'checked' durumunu ayarla
+                    modalImportantCheckbox.checked = props.is_important || false;
+
+                    // AJAX isteği için gerekli verileri checkbox'a ata
+                    modalImportantCheckbox.dataset.modelType = props.model_type;
+                    modalImportantCheckbox.dataset.modelId = props.id;
+                } else {
+                    // Yetkisi yoksa checkbox'ı gizle
+                    modalImportantContainer.style.display = 'none';
+                }
+
                 modalTitle.textContent = props.title || 'Detaylar';
                 let showButtons = false;
 
                 if (props.eventType === 'production' || props.eventType === 'service_event' || props.eventType ===
                     'vehicle_assignment') {
-                    if (isAuthorized) { // Admin veya Yönetici ise her zaman göster
+                    if (isAuthorized) {
                         showButtons = true;
-                    } else if (props.user_id) { // Etkinlikte 'user_id' (oluşturan) varsa
-                        showButtons = (props.user_id === currentUserId); // Sadece oluşturan kişi ise göster
+                    } else if (props.user_id) {
+                        showButtons = (props.user_id === currentUserId);
                     } else {
-                        // user_id prop'u eklenmemişse (ve admin değilse) güvenlik için gizle
+
                         showButtons = false;
                         console.warn(
                             `'${props.eventType}' etkinliğinde 'user_id' prop'u eksik. Butonlar gizlendi.`);
                     }
                 } else {
-                    // Diğer etkinlik türleri (örn: 'shipment') için varsayılan olarak göster
+
                     showButtons = true;
                 }
 
@@ -721,12 +738,11 @@
                     }
                 }
 
-                // 3. İçeriği oluştur
+
                 let html = '<div class="row">';
 
-                // Sevkiyata özel butonları ve içeriği ayarla
+
                 if (props.eventType === 'shipment') {
-                    // Sevkiyat butonları
                     modalExportButton.href = props.exportUrl || '#';
                     modalExportButton.style.display = 'inline-block';
 
@@ -747,12 +763,12 @@
                         modalOnayBadge.style.display = 'none';
                     }
 
-                    // Sevkiyat İçeriği (Dinamik alan gizleme)
+
                     const isGemi = (props.details['Araç Tipi'] || '').toLowerCase().includes('gemi');
                     const col1 = [],
                         col2 = [];
 
-                    // Kolon 1
+
                     col1.push(`<strong>🚛 Araç Tipi:</strong> ${props.details['Araç Tipi'] || '-'}`);
                     if (!isGemi) {
                         col1.push(`<strong>🔢 Plaka:</strong> ${props.details['Plaka'] || '-'}`);
@@ -763,7 +779,7 @@
                         col1.push(`<strong>🚢 Gemi Adı:</strong> ${props.details['Gemi Adı'] || '-'}`);
                     }
 
-                    // Kolon 2
+
                     if (!isGemi) {
                         col2.push(`<strong>📍 Kalkış Noktası:</strong> ${props.details['Kalkış Noktası'] || '-'}`);
                         col2.push(`<strong>📍 Varış Noktası:</strong> ${props.details['Varış Noktası'] || '-'}`);
@@ -782,14 +798,12 @@
                         `<div class="col-md-6"><p><strong>🏷️ Kargo Tipi:</strong> ${props.details['Kargo Tipi'] || '-'}</p></div>`;
                     html +=
                         `<div class="col-md-6"><p><strong>⚖️ Kargo Miktarı:</strong> ${props.details['Kargo Miktarı'] || '-'}</p></div>`;
-                    html += '</div><hr><div class="row">'; // Yeni satır
-
-                    // --- GÜNCELLENMİŞ TARİH/SAAT BLOKU ('shipment') ---
+                    html += '</div><hr><div class="row">';
 
                     const cikis = splitDateTime(props.details['Çıkış Tarihi']);
                     const varis = splitDateTime(props.details['Tahmini Varış']);
 
-                    // Ayrılmış HTML'i oluştur
+
                     html += '<div class="col-md-6">';
                     html += `    <p><strong>📅 Çıkış Tarihi:</strong> ${cikis.date}</p>`;
                     if (cikis.time !== '-') {
@@ -803,24 +817,22 @@
                         html += `    <p><strong>🕒 Varış Saati:</strong> ${varis.time}</p>`;
                     }
                     html += '</div>';
-                    // --- GÜNCELLENMİŞ BLOK BİTİŞİ ---
 
-                }
-                // Diğer departmanlar için butonları gizle ve basit içerik oluştur
-                else {
+
+                } else {
                     modalExportButton.style.display = 'none';
                     modalOnayForm.style.display = 'none';
                     if (modalOnayKaldirForm) modalOnayKaldirForm.style.display = 'none';
                     modalOnayBadge.style.display = 'none';
 
-                    // Üretim Planı İçeriği
+
                     if (props.eventType === 'production') {
                         html += `<div class="col-md-12">`;
                         html += `<p><strong>Plan Başlığı:</strong> ${props.details['Plan Başlığı'] || '-'}</p>`;
                         html +=
                             `<p><strong>Hafta Başlangıcı:</strong> ${props.details['Hafta Başlangıcı'] || '-'}</p>`;
                         html += `<p><strong>Oluşturan:</strong> ${props.details['Oluşturan'] || '-'}</p>`;
-                        // Plan detayları (JSON array) için tablo oluştur
+
                         if (props.details['Plan Detayları'] && props.details['Plan Detayları'].length > 0) {
                             html +=
                                 '<strong>Plan Detayları:</strong><table class="table table-sm table-bordered mt-2" style="background: rgba(255,255,255,0.5);">';
@@ -832,83 +844,73 @@
                             html += '</tbody></table>';
                         }
                         html += `</div>`;
-                    }
-                    // Hizmet Etkinlik İçeriği
-                    else if (props.eventType === 'service_event') {
+                    } else if (props.eventType === 'service_event') {
 
-                        // --- GÜNCELLENMİŞ TARİH/SAAT BLOKU ('service_event') ---
+
                         html += `<div class="col-md-12">`;
                         html +=
                             `    <p><strong>Etkinlik Tipi:</strong> ${props.details['Etkinlik Tipi'] || '-'}</p>`;
                         html += `    <p><strong>Konum:</strong> ${props.details['Konum'] || '-'}</p>`;
-                        html += `</div>`; // Close the first part
+                        html += `</div>`;
 
-                        // Tarih ve saatleri ayır
+
                         const baslangic = splitDateTime(props.details['Başlangıç']);
                         const bitis = splitDateTime(props.details['Bitiş']);
 
-                        html += '<div class="col-md-6">'; // Start left column
+                        html += '<div class="col-md-6">';
                         html += `    <p><strong>📅 Başlangıç Tarihi:</strong> ${baslangic.date}</p>`;
                         if (baslangic.time !== '-') {
                             html += `    <p><strong>🕒 Başlangıç Saati:</strong> ${baslangic.time}</p>`;
                         }
-                        html += '</div>'; // End left column
+                        html += '</div>';
 
-                        html += '<div class="col-md-6">'; // Start right column
+                        html += '<div class="col-md-6">';
                         html += `    <p><strong>📅 Bitiş Tarihi:</strong> ${bitis.date}</p>`;
                         if (bitis.time !== '-') {
                             html += `    <p><strong>🕒 Bitiş Saati:</strong> ${bitis.time}</p>`;
                         }
-                        html += '</div>'; // End right column
+                        html += '</div>';
 
-                        // Kalan bilgiyi ekle
+
                         html += `<div class="col-md-12 mt-3">`;
                         html += `    <p><strong>Kayıt Yapan:</strong> ${props.details['Kayıt Yapan'] || '-'}</p>`;
                         html += `</div>`;
-                        // --- GÜNCELLENMİŞ BLOK BİTİŞİ ---
 
-                    }
-                    // Hizmet Araç Atama İçeriği
-                    else if (props.eventType === 'vehicle_assignment') {
+                    } else if (props.eventType === 'vehicle_assignment') {
 
-                        // --- GÜNCELLENMİŞ TARİH/SAAT BLOKU ('vehicle_assignment') ---
+
                         html += `<div class="col-md-12">`; // Info block
                         html += `    <p><strong>Araç:</strong> ${props.details['Araç'] || '-'}</p>`;
                         html += `    <p><strong>Görev:</strong> ${props.details['Görev'] || '-'}</p>`;
                         html += `    <p><strong>Yer:</strong> ${props.details['Yer'] || '-'}</p>`;
                         html += `    <p><strong>Talep Eden:</strong> ${props.details['Talep Eden'] || '-'}</p>`;
-                        html += `</div>`; // End info block
-
-                        // Tarih ve saatleri ayır
+                        html += `</div>`;
                         const baslangic = splitDateTime(props.details['Başlangıç']);
                         const bitis = splitDateTime(props.details['Bitiş']);
 
-                        html += '<div class="col-md-6">'; // Start left column
+                        html += '<div class="col-md-6">';
                         html += `    <p><strong>📅 Başlangıç Tarihi:</strong> ${baslangic.date}</p>`;
                         if (baslangic.time !== '-') {
                             html += `    <p><strong>🕒 Başlangıç Saati:</strong> ${baslangic.time}</p>`;
                         }
-                        html += '</div>'; // End left column
+                        html += '</div>';
 
-                        html += '<div class="col-md-6">'; // Start right column
+                        html += '<div class="col-md-6">';
                         html += `    <p><strong>📅 Bitiş Tarihi:</strong> ${bitis.date}</p>`;
                         if (bitis.time !== '-') {
                             html += `    <p><strong>🕒 Bitiş Saati:</strong> ${bitis.time}</p>`;
                         }
-                        html += '</div>'; // End right column
+                        html += '</div>';
 
-                        // Kalan bilgiyi ekle
                         html += `<div class="col-md-12 mt-3">`;
                         html += `    <p><strong>Kayıt Yapan:</strong> ${props.details['Kayıt Yapan'] || '-'}</p>`;
                         html += `</div>`;
-                        // --- GÜNCELLENMİŞ BLOK BİTİŞİ ---
                     }
                 }
 
-                // Kapanış ve Açıklamalar / Notlar (Tümü için ortak olabilir)
-                html += '</div>'; // row
 
-                // Açıklamalar veya Notlar
+                html += '</div>';
+
                 const aciklama = props.details['Açıklamalar'] || props.details['Notlar'] || props.details[
                     'Açıklama'];
                 if (aciklama) {
@@ -918,7 +920,7 @@
                         `<p style="margin-left: 1rem; padding: 1rem; background: rgba(102, 126, 234, 0.05); border-radius: 0.5rem;">${aciklama}</p>`;
                 }
 
-                // Dosya (Sadece Sevkiyat için)
+
                 if (props.eventType === 'shipment' && props.details['Dosya Yolu']) {
                     html += '<hr>';
                     html += '<p><strong>📎 Ek Dosya:</strong></p>';
@@ -926,14 +928,14 @@
                         `<a href="${props.details['Dosya Yolu']}" target="_blank" class="btn btn-outline-primary btn-sm">📄 Dosyayı Görüntüle / İndir</a>`;
                 }
 
-                // HTML'i modal body'ye bas
+
                 modalBody.innerHTML = html;
 
-                // Modalı göster
+
                 detailModal.show();
             }
 
-            // Gerekli değilse bu eski değişkenleri kaldırabiliriz, ancak zararı yok
+
             const editButton = document.getElementById('editShipmentButton');
             const exportButton = document.getElementById('exportExcelButton');
             const onayForm = document.getElementById('onayForm');
@@ -941,9 +943,7 @@
             const deleteForm = document.getElementById('deleteShipmentForm');
 
 
-            // --- eventClick fonksiyonu openModalOrLink'i değil, YENİ openUniversalModal'i çağırmalı ---
-            // 'openModalOrLink' fonksiyonu eski (artık kullanılmayan) 'openModalForEvent' fonksiyonunu çağırıyor.
-            // Bu nedenle, doğrudan 'openUniversalModal'i çağırmak daha temiz ve doğru.
+
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 locale: 'tr',
@@ -972,31 +972,30 @@
                 },
                 eventClick: function(info) {
                     info.jsEvent.preventDefault();
-
-                    // GÜNCELLEME:
-                    // Diğer departmanlar (üretim, hizmet) için URL varsa direkt yönlendir,
-                    // URL yoksa (lojistik) modalı aç.
                     if (info.event.url) {
                         window.location.href = info.event.url;
                     } else {
-                        // Lojistik (veya URL'i olmayan diğer etkinlikler) için evrensel modalı aç
                         openUniversalModal(info.event.extendedProps);
+                    }
+                },
+                eventDidMount: function(info) {
+                    if (info.event.extendedProps.is_important) {
+                        info.el.classList.add('event-important-pulse');
                     }
                 }
             });
             calendar.render();
-            // --- GÜNCELLENEN KISIM BİTİŞİ ---
 
             if (modalOnayForm) {
                 modalOnayForm.addEventListener('submit', function(e) {
-                    // ... (Mevcut confirm ve spinner kodunuz) ...
+
                     if (!confirm('Sevkiyatın tesise ulaştığını onaylıyor musunuz?')) e.preventDefault();
                     else this.querySelector('button[type=submit]').disabled = true;
                 });
             }
             if (modalOnayKaldirForm) {
                 modalOnayKaldirForm.addEventListener('submit', function(e) {
-                    // ... (Mevcut confirm ve spinner kodunuz) ...
+
                     if (!confirm('Bu sevkiyatın onayını geri almak istediğinizden emin misiniz?')) e
                         .preventDefault();
                     else this.querySelector('button[type=submit]').disabled = true;
@@ -1004,32 +1003,27 @@
             }
             if (modalDeleteForm) {
                 modalDeleteForm.addEventListener('submit', function(e) {
-                    // ... (Mevcut spinner kodunuz) ...
+
                     this.querySelector('button[type=submit]').disabled = true;
                 });
             }
 
-            // --- URL'den Modal Açma Kodu ---
-            // Bu kodun, yeni evrensel modalı ve `openUniversalModal` fonksiyonunu kullanması için güncellenmesi gerekir.
+
             const urlParams = new URLSearchParams(window.location.search);
             const modalIdToOpenStr = urlParams.get('open_modal');
             if (modalIdToOpenStr) {
                 const allEvents = calendar.getEvents();
                 const modalIdToOpenNum = parseInt(modalIdToOpenStr, 10);
-
-                // Departman fark etmeksizin, ID'si eşleşen ilk etkinliği bul
                 const eventToOpen = allEvents.find(
                     event => event.extendedProps.id === modalIdToOpenNum
                 );
 
                 if (eventToOpen) {
-                    // Bulunan etkinliğin evrensel modal fonksiyonunu çağır
                     openUniversalModal(eventToOpen.extendedProps);
                 } else {
                     console.warn('Modal açılmak istendi ancak ' + modalIdToOpenNum +
                         ' ID\'li etkinlik takvimde bulunamadı.');
                 }
-                // URL'yi temizle
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
 
@@ -1048,12 +1042,54 @@
                     });
                 }
             }
+            if (modalImportantCheckbox) {
+                modalImportantCheckbox.addEventListener('change', function() {
+                    const modelId = this.dataset.modelId;
+                    const modelType = this.dataset.modelType;
+                    const isChecked = this.checked;
+
+                    this.disabled = true;
+
+                    fetch('<?php echo e(route('calendar.toggleImportant')); ?>', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': getCsrfToken(),
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                model_id: modelId,
+                                model_type: modelType,
+                                is_important: isChecked
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (!data.success) throw new Error(data.message || 'Güncelleme başarısız.');
+
+                            console.log('Güncelleme başarılı:', data.message);
+
+                            // KRİTİK FARK: Bu takvim veriyi AJAX ile çekmiyor,
+                            // <?php echo json_encode($events, 15, 512) ?> ile sayfaya gömüyor.
+                            // 'refetchEvents()' burada çalışmaz.
+                            // En basit ve güvenilir yol, değişikliğin
+                            // görünmesi için sayfayı yeniden yüklemektir.
+                            location.reload();
+                        })
+                        .catch(error => {
+                            console.error('Hata:', error);
+                            alert('Bir hata oluştu, değişiklik geri alınıyor.');
+                            this.checked = !isChecked;
+                            this.disabled = false;
+                        });
+                });
+            }
 
             const statsCard = document.getElementById('stats-card-body');
             const chartData = <?php echo json_encode($chartData ?? [], 15, 512) ?>;
-            const departmentSlug = '<?php echo e($departmentSlug); ?>'; // Hangi departmanda olduğumuzu bilelim
+            const departmentSlug = '<?php echo e($departmentSlug); ?>';
 
-            // Genel ApexCharts seçenekleri (isteğe bağlı)
+
             const commonChartOptions = {
                 chart: {
                     type: 'bar',

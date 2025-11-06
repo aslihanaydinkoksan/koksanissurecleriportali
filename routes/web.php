@@ -28,6 +28,7 @@ Auth::routes(['register' => false]);
 Route::get('/home', [HomeController::class, 'index'])->name('home');
 Route::get('/welcome', [HomeController::class, 'welcome'])->name('welcome');
 Route::get('/statistics', [HomeController::class, 'showStatistics'])->name('statistics.index');
+Route::get('/important-items', [HomeController::class, 'showAllImportant'])->name('important.all');
 
 // --- KULLANICI YÖNETİMİ ROTALARI ---
 Route::middleware(['auth', 'role:admin,yönetici'])->prefix('users')->group(function () {
@@ -104,4 +105,5 @@ Route::middleware(['auth'])->prefix('service')->name('service.')->group(function
 Route::middleware('auth')->group(function () {
     Route::get('/general-calendar', [GeneralCalendarController::class, 'showCalendar'])->name('general.calendar');
     Route::get('/calendar-events-data', [GeneralCalendarController::class, 'getEvents'])->name('web.calendar.events');
+    Route::post('/calendar/toggle-important', [GeneralCalendarController::class, 'toggleImportant'])->name('calendar.toggleImportant');
 });

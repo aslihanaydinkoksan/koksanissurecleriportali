@@ -16,11 +16,13 @@ class ServiceSchedule extends Model
         'cutoff_minutes',
         'default_vehicle_id',
         'is_active',
+        'is_important',
     ];
 
     // Tarih/saat alanlarını otomatik Carbon'a çevirme
     protected $casts = [
         // 'departure_time' => 'datetime:H:i', // Sadece time olduğu için Carbon'a gerek yok
+        'is_important' => 'boolean',
     ];
 
     /**

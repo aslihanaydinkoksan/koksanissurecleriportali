@@ -46,6 +46,19 @@ class EventController extends Controller
         $this->authorize('access-department', 'hizmet');
 
         $query = Event::with('user');
+        $user = Auth::user(); // Giriş yapan kullanıcıyı al
+        $isImportantFilter = $request->input('is_important', 'all');
+
+        // Bu filtreyi sadece admin veya yönetici ise uygula
+        if ($isImportantFilter !== 'all' && $user && in_array($user->role, ['admin', 'yönetici'])) {
+
+            if ($isImportantFilter === 'yes') {
+                $query->where('is_important', true);
+            } elseif ($isImportantFilter === 'no') {
+                $query->where('is_important', false);
+            }
+            // 'all' ise hiçbir şey yapma
+        }
 
         // --- FİLTRELEME MANTIĞI ---
         if ($request->filled('title')) {
@@ -87,7 +100,7 @@ class EventController extends Controller
         $events = $query->orderBy('start_datetime', 'desc')
             ->paginate(15);
 
-        $filters = $request->only(['title', 'event_type', 'date_from', 'date_to']);
+        $filters = $request->only(['title', 'event_type', 'date_from', 'date_to', 'is_important']);
 
         // Sabit listemizi view'a gönderiyoruz
         $eventTypes = $this->eventTypes;

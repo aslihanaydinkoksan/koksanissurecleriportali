@@ -18,6 +18,20 @@ class ProductionPlanController extends Controller
         $this->authorize('access-department', 'uretim');
 
         $query = ProductionPlan::with('user');
+        $filters = $request->all();
+        $user = Auth::user(); // Giriş yapan kullanıcıyı al
+        $isImportantFilter = $request->input('is_important', 'all');
+
+        // Bu filtreyi sadece admin veya yönetici ise uygula
+        if ($isImportantFilter !== 'all' && $user && in_array($user->role, ['admin', 'yönetici'])) {
+
+            if ($isImportantFilter === 'yes') {
+                $query->where('is_important', true);
+            } elseif ($isImportantFilter === 'no') {
+                $query->where('is_important', false);
+            }
+            // 'all' ise hiçbir şey yapma
+        }
 
         if ($request->filled('plan_title')) {
             $query->where('plan_title', 'LIKE', '%' . $request->input('plan_title') . '%');
@@ -44,7 +58,7 @@ class ProductionPlanController extends Controller
             ->paginate(15);
 
         // Filtre değerlerini view'a geri yolla
-        $filters = $request->only(['plan_title', 'date_from', 'date_to']);
+        $filters = $request->only(['plan_title', 'date_from', 'date_to', 'is_important']);
 
         return view('production.plans.index', compact('plans', 'filters'));
     }

@@ -18,6 +18,7 @@ class ProductionPlan extends Model
         'plan_title',
         'week_start_date',
         'plan_details',
+        'is_important',
     ];
 
     /**
@@ -26,6 +27,7 @@ class ProductionPlan extends Model
     protected $casts = [
         'week_start_date' => 'date',
         'plan_details' => 'array',
+        'is_important' => 'boolean',
     ];
 
     /**

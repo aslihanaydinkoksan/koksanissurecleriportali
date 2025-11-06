@@ -286,6 +286,20 @@ class ShipmentController extends Controller
         $this->authorize('access-department', 'lojistik');
         // Temel sorguyu başlat
         $query = Shipment::query();
+        $user = Auth::user();
+        $isImportantFilter = $request->input('is_important', 'all');
+
+        // Bu filtreyi sadece admin veya yönetici ise uygula
+        if ($isImportantFilter !== 'all' && $user && in_array($user->role, ['admin', 'yönetici'])) {
+
+
+            if ($isImportantFilter === 'yes') {
+                $query->where('is_important', true);
+            } elseif ($isImportantFilter === 'no') {
+                $query->where('is_important', false);
+            }
+            // 'all' ise hiçbir şey yapma, tümünü getir.
+        }
 
         // 1. Sevkiyat Türüne Göre Filtrele
         if ($request->filled('shipment_type') && $request->input('shipment_type') !== 'all') {
@@ -330,8 +344,7 @@ class ShipmentController extends Controller
         $cargoContents = Shipment::distinct()->pluck('kargo_icerigi')->filter()->sort()->values();
 
         // İsteği de view'a gönderelim ki form tekrar doldurulabilsin
-        $filters = $request->only(['shipment_type', 'vehicle_type', 'cargo_content', 'date_from', 'date_to']);
-
+        $filters = $request->only(['shipment_type', 'vehicle_type', 'cargo_content', 'date_from', 'date_to', 'is_important']);
         return view('shipments.list', compact('shipments', 'vehicleTypes', 'cargoContents', 'filters'));
     }
 }

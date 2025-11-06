@@ -1,6 +1,6 @@
-@extends('layouts.app')
 
-{{-- Stil bölümü güncellendi --}}
+
+
 <style>
     /* Ana içerik alanına (main) animasyonlu arka planı uygula */
     #app>main.py-4 {
@@ -213,94 +213,94 @@
     }
 </style>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container-fluid">
         <div class="row justify-content-center">
             <div class="col-md-12">
 
-                {{-- Başarı/Hata Mesajları --}}
-                @if (session('success'))
+                
+                <?php if(session('success')): ?>
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        {{ session('success') }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <?php echo e(session('success')); ?> <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
-                @endif
-                @if (session('error'))
+                <?php endif; ?>
+                <?php if(session('error')): ?>
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        {{ session('error') }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <?php echo e(session('error')); ?> <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
-                @endif
+                <?php endif; ?>
 
-                {{-- === GÜNCELLENMİŞ FİLTRELEME BÖLÜMÜ === --}}
+                
                 <div class="mb-4">
                     <div class="d-grid">
-                        {{-- Buton stili güncellendi --}}
+                        
                         <button class="btn btn-filter-toggle" type="button" data-bs-toggle="collapse"
                             data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
                             <i class="fas fa-filter me-2"></i> Filtre Seçenekleri
-                            {{-- Açık/Kapalı ikonu --}}
+                            
                             <i class="fas fa-chevron-down ms-2 small"></i>
                         </button>
                     </div>
 
                     <div class="collapse mt-3" id="filterCollapse">
-                        <div class="card filter-card"> {{-- card-body kaldırıldı, padding karta verildi --}}
-                            <form method="GET" action="{{ route('products.list') }}">
-                                {{-- Layout güncellendi: Daha fazla dikey boşluk --}}
+                        <div class="card filter-card"> 
+                            <form method="GET" action="<?php echo e(route('products.list')); ?>">
+                                
                                 <div class="row">
-                                    {{-- Sevkiyat Türü Filtresi --}}
+                                    
                                     <div class="col-md-3">
                                         <label for="shipment_type" class="form-label">Sevkiyat Türü</label>
                                         <select class="form-select form-select-sm" id="shipment_type" name="shipment_type">
-                                            {{-- sm boyut --}}
+                                            
                                             <option value="all"
-                                                {{ ($filters['shipment_type'] ?? 'all') == 'all' ? 'selected' : '' }}>Tümü
+                                                <?php echo e(($filters['shipment_type'] ?? 'all') == 'all' ? 'selected' : ''); ?>>Tümü
                                             </option>
                                             <option value="import"
-                                                {{ ($filters['shipment_type'] ?? '') == 'import' ? 'selected' : '' }}>
+                                                <?php echo e(($filters['shipment_type'] ?? '') == 'import' ? 'selected' : ''); ?>>
                                                 İthalat</option>
                                             <option value="export"
-                                                {{ ($filters['shipment_type'] ?? '') == 'export' ? 'selected' : '' }}>
+                                                <?php echo e(($filters['shipment_type'] ?? '') == 'export' ? 'selected' : ''); ?>>
                                                 İhracat</option>
                                         </select>
                                     </div>
 
-                                    {{-- Araç Tipi Filtresi --}}
+                                    
                                     <div class="col-md-3">
                                         <label for="vehicle_type" class="form-label">Araç Tipi</label>
                                         <select class="form-select form-select-sm" id="vehicle_type" name="vehicle_type">
                                             <option value="all"
-                                                {{ ($filters['vehicle_type'] ?? 'all') == 'all' ? 'selected' : '' }}>Tümü
+                                                <?php echo e(($filters['vehicle_type'] ?? 'all') == 'all' ? 'selected' : ''); ?>>Tümü
                                             </option>
-                                            @foreach ($vehicleTypes as $type)
-                                                <option value="{{ $type }}"
-                                                    {{ ($filters['vehicle_type'] ?? '') == $type ? 'selected' : '' }}>
-                                                    {{ ucfirst($type) }}</option>
-                                            @endforeach
+                                            <?php $__currentLoopData = $vehicleTypes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $type): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <option value="<?php echo e($type); ?>"
+                                                    <?php echo e(($filters['vehicle_type'] ?? '') == $type ? 'selected' : ''); ?>>
+                                                    <?php echo e(ucfirst($type)); ?></option>
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </select>
                                     </div>
 
-                                    {{-- Kargo İçeriği Filtresi (Text Input) --}}
+                                    
                                     <div class="col-md-6">
                                         <label for="cargo_content" class="form-label">Kargo İçeriği (Ara)</label>
                                         <input type="text" class="form-control form-control-sm" id="cargo_content"
-                                            name="cargo_content" value="{{ $filters['cargo_content'] ?? '' }}"
+                                            name="cargo_content" value="<?php echo e($filters['cargo_content'] ?? ''); ?>"
                                             placeholder="İçerik adı girin...">
                                     </div>
 
-                                    {{-- Tarih Aralığı Filtresi --}}
+                                    
                                     <div class="col-md-3">
                                         <label for="date_from" class="form-label">Başlangıç Tarihi</label>
                                         <input type="date" class="form-control form-control-sm" id="date_from"
-                                            name="date_from" value="{{ $filters['date_from'] ?? '' }}">
+                                            name="date_from" value="<?php echo e($filters['date_from'] ?? ''); ?>">
                                     </div>
                                     <div class="col-md-3">
                                         <label for="date_to" class="form-label">Bitiş Tarihi</label>
                                         <input type="date" class="form-control form-control-sm" id="date_to"
-                                            name="date_to" value="{{ $filters['date_to'] ?? '' }}">
+                                            name="date_to" value="<?php echo e($filters['date_to'] ?? ''); ?>">
                                     </div>
 
-                                    {{-- Önem Durumu Filtresi (Sadece Admin/Yönetici) --}}
-                                    @if (in_array(Auth::user()->role, ['admin', 'yönetici']))
+                                    
+                                    <?php if(in_array(Auth::user()->role, ['admin', 'yönetici'])): ?>
                                         <div class="col-md-3">
                                             <label for="is_important" class="form-label" style="color: #dc3545;">
                                                 <i class="fas fa-bell"></i> Önem Durumu
@@ -308,29 +308,29 @@
                                             <select class="form-select form-select-sm" id="is_important"
                                                 name="is_important">
                                                 <option value="all"
-                                                    {{ ($filters['is_important'] ?? 'all') == 'all' ? 'selected' : '' }}>
+                                                    <?php echo e(($filters['is_important'] ?? 'all') == 'all' ? 'selected' : ''); ?>>
                                                     Tümü
                                                 </option>
                                                 <option value="yes"
-                                                    {{ ($filters['is_important'] ?? '') == 'yes' ? 'selected' : '' }}>
+                                                    <?php echo e(($filters['is_important'] ?? '') == 'yes' ? 'selected' : ''); ?>>
                                                     Sadece Önemliler
                                                 </option>
                                                 <option value="no"
-                                                    {{ ($filters['is_important'] ?? '') == 'no' ? 'selected' : '' }}>
+                                                    <?php echo e(($filters['is_important'] ?? '') == 'no' ? 'selected' : ''); ?>>
                                                     Önemli Olmayanlar
                                                 </option>
                                             </select>
                                         </div>
-                                    @endif
+                                    <?php endif; ?>
 
-                                    {{-- Butonlar --}}
-                                    @php
+                                    
+                                    <?php
                                         $buttonCol = in_array(Auth::user()->role, ['admin', 'yönetici'])
                                             ? 'col-md-3'
                                             : 'col-md-6';
-                                    @endphp
-                                    <div class="{{ $buttonCol }} d-flex align-items-end justify-content-end gap-2">
-                                        <a href="{{ route('products.list') }}"
+                                    ?>
+                                    <div class="<?php echo e($buttonCol); ?> d-flex align-items-end justify-content-end gap-2">
+                                        <a href="<?php echo e(route('products.list')); ?>"
                                             class="btn btn-secondary btn-clear-filter btn-sm">
                                             <i class="fas fa-times me-1"></i> Temizle
                                         </a>
@@ -343,95 +343,99 @@
                         </div>
                     </div>
                 </div>
-                {{-- === FİLTRELEME BÖLÜMÜ SONU === --}}
+                
 
 
-                {{-- SEVKİYAT LİSTESİ KARTI --}}
+                
                 <div class="card list-card">
                     <div class="card-header">Sevkiyat Listesi</div>
 
-                    <div class="card-body p-0"> {{-- Tablonun karta tam yapışması için padding kaldırıldı --}}
-                        @if ($shipments->isEmpty())
-                            <div class="alert alert-warning m-3" role="alert"> {{-- Kart içine alındı --}}
+                    <div class="card-body p-0"> 
+                        <?php if($shipments->isEmpty()): ?>
+                            <div class="alert alert-warning m-3" role="alert"> 
                                 <i class="fas fa-exclamation-triangle me-2"></i> Seçilen filtrelere uygun sevkiyat kaydı
                                 bulunamadı.
                             </div>
-                        @else
+                        <?php else: ?>
                             <div class="table-responsive">
-                                <table class="table table-striped table-hover mb-0"> {{-- mb-0 eklendi --}}
+                                <table class="table table-striped table-hover mb-0"> 
                                     <thead>
                                         <tr>
-                                            <th scope="col" class="ps-3">Sevkiyat Türü</th> {{-- Sola padding eklendi --}}
+                                            <th scope="col" class="ps-3">Sevkiyat Türü</th> 
                                             <th scope="col">Kargo İçeriği</th>
                                             <th scope="col">Araç Tipi</th>
                                             <th scope="col">Kalkış</th>
                                             <th scope="col">Varış</th>
                                             <th scope="col">Çıkış Tarihi</th>
                                             <th scope="col">Tahmini Varış</th>
-                                            <th scope="col" class="text-end pe-3">İşlemler</th> {{-- Sağa padding ve hizalama --}}
+                                            <th scope="col" class="text-end pe-3">İşlemler</th> 
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($shipments as $shipment)
-                                            <tr class="{{ $shipment->is_important ? 'row-important' : '' }}">
+                                        <?php $__currentLoopData = $shipments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $shipment): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <tr class="<?php echo e($shipment->is_important ? 'row-important' : ''); ?>">
                                                 <td class="ps-3">
-                                                    @if ($shipment->shipment_type == 'import')
+                                                    <?php if($shipment->shipment_type == 'import'): ?>
                                                         <span class="badge bg-primary">İthalat</span>
-                                                    @elseif($shipment->shipment_type == 'export')
+                                                    <?php elseif($shipment->shipment_type == 'export'): ?>
                                                         <span class="badge bg-success">İhracat</span>
-                                                    @else
+                                                    <?php else: ?>
                                                         <span class="badge bg-secondary">-</span>
-                                                    @endif
+                                                    <?php endif; ?>
                                                 </td>
-                                                <td>{{ $shipment->kargo_icerigi }}</td>
-                                                <td>{{ ucfirst($shipment->arac_tipi) }}</td>
-                                                <td>{{ $shipment->arac_tipi == 'gemi' ? $shipment->kalkis_limani : $shipment->kalkis_noktasi }}
+                                                <td><?php echo e($shipment->kargo_icerigi); ?></td>
+                                                <td><?php echo e(ucfirst($shipment->arac_tipi)); ?></td>
+                                                <td><?php echo e($shipment->arac_tipi == 'gemi' ? $shipment->kalkis_limani : $shipment->kalkis_noktasi); ?>
+
                                                 </td>
-                                                <td>{{ $shipment->arac_tipi == 'gemi' ? $shipment->varis_limani : $shipment->varis_noktasi }}
+                                                <td><?php echo e($shipment->arac_tipi == 'gemi' ? $shipment->varis_limani : $shipment->varis_noktasi); ?>
+
                                                 </td>
-                                                <td>{{ $shipment->cikis_tarihi ? \Carbon\Carbon::parse($shipment->cikis_tarihi)->format('d.m.Y H:i') : '-' }}
+                                                <td><?php echo e($shipment->cikis_tarihi ? \Carbon\Carbon::parse($shipment->cikis_tarihi)->format('d.m.Y H:i') : '-'); ?>
+
                                                 </td>
-                                                <td>{{ $shipment->tahmini_varis_tarihi ? \Carbon\Carbon::parse($shipment->tahmini_varis_tarihi)->format('d.m.Y H:i') : '-' }}
+                                                <td><?php echo e($shipment->tahmini_varis_tarihi ? \Carbon\Carbon::parse($shipment->tahmini_varis_tarihi)->format('d.m.Y H:i') : '-'); ?>
+
                                                 </td>
-                                                <td class="text-end pe-3"> {{-- Sağa hizalama ve padding --}}
-                                                    @if (!in_array(Auth::user()->role, ['izleyici']))
-                                                        <a href="{{ route('shipments.edit', $shipment) }}"
+                                                <td class="text-end pe-3"> 
+                                                    <?php if(!in_array(Auth::user()->role, ['izleyici'])): ?>
+                                                        <a href="<?php echo e(route('shipments.edit', $shipment)); ?>"
                                                             class="btn btn-sm btn-light" title="Düzenle"><i
                                                                 class="fas fa-edit"></i></a>
-                                                        {{-- DOĞRU KOD --}}
-                                                        <form action="{{ route('shipments.destroy', $shipment) }}"
+                                                        
+                                                        <form action="<?php echo e(route('shipments.destroy', $shipment)); ?>"
                                                             method="POST" class="d-inline"
                                                             onsubmit="return confirm('Bu sevkiyatı silmek istediğinizden emin misiniz?');">
-                                                            @csrf
-                                                            @method('DELETE')
+                                                            <?php echo csrf_field(); ?>
+                                                            <?php echo method_field('DELETE'); ?>
                                                             <button type="submit" class="btn btn-sm btn-light"
                                                                 title="Sil">
                                                                 <i class="fas fa-trash"
                                                                     style="color: rgb(235, 76, 108)"></i>
                                                             </button>
                                                         </form>
-                                                    @endif
-                                                    @if (!in_array(Auth::user()->role, ['izleyici']))
-                                                        {{-- Detay butonu belki burası için gereksiz olabilir, kaldırılabilir --}}
-                                                        {{-- <a href="{{ route('home', ['open_modal' => $shipment->id]) }}" class="btn btn-sm btn-info" title="Detaylar"><i class="fas fa-eye"></i></a> --}}
-                                                    @endif
+                                                    <?php endif; ?>
+                                                    <?php if(!in_array(Auth::user()->role, ['izleyici'])): ?>
+                                                        
+                                                        
+                                                    <?php endif; ?>
                                                 </td>
                                             </tr>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </tbody>
                                 </table>
 
                             </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- YENİ: Collapse ikonu için basit bir JS --}}
-@endsection
-@section('page_scripts')
+    
+<?php $__env->stopSection(); ?>
+<?php $__env->startSection('page_scripts'); ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var filterCollapse = document.getElementById('filterCollapse');
@@ -455,4 +459,6 @@
             }
         });
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp\htdocs\koksanissurecleriportali\resources\views/shipments/list.blade.php ENDPATH**/ ?>

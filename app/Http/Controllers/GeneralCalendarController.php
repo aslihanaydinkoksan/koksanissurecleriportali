@@ -14,36 +14,25 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Log;
 
 class GeneralCalendarController extends Controller
 {
-    /**
-     * FullCalendar için olay verilerini JSON formatında döndürür.
-     */
     public function getEvents(Request $request)
     {
-        // === GÜNCELLEME: Kullanıcı ve Rol Kontrolü ===
         $user = Auth::user();
 
-        // Kullanıcı giriş yapmamışsa (ola ki)
         if (!$user) {
             return response()->json([]);
         }
 
-        // Admin/Yönetici mi? Bu kontrolü en başta bir kez yapalım.
+
         $isAdminOrManager = in_array($user->role, ['admin', 'yönetici']);
-        // === GÜNCELLEME BİTİŞİ ===
-
-
         $start = Carbon::parse($request->input('start'))->startOfDay();
         $end = Carbon::parse($request->input('end'))->endOfDay();
 
         $events = [];
 
-        // 1. Sevkiyat Varışları (Lojistik)
-        // === GÜNCELLEME: 'user' ilişkisini de ekleyelim (oluşturanı bilmek için) ===
-        // Not: Bu, Shipment modelinizde 'user' (belongsTo) ilişkisinin tanımlı olduğunu varsayar.
         $shipments = Shipment::with(['onaylayanKullanici', 'user'])
             ->whereNotNull('tahmini_varis_tarihi')
             ->whereBetween('tahmini_varis_tarihi', [$start, $end])
@@ -61,26 +50,25 @@ class GeneralCalendarController extends Controller
             $normalizedKargo = $this->normalizeCargoContent($shipment->kargo_icerigi);
             $normalizedAracTipi = $this->normalizeVehicleType($shipment->arac_tipi);
 
-            // === GÜNCELLEME: "Sahip" Yetki Kontrolü (Sevkiyat) ===
-            // Admin/Yönetici VEYA bu kaydı oluşturan kullanıcı mı?
+
             $canManageThis = $isAdminOrManager || $user->id === $shipment->user_id;
 
             $extendedProps = [
                 'eventType' => 'shipment',
+                'model_type' => 'shipment',
+                'is_important' => $shipment->is_important,
                 'title' => '🚚 Sevkiyat Detayı: ' . $normalizedKargo,
                 'id' => $shipment->id,
 
-                // === GÜNCELLEME: Yetkiyi Uygula (Sevkiyat) ===
                 'editUrl' => $canManageThis ? route('shipments.edit', $shipment->id) : null,
                 'deleteUrl' => $canManageThis ? route('shipments.destroy', $shipment->id) : null,
                 'onayUrl' => $canManageThis ? route('shipments.onayla', $shipment->id) : null,
                 'onayKaldirUrl' => $canManageThis ? route('shipments.onayiGeriAl', $shipment->id) : null,
-                // === GÜNCELLEME BİTİŞİ ===
+
 
                 'exportUrl' => route('shipments.export', $shipment->id), // Excel'i herkes alabilir
 
                 'details' => [
-                    // ... (tüm 'details' içeriği aynı kalır) ...
                     'Araç Tipi' => $normalizedAracTipi,
                     'Plaka' => $shipment->plaka,
                     'Dorse Plakası' => $shipment->dorse_plakasi,
@@ -113,14 +101,14 @@ class GeneralCalendarController extends Controller
             ];
         }
 
-        // 2. Üretim Planı Başlangıçları (Üretim)
-        $plans = ProductionPlan::with('user') // 'user' zaten yükleniyor
+
+        $plans = ProductionPlan::with('user')
             ->whereBetween('week_start_date', [$start, $end])
             ->get();
 
         foreach ($plans as $plan) {
 
-            // === GÜNCELLEME: "Sahip" Yetki Kontrolü (Üretim) ===
+
             $canManageThis = $isAdminOrManager || $user->id === $plan->user_id;
 
             $events[] = [
@@ -130,13 +118,15 @@ class GeneralCalendarController extends Controller
                 'color' => '#4FD1C5',
                 'extendedProps' => [
                     'eventType' => 'production',
+                    'model_type' => 'production_plan',
+                    'is_important' => $plan->is_important,
                     'title' => '📅 Üretim Planı Detayı',
                     'id' => $plan->id,
 
-                    // === GÜNCELLEME: Yetkiyi Uygula (Üretim) ===
+
                     'editUrl' => $canManageThis ? route('production.plans.edit', $plan->id) : null,
                     'deleteUrl' => $canManageThis ? route('production.plans.destroy', $plan->id) : null,
-                    // === GÜNCELLEME BİTİŞİ ===
+
 
                     'details' => [
                         'Plan Başlığı' => $plan->plan_title,
@@ -150,7 +140,7 @@ class GeneralCalendarController extends Controller
         }
 
         // 3. Etkinlikler (Hizmet)
-        $serviceEvents = Event::with('user') // 'user' zaten yükleniyor
+        $serviceEvents = Event::with('user')
             ->where(function ($q) use ($start, $end) {
                 $q->whereBetween('start_datetime', [$start, $end])
                     ->orWhereBetween('end_datetime', [$start, $end])
@@ -159,7 +149,6 @@ class GeneralCalendarController extends Controller
 
         foreach ($serviceEvents as $event) {
 
-            // === GÜNCELLEME: "Sahip" Yetki Kontrolü (Hizmet Etkinlik) ===
             $canManageThis = $isAdminOrManager || $user->id === $event->user_id;
 
             $events[] = [
@@ -169,13 +158,15 @@ class GeneralCalendarController extends Controller
                 'color' => '#F093FB',
                 'extendedProps' => [
                     'eventType' => 'service_event',
+                    'model_type' => 'event',
+                    'is_important' => $event->is_important,
                     'title' => '🎉 Etkinlik Detayı: ' . $event->title,
                     'id' => $event->id,
 
-                    // === GÜNCELLEME: Yetkiyi Uygula (Hizmet Etkinlik) ===
+
                     'editUrl' => $canManageThis ? route('service.events.edit', $event->id) : null,
                     'deleteUrl' => $canManageThis ? route('service.events.destroy', $event->id) : null,
-                    // === GÜNCELLEME BİTİŞİ ===
+
 
                     'details' => [
                         'Etkinlik Tipi' => $this->getEventTypes()[$event->event_type] ?? ucfirst($event->event_type),
@@ -189,7 +180,6 @@ class GeneralCalendarController extends Controller
             ];
         }
 
-        // 4. Araç Atamaları (Hizmet)
         $assignments = VehicleAssignment::with(['vehicle', 'user']) // 'user' zaten yükleniyor
             ->where(function ($q) use ($start, $end) {
                 $q->whereBetween('start_time', [$start, $end])
@@ -198,19 +188,17 @@ class GeneralCalendarController extends Controller
             })->get();
 
         foreach ($assignments as $assignment) {
-
-            // === GÜNCELLEME: "Sahip" Yetki Kontrolü (Araç Atama) ===
             $canManageThis = $isAdminOrManager || $user->id === $assignment->user_id;
 
             $extendedProps = [
                 'eventType' => 'vehicle_assignment',
+                'model_type' => 'vehicle_assignment',
+                'is_important' => $assignment->is_important,
                 'title' => '🚗 Araç Atama Detayı',
                 'id' => $assignment->id,
 
-                // === GÜNCELLEME: Yetkiyi Uygula (Araç Atama) ===
                 'editUrl' => $canManageThis ? route('service.assignments.edit', $assignment->id) : null,
                 'deleteUrl' => $canManageThis ? route('service.assignments.destroy', $assignment->id) : null,
-                // === GÜNCELLEME BİTİŞİ ===
 
                 'details' => [
                     'Araç' => $assignment->vehicle?->plate_number . ' (' . $assignment->vehicle?->type . ')',
@@ -224,7 +212,6 @@ class GeneralCalendarController extends Controller
                 ]
             ];
 
-            // === GÜNCELLEME: Eski 'Gate::allows' kontrolü kaldırıldı ===
 
             $events[] = [
                 'title' => 'Araç (' . ($assignment->vehicle->plate_number ?? '?') . '): ' . $assignment->task_description,
@@ -246,13 +233,6 @@ class GeneralCalendarController extends Controller
         return view('general-calendar');
     }
 
-    // ===============================================
-    // YARDIMCI METODLAR (HomeController'dan kopyalandı)
-    // ===============================================
-
-    /**
-     * Kargo içeriğini normalize et
-     */
     private function normalizeCargoContent($cargo)
     {
         if (empty($cargo)) {
@@ -309,5 +289,72 @@ class GeneralCalendarController extends Controller
             'misafir_karsilama' => 'Misafir Karşılama',
             'diger' => 'Diğer',
         ];
+    }
+    public function toggleImportant(Request $request)
+    {
+        // 1. Yetki Kontrolü
+        $user = Auth::user();
+        if (!$user || !in_array($user->role, ['admin', 'yönetici'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bu işlemi yapmak için yetkiniz yok.'
+            ], 403); // 403 Forbidden
+        }
+
+        // 2. Gelen Veriyi Doğrulama (Temel)
+        $validated = $request->validate([
+            'model_type' => 'required|string',
+            'model_id' => 'required|integer',
+            'is_important' => 'required|boolean',
+        ]);
+
+        $modelType = $validated['model_type'];
+        $modelId = $validated['model_id'];
+        $isImportant = $validated['is_important'];
+
+        $model = null;
+
+        // 3. Doğru Modeli Bul
+        try {
+            switch ($modelType) {
+                case 'shipment':
+                    $model = Shipment::find($modelId);
+                    break;
+                case 'production_plan':
+                    $model = ProductionPlan::find($modelId);
+                    break;
+                case 'event':
+                    $model = Event::find($modelId);
+                    break;
+                case 'vehicle_assignment':
+                    $model = VehicleAssignment::find($modelId);
+                    break;
+                default:
+                    Log::warning('Bilinmeyen model tipi geldi', ['type' => $modelType]);
+                    return response()->json(['success' => false, 'message' => 'Geçersiz kayıt tipi.'], 400); // 400 Bad Request
+            }
+
+            if (!$model) {
+                Log::warning('toggleImportant için model bulunamadı', $validated);
+                return response()->json(['success' => false, 'message' => 'Kayıt bulunamadı.'], 404); // 404 Not Found
+            }
+
+            // 4. Güncelleme
+            $model->update([
+                'is_important' => $isImportant,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Durum başarıyla güncellendi.',
+                'new_status' => $model->is_important
+            ]);
+        } catch (\Exception $e) {
+            Log::error('toggleImportant hatası', [
+                'error' => $e->getMessage(),
+                'request' => $request->all()
+            ]);
+            return response()->json(['success' => false, 'message' => 'Sunucu hatası: ' . $e->getMessage()], 500);
+        }
     }
 }

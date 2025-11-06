@@ -21,6 +21,7 @@ class Event extends Model
         'end_datetime',
         'location',
         'event_type',
+        'is_important',
     ];
 
     /**
@@ -30,6 +31,7 @@ class Event extends Model
     protected $casts = [
         'start_datetime' => 'datetime',
         'end_datetime' => 'datetime',
+        'is_important' => 'boolean',
     ];
 
     /**

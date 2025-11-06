@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
- use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Shipment extends Model
 {
@@ -34,11 +34,13 @@ class Shipment extends Model
         'ekstra_bilgiler', // Bu alanı artık kullanmayabiliriz veya başka amaçlar için tutabiliriz
         'aciklamalar',
         'dosya_yolu',
+        'is_important',
     ];
     protected $casts = [
         'cikis_tarihi' => 'datetime',
         'tahmini_varis_tarihi' => 'datetime',
         'onaylanma_tarihi' => 'datetime',
+        'is_important' => 'boolean',
     ];
 
     public function onaylayanKullanici(): BelongsTo
