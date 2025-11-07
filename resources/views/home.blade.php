@@ -492,7 +492,7 @@
 
 
             <div class="col-md-4">
-                @if (in_array(Auth::user()->role, ['admin', 'yönetici']))
+                @can('is-global-manager')
                     <div class="card create-shipment-card mb-3">
                         <div class="card-header">⚡ {{ __('Hızlı Eylemler') }}</div>
                         <div class="card-body">
@@ -504,7 +504,7 @@
                             </div>
                         </div>
                     </div>
-                @endif
+                @endcan
                 @if (!empty($chartData))
                     <div class="card create-shipment-card">
                         <div class="card-header">

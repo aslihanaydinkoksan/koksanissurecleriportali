@@ -144,36 +144,36 @@
                             </li>
                         </ul>
                         </li>
-                        <?php endif; ?> <?php if(in_array(Auth::user()->role, ['admin', 'yönetici'])): ?>
-                            <li class="nav-item me-2"> <a class="nav-link fw-bold" href="<?php echo e(route('users.create')); ?>">
-                                    <i class="fa-solid fa-user-plus me-1" style="color: #667EEA;"></i> Kullanıcı Ekle </a>
-                            </li>
-                        <?php endif; ?>
-                        <li class="nav-item dropdown"> <a id="navbarDropdown" class="nav-link dropdown-toggle"
-                                href="#" role="button" data-bs-toggle="dropdown" style="font-weight: 700;">
-                                <i class="fa-solid fa-user-gear me-1" style="color: #F093FB;"></i>
-                                <?php echo e(Auth::user()->name); ?> </a>
-                            <div class="dropdown-menu dropdown-menu-end"> <a class="dropdown-item fw-bold"
-                                    href="<?php echo e(route('profile.edit')); ?>"> <i class="fa-solid fa-user-pen me-1"
-                                        style="color: #4FD1C5;"></i> Profilimi Düzenle </a>
-                                <?php if(Auth::user()->role === 'admin'): ?>
-                                    <a class="dropdown-item fw-bold" href="<?php echo e(route('birimler.index')); ?>"> <i
-                                            class="fa-solid fa-tags me-1" style="color: #FBD38D;"></i> Birimleri Yönet
-                                    </a>
-                                <?php endif; ?> <a class="dropdown-item fw-bold" href="<?php echo e(route('logout')); ?>"
-                                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                    <i class="fa-solid fa-right-from-bracket me-1" style="color: #FC8181;"></i> Çıkış
-                                    Yap </a>
-                                <form id="logout-form" action="<?php echo e(route('logout')); ?>" method="POST" class="d-none">
-                                    <?php echo csrf_field(); ?> </form>
-                            </div>
-                    </li> <?php endif; ?> </ul>
-                </div>
+                        <?php endif; ?> <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('is-global-manager')): ?>
+                        <li class="nav-item me-2"> <a class="nav-link fw-bold" href="<?php echo e(route('users.create')); ?>">
+                                <i class="fa-solid fa-user-plus me-1" style="color: #667EEA;"></i> Kullanıcı Ekle </a>
+                        </li>
+                    <?php endif; ?>
+                    <li class="nav-item dropdown"> <a id="navbarDropdown" class="nav-link dropdown-toggle"
+                            href="#" role="button" data-bs-toggle="dropdown" style="font-weight: 700;">
+                            <i class="fa-solid fa-user-gear me-1" style="color: #F093FB;"></i>
+                            <?php echo e(Auth::user()->name); ?> </a>
+                        <div class="dropdown-menu dropdown-menu-end"> <a class="dropdown-item fw-bold"
+                                href="<?php echo e(route('profile.edit')); ?>"> <i class="fa-solid fa-user-pen me-1"
+                                    style="color: #4FD1C5;"></i> Profilimi Düzenle </a>
+                            <?php if(Auth::user()->role === 'admin'): ?>
+                                <a class="dropdown-item fw-bold" href="<?php echo e(route('birimler.index')); ?>"> <i
+                                        class="fa-solid fa-tags me-1" style="color: #FBD38D;"></i> Birimleri Yönet
+                                </a>
+                            <?php endif; ?> <a class="dropdown-item fw-bold" href="<?php echo e(route('logout')); ?>"
+                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                <i class="fa-solid fa-right-from-bracket me-1" style="color: #FC8181;"></i> Çıkış
+                                Yap </a>
+                            <form id="logout-form" action="<?php echo e(route('logout')); ?>" method="POST" class="d-none">
+                                <?php echo csrf_field(); ?> </form>
+                        </div>
+                </li> <?php endif; ?> </ul>
             </div>
-        </nav>
-        <main> <?php echo $__env->yieldContent('content'); ?> </main>
-    </div> <?php echo $__env->yieldContent('page_scripts'); ?>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        </div>
+    </nav>
+    <main> <?php echo $__env->yieldContent('content'); ?> </main>
+</div> <?php echo $__env->yieldContent('page_scripts'); ?>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

@@ -144,36 +144,36 @@
                             </li>
                         </ul>
                         </li>
-                        @endcan @if (in_array(Auth::user()->role, ['admin', 'yönetici']))
-                            <li class="nav-item me-2"> <a class="nav-link fw-bold" href="{{ route('users.create') }}">
-                                    <i class="fa-solid fa-user-plus me-1" style="color: #667EEA;"></i> Kullanıcı Ekle </a>
-                            </li>
-                        @endif
-                        <li class="nav-item dropdown"> <a id="navbarDropdown" class="nav-link dropdown-toggle"
-                                href="#" role="button" data-bs-toggle="dropdown" style="font-weight: 700;">
-                                <i class="fa-solid fa-user-gear me-1" style="color: #F093FB;"></i>
-                                {{ Auth::user()->name }} </a>
-                            <div class="dropdown-menu dropdown-menu-end"> <a class="dropdown-item fw-bold"
-                                    href="{{ route('profile.edit') }}"> <i class="fa-solid fa-user-pen me-1"
-                                        style="color: #4FD1C5;"></i> Profilimi Düzenle </a>
-                                @if (Auth::user()->role === 'admin')
-                                    <a class="dropdown-item fw-bold" href="{{ route('birimler.index') }}"> <i
-                                            class="fa-solid fa-tags me-1" style="color: #FBD38D;"></i> Birimleri Yönet
-                                    </a>
-                                @endif <a class="dropdown-item fw-bold" href="{{ route('logout') }}"
-                                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                    <i class="fa-solid fa-right-from-bracket me-1" style="color: #FC8181;"></i> Çıkış
-                                    Yap </a>
-                                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                    @csrf </form>
-                            </div>
-                    </li> @endguest </ul>
-                </div>
+                        @endcan @can('is-global-manager')
+                        <li class="nav-item me-2"> <a class="nav-link fw-bold" href="{{ route('users.create') }}">
+                                <i class="fa-solid fa-user-plus me-1" style="color: #667EEA;"></i> Kullanıcı Ekle </a>
+                        </li>
+                    @endcan
+                    <li class="nav-item dropdown"> <a id="navbarDropdown" class="nav-link dropdown-toggle"
+                            href="#" role="button" data-bs-toggle="dropdown" style="font-weight: 700;">
+                            <i class="fa-solid fa-user-gear me-1" style="color: #F093FB;"></i>
+                            {{ Auth::user()->name }} </a>
+                        <div class="dropdown-menu dropdown-menu-end"> <a class="dropdown-item fw-bold"
+                                href="{{ route('profile.edit') }}"> <i class="fa-solid fa-user-pen me-1"
+                                    style="color: #4FD1C5;"></i> Profilimi Düzenle </a>
+                            @if (Auth::user()->role === 'admin')
+                                <a class="dropdown-item fw-bold" href="{{ route('birimler.index') }}"> <i
+                                        class="fa-solid fa-tags me-1" style="color: #FBD38D;"></i> Birimleri Yönet
+                                </a>
+                            @endif <a class="dropdown-item fw-bold" href="{{ route('logout') }}"
+                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                <i class="fa-solid fa-right-from-bracket me-1" style="color: #FC8181;"></i> Çıkış
+                                Yap </a>
+                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                @csrf </form>
+                        </div>
+                </li> @endguest </ul>
             </div>
-        </nav>
-        <main> @yield('content') </main>
-    </div> @yield('page_scripts')
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        </div>
+    </nav>
+    <main> @yield('content') </main>
+</div> @yield('page_scripts')
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

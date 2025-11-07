@@ -321,7 +321,6 @@ unset($__errorArgs, $__bag); ?>
             });
         });
     </script>
-    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const roleDropdown = document.getElementById('role');
@@ -329,25 +328,31 @@ unset($__errorArgs, $__bag); ?>
             const departmentDropdown = document.getElementById('department_id');
 
             function toggleDepartmentField() {
-                // Seçilen rol admin VEYA yönetici ise
-                if (roleDropdown.value === 'admin' || roleDropdown.value === 'yönetici') {
-                    departmentRow.style.display = 'none'; // Birim satırını gizle
-                    departmentDropdown.required = false; // Zorunlu olmaktan çıkar
-                    departmentDropdown.value = ''; // Değerini sıfırla
+                if (!roleDropdown || !departmentRow || !departmentDropdown) {
+                    console.error("Form elemanları (role, department-row, department_id) bulunamadı.");
+                    return;
+                }
+                const selectedRole = roleDropdown.value;
+                if (selectedRole === 'admin') {
+                    // Admin: Gizle ve zorunlu yapma
+                    departmentRow.style.display = 'none';
+                    departmentDropdown.required = false;
+                    departmentDropdown.value = '';
+                } else if (selectedRole === 'yönetici') {
+                    // Yönetici: Göster ama zorunlu yapma
+                    departmentRow.style.display = '';
+                    departmentDropdown.required = false;
+                    departmentDropdown.value = ''; //  Değeri sıfırla
                 } else {
-                    departmentRow.style.display = ''; // Birim satırını göster
-                    departmentDropdown.required = true; // Zorunlu yap
+                    // Kullanıcı (veya diğer roller): Göster ve zorunlu yap
+                    departmentRow.style.display = '';
+                    departmentDropdown.required = true;
                 }
             }
-
-            // Rol değiştiğinde fonksiyonu tetikle
             roleDropdown.addEventListener('change', toggleDepartmentField);
-
-            // Sayfa yüklendiğinde de bir kez kontrol et (eski veri varsa diye)
             toggleDepartmentField();
         });
     </script>
-    
 <?php $__env->stopSection(); ?>
 
 <?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp\htdocs\koksanissurecleriportali\resources\views/users/create.blade.php ENDPATH**/ ?>

@@ -20,6 +20,7 @@ class EventController extends Controller
         'egitim' => 'Eğitim',
         'fuar' => 'Fuar',
         'gezi' => 'Gezi',
+        'seyahat' => 'Seyahat',
         'musteri_ziyareti' => 'Müşteri Ziyareti',
         'misafir_karsilama' => 'Misafir Karşılama',
         'diger' => 'Diğer',

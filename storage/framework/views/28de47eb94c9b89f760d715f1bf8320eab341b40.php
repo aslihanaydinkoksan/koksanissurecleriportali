@@ -494,7 +494,7 @@
 
 
             <div class="col-md-4">
-                <?php if(in_array(Auth::user()->role, ['admin', 'yönetici'])): ?>
+                <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('is-global-manager')): ?>
                     <div class="card create-shipment-card mb-3">
                         <div class="card-header">⚡ <?php echo e(__('Hızlı Eylemler')); ?></div>
                         <div class="card-body">
