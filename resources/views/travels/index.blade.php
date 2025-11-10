@@ -2,41 +2,79 @@
 
 @section('title', 'Seyahat Planı Listesi')
 
-{{-- Customer kart stilini kullanalım --}}
 <style>
-    .customer-card {
-        background-color: #ffffff;
-        border-radius: 0.75rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.3);
+    /* Ana içerik alanına (main) animasyonlu arka planı uygula */
+    #app>main.py-4 {
+        padding: 2.5rem 0 !important;
+        min-height: calc(100vh - 72px);
+        background: linear-gradient(-45deg,
+                #dbe4ff,
+                #fde2ff,
+                #d9fcf7,
+                #fff0d9);
+        background-size: 400% 400%;
+        animation: gradientWave 18s ease infinite;
     }
 
-    .btn-primary-gradient {
-        background: linear-gradient(to right, #667EEA, #5a6ed0);
-        color: white;
+    /* Arka plan dalgalanma animasyonu */
+    @keyframes gradientWave {
+        0% {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+
+    /* === GÜNCELLENDİ (create-event-card) === */
+    .create-event-card {
+        border-radius: 1rem;
+        box-shadow: none !important;
+        border: 0;
+        background-color: transparent;
+        backdrop-filter: none;
+    }
+
+    .create-event-card .card-header,
+    .create-event-card .form-label {
+        color: #444;
+        font-weight: bold;
+        text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
+    }
+
+    .create-event-card .card-header {
+        color: #000;
+    }
+
+    .create-event-card .form-control,
+    .create-event-card .form-select {
+        border-radius: 0.5rem;
+        background-color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* === Dinamik satır CSS'leri (plan-detail-row) kaldırıldı === */
+
+    /* Animasyonlu buton (Değişiklik yok) */
+    .btn-animated-gradient {
+        background: linear-gradient(-45deg,
+                #667EEA, #F093FB, #4FD1C5, #FBD38D);
+        background-size: 400% 400%;
+        animation: gradientWave 18s ease infinite;
         border: none;
-        font-weight: 500;
+        color: white;
+        font-weight: bold;
+        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
     }
 
-    .filter-card {
-        background-color: rgba(255, 255, 255, 0.5);
-        border-radius: 0.75rem;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        border: 1px solid rgba(0, 0, 0, 0.05);
-    }
-
-    /* ---------------------------------------------------- */
-    /* YENİ EKLENDİ: MODERN BUTON STİLLERİ (HOVER EFEKTİ) */
-    /* ---------------------------------------------------- */
-    .btn.btn-modern {
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07);
-    }
-
-    .btn.btn-modern:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+    .btn-animated-gradient:hover {
+        color: white;
+        transform: scale(1.05);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
 </style>
 
@@ -49,7 +87,7 @@
                     <h4 class="mb-0">Seyahat Planı Listesi</h4>
 
                     {{-- GÜNCELLENDİ: 'btn-modern' eklendi --}}
-                    <a href="{{ route('travels.create') }}" class="btn btn-primary-gradient rounded-pill px-4 btn-modern">
+                    <a href="{{ route('travels.create') }}" class="btn btn-animated-gradient rounded-pill px-4 btn-modern">
                         <i class="fa-solid fa-plus me-1"></i> Yeni Seyahat Planı
                     </a>
                 </div>
@@ -125,7 +163,7 @@
                                     class="btn btn-outline-secondary rounded-pill px-4 btn-modern">Temizle</a>
 
                                 {{-- GÜNCELLENDİ: 'btn-modern' eklendi ve stil 'btn-primary-gradient' yapıldı --}}
-                                <button type="submit" class="btn btn-primary-gradient rounded-pill px-4 ms-2 btn-modern">
+                                <button type="submit" class="btn btn-animated-gradient rounded-pill px-4 btn-modern">
                                     <i class="fa-solid fa-filter me-1"></i> Filtrele
                                 </button>
                             </div>

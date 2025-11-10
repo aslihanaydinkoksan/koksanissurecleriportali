@@ -1029,16 +1029,13 @@
 
 
             const urlParams = new URLSearchParams(window.location.search);
-            // DÜZELTME 1: Doğru parametre adlarını al
             const modalIdToOpen = urlParams.get('open_modal_id');
             const modalTypeToOpen = urlParams.get('open_modal_type');
 
-            // İki parametre de doluysa devam et
             if (modalIdToOpen && modalTypeToOpen) {
                 const allEvents = calendar.getEvents();
                 const modalIdNum = parseInt(modalIdToOpen, 10);
 
-                // DÜZELTME 2: Sadece ID'yi değil, HEM ID'yi HEM de TİP'i kontrol et
                 const eventToOpen = allEvents.find(event =>
                     event.extendedProps.id === modalIdNum &&
                     event.extendedProps.model_type === modalTypeToOpen
@@ -1051,7 +1048,6 @@
                     console.warn('Modal açılmak istendi ancak ' + modalTypeToOpen + ' (ID:' +
                         modalIdNum + ') takvimde bulunamadı.');
                 }
-                // URL'yi temizle (sayfa yenilenirse tekrar açılmasın)
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
 

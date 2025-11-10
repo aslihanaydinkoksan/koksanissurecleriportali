@@ -3,12 +3,76 @@
 @section('title', $customer->name)
 
 <style>
+    /* === 1. Ana kartı transparan yapar === */
     .customer-card {
-        background-color: #ffffff;
+        background-color: transparent;
         border-radius: 0.75rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        box-shadow: none;
         border: none;
     }
+
+    /* === 2. Sekme (Tab) Stilini Güçlendirme === */
+    .nav-tabs {
+        border-bottom: none !important;
+    }
+
+    .nav-tabs .nav-link {
+        border: none !important;
+        border-radius: 0.5rem;
+        color: #555;
+        font-weight: 500;
+        margin-right: 0.25rem;
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .nav-tabs .nav-link:not(.active):hover {
+        background-color: #f1f3f5;
+        color: #333;
+    }
+
+    .nav-tabs .nav-link.active {
+        border-color: transparent !important;
+        background-color: #667EEA !important;
+        color: #ffffff !important;
+        font-weight: 500;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+    }
+
+    /* === 3. YENİ BÖLÜM: Sekme İÇERİKLERİNİ transparan yapma === */
+
+    /* "Hızlı Ekle" formlarının arka planını kaldırır */
+    .quick-add-form {
+        background-color: transparent !important;
+        border: none !important;
+        padding: 1.5rem 0;
+        /* İçeriğin gövdeye yapışmaması için dikey padding kalsın */
+    }
+
+    /* "Kayıtlı Şikayetler" gibi uyarı kutularını transparan yapar */
+    .alert {
+        background-color: transparent !important;
+        border: none !important;
+        padding-left: 0;
+        /* Kenar boşluklarını sıfırla */
+        padding-right: 0;
+    }
+
+    /* "Kayıtlı Makineler" gibi tabloları transparan yapar */
+    .table,
+    .table-striped>tbody>tr:nth-of-type(odd)>*,
+    .table> :not(caption)>*>* {
+        background-color: transparent !important;
+    }
+
+    /* Uyarılardaki "Dosya" listeleme kutularını transparan yapar */
+    .file-list-item {
+        /* Tamamen şeffaf olunca kayboluyor, hafif yarı-şeffaf bir beyaz daha iyi durur */
+        background-color: rgba(255, 255, 255, 0.5) !important;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+
+    /* --- Orijinal stilleriniz (dokunulmadı) --- */
 
     .btn-outline-primary {
         border-color: #667EEA;
@@ -18,18 +82,6 @@
     .btn-outline-primary:hover {
         background-color: #667EEA;
         color: #fff;
-    }
-
-    .nav-tabs .nav-link {
-        border-bottom-width: 3px;
-        border-color: transparent;
-        color: #555;
-    }
-
-    .nav-tabs .nav-link.active {
-        border-color: #667EEA;
-        color: #333;
-        font-weight: 500;
     }
 
     .detail-list dt {
@@ -42,22 +94,27 @@
         font-weight: 400;
     }
 
-    /* Hızlı Ekleme Formu Stili */
-    .quick-add-form {
-        background-color: #f8f9fa;
+    .create-event-card .form-control,
+    .create-event-card .form-select {
         border-radius: 0.5rem;
-        padding: 1.5rem;
-        border: 1px solid #e9ecef;
+        background-color: rgba(255, 255, 255, 0.8);
     }
 
-    .file-list-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0.5rem 0.75rem;
-        background-color: #f1f3f5;
-        border-radius: 0.25rem;
-        margin-bottom: 0.5rem;
+    .btn-animated-gradient {
+        background: linear-gradient(-45deg,
+                #667EEA, #F093FB, #4FD1C5, #FBD38D);
+        background-size: 400% 400%;
+        animation: gradientWave 18s ease infinite;
+        border: none;
+        color: white;
+        font-weight: bold;
+        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    }
+
+    .btn-animated-gradient:hover {
+        color: white;
+        transform: scale(1.05);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
 </style>
 
@@ -74,21 +131,21 @@
                                 <span class="text-muted">Müşteri Detayları </span>
                             </div>
                             <div class="row g-2 mt-2">
-                                <div class="col">
+                                <div class="col-md-6">
                                     <a href="{{ route('customers.edit', $customer) }}"
-                                        class="btn btn-sm btn-outline-primary rounded-pill px-3 me-2 w-100">
+                                        class="btn btn-animated-gradient rounded-pill px-4 w-100 btn-modern">
                                         <i class="fa-solid fa-pen me-1"></i> Müşteri Bilgilerini Düzenle
                                     </a>
                                 </div>
-                                <div class="col">
+                                <div class="col-md-6">
                                     <form action="{{ route('customers.destroy', $customer) }}" method="POST" class="d-grid"
                                         {{-- Formun da tam genişlik kaplamasını sağlar --}}
                                         onsubmit="return confirm('Bu müşteriyi silmek (arşivlemek) istediğinizden emin misiniz?');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
-                                            class="btn btn-sm btn-outline-danger rounded-pill px-3 me-2 w-100">
-                                            <i class="fa-solid fa-trash-alt me-1"></i> Sil
+                                            class="btn btn-animated-gradient rounded-pill px-4 btn-modern">
+                                            <i class="fa-solid fa-trash-alt me-1"></i> Müşteri Kaydını Sil
                                         </button>
                                     </form>
                                 </div>
@@ -193,7 +250,8 @@
                                             <input type="date" name="installation_date" class="form-control">
                                         </div>
                                     </div>
-                                    <button type="submit" class="btn btn-sm btn-primary-gradient px-3">Makineyi
+                                    <button type="submit"
+                                        class="btn btn-animated-gradient rounded-pill px-4 btn-modern">Makineyi
                                         Ekle</button>
                                 </form>
 
@@ -241,7 +299,8 @@
                                         <label for="summary" class="form-label">Özet</label>
                                         <textarea name="summary" class="form-control" rows="2"></textarea>
                                     </div>
-                                    <button type="submit" class="btn btn-sm btn-primary-gradient px-3">Test Sonucunu
+                                    <button type="submit"
+                                        class="btn btn-animated-gradient rounded-pill px-4 btn-modern">Test Sonucunu
                                         Ekle</button>
                                 </form>
 
@@ -313,7 +372,8 @@
                                             Video...)</label>
                                         <input type="file" name="complaint_files[]" class="form-control" multiple>
                                     </div>
-                                    <button type="submit" class="btn btn-sm btn-primary-gradient px-3">Şikayeti
+                                    <button type="submit"
+                                        class="btn btn-animated-gradient rounded-pill px-4 btn-modern">Şikayeti
                                         Ekle</button>
                                 </form>
 
@@ -339,10 +399,6 @@
                             </div>
 
                             <div class="tab-pane fade" id="visits" role="tabpanel" aria-labelledby="visits-tab">
-                                <div class="alert alert-info">
-                                    Müşteri ziyaretleri, "İdari İşler" menüsündeki <strong>"Yeni Etkinlik Oluştur"</strong>
-                                    (Müşteri Ziyareti tipi) sayfası üzerinden eklenir ve buraya otomatik olarak düşer.
-                                </div>
                                 <table class="table table-sm table-striped">
                                     <thead>
                                         <tr>

@@ -160,10 +160,6 @@
                             </li>
                         </ul>
                         </li>
-                        <?php endif; ?> <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('is-global-manager')): ?>
-                        <li class="nav-item me-2"> <a class="nav-link fw-bold" href="<?php echo e(route('users.create')); ?>">
-                                <i class="fa-solid fa-user-plus me-1" style="color: #667EEA;"></i> Kullanıcı Ekle </a>
-                        </li>
                     <?php endif; ?>
                     <li class="nav-item dropdown"> <a id="navbarDropdown" class="nav-link dropdown-toggle"
                             href="#" role="button" data-bs-toggle="dropdown" style="font-weight: 700;">
@@ -172,6 +168,12 @@
                         <div class="dropdown-menu dropdown-menu-end"> <a class="dropdown-item fw-bold"
                                 href="<?php echo e(route('profile.edit')); ?>"> <i class="fa-solid fa-user-pen me-1"
                                     style="color: #4FD1C5;"></i> Profilimi Düzenle </a>
+                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('is-global-manager')): ?>
+                                <a class="dropdown-item fw-bold" href="<?php echo e(route('users.create')); ?>">
+                                    <i class="fa-solid fa-user-plus me-1" style="color: #667EEA;"></i> Kullanıcı Ekle
+                                </a>
+                            <?php endif; ?>
+
                             <?php if(Auth::user()->role === 'admin'): ?>
                                 <a class="dropdown-item fw-bold" href="<?php echo e(route('birimler.index')); ?>"> <i
                                         class="fa-solid fa-tags me-1" style="color: #FBD38D;"></i> Birimleri Yönet

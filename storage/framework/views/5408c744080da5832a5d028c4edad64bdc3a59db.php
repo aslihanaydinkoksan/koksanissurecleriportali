@@ -80,7 +80,7 @@
         vertical-align: middle;
     }
 
-    /* Filtre Stilleri (Sevkiyat listesiyle aynı) */
+    /* Filtre Stilleri */
     .btn-filter-toggle {
         background-color: rgba(255, 255, 255, 0.8);
         border: 1px solid rgba(0, 0, 0, 0.1);
@@ -151,47 +151,6 @@
     .btn-clear-filter {
         padding: 0.5rem 1.25rem;
     }
-
-    /* ... (mevcut genel stil kurallarınız) ... */
-
-    /* YENİ VE GELİŞTİRİLMİŞ: Önemli satırları vurgulamak için */
-    .row-important {
-        /* Daha belirgin bir arka plan rengi, ancak yine de hafif */
-        --bs-table-accent-bg: rgba(255, 235, 238, 0.8);
-        /* Açık pembe tonu, biraz şeffaf */
-        background-color: var(--bs-table-accent-bg) !important;
-        /* Önemli! Striped override */
-
-        /* Metin rengini belirginleştir ama çok koyu yapma */
-        color: #c0392b;
-        /* Koyu kırmızımsı ton */
-        font-weight: 600;
-
-        /* Hafif bir gölge efekti (isteğe bağlı, kaldırabilirsiniz) */
-        box-shadow: inset 0 0 5px rgba(252, 98, 117, 0.1);
-        /* İç gölge */
-
-        transition: all 0.2s ease-in-out;
-        /* Animasyonlu geçişler */
-    }
-
-    /* Önemli satırın üzerine gelindiğinde (hover) arka planı daha belirgin yap */
-    .table-hover>tbody>tr.row-important:hover {
-        --bs-table-accent-bg: rgba(255, 220, 224, 0.95);
-        /* Biraz daha koyu pembe */
-        background-color: var(--bs-table-accent-bg) !important;
-        /* Önemli! Striped override */
-        transform: translateY(-2px);
-        /* Hafif yukarı kayma efekti */
-        box-shadow: inset 0 0 8px rgba(252, 98, 117, 0.2), 0 2px 5px rgba(0, 0, 0, 0.05);
-        /* Daha belirgin gölge */
-    }
-
-    /* Önemli satırlardaki hücrelerin metin rengini korumak için */
-    .row-important td {
-        color: #c0392b;
-        /* Metin rengini koru */
-    }
 </style>
 
 <?php $__env->startSection('content'); ?>
@@ -213,10 +172,14 @@
 
                 
                 <div class="mb-4">
-                    <div class="d-grid">
-                        <button class="btn btn-filter-toggle" type="button" data-bs-toggle="collapse"
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                        
+                        <a href="<?php echo e(route('service.assignments.create')); ?>" class="btn btn-primary btn-sm mb-2 mb-md-0">
+                            <i class="fas fa-plus me-1"></i> Yeni Araç Görevi Ekle
+                        </a>
+                        <button class="btn btn-filter-toggle btn-sm" type="button" data-bs-toggle="collapse"
                             data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
-                            <i class="fas fa-filter me-2"></i> Filtre Seçenekleri
+                            <i class="fas fa-filter me-2"></i> Filtrele
                             <i class="fas fa-chevron-down ms-2 small"></i>
                         </button>
                     </div>
@@ -224,65 +187,51 @@
                     <div class="collapse mt-3" id="filterCollapse">
                         <div class="card filter-card">
                             
-                            <form method="GET" action="<?php echo e(route('production.plans.index')); ?>">
+                            <form method="GET" action="<?php echo e(route('service.assignments.index')); ?>">
                                 <div class="row">
-                                    <?php
-                                        // Admin/Yönetici mi?
-                                        $isAdminOrManager = in_array(Auth::user()->role, ['admin', 'yönetici']);
-                                    ?>
-
                                     
-                                    <div class="<?php echo e($isAdminOrManager ? 'col-md-3' : 'col-md-6'); ?>">
-                                        <label for="plan_title" class="form-label">Plan Başlığı (Ara)</label>
-                                        <input type="text" class="form-control form-control-sm" id="plan_title"
-                                            name="plan_title" value="<?php echo e($filters['plan_title'] ?? ''); ?>"
-                                            placeholder="Plan başlığı girin...">
+                                    <div class="col-md-3">
+                                        <label for="vehicle_id" class="form-label">Araç</label>
+                                        <select class="form-select form-select-sm" id="vehicle_id" name="vehicle_id">
+                                            <option value="">Tümü</option>
+                                            
+                                            <?php $__currentLoopData = $vehicles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $vehicle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <option value="<?php echo e($vehicle->id); ?>"
+                                                    <?php echo e(($filters['vehicle_id'] ?? '') == $vehicle->id ? 'selected' : ''); ?>>
+                                                    <?php echo e($vehicle->plate_number); ?> (<?php echo e($vehicle->type); ?>)
+                                                </option>
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                        </select>
                                     </div>
 
                                     
-                                    <?php if($isAdminOrManager): ?>
-                                        <div class="col-md-3">
-                                            <label for="is_important" class="form-label" style="color: #dc3545;">
-                                                <i class="fas fa-bell"></i> Önem Durumu
-                                            </label>
-                                            <select class="form-select form-select-sm" id="is_important"
-                                                name="is_important">
-                                                <option value="all"
-                                                    <?php echo e(($filters['is_important'] ?? 'all') == 'all' ? 'selected' : ''); ?>>
-                                                    Tümü
-                                                </option>
-                                                <option value="yes"
-                                                    <?php echo e(($filters['is_important'] ?? '') == 'yes' ? 'selected' : ''); ?>>
-                                                    Sadece Önemliler
-                                                </option>
-                                                <option value="no"
-                                                    <?php echo e(($filters['is_important'] ?? '') == 'no' ? 'selected' : ''); ?>>
-                                                    Önemli Olmayanlar
-                                                </option>
-                                            </select>
-                                        </div>
-                                    <?php endif; ?>
+                                    <div class="col-md-4">
+                                        <label for="task_description" class="form-label">Görev Açıklaması (Ara)</label>
+                                        <input type="text" class="form-control form-control-sm" id="task_description"
+                                            name="task_description" value="<?php echo e($filters['task_description'] ?? ''); ?>"
+                                            placeholder="Görev açıklaması girin...">
+                                    </div>
 
                                     
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
                                         <label for="date_from" class="form-label">Başlangıç Tarihi</label>
                                         <input type="date" class="form-control form-control-sm" id="date_from"
                                             name="date_from" value="<?php echo e($filters['date_from'] ?? ''); ?>">
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
                                         <label for="date_to" class="form-label">Bitiş Tarihi</label>
                                         <input type="date" class="form-control form-control-sm" id="date_to"
                                             name="date_to" value="<?php echo e($filters['date_to'] ?? ''); ?>">
                                     </div>
 
                                     
-                                    <div class="col-md-12 d-flex align-items-end justify-content-end gap-2 mt-3">
-                                        <a href="<?php echo e(route('production.plans.index')); ?>"
-                                            class="btn btn-secondary btn-clear-filter btn-sm">
-                                            <i class="fas fa-times me-1"></i> Temizle
+                                    <div class="col-md-1 d-flex align-items-end justify-content-end gap-2">
+                                        <a href="<?php echo e(route('service.assignments.index')); ?>"
+                                            class="btn btn-secondary btn-clear-filter btn-sm" title="Temizle">
+                                            <i class="fas fa-times"></i>
                                         </a>
-                                        <button type="submit" class="btn btn-apply-filter btn-sm">
-                                            <i class="fas fa-check me-1"></i> Filtrele
+                                        <button type="submit" class="btn btn-apply-filter btn-sm" title="Filtrele">
+                                            <i class="fas fa-check"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -296,13 +245,13 @@
                 
                 <div class="card list-card">
                     
-                    <div class="card-header">Üretim Planı Listesi</div>
+                    <div class="card-header">Araç Görev Listesi</div>
 
                     <div class="card-body p-0">
                         
-                        <?php if($plans->isEmpty()): ?>
+                        <?php if($assignments->isEmpty()): ?>
                             <div class="alert alert-warning m-3" role="alert">
-                                <i class="fas fa-exclamation-triangle me-2"></i> Kayıtlı üretim planı bulunamadı.
+                                <i class="fas fa-exclamation-triangle me-2"></i> Filtrelere uygun araç görevi bulunamadı.
                             </div>
                         <?php else: ?>
                             <div class="table-responsive">
@@ -310,41 +259,42 @@
                                     <thead>
                                         
                                         <tr>
-                                            <th scope="col" class="ps-3">Plan Başlığı</th>
-                                            <th scope="col">Hafta Başlangıcı</th>
-                                            <th scope="col">Oluşturan</th>
-                                            <th scope="col">Kayıt Tarihi</th>
+                                            <th scope="col" class="ps-3">Araç</th>
+                                            <th scope="col">Görev</th>
+                                            <th scope="col">Yer</th>
+                                            <th scope="col">Talep Eden</th>
+                                            <th scope="col">Atanan Sefer Zamanı</th> 
+                                            
                                             <th scope="col" class="text-end pe-3">İşlemler</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         
-                                        <?php $__currentLoopData = $plans; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $plan): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                            <tr class="<?php echo e($plan->is_important ? 'row-important' : ''); ?>">
+                                        <?php $__currentLoopData = $assignments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $assignment): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <tr>
                                                 
-                                                <td class="ps-3"><?php echo e($plan->plan_title); ?></td>
-                                                <td><?php echo e($plan->week_start_date ? \Carbon\Carbon::parse($plan->week_start_date)->format('d.m.Y') : '-'); ?>
-
-                                                </td>
-                                                <td><?php echo e($plan->user->name ?? 'Bilinmiyor'); ?></td>
-                                                <td><?php echo e($plan->created_at ? \Carbon\Carbon::parse($plan->created_at)->format('d.m.Y H:i') : '-'); ?>
-
-                                                </td>
+                                                <td class="ps-3 fw-bold">
+                                                    <?php echo e($assignment->vehicle->plate_number ?? 'Silinmiş Araç'); ?></td>
+                                                <td><?php echo e($assignment->task_description); ?></td>
+                                                <td><?php echo e($assignment->destination ?? '-'); ?></td>
+                                                <td><?php echo e($assignment->requester_name ?? '-'); ?></td>
+                                                <td><?php echo e($assignment->start_time->format('d.m.Y H:i')); ?></td>
+                                                
+                                                
 
                                                 
                                                 <td class="text-end pe-3">
-                                                    
                                                     <?php if(!in_array(Auth::user()->role, ['izleyici'])): ?>
-                                                        <a href="<?php echo e(route('production.plans.edit', $plan)); ?>"
+                                                        <a href="<?php echo e(route('service.assignments.edit', $assignment)); ?>"
                                                             class="btn btn-sm btn-primary" title="Düzenle"><i
                                                                 class="fas fa-edit"></i></a>
                                                     <?php endif; ?>
 
-                                                    
                                                     <?php if(!in_array(Auth::user()->role, ['izleyici'])): ?>
-                                                        <form action="<?php echo e(route('production.plans.destroy', $plan)); ?>"
+                                                        <form
+                                                            action="<?php echo e(route('service.assignments.destroy', $assignment)); ?>"
                                                             method="POST" class="d-inline"
-                                                            onsubmit="return confirm('Bu planı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.');">
+                                                            onsubmit="return confirm('Bu araç görevini silmek istediğinizden emin misiniz?');">
                                                             <?php echo csrf_field(); ?>
                                                             <?php echo method_field('DELETE'); ?>
                                                             <button type="submit" class="btn btn-sm btn-danger"
@@ -358,10 +308,9 @@
                                 </table>
 
                                 
-                                <?php if($plans->hasPages()): ?>
+                                <?php if($assignments->hasPages()): ?>
                                     <div class="card-footer bg-transparent border-top-0 pt-3 pb-2 px-3">
-                                        
-                                        <?php echo e($plans->appends($filters ?? [])->links('pagination::bootstrap-5')); ?>
+                                        <?php echo e($assignments->appends($filters ?? [])->links('pagination::bootstrap-5')); ?>
 
                                     </div>
                                 <?php endif; ?>
@@ -400,4 +349,4 @@
     </script>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp\htdocs\koksanissurecleriportali\resources\views/production/plans/index.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp\htdocs\koksanissurecleriportali\resources\views/service/assignments/index.blade.php ENDPATH**/ ?>

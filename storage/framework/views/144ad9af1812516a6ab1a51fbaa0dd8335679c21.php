@@ -174,6 +174,10 @@
                                             <option value="vehicle_assignment"
                                                 <?php echo e(($filters['type'] ?? '') == 'vehicle_assignment' ? 'selected' : ''); ?>>
                                                 Araç Ataması</option>
+                                            <option value="travel"
+                                                <?php echo e(($filters['type'] ?? '') == 'travel' ? 'selected' : ''); ?>>
+                                                Seyahat Planı
+                                            </option>
                                         </select>
                                     </div>
 

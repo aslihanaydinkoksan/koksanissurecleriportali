@@ -46,51 +46,7 @@
                             <form action="{{ route('travels.bookings.store', $travel) }}" method="POST"
                                 enctype="multipart/form-data">
                                 @csrf
-                                <div class="row">
-                                    <div class="col-md-3 mb-3">
-                                        <label for="type" class="form-label">Tip (*)</label>
-                                        <select name="type" class="form-select" required>
-                                            <option value="flight">✈️ Uçuş</option>
-                                            <option value="hotel">🏨 Otel</option>
-                                            <option value="car_rental">🚗 Araç Kiralama</option>
-                                            <option value="train">🚆 Tren</option>
-                                            <option value="other">Diğer</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-5 mb-3">
-                                        <label for="provider_name" class="form-label">Sağlayıcı (*)</label>
-                                        <input type="text" name="provider_name" class="form-control"
-                                            placeholder="Örn: Türk Hava Yolları, Hilton..." required>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label for="confirmation_code" class="form-label">Rezervasyon Kodu (PNR vb.)</label>
-                                        <input type="text" name="confirmation_code" class="form-control"
-                                            placeholder="Örn: ABC123">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-3 mb-3">
-                                        <label for="start_datetime" class="form-label">Başlangıç / Kalkış (*)</label>
-                                        <input type="datetime-local" name="start_datetime" class="form-control" required>
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label for="end_datetime" class="form-label">Bitiş / Varış</label>
-                                        <input type="datetime-local" name="end_datetime" class="form-control">
-                                    </div>
-                                    <div class="col-md-2 mb-3">
-                                        <label for="cost" class="form-label">Masraf (TL)</label>
-                                        <input type="number" step="0.01" name="cost" class="form-control"
-                                            placeholder="0.00">
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label for="booking_files" class="form-label">Bilet / Voucher (PDF, JPG...)</label>
-                                        <input type="file" name="booking_files[]" class="form-control" multiple>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="notes" class="form-label">Notlar</label>
-                                    <textarea name="notes" class="form-control" rows="2" placeholder="Örn: 1 adet kabin bagajı dahil..."></textarea>
-                                </div>
+                                @include('bookings._form', ['booking' => null])
                                 <button type="submit" class="btn btn-primary-gradient px-4"
                                     style="background: linear-gradient(to right, #667EEA, #5a6ed0); color: white;">
                                     Rezervasyonu Ekle
@@ -157,15 +113,22 @@
                                                     @endforeach
                                                 </td>
                                                 <td>
-                                                    {{-- Silme Butonu --}}
+                                                    {{-- Düzenleme ve Silme Butonu --}}
                                                     @if (Auth::id() == $booking->user_id || Auth::user()->can('is-global-manager'))
+                                                        <a href="{{ route('bookings.edit', $booking) }}"
+                                                            class="btn btn-sm btn-outline-secondary"
+                                                            title="Düzenle">Rezervasyon Detaylarını Düzenle
+                                                            <i class="fa-solid fa-pen"></i>
+                                                        </a>
                                                         <form action="{{ route('bookings.destroy', $booking) }}"
                                                             method="POST"
                                                             onsubmit="return confirm('Bu rezervasyon kaydını silmek istediğinizden emin misiniz?');">
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                                style="border: none; background: transparent;">
+                                                                title="Sil"
+                                                                style="border: none; background: transparent;"> Rezervasyonu
+                                                                Sil
                                                                 <i class="fa-solid fa-trash-alt"></i>
                                                             </button>
                                                         </form>

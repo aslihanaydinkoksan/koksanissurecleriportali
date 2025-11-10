@@ -1,6 +1,6 @@
-@extends('layouts.app')
 
-@section('title', $pageTitle) {{-- Dinamik Başlık --}}
+
+<?php $__env->startSection('title', $pageTitle); ?> 
 
 <style>
     /* ... (Mevcut CSS stilleriniz aynı kalır) ... */
@@ -57,70 +57,71 @@
     }
 </style>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container-fluid">
 
-        {{-- JS'nin verileri okuması için gizli alanlar --}}
-        <div id="stats-data-container" style="display: none;" data-chart-data='@json($chartData ?? [])'
-            data-department-slug="{{ $departmentSlug ?? '' }}" {{-- Departmana özel JS verilerini ekliyoruz --}}
-            @if ($departmentSlug === 'lojistik') data-shipments='@json($shipmentsForFiltering ?? [])'
+        
+        <div id="stats-data-container" style="display: none;" data-chart-data='<?php echo json_encode($chartData ?? [], 15, 512) ?>'
+            data-department-slug="<?php echo e($departmentSlug ?? ''); ?>" 
+            <?php if($departmentSlug === 'lojistik'): ?> data-shipments='<?php echo json_encode($shipmentsForFiltering ?? [], 15, 512) ?>'
              
-             @elseif ($departmentSlug === 'uretim')
-                data-production-plans='@json($productionPlansForFiltering ?? [])'
+             <?php elseif($departmentSlug === 'uretim'): ?>
+                data-production-plans='<?php echo json_encode($productionPlansForFiltering ?? [], 15, 512) ?>'
              
-             @elseif ($departmentSlug === 'hizmet')
-                data-events='@json($eventsForFiltering ?? [])'
-                data-assignments='@json($assignmentsForFiltering ?? [])'
-                data-vehicles='@json($vehiclesForFiltering ?? [])'
-                data-monthly-labels='@json($monthlyLabels ?? [])' {{-- Hizmet aylık grafik etiketleri --}} @endif>
+             <?php elseif($departmentSlug === 'hizmet'): ?>
+                data-events='<?php echo json_encode($eventsForFiltering ?? [], 15, 512) ?>'
+                data-assignments='<?php echo json_encode($assignmentsForFiltering ?? [], 15, 512) ?>'
+                data-vehicles='<?php echo json_encode($vehiclesForFiltering ?? [], 15, 512) ?>'
+                data-monthly-labels='<?php echo json_encode($monthlyLabels ?? [], 15, 512) ?>'  <?php endif; ?>>
         </div>
 
-        {{-- Sayfa Başlığı ve Geri Dön Butonu --}}
+        
         <div class="row mb-3 align-items-center">
             <div class="col-md-6">
                 <h3 class="mb-0" style="color: #1e3a5f; text-shadow: 0 1px 3px rgba(0,0,0,0.3);">
-                    {{ $pageTitle }}
+                    <?php echo e($pageTitle); ?>
+
                 </h3>
             </div>
             <div class="col-md-6 text-md-end">
-                <a href="{{ route('home') }}" class="btn btn-link w-40"
+                <a href="<?php echo e(route('home')); ?>" class="btn btn-link w-40"
                     style="border-color: #1a2332; font-weight: bold; color:#1e3a5f">&larr; Takvime Geri Dön</a>
             </div>
         </div>
 
-        {{-- ================= FİLTRELEME BÖLÜMÜ (BİRLEŞTİRİLMİŞ) ================= --}}
+        
         <div class="card create-shipment-card mb-4">
             <div class="card-header">📊 Grafik Filtreleri</div>
             <div class="card-body">
 
-                {{-- BÖLÜM 1: Ana Tarih Filtresi (Sunucu Taraflı - Sayfayı Yeniler) --}}
-                <form method="GET" action="{{ route('statistics.index') }}">
+                
+                <form method="GET" action="<?php echo e(route('statistics.index')); ?>">
                     <h6 class="mb-3">Ana Tarih Aralığı </h6>
                     <div class="row g-3 align-items-end">
                         <div class="col-md-4">
                             <label for="date_from" class="form-label">Başlangıç Tarihi:</label>
                             <input type="date" id="date_from" name="date_from" class="form-control"
-                                value="{{ $filters['date_from'] ?? '' }}">
+                                value="<?php echo e($filters['date_from'] ?? ''); ?>">
                         </div>
                         <div class="col-md-4">
                             <label for="date_to" class="form-label">Bitiş Tarihi:</label>
                             <input type="date" id="date_to" name="date_to" class="form-control"
-                                value="{{ $filters['date_to'] ?? '' }}">
+                                value="<?php echo e($filters['date_to'] ?? ''); ?>">
                         </div>
                         <div class="col-md-4 d-flex">
                             <button type="submit" class="btn btn-primary w-50 me-2"
                                 style="background-color: #667EEA; border: none;">
                                 <i class="fa-solid fa-filter me-1"></i> Filtrele
                             </button>
-                            <a href="{{ route('statistics.index') }}" class="btn btn-outline-secondary w-50">
+                            <a href="<?php echo e(route('statistics.index')); ?>" class="btn btn-outline-secondary w-50">
                                 Temizle
                             </a>
                         </div>
                     </div>
                 </form>
 
-                {{-- BÖLÜM 2: Departmana Özel Hızlı Filtreler (JS Taraflı) --}}
-                @if ($departmentSlug === 'lojistik')
+                
+                <?php if($departmentSlug === 'lojistik'): ?>
                     <hr class="my-4">
                     <h6 class="mb-3">Lojistik Hızlı Filtreleri </h6>
                     <div class="row g-3">
@@ -128,25 +129,25 @@
                             <label for="shipmentTypeFilter" class="form-label">Sevkiyat Türü:</label>
                             <select id="shipmentTypeFilter" class="form-select">
                                 <option value="all">Tümü (İthalat/İhracat)</option>
-                                {{-- JS tarafından doldurulacak --}}
+                                
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label for="vehicleTypeFilter" class="form-label">Araç Tipi:</label>
                             <select id="vehicleTypeFilter" class="form-select">
                                 <option value="all">Tüm Araç Tipleri</option>
-                                {{-- JS tarafından doldurulacak --}}
+                                
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label for="cargoContentFilter" class="form-label">Kargo İçeriği:</label>
                             <select id="cargoContentFilter" class="form-select">
                                 <option value="all">Tüm Kargolar</option>
-                                {{-- JS tarafından doldurulacak --}}
+                                
                             </select>
                         </div>
                     </div>
-                @elseif ($departmentSlug === 'uretim')
+                <?php elseif($departmentSlug === 'uretim'): ?>
                     <hr class="my-4">
                     <h6 class="mb-3">Üretim Hızlı Filtreleri (Anlık Günceller)</h6>
                     <div class="row g-3">
@@ -154,18 +155,18 @@
                             <label for="machineFilter" class="form-label">Makine:</label>
                             <select id="machineFilter" class="form-select">
                                 <option value="all">Tüm Makineler</option>
-                                {{-- JS tarafından doldurulacak --}}
+                                
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label for="productFilter" class="form-label">Ürün:</label>
                             <select id="productFilter" class="form-select">
                                 <option value="all">Tüm Ürünler</option>
-                                {{-- JS tarafından doldurulacak --}}
+                                
                             </select>
                         </div>
                     </div>
-                @elseif ($departmentSlug === 'hizmet')
+                <?php elseif($departmentSlug === 'hizmet'): ?>
                     <hr class="my-4">
                     <h6 class="mb-3">İdari İşler Hızlı Filtreleri (Anlık Günceller)</h6>
                     <div class="row g-3">
@@ -173,28 +174,28 @@
                             <label for="eventTypeFilter" class="form-label">Etkinlik Tipi:</label>
                             <select id="eventTypeFilter" class="form-select">
                                 <option value="all">Tüm Etkinlik Tipleri</option>
-                                {{-- JS tarafından doldurulacak --}}
+                                
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label for="vehicleFilter" class="form-label">Araç:</label>
                             <select id="vehicleFilter" class="form-select">
                                 <option value="all">Tüm Araçlar</option>
-                                {{-- JS tarafından doldurulacak --}}
+                                
                             </select>
                         </div>
                     </div>
-                @endif
+                <?php endif; ?>
 
             </div>
         </div>
-        {{-- ================= FİLTRELEME BÖLÜMÜ SONU ================= --}}
+        
 
 
-        {{-- ================= GRAFİK ALANLARI (DEPARTMANA ÖZEL) ================= --}}
+        
 
-        {{-- Lojistik Bölümü --}}
-        @if ($departmentSlug === 'lojistik')
+        
+        <?php if($departmentSlug === 'lojistik'): ?>
             <div class="row mb-4">
                 <div class="col-lg-6">
                     <div class="card create-shipment-card">
@@ -215,7 +216,7 @@
             </div>
             <hr class="my-4" style="border-color: rgba(255,255,255,0.5);">
             <h4 class="mb-3" style="color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.3);">
-                Genel İstatistikler (Tarih Aralığı: {{ $filters['date_from'] }} - {{ $filters['date_to'] }})
+                Genel İstatistikler (Tarih Aralığı: <?php echo e($filters['date_from']); ?> - <?php echo e($filters['date_to']); ?>)
             </h4>
             <div class="row">
                 <div class="col-lg-8">
@@ -259,8 +260,8 @@
                 </div>
             </div>
 
-            {{-- Üretim Bölümü --}}
-        @elseif($departmentSlug === 'uretim')
+            
+        <?php elseif($departmentSlug === 'uretim'): ?>
             <div class="row mb-4">
                 <div class="col-lg-6">
                     <div class="card create-shipment-card">
@@ -281,7 +282,7 @@
             </div>
             <hr class="my-4" style="border-color: rgba(255,255,255,0.5);">
             <h4 class="mb-3" style="color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.3);">
-                Genel İstatistikler (Tarih Aralığı: {{ $filters['date_from'] }} - {{ $filters['date_to'] }})
+                Genel İstatistikler (Tarih Aralığı: <?php echo e($filters['date_from']); ?> - <?php echo e($filters['date_to']); ?>)
             </h4>
             <div class="row">
                 <div class="col-lg-6">
@@ -300,8 +301,8 @@
                 </div>
             </div>
 
-            {{-- Hizmet Bölümü --}}
-        @elseif($departmentSlug === 'hizmet')
+            
+        <?php elseif($departmentSlug === 'hizmet'): ?>
             <div class="row mb-4">
                 <div class="col-lg-6">
                     <div class="card create-shipment-card">
@@ -321,19 +322,19 @@
                 </div>
             </div>
 
-            {{-- Hizmet departmanında genel istatistikler ve hızlı istatistikler aynı --}}
+            
 
-            {{-- Diğer Durumlar --}}
-        @else
+            
+        <?php else: ?>
             <div class="alert alert-info create-shipment-card">Bu departman için özel istatistikler henüz mevcut değil.
             </div>
-        @endif
-        {{-- ================= GRAFİK ALANLARI SONU ================= --}}
+        <?php endif; ?>
+        
 
-    </div> {{-- container-fluid sonu --}}
-@endsection
+    </div> 
+<?php $__env->stopSection(); ?>
 
-@section('page_scripts')
+<?php $__env->startSection('page_scripts'); ?>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -927,4 +928,6 @@
             }
         }); // DOMContentLoaded sonu
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp\htdocs\koksanissurecleriportali\resources\views/statistics/index.blade.php ENDPATH**/ ?>

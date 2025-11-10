@@ -149,8 +149,8 @@ class GeneralCalendarController extends Controller
             $canManageThis = $isAdminOrManager || $user->id === $event->user_id;
             $events[] = [
                 'title' => 'Etkinlik: ' . $event->title,
-                'start' => $event->start_datetime->toIso8601String(),
-                'end' => $event->end_datetime->toIso8601String(),
+                'start' => $event->start_datetime->format('Y-m-d\TH:i:s'),
+                'end' => $event->end_datetime->format('Y-m-d\TH:i:s'),
                 'color' => '#F093FB',
                 'extendedProps' => [
                     'eventType' => 'service_event',
@@ -209,8 +209,8 @@ class GeneralCalendarController extends Controller
 
             $events[] = [
                 'title' => 'Araç (' . ($assignment->vehicle->plate_number ?? '?') . '): ' . $assignment->task_description,
-                'start' => $assignment->start_time->toIso8601String(),
-                'end' => $assignment->end_time->toIso8601String(),
+                'start' => $assignment->start_time->format('Y-m-d\TH:i:s'),
+                'end' => $assignment->end_time->format('Y-m-d\TH:i:s'),
                 'color' => '#FBD38D',
                 'extendedProps' => $extendedProps
             ];

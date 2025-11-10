@@ -160,10 +160,6 @@
                             </li>
                         </ul>
                         </li>
-                        @endcan @can('is-global-manager')
-                        <li class="nav-item me-2"> <a class="nav-link fw-bold" href="{{ route('users.create') }}">
-                                <i class="fa-solid fa-user-plus me-1" style="color: #667EEA;"></i> Kullanıcı Ekle </a>
-                        </li>
                     @endcan
                     <li class="nav-item dropdown"> <a id="navbarDropdown" class="nav-link dropdown-toggle"
                             href="#" role="button" data-bs-toggle="dropdown" style="font-weight: 700;">
@@ -172,6 +168,12 @@
                         <div class="dropdown-menu dropdown-menu-end"> <a class="dropdown-item fw-bold"
                                 href="{{ route('profile.edit') }}"> <i class="fa-solid fa-user-pen me-1"
                                     style="color: #4FD1C5;"></i> Profilimi Düzenle </a>
+                            @can('is-global-manager')
+                                <a class="dropdown-item fw-bold" href="{{ route('users.create') }}">
+                                    <i class="fa-solid fa-user-plus me-1" style="color: #667EEA;"></i> Kullanıcı Ekle
+                                </a>
+                            @endcan
+
                             @if (Auth::user()->role === 'admin')
                                 <a class="dropdown-item fw-bold" href="{{ route('birimler.index') }}"> <i
                                         class="fa-solid fa-tags me-1" style="color: #FBD38D;"></i> Birimleri Yönet

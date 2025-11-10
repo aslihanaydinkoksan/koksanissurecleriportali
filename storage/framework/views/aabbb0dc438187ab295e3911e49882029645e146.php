@@ -1,32 +1,32 @@
-@extends('layouts.app')
 
-@section('title', 'Seyahat Planını Düzenle')
 
-@section('content')
+<?php $__env->startSection('title', 'Seyahat Planını Düzenle'); ?>
+
+<?php $__env->startSection('content'); ?>
     <div class="container py-4">
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="customer-card shadow-sm border">
                     <div class="card-header bg-white border-0 px-4 pt-4">
-                        <h4 class="mb-0">"{{ $travel->name }}" Planını Düzenle</h4>
+                        <h4 class="mb-0">"<?php echo e($travel->name); ?>" Planını Düzenle</h4>
                     </div>
                     <div class="card-body px-4">
-                        <form action="{{ route('travels.update', $travel) }}" method="POST" id="update-form">
-                            @csrf
-                            @method('PUT')
-                            @include('travels._form', ['travel' => $travel])
+                        <form action="<?php echo e(route('travels.update', $travel)); ?>" method="POST" id="update-form">
+                            <?php echo csrf_field(); ?>
+                            <?php echo method_field('PUT'); ?>
+                            <?php echo $__env->make('travels._form', ['travel' => $travel], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                         </form>
                         <div class="d-flex justify-content-between mt-3">
-                            <form action="{{ route('travels.destroy', $travel) }}" method="POST"
+                            <form action="<?php echo e(route('travels.destroy', $travel)); ?>" method="POST"
                                 onsubmit="return confirm('Bu seyahat planını silmek istediğinizden emin misiniz? Bağlı ziyaretler silinmez, bağımsız hale gelir.');">
-                                @csrf
-                                @method('DELETE')
+                                <?php echo csrf_field(); ?>
+                                <?php echo method_field('DELETE'); ?>
                                 <button type="submit" class="btn btn-outline-danger rounded-pill px-4">
                                     <i class="fa-solid fa-trash-alt me-1"></i> Sil
                                 </button>
                             </form>
                             <div>
-                                <a href="{{ route('travels.index') }}"
+                                <a href="<?php echo e(route('travels.index')); ?>"
                                     class="btn btn-outline-secondary rounded-pill px-4 me-2">
                                     İptal
                                 </a>
@@ -45,4 +45,6 @@
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp\htdocs\koksanissurecleriportali\resources\views/travels/edit.blade.php ENDPATH**/ ?>

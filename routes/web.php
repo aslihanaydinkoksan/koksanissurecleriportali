@@ -76,6 +76,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('birimler')->group(function ()
     Route::delete('/{birim}', [BirimController::class, 'destroy'])->name('birimler.destroy');
 });
 
+// --- DEPARTMAN ROTALARI ---
 Route::middleware('auth')->group(function () {
     Route::middleware('can:access-admin-features')->group(function () {
         Route::resource('departments', DepartmentController::class)
@@ -145,4 +146,14 @@ Route::middleware('auth')->group(function () {
     Route::resource('travels.bookings', BookingController::class)
         ->shallow()
         ->except(['index', 'show']);
+});
+
+// --- Rezervasyon Rotaları ---
+Route::middleware('auth')->group(function () {
+    Route::middleware('can:access-department,hizmet')->group(function () {
+        Route::resource('travels', TravelController::class);
+        Route::resource('travels.bookings', BookingController::class)
+            ->shallow() // Bu, /bookings/{booking}/edit gibi rotalar oluşturur
+            ->except(['index', 'show']); // Ana liste sayfası yok
+    });
 });

@@ -6,6 +6,7 @@ use App\Models\Booking;
 use Illuminate\Http\Request;
 use App\Models\Travel;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class BookingController extends Controller
 {
@@ -91,7 +92,11 @@ class BookingController extends Controller
      */
     public function edit(Booking $booking)
     {
-        //
+        if (Auth::id() !== $booking->user_id && !Auth::user()->can('is-global-manager')) {
+            abort(403, 'Bu eylemi gerçekleştirme yetkiniz yok.');
+        }
+
+        return view('bookings.edit', compact('booking'));
     }
 
     /**
@@ -103,7 +108,35 @@ class BookingController extends Controller
      */
     public function update(Request $request, Booking $booking)
     {
-        //
+        if (Auth::id() !== $booking->user_id && !Auth::user()->can('is-global-manager')) {
+            abort(403, 'Bu eylemi gerçekleştirme yetkiniz yok.');
+        }
+
+        // Validasyon (store ile aynı)
+        $validated = $request->validate([
+            'type' => 'required|string|in:flight,hotel,car_rental,train,other',
+            'provider_name' => 'required|string|max:255',
+            'confirmation_code' => 'nullable|string|max:255',
+            'start_datetime' => 'required|date',
+            'end_datetime' => 'nullable|date|after_or_equal:start_datetime',
+            'cost' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string',
+            'booking_files.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,msg,eml|max:10240'
+        ]);
+
+        // Rezervasyonu güncelle
+        $booking->update($validated);
+
+        // YENİ dosyalar varsa, mevcutların üzerine ekle (eskileri silme)
+        if ($request->hasFile('booking_files')) {
+            foreach ($request->file('booking_files') as $file) {
+                $booking->addMedia($file)->toMediaCollection('attachments');
+            }
+        }
+
+        // Ana seyahat planının detay sayfasına geri yönlendir
+        return redirect()->route('travels.show', $booking->travel)
+            ->with('success', 'Rezervasyon kaydı başarıyla güncellendi!');
     }
 
     /**
