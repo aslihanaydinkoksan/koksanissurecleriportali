@@ -29,7 +29,7 @@ class LoginController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/general-calendar';
+    protected $redirectTo = '/welcome';
     //protected $redirectTo = RouteServiceProvider::HOME;
 
     /**

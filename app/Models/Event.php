@@ -41,4 +41,8 @@ class Event extends Model
     {
         return $this->belongsTo(User::class);
     }
+    public function customerVisit()
+    {
+        return $this->hasOne(CustomerVisit::class);
+    }
 }

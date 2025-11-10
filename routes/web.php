@@ -12,11 +12,18 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\VehicleAssignmentController;
 use App\Http\Controllers\ServiceScheduleController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CustomerMachineController;
+use App\Http\Controllers\ComplaintController;
+use App\Http\Controllers\TestResultController;
+use App\Http\Controllers\TravelController;
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\DepartmentController;
 
 // Ana sayfa yönlendirmesi
 Route::get('/', function () {
     if (Auth::check()) {
-        return redirect()->route('general.calendar');
+        return redirect()->route('welcome');
     }
     return redirect()->route('login');
 });
@@ -69,6 +76,13 @@ Route::middleware(['auth', 'role:admin'])->prefix('birimler')->group(function ()
     Route::delete('/{birim}', [BirimController::class, 'destroy'])->name('birimler.destroy');
 });
 
+Route::middleware('auth')->group(function () {
+    Route::middleware('can:access-admin-features')->group(function () {
+        Route::resource('departments', DepartmentController::class)
+            ->except(['show']);
+    });
+});
+
 // --- ÜRETİM BİRİMİ ROTALARI ---
 Route::middleware(['auth'])->prefix('production')->name('production.')->group(function () {
     // /production/plans -> Planları listeleme sayfası
@@ -106,4 +120,29 @@ Route::middleware('auth')->group(function () {
     Route::get('/general-calendar', [GeneralCalendarController::class, 'showCalendar'])->name('general.calendar');
     Route::get('/calendar-events-data', [GeneralCalendarController::class, 'getEvents'])->name('web.calendar.events');
     Route::post('/calendar/toggle-important', [GeneralCalendarController::class, 'toggleImportant'])->name('calendar.toggleImportant');
+});
+
+// --- Müşteri Ziyaretleri Rotaları ---
+Route::middleware('auth')->group(function () {
+    // Ana Müşteri Rotaları (index, create, show, vb.)
+    Route::resource('customers', CustomerController::class);
+    // Bu, /customers/{customer}/machines URL'sini oluşturur
+    Route::resource('customers.machines', CustomerMachineController::class)
+        ->shallow() // Sadece 'customer_id' gereken rotaları (store, update, destroy) oluştur
+        ->except(['index', 'show']); // Bu sayfalara ihtiyacımız yok
+    // /customers/{customer}/complaints
+    Route::resource('customers.complaints', ComplaintController::class)
+        ->shallow()
+        ->except(['index', 'show']);
+    // /customers/{customer}/test-results
+    Route::resource('customers.test-results', TestResultController::class)
+        ->shallow()
+        ->except(['index', 'show']);
+    //    Seçilen müşteriye ait makineleri JSON olarak döndürür
+    Route::get('/api/customers/{customer}/machines', [CustomerController::class, 'getMachinesJson'])
+        ->name('api.customers.machines');
+    Route::resource('travels', TravelController::class);
+    Route::resource('travels.bookings', BookingController::class)
+        ->shallow()
+        ->except(['index', 'show']);
 });

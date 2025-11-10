@@ -140,6 +140,22 @@
                                         <hr class="dropdown-divider">
                                     </li> <a class="dropdown-item fw-bold" href="<?php echo e(route('service.vehicles.index')); ?>">
                                         <i class="fa-solid fa-car me-1" style="color: #FBD38D"></i> Araç Tanımları </a>
+                                    <li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li> <a class="dropdown-item fw-bold" href="<?php echo e(route('travels.create')); ?>"> <i
+                                                class="fa-solid fa-route me-1" style="color: #A78BFA"></i> Yeni Seyahat
+                                            Planı</a>
+                                    </li>
+                                    <li> <a class="dropdown-item fw-bold" href="<?php echo e(route('travels.index')); ?>"> <i
+                                                class="fa-solid fa-list-check me-1" style="color: #A78BFA"></i> Seyahat
+                                            Planı Listesi</a>
+                                    </li>
+                                    <hr class="dropdown-divider">
+                            </li> <a class="dropdown-item fw-bold" href="<?php echo e(route('customers.index')); ?>">
+                                <i class="fa-solid fa-users me-1" style="color: #A78BFA;"></i> Müşteri Yönetimi
+                            </a>
                             </li>
                             </li>
                         </ul>
@@ -159,6 +175,10 @@
                             <?php if(Auth::user()->role === 'admin'): ?>
                                 <a class="dropdown-item fw-bold" href="<?php echo e(route('birimler.index')); ?>"> <i
                                         class="fa-solid fa-tags me-1" style="color: #FBD38D;"></i> Birimleri Yönet
+                                </a>
+                                <a class="dropdown-item fw-bold" href="<?php echo e(route('departments.index')); ?>">
+                                    <i class="fa-solid fa-building-user me-1" style="color: #667EEA;"></i>
+                                    Departmanları Yönet
                                 </a>
                             <?php endif; ?> <a class="dropdown-item fw-bold" href="<?php echo e(route('logout')); ?>"
                                 onclick="event.preventDefault(); document.getElementById('logout-form').submit();">

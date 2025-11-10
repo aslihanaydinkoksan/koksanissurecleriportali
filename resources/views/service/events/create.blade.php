@@ -118,6 +118,113 @@
                                                 </option>
                                             @endforeach
                                         </select>
+                                        <div id="crm-details-wrapper" style="display: none;">
+                                            <hr class="my-4">
+
+                                            <div class="row">
+                                                {{-- SEYAHAT SEÇİMİ (OPSİYONEL) --}}
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="travel_id" class="form-label">Bağlı Olduğu Seyahat
+                                                            Programı
+                                                            (Opsiyonel)</label>
+                                                        <select name="travel_id" id="travel_id" class="form-select">
+                                                            <option value="">Bağımsız Ziyaret</option>
+                                                            @foreach ($availableTravels as $travel)
+                                                                <option value="{{ $travel->id }}"
+                                                                    @if (old('travel_id') == $travel->id) selected @endif>
+                                                                    {{ $travel->name }}
+                                                                    ({{ \Carbon\Carbon::parse($travel->start_date)->format('d/m/Y') }})
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                {{-- MÜŞTERİ SEÇİMİ (ZORUNLU) --}}
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="customer_id" class="form-label">Hangi Müşteri Ziyaret
+                                                            Edildi?
+                                                            (*)</label>
+                                                        <select name="customer_id" id="customer_id"
+                                                            class="form-select @error('customer_id') is-invalid @enderror">
+                                                            <option value="">Müşteri Seçiniz...</option>
+                                                            @foreach ($customers as $customer)
+                                                                <option value="{{ $customer->id }}"
+                                                                    @if (old('customer_id') == $customer->id) selected @endif>
+                                                                    {{ $customer->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                        @error('customer_id')
+                                                            <div class="invalid-feedback">{{ $message }}</div>
+                                                        @enderror
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row">
+                                                {{-- ZİYARET AMACI (ZORUNLU) --}}
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="visit_purpose" class="form-label">Ziyaret Amacı
+                                                            (*)</label>
+                                                        <select name="visit_purpose" id="visit_purpose"
+                                                            class="form-select @error('visit_purpose') is-invalid @enderror">
+                                                            <option value="">Seçiniz...</option>
+                                                            <option value="satis_sonrasi_hizmet"
+                                                                @if (old('visit_purpose') == 'satis_sonrasi_hizmet') selected @endif>Satış
+                                                                Sonrası Hizmet
+                                                            </option>
+                                                            <option value="egitim"
+                                                                @if (old('visit_purpose') == 'egitim') selected @endif>
+                                                                Eğitim</option>
+                                                            <option value="rutin_ziyaret"
+                                                                @if (old('visit_purpose') == 'rutin_ziyaret') selected @endif>Rutin
+                                                                Ziyaret
+                                                            </option>
+                                                            <option value="pazarlama"
+                                                                @if (old('visit_purpose') == 'pazarlama') selected @endif>Pazarlama
+                                                                Amaçlı
+                                                                Ziyaret</option>
+                                                            <option value="diger"
+                                                                @if (old('visit_purpose') == 'diger') selected @endif>
+                                                                Diğer</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {{-- 'Satış Sonrası Hizmet' seçilince görünecek alan --}}
+                                            <div id="after-sales-details" style="display: none;">
+                                                <div class="row">
+                                                    {{-- İLGİLİ MAKİNE (AJAX ile dolacak) --}}
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label for="customer_machine_id" class="form-label">İlgili
+                                                                Makine (Opsiyonel)</label>
+                                                            <select name="customer_machine_id" id="customer_machine_id"
+                                                                class="form-select" disabled> {{-- Başlangıçta devre dışı --}}
+                                                                <option value="">Önce bir müşteri seçiniz...</option>
+                                                            </select>
+                                                            @error('customer_machine_id')
+                                                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- SATIŞ SONRASI NOTLARI (hep görünür, 'has_machine' kalktı) --}}
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label for="after_sales_notes" class="form-label">Satış Sonrası
+                                                                Notları</label>
+                                                            <textarea class="form-control" id="after_sales_notes" name="after_sales_notes" rows="3">{{ old('after_sales_notes') }}</textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                         @error('event_type')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -136,11 +243,12 @@
                                 {{-- Sağ Sütun (Tarih ve Açıklama) --}}
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="start_datetime" class="form-label">Başlangıç Tarihi ve Saati (*)</label>
+                                        <label for="start_datetime" class="form-label">Başlangıç Tarihi ve Saati
+                                            (*)</label>
                                         <input type="datetime-local"
                                             class="form-control @error('start_datetime') is-invalid @enderror"
-                                            id="start_datetime" name="start_datetime" value="{{ old('start_datetime') }}"
-                                            required>
+                                            id="start_datetime" name="start_datetime"
+                                            value="{{ old('start_datetime') }}" required>
                                         @error('start_datetime')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -168,6 +276,7 @@
                                 </div>
                             </div>
 
+
                             <div class="text-end mt-4">
                                 {{-- Buton metni güncellendi --}}
                                 <button type="submit" class="btn btn-animated-gradient rounded-3 px-4 py-2">Etkinliği
@@ -179,4 +288,110 @@
             </div>
         </div>
     </div>
+@endsection
+@section('page_scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ana elemanlar
+            const eventTypeDropdown = document.getElementById('event_type');
+            const crmWrapper = document.getElementById('crm-details-wrapper');
+
+            // CRM Elemanları
+            const customerIdDropdown = document.getElementById('customer_id');
+            const visitPurposeDropdown = document.getElementById('visit_purpose');
+
+            // Koşullu CRM Elemanları
+            const afterSalesSection = document.getElementById('after-sales-details');
+            const machineDropdown = document.getElementById('customer_machine_id'); // Radio yerine bu geldi
+
+            // Seçilen müşteriye ait makineleri AJAX ile çeken fonksiyon
+            async function fetchCustomerMachines() {
+                const customerId = customerIdDropdown.value;
+
+                // Müşteri seçilmemişse makine listesini sıfırla
+                if (!customerId) {
+                    machineDropdown.innerHTML = '<option value="">Önce bir müşteri seçiniz...</option>';
+                    machineDropdown.disabled = true;
+                    return;
+                }
+
+                // Müşteri seçilmişse API'ye istek at
+                try {
+                    // API rotamızı 'customer' ID'si ile çağırıyoruz
+                    const response = await fetch(`/api/customers/${customerId}/machines`);
+                    if (!response.ok) throw new Error('Network response was not ok');
+
+                    const machines = await response.json();
+
+                    // Makine dropdown'ını temizle ve doldur
+                    machineDropdown.innerHTML = '<option value="">Makine seç (Opsiyonel)...</option>';
+
+                    if (machines.length > 0) {
+                        machines.forEach(machine => {
+                            const option = document.createElement('option');
+                            option.value = machine.id;
+                            option.textContent =
+                                `${machine.model} (Seri No: ${machine.serial_number || 'N/A'})`;
+                            machineDropdown.appendChild(option);
+                        });
+                        machineDropdown.disabled = false; // Dropdown'ı aktif et
+                    } else {
+                        machineDropdown.innerHTML =
+                            '<option value="">Bu müşteriye ait kayıtlı makine bulunamadı.</option>';
+                        machineDropdown.disabled = true;
+                    }
+
+                } catch (error) {
+                    console.error('Makineler çekilirken hata oluştu:', error);
+                    machineDropdown.innerHTML = '<option value="">Makineler yüklenemedi.</option>';
+                    machineDropdown.disabled = true;
+                }
+            }
+
+            // Etkinlik Tipi 'Müşteri Ziyareti' ise ana CRM bloğunu yönetir
+            function toggleCrmWrapper() {
+                const selectedEventType = eventTypeDropdown.value;
+
+                if (selectedEventType === 'musteri_ziyareti') {
+                    crmWrapper.style.display = 'block';
+                    customerIdDropdown.required = true;
+                    visitPurposeDropdown.required = true;
+
+                    // İç mantığı tetikle
+                    togglePurposeDetails();
+                    // Müşteri seçiliyse makineleri de yükle (sayfa validation'dan dönerse)
+                    fetchCustomerMachines();
+                } else {
+                    crmWrapper.style.display = 'none';
+                    customerIdDropdown.required = false;
+                    visitPurposeDropdown.required = false;
+
+                    // İç alanları gizle
+                    afterSalesSection.style.display = 'none';
+                }
+            }
+
+            // 'Ziyaret Amacı'na göre 'Satış Sonrası' bloğunu yönetir
+            function togglePurposeDetails() {
+                const selectedVisitPurpose = visitPurposeDropdown.value;
+
+                if (selectedVisitPurpose === 'satis_sonrasi_hizmet') {
+                    afterSalesSection.style.display = 'block';
+                    // Artık radio zorunluluğu yok, makine seçimi opsiyonel
+                } else {
+                    afterSalesSection.style.display = 'none';
+                }
+            }
+
+            // Olay dinleyicilerini ekle
+            eventTypeDropdown.addEventListener('change', toggleCrmWrapper);
+            visitPurposeDropdown.addEventListener('change', togglePurposeDetails);
+
+            // YENİ DİNLEYİCİ: Müşteri dropdown'ı değiştiğinde makineleri çek
+            customerIdDropdown.addEventListener('change', fetchCustomerMachines);
+
+            // Sayfa yüklendiğinde (validation hatasıyla geri dönerse diye)
+            toggleCrmWrapper();
+        });
+    </script>
 @endsection

@@ -544,6 +544,24 @@
                         html +=
                             `<div class="col-md-12 mt-3"><p><strong>Kayıt Yapan:</strong> ${props.details['Kayıt Yapan'] || '-'}</p></div>`; // Kalan bilgi
 
+                    } else if (props.eventType === 'travel') {
+                        // YENİ EKLENEN SEYAHAT KONTROLÜ
+                        html += `<div class="col-md-12">
+                                <p><strong>✈️ Plan Adı:</strong> ${props.details['Plan Adı'] || '-'}</p>
+                                <p><strong>👤 Oluşturan:</strong> ${props.details['Oluşturan'] || '-'}</p>
+                                <p><strong>📅 Başlangıç:</strong> ${props.details['Başlangıç'] || '-'}</p>
+                                <p><strong>📅 Bitiş:</strong> ${props.details['Bitiş'] || '-'}</p>
+                                <p><strong>📊 Durum:</strong> ${props.details['Durum'] || '-'}</p>
+                             </div>`;
+
+                        // Seyahat planının detay sayfasına gitmek için bir buton ekleyelim
+                        // (modalExportButton'u bu amaçla yeniden kullanalım)
+                        if (props.url) {
+                            modalExportButton.href = props.url;
+                            modalExportButton.target = "_blank"; // Yeni sekmede aç
+                            modalExportButton.textContent = "✈️ Seyahat Detayına Git";
+                            modalExportButton.style.display = 'inline-block';
+                        }
                     }
                 }
                 html += '</div>';
@@ -602,35 +620,30 @@
                     }
                 },
                 eventsSet: function(info) {
+                    // DÜZELTME 1: Doğru parametre adlarını al
                     const modalIdToOpen = urlParams.get('open_modal_id');
                     const modalTypeToOpen = urlParams.get('open_modal_type');
 
-                    // 2. Eğer açılacak modal bilgisi URL'de varsa
+                    // İki parametre de doluysa devam et
                     if (modalIdToOpen && modalTypeToOpen) {
-
-                        // 3. Takvimdeki tüm etkinlikleri al
                         const allEvents = calendar.getEvents();
+                        const modalIdNum = parseInt(modalIdToOpen, 10);
 
-                        // 4. Eşleşen etkinliği bul (HEM ID HEM TİP KONTROLÜ)
+                        // DÜZELTME 2: Sadece ID'yi değil, HEM ID'yi HEM de TİP'i kontrol et
                         const eventToOpen = allEvents.find(event =>
-                            event.extendedProps.id == modalIdToOpen &&
-                            event.extendedProps.model_type == modalTypeToOpen
+                            event.extendedProps.id === modalIdNum &&
+                            event.extendedProps.model_type === modalTypeToOpen
                         );
 
-                        // 5. Etkinlik bulunduysa modalı aç
                         if (eventToOpen) {
                             console.log('URL\'den modal tetikleniyor:', eventToOpen.extendedProps);
                             openUniversalModal(eventToOpen.extendedProps);
-
-                            // 6. URL'yi temizle (sayfa yenilenirse tekrar açılmasın)
-                            window.history.replaceState({}, document.title, window.location.pathname);
-
                         } else {
-                            console.warn('Modal açılmak istendi ancak ' + modalTypeToOpen + ' ID:' +
-                                modalIdToOpen + ' takvimde bulunamadı.');
-                            // URL'yi yine de temizle
-                            window.history.replaceState({}, document.title, window.location.pathname);
+                            console.warn('Modal açılmak istendi ancak ' + modalTypeToOpen + ' (ID:' +
+                                modalIdNum + ') takvimde bulunamadı.');
                         }
+                        // URL'yi temizle (sayfa yenilenirse tekrar açılmasın)
+                        window.history.replaceState({}, document.title, window.location.pathname);
                     }
                 }
             });

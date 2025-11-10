@@ -8,11 +8,13 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Models\ProductionPlan;
 use App\Models\Event;
 use App\Models\VehicleAssignment;
+use App\Models\Travel;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\EventController;
 use Illuminate\Support\Facades\Gate;
@@ -208,6 +210,44 @@ class HomeController extends Controller
                     'extendedProps' => $extendedProps
                 ];
             }
+            $travels = Travel::with('user')->get(); // Diğer sorgular gibi tümünü al
+            foreach ($travels as $travel) {
+                // 'end_date' FullCalendar'da exclusive'dir (o gün dahil edilmez).
+                // Tam gün görünmesi için 1 gün eklemeliyiz.
+                $period = CarbonPeriod::create($travel->start_date, $travel->end_date);
+
+                foreach ($period as $date) {
+
+                    // extendedProps'u (modalda gösterilecek veri) bir kez tanımla
+                    $extendedProps = [
+                        'eventType' => 'travel',
+                        'model_type' => 'travel',
+                        'is_important' => false,
+                        'title' => '✈️ Seyahat Detayı: ' . $travel->name,
+                        'id' => $travel->id,
+                        'user_id' => $travel->user_id,
+                        'url'   => route('travels.show', $travel),
+                        'editUrl' => (Auth::id() == $travel->user_id || Auth::user()->can('is-global-manager')) ? route('travels.edit', $travel) : null,
+                        'deleteUrl' => (Auth::id() == $travel->user_id || Auth::user()->can('is-global-manager')) ? route('travels.destroy', $travel) : null,
+                        'details' => [
+                            'Plan Adı' => $travel->name,
+                            'Oluşturan' => $travel->user?->name,
+                            'Başlangıç' => $travel->start_date->format('d.m.Y'),
+                            'Bitiş' => $travel->end_date->format('d.m.Y'),
+                            'Durum' => $travel->status == 'planned' ? 'Planlandı' : 'Tamamlandı',
+                        ]
+                    ];
+
+                    // Takvime o gün için etkinliği ekle
+                    $events[] = [
+                        'title' => '✈️ Seyahat: ' . $travel->name,
+                        'start' => $date->toDateString(), // Sadece o gün
+                        'allDay' => true,
+                        'color' => '#A78BFA',
+                        'extendedProps' => $extendedProps
+                    ];
+                }
+            }
         }
 
         // --- Departmana Özel İstatistik Verileri (Bu bölümde değişiklik yok) ---
@@ -301,40 +341,32 @@ class HomeController extends Controller
     public function welcome(Request $request)
     {
         $user = Auth::user();
-        $allItems = $this->getMappedImportantItems($request); // Önemli bildirimleri al
+        $allItems = $this->getMappedImportantItems($request);
         $importantItems = $allItems->take(4);
         $importantItemsCount = $allItems->count();
 
-        // 1. Kullanıcının departmanını ve rolünü al
         $departmentSlug = $user->department ? trim($user->department->slug) : null;
         $userRole = $user->role;
 
-        // 2. Değişkenleri varsayılan olarak ata
         $welcomeTitle = "Hoş Geldiniz";
         $todayItems = collect();
         $chartTitle = "";
         $chartData = [];
-        $kpiData = []; // YENİ: KPI kartları için boş dizi
-
-        // 3. Hangi verinin gösterileceğine karar ver
-
-        // Kural 1, 2, 3: Departmanı OLAN Yöneticiler
+        $kpiData = [];
         if ($departmentSlug === 'uretim') {
             list($welcomeTitle, $chartTitle, $todayItems, $chartData) = $this->getProductionWelcomeData();
         } elseif ($departmentSlug === 'hizmet') {
             list($welcomeTitle, $chartTitle, $todayItems, $chartData) = $this->getServiceWelcomeData();
         } elseif ($departmentSlug === 'lojistik') {
             list($welcomeTitle, $chartTitle, $todayItems, $chartData) = $this->getLogisticsWelcomeData();
-        }
-        // Kural 4 & 5: Admin VEYA Departmansız Yönetici
-        elseif ($userRole == 'admin' || (empty($departmentSlug) && $userRole == 'yönetici')) {
-            $welcomeTitle = "Genel Bakış"; // Başlığı değiştir
-
-            // Fikir 1: KPI Kartları için verileri hazırla
+        } elseif ($userRole == 'admin' || (empty($departmentSlug) && $userRole == 'yönetici')) {
+            $welcomeTitle = "Genel Bakış";
             $kpiData = [
                 'sevkiyat_sayisi' => \App\Models\Shipment::whereDate('tahmini_varis_tarihi', Carbon::today())->count(),
                 'plan_sayisi' => \App\Models\ProductionPlan::whereDate('week_start_date', Carbon::today())->count(),
-                'gorev_sayisi' => \App\Models\Event::whereDate('start_datetime', Carbon::today())->count() + \App\Models\VehicleAssignment::whereDate('start_time', Carbon::today())->count(),
+                'gorev_sayisi' => \App\Models\Event::whereDate('start_datetime', Carbon::today())->count() +
+                    \App\Models\VehicleAssignment::whereDate('start_time', Carbon::today())->count() +
+                    \App\Models\Travel::whereDate('start_date', Carbon::today())->count(),
                 'kullanici_sayisi' => \App\Models\User::count()
             ];
 
@@ -500,8 +532,12 @@ class HomeController extends Controller
             ->with('vehicle')
             ->orderBy('start_time', 'asc')
             ->get();
+        $todayTravels = Travel::whereDate('start_date', Carbon::today())
+            ->orderBy('start_date', 'asc')
+            ->get();
         $todayItems = $todayEvents->merge($todayAssignments)
-            ->sortBy(fn($item) => $item->start_datetime ?? $item->start_time);
+            ->merge($todayTravels)
+            ->sortBy(fn($item) => $item->start_datetime ?? $item->start_time ?? $item->start_date);
 
         // 1. Araç Atama Grafiğini dene
         $assignments = VehicleAssignment::with('vehicle')
@@ -790,15 +826,8 @@ class HomeController extends Controller
         ));
     }
 
-
-    /**
-     * ===================================================================
-     * ÖNEMLİ BİLDİRİMLER (Değişiklik yok)
-     * ===================================================================
-     */
     private function getMappedImportantItems(Request $request)
     {
-        // ... (Bu fonksiyon aynı kalır) ...
         $typeFilter = $request->input('type', 'all');
         $deptFilter = $request->input('department_id', 'all');
         $dateFrom = $request->input('date_from');
@@ -876,12 +905,56 @@ class HomeController extends Controller
                 })
             );
         }
+        if ($typeFilter == 'all' || $typeFilter == 'travel') {
+            $query = Travel::where('is_important', true);
+
+            if ($dateFrom) $query->where('start_date', '>=', Carbon::parse($dateFrom)->startOfDay());
+            if ($dateTo)   $query->where('start_date', '<=', Carbon::parse($dateTo)->endOfDay());
+
+            if ($deptFilter != 'all') {
+                $query->whereHas('user', fn($q) => $q->where('department_id', $deptFilter));
+            }
+
+            $allMappedItems = $allMappedItems->merge(
+                $query->get()->map(function ($item) {
+                    return (object)[
+                        'title' => '✈️ Seyahat: ' . Str::limit($item->name, 30),
+                        'date'  => $item->start_date,
+                        'model_id' => $item->id,
+                        'model_type' => 'travel'
+                    ];
+                })
+            );
+        }
+        // ÖNEMLİ SEYAHATLER
+        if ($typeFilter == 'all' || $typeFilter == 'travel') {
+
+            $query = Travel::where('is_important', true);
+
+            if ($dateFrom) $query->where('start_date', '>=', Carbon::parse($dateFrom)->startOfDay());
+            if ($dateTo)   $query->where('start_date', '<=', Carbon::parse($dateTo)->endOfDay());
+
+            // Departman filtresi (Seyahati oluşturan kullanıcıya göre)
+            if ($deptFilter != 'all') {
+                $query->whereHas('user', fn($q) => $q->where('department_id', $deptFilter));
+            }
+
+            $allMappedItems = $allMappedItems->merge(
+                $query->get()->map(function ($item) {
+                    return (object)[
+                        'title' => '✈️ Seyahat: ' . Str::limit($item->name, 30),
+                        'date'  => $item->start_date,
+                        'model_id' => $item->id,
+                        'model_type' => 'travel'
+                    ];
+                })
+            );
+        }
         return $allMappedItems->sortByDesc('date');
     }
 
     public function showAllImportant(Request $request)
     {
-        // ... (Bu fonksiyon aynı kalır) ...
         $filters = $request->only(['type', 'department_id', 'date_from', 'date_to']);
         $departments = Department::orderBy('name')->get();
         $allItems = $this->getMappedImportantItems($request);
@@ -891,12 +964,6 @@ class HomeController extends Controller
             'departments' => $departments
         ]);
     }
-
-    /**
-     * ===================================================================
-     * ÖZEL YARDIMCI METOTLAR (Değişiklik yok)
-     * ===================================================================
-     */
     private function normalizeCargoContent($cargo)
     {
         // ... (Bu fonksiyon aynı kalır) ...

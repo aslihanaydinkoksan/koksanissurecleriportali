@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\Customer;
+use App\Models\Travel;
+use App\Models\CustomerVisit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class EventController extends Controller
 {
@@ -20,7 +24,6 @@ class EventController extends Controller
         'egitim' => 'Eğitim',
         'fuar' => 'Fuar',
         'gezi' => 'Gezi',
-        'seyahat' => 'Seyahat',
         'musteri_ziyareti' => 'Müşteri Ziyareti',
         'misafir_karsilama' => 'Misafir Karşılama',
         'diger' => 'Diğer',
@@ -118,7 +121,19 @@ class EventController extends Controller
         $this->authorize('access-department', 'hizmet');
 
         $eventTypes = $this->eventTypes;
-        return view('service.events.create', compact('eventTypes'));
+
+        // YENİ EKLENEN VERİLER:
+        $customers = Customer::orderBy('name')->get();
+        $availableTravels = Travel::where('status', '!=', 'completed')
+            ->where('user_id', Auth::id()) // Sadece kendi seyahatleri
+            ->orderBy('start_date', 'desc')
+            ->get();
+
+        return view('service.events.create', compact(
+            'eventTypes',
+            'customers',
+            'availableTravels'
+        ));
     }
 
     /**
@@ -129,19 +144,71 @@ class EventController extends Controller
         // YETKİ KONTROLÜ
         $this->authorize('access-department', 'hizmet');
 
-        // VALIDASYON
+        // VALIDASYON (HEM EVENT HEM DE CRM ALANLARI İÇİN)
         $validatedData = $request->validate([
+            // Ana Event Alanları
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'start_datetime' => 'required|date',
-            'end_datetime' => 'required|date|after_or_equal:start_datetime', // Bitiş, başlangıçtan sonra olmalı
+            'end_datetime' => 'required|date|after_or_equal:start_datetime',
             'location' => 'nullable|string|max:255',
-            'event_type' => ['required', Rule::in(array_keys($this->eventTypes))], // Listemizde var mı?
+            'event_type' => ['required', Rule::in(array_keys($this->eventTypes))],
+
+            // CRM Alanları
+            'travel_id' => 'nullable|integer|exists:travels,id',
+
+            // Koşullu CRM Alanları (Sadece 'musteri_ziyareti' seçilirse zorunlu)
+            'customer_id' => [
+                'nullable',
+                'integer',
+                'exists:customers,id',
+                Rule::requiredIf($request->event_type === 'musteri_ziyareti')
+            ],
+            'visit_purpose' => [
+                'nullable',
+                Rule::in(['satis_sonrasi_hizmet', 'egitim', 'rutin_ziyaret', 'pazarlama', 'diger']),
+                Rule::requiredIf($request->event_type === 'musteri_ziyareti')
+            ],
+
+            'customer_machine_id' => 'nullable|integer|exists:customer_machines,id',
+            'after_sales_notes' => 'nullable|string',
         ]);
 
-        $validatedData['user_id'] = Auth::id();
+        // Veritabanı işlemini Transaction (bütünleşik işlem) içine alıyoruz.
+        // Eğer biri başarısız olursa, ikisi de geri alınır.
+        try {
+            DB::beginTransaction();
 
-        Event::create($validatedData);
+            // 1. Ana Etkinliği Oluştur
+            $event = Event::create([
+                'user_id' => Auth::id(),
+                'title' => $validatedData['title'],
+                'description' => $validatedData['description'],
+                'start_datetime' => $validatedData['start_datetime'],
+                'end_datetime' => $validatedData['end_datetime'],
+                'location' => $validatedData['location'],
+                'event_type' => $validatedData['event_type'],
+            ]);
+
+            // 2. Eğer tip 'Müşteri Ziyareti' ise, CustomerVisit kaydını oluştur
+            if ($event->event_type === 'musteri_ziyareti') {
+                CustomerVisit::create([
+                    'event_id' => $event->id,
+                    'customer_id' => $validatedData['customer_id'],
+                    'travel_id' => $validatedData['travel_id'] ?? null,
+                    'visit_purpose' => $validatedData['visit_purpose'],
+                    'customer_machine_id' => $validatedData['customer_machine_id'] ?? null,
+                    'after_sales_notes' => $validatedData['after_sales_notes'] ?? null,
+                ]);
+            }
+            DB::commit();
+        } catch (\Exception $e) {
+            // Hata varsa, tüm işlemleri geri al
+            DB::rollBack();
+            return redirect()->back()
+                ->with('error', 'Etkinlik oluşturulurken bir hata oluştu: ' . $e->getMessage())
+                ->withInput();
+        }
 
         return redirect()->route('service.events.create')
             ->with('success', 'Yeni etkinlik başarıyla oluşturuldu!');

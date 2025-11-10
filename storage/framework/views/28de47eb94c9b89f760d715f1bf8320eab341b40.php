@@ -905,6 +905,24 @@
                         html += `<div class="col-md-12 mt-3">`;
                         html += `    <p><strong>Kayıt Yapan:</strong> ${props.details['Kayıt Yapan'] || '-'}</p>`;
                         html += `</div>`;
+                    } else if (props.eventType === 'travel') {
+                        // YENİ EKLENEN SEYAHAT KONTROLÜ
+                        html += `<div class="col-md-12">
+                                <p><strong>✈️ Plan Adı:</strong> ${props.details['Plan Adı'] || '-'}</p>
+                                <p><strong>👤 Oluşturan:</strong> ${props.details['Oluşturan'] || '-'}</p>
+                                <p><strong>📅 Başlangıç:</strong> ${props.details['Başlangıç'] || '-'}</p>
+                                <p><strong>📅 Bitiş:</strong> ${props.details['Bitiş'] || '-'}</p>
+                                <p><strong>📊 Durum:</strong> ${props.details['Durum'] || '-'}</p>
+                             </div>`;
+
+                        // Seyahat planının detay sayfasına gitmek için bir buton ekleyelim
+                        // (modalExportButton'u bu amaçla yeniden kullanalım)
+                        if (props.url) {
+                            modalExportButton.href = props.url;
+                            modalExportButton.target = "_blank"; // Yeni sekmede aç
+                            modalExportButton.textContent = "✈️ Seyahat Detayına Git";
+                            modalExportButton.style.display = 'inline-block';
+                        }
                     }
                 }
 
@@ -960,7 +978,7 @@
                 },
                 events: eventsData,
                 timeZone: appTimezone,
-                dayMaxEvents: 2,
+                dayMaxEvents: true,
                 moreLinkText: function(num) {
                     return '+ ' + num + ' tane daha';
                 },
@@ -983,6 +1001,7 @@
                         info.el.classList.add('event-important-pulse');
                     }
                 }
+
             });
             calendar.render();
 
@@ -1010,20 +1029,29 @@
 
 
             const urlParams = new URLSearchParams(window.location.search);
-            const modalIdToOpenStr = urlParams.get('open_modal');
-            if (modalIdToOpenStr) {
+            // DÜZELTME 1: Doğru parametre adlarını al
+            const modalIdToOpen = urlParams.get('open_modal_id');
+            const modalTypeToOpen = urlParams.get('open_modal_type');
+
+            // İki parametre de doluysa devam et
+            if (modalIdToOpen && modalTypeToOpen) {
                 const allEvents = calendar.getEvents();
-                const modalIdToOpenNum = parseInt(modalIdToOpenStr, 10);
-                const eventToOpen = allEvents.find(
-                    event => event.extendedProps.id === modalIdToOpenNum
+                const modalIdNum = parseInt(modalIdToOpen, 10);
+
+                // DÜZELTME 2: Sadece ID'yi değil, HEM ID'yi HEM de TİP'i kontrol et
+                const eventToOpen = allEvents.find(event =>
+                    event.extendedProps.id === modalIdNum &&
+                    event.extendedProps.model_type === modalTypeToOpen
                 );
 
                 if (eventToOpen) {
+                    console.log('URL\'den modal tetikleniyor:', eventToOpen.extendedProps);
                     openUniversalModal(eventToOpen.extendedProps);
                 } else {
-                    console.warn('Modal açılmak istendi ancak ' + modalIdToOpenNum +
-                        ' ID\'li etkinlik takvimde bulunamadı.');
+                    console.warn('Modal açılmak istendi ancak ' + modalTypeToOpen + ' (ID:' +
+                        modalIdNum + ') takvimde bulunamadı.');
                 }
+                // URL'yi temizle (sayfa yenilenirse tekrar açılmasın)
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
 

@@ -15,6 +15,7 @@ use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use App\Models\Travel;
 
 class GeneralCalendarController extends Controller
 {
@@ -107,10 +108,7 @@ class GeneralCalendarController extends Controller
             ->get();
 
         foreach ($plans as $plan) {
-
-
             $canManageThis = $isAdminOrManager || $user->id === $plan->user_id;
-
             $events[] = [
                 'title' => 'Üretim: ' . $plan->plan_title,
                 'start' => $plan->week_start_date->startOfDay()->toIso8601String(),
@@ -148,9 +146,7 @@ class GeneralCalendarController extends Controller
             })->get();
 
         foreach ($serviceEvents as $event) {
-
             $canManageThis = $isAdminOrManager || $user->id === $event->user_id;
-
             $events[] = [
                 'title' => 'Etkinlik: ' . $event->title,
                 'start' => $event->start_datetime->toIso8601String(),
@@ -186,10 +182,8 @@ class GeneralCalendarController extends Controller
                     ->orWhereBetween('end_time', [$start, $end])
                     ->orWhere(fn($sub) => $sub->where('start_time', '<=', $start)->where('end_time', '>=', $end));
             })->get();
-
         foreach ($assignments as $assignment) {
             $canManageThis = $isAdminOrManager || $user->id === $assignment->user_id;
-
             $extendedProps = [
                 'eventType' => 'vehicle_assignment',
                 'model_type' => 'vehicle_assignment',
@@ -219,6 +213,48 @@ class GeneralCalendarController extends Controller
                 'end' => $assignment->end_time->toIso8601String(),
                 'color' => '#FBD38D',
                 'extendedProps' => $extendedProps
+            ];
+        }
+        // 5. Seyahat Planları (Travels)
+        $travels = Travel::with('user')
+            ->where(function ($q) use ($start, $end) {
+                // Sadece tarih (date) sütunları olduğu için whereDate kullan
+                $q->whereBetween('start_date', [$start, $end])
+                    ->orWhereBetween('end_date', [$start, $end])
+                    ->orWhere(fn($sub) => $sub->where('start_date', '<=', $start)->where('end_date', '>=', $end));
+            })->get();
+
+        foreach ($travels as $travel) {
+            // 'end_date' FullCalendar'da exclusive'dir (o gün dahil edilmez).
+            // Tam gün görünmesi için 1 gün eklemeliyiz.
+            $endDate = Carbon::parse($travel->end_date)->addDay()->toDateString();
+
+            // Seyahati oluşturan kişi veya admin/yönetici mi kontrol et
+            $canManageThis = $isAdminOrManager || $user->id === $travel->user_id;
+
+            $events[] = [
+                'title' => '✈️ Seyahat: ' . $travel->name,
+                'start' => $travel->start_date->toDateString(),
+                'end'   => $endDate,
+                'allDay' => true,
+                'color' => '#A78BFA',
+                'extendedProps' => [
+                    'eventType' => 'travel',
+                    'model_type' => 'travel',
+                    'is_important' => $travel->is_important,
+                    'title' => '✈️ Seyahat Detayı: ' . $travel->name,
+                    'id' => $travel->id,
+                    'url'   => route('travels.show', $travel),
+                    'editUrl' => $canManageThis ? route('travels.edit', $travel) : null,
+                    'deleteUrl' => $canManageThis ? route('travels.destroy', $travel) : null,
+                    'details' => [
+                        'Plan Adı' => $travel->name,
+                        'Oluşturan' => $travel->user?->name,
+                        'Başlangıç' => $travel->start_date->format('d.m.Y'),
+                        'Bitiş' => $travel->end_date->format('d.m.Y'),
+                        'Durum' => $travel->status == 'planned' ? 'Planlandı' : 'Tamamlandı',
+                    ]
+                ]
             ];
         }
 
@@ -328,6 +364,9 @@ class GeneralCalendarController extends Controller
                     break;
                 case 'vehicle_assignment':
                     $model = VehicleAssignment::find($modelId);
+                    break;
+                case 'travel':
+                    $model = \App\Models\Travel::find($modelId);
                     break;
                 default:
                     Log::warning('Bilinmeyen model tipi geldi', ['type' => $modelType]);
