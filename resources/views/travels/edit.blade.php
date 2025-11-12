@@ -11,7 +11,8 @@
                         <h4 class="mb-0">"{{ $travel->name }}" Planını Düzenle</h4>
                     </div>
                     <div class="card-body px-4">
-                        <form action="{{ route('travels.update', $travel) }}" method="POST" id="update-form">
+                        <form action="{{ route('travels.update', $travel) }}" method="POST" id="update-form"
+                            autocomplete="off">
                             @csrf
                             @method('PUT')
                             @include('travels._form', ['travel' => $travel])

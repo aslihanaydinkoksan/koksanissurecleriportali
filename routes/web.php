@@ -19,6 +19,7 @@ use App\Http\Controllers\TestResultController;
 use App\Http\Controllers\TravelController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\ActivityLogController;
 
 // Ana sayfa yönlendirmesi
 Route::get('/', function () {
@@ -148,12 +149,6 @@ Route::middleware('auth')->group(function () {
         ->except(['index', 'show']);
 });
 
-// --- Rezervasyon Rotaları ---
-Route::middleware('auth')->group(function () {
-    Route::middleware('can:access-department,hizmet')->group(function () {
-        Route::resource('travels', TravelController::class);
-        Route::resource('travels.bookings', BookingController::class)
-            ->shallow() // Bu, /bookings/{booking}/edit gibi rotalar oluşturur
-            ->except(['index', 'show']); // Ana liste sayfası yok
-    });
+Route::middleware(['auth', 'can:is-global-manager'])->group(function () {
+    Route::get('/system/logs', [ActivityLogController::class, 'index'])->name('logs.index');
 });

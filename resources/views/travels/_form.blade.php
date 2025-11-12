@@ -11,7 +11,7 @@
 <div class="mb-3">
     <label for="name" class="form-label">Seyahat Adı (*)</label>
     <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name"
-        value="{{ old('name', $travel->name ?? '') }}" required>
+        value="{{ old('name', $travel->name ?? '') }}" autocomplete="off" required>
 </div>
 
 <div class="row">
@@ -19,14 +19,15 @@
         <div class="mb-3">
             <label for="start_date" class="form-label">Başlangıç Tarihi (*)</label>
             <input type="date" class="form-control @error('start_date') is-invalid @enderror" id="start_date"
-                name="start_date" value="{{ old('start_date', $travel->start_date ?? '') }}" required>
+                name="start_date" value="{{ old('start_date', $travel->start_date ?? '') }}" autocomplete="off"
+                required>
         </div>
     </div>
     <div class="col-md-6">
         <div class="mb-3">
             <label for="end_date" class="form-label">Bitiş Tarihi (*)</label>
             <input type="date" class="form-control @error('end_date') is-invalid @enderror" id="end_date"
-                name="end_date" value="{{ old('end_date', $travel->end_date ?? '') }}" required>
+                name="end_date" value="{{ old('end_date', $travel->end_date ?? '') }}" autocomplete="off" required>
         </div>
     </div>
 </div>

@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Foundation\Auth\ThrottlesLogins;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Cache;
 
 class LoginController extends Controller
 {
@@ -22,7 +25,20 @@ class LoginController extends Controller
     |
     */
 
-    use AuthenticatesUsers;
+    use AuthenticatesUsers, ThrottlesLogins {
+
+        ThrottlesLogins::incrementLoginAttempts insteadof AuthenticatesUsers;
+
+        ThrottlesLogins::clearLoginAttempts insteadof AuthenticatesUsers;
+
+        ThrottlesLogins::incrementLoginAttempts as protected traitIncrementLoginAttempts;
+        ThrottlesLogins::clearLoginAttempts as protected traitClearLoginAttempts;
+    }
+
+    protected $maxAttempts = 3;
+    protected $decayMinutes = 2;
+
+    protected $captchaThreshold = 3;
 
     /**
      * Giriş yapıldıktan sonra kullanıcıların yönlendirileceği yer.
@@ -53,22 +69,80 @@ class LoginController extends Controller
      */
     protected function sendFailedLoginResponse(Request $request)
     {
-        // 1. Girilen e-posta adresine sahip bir kullanıcı var mı diye kontrol et.
+        $this->incrementLoginAttempts($request);
         $user = User::where($this->username(), $request->{$this->username()})->first();
 
-        // 2. Eğer kullanıcı varsa ama girilen şifre yanlışsa...
         if ($user && !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
-                // Hata mesajı olarak 'password' alanına odaklan ve
-                // lang/tr/auth.php dosyasındaki 'password' anahtarını kullan.
                 'password' => [trans('auth.password')],
             ]);
         }
 
-        // 3. Eğer kullanıcı hiç yoksa, varsayılan genel hatayı göster.
-        // lang/tr/auth.php dosyasındaki 'failed' anahtarını kullan.
         throw ValidationException::withMessages([
             $this->username() => [trans('auth.failed')],
         ]);
+    }
+    /**
+     * Login formunu gösterir. (Override)
+     */
+    public function showLoginForm(Request $request)
+    {
+        $key = 'login_ip_check|' . $request->ip();
+
+        $attempts = Cache::get($key, 0);
+
+        $showCaptcha = ($attempts >= $this->captchaThreshold);
+        return view('auth.login', [
+            'showCaptcha' => $showCaptcha
+        ]);
+    }
+
+    /**
+     * Başarısız giriş denemesi sayacını artırır. (Override)
+     */
+    /**
+     * Başarısız giriş denemesi sayacını artırır. (Override)
+     */
+    protected function incrementLoginAttempts(Request $request)
+    {
+        $this->traitIncrementLoginAttempts($request);
+        $key = 'login_ip_check|' . $request->ip();
+        $currentAttempts = Cache::get($key, 0);
+        $currentAttempts++;
+        Cache::put($key, $currentAttempts, $this->decayMinutes * 60);
+    }
+
+    /**
+     * Giriş isteğini doğrular. (Override)
+     */
+    protected function validateLogin(Request $request)
+    {
+        $request->validate([
+            $this->username() => 'required|string',
+            'password' => 'required|string',
+        ]);
+
+
+        $key = 'login_ip_check|' . $request->ip();
+        $attempts = Cache::get($key, 0);
+
+        if ($attempts >= $this->captchaThreshold) {
+            $request->validate([
+                'g-recaptcha-response' => 'required|recaptcha'
+            ], [
+                'g-recaptcha-response.required' => 'Lütfen robot olmadığınızı doğrulayın.',
+                'g-recaptcha-response.recaptcha' => 'reCAPTCHA doğrulaması başarısız oldu, lütfen tekrar deneyin.',
+            ]);
+        }
+    }
+
+    /**
+     * Başarılı girişten sonra denemeleri temizler. (Override)
+     */
+    protected function clearLoginAttempts(Request $request)
+    {
+        $this->traitClearLoginAttempts($request);
+        $key = 'login_ip_check|' . $request->ip();
+        Cache::forget($key);
     }
 }

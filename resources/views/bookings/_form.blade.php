@@ -38,13 +38,13 @@
     <div class="col-md-3 mb-3">
         <label for="start_datetime" class="form-label">Başlangıç / Kalkış (*)</label>
         {{-- Tarih formatlamasını 'datetime-local' için düzelt --}}
-        <input type="datetime-local" ...
+        <input type="datetime-local" name="start_datetime" id="start_datetime" class="form-control"
             value="{{ old('start_datetime', isset($booking) && $booking->start_datetime ? \Carbon\Carbon::parse($booking->start_datetime)->format('Y-m-d\TH:i') : '') }}"
             required>
     </div>
     <div class="col-md-3 mb-3">
         <label for="end_datetime" class="form-label">Bitiş / Varış</label>
-        <input type="datetime-local" ...
+        <input type="datetime-local" name="end_datetime" id="end_datetime" class="form-control"
             value="{{ old('end_datetime', isset($booking) && $booking->end_datetime ? \Carbon\Carbon::parse($booking->end_datetime)->format('Y-m-d\TH:i') : '') }}">
     </div>
     <div class="col-md-2 mb-3">

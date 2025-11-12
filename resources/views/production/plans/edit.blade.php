@@ -2,96 +2,98 @@
 
 @section('title', 'Üretim Planını Düzenle')
 
-<style>
-    /* Ana içerik alanına (main) animasyonlu arka planı uygula */
-    #app>main.py-4 {
-        padding: 2.5rem 0 !important;
-        min-height: calc(100vh - 72px);
-        background: linear-gradient(-45deg,
-                #dbe4ff,
-                #fde2ff,
-                #d9fcf7,
-                #fff0d9);
-        background-size: 400% 400%;
-        animation: gradientWave 18s ease infinite;
-    }
-
-    /* Arka plan dalgalanma animasyonu */
-    @keyframes gradientWave {
-        0% {
-            background-position: 0% 50%;
+@push('styles')
+    <style>
+        /* Ana içerik alanına (main) animasyonlu arka planı uygula */
+        #app>main.py-4 {
+            padding: 2.5rem 0 !important;
+            min-height: calc(100vh - 72px);
+            background: linear-gradient(-45deg,
+                    #dbe4ff,
+                    #fde2ff,
+                    #d9fcf7,
+                    #fff0d9);
+            background-size: 400% 400%;
+            animation: gradientWave 18s ease infinite;
         }
 
-        50% {
-            background-position: 100% 50%;
+        /* Arka plan dalgalanma animasyonu */
+        @keyframes gradientWave {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
-        100% {
-            background-position: 0% 50%;
+        /* === GÜNCELLENDİ (plan-edit-card) === */
+        .plan-edit-card {
+            border-radius: 1rem;
+            box-shadow: none !important;
+            border: 0;
+            background-color: transparent;
+            backdrop-filter: none;
         }
-    }
 
-    /* === GÜNCELLENDİ (plan-edit-card) === */
-    .plan-edit-card {
-        border-radius: 1rem;
-        box-shadow: none !important;
-        border: 0;
-        background-color: transparent;
-        backdrop-filter: none;
-    }
+        .plan-edit-card .card-header,
+        .plan-edit-card .form-label {
+            color: #444;
+            font-weight: bold;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
+        }
 
-    .plan-edit-card .card-header,
-    .plan-edit-card .form-label {
-        color: #444;
-        font-weight: bold;
-        text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
-    }
+        .plan-edit-card .card-header {
+            color: #000;
+        }
 
-    .plan-edit-card .card-header {
-        color: #000;
-    }
+        .plan-edit-card .form-control,
+        .plan-edit-card .form-select {
+            border-radius: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
 
-    .plan-edit-card .form-control,
-    .plan-edit-card .form-select {
-        border-radius: 0.5rem;
-        background-color: rgba(255, 255, 255, 0.8);
-    }
+        /* Plan detayları satırı için stiller (create.blade.php ile aynı) */
+        .plan-detail-row {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            align-items: center;
+        }
 
-    /* Plan detayları satırı için stiller (create.blade.php ile aynı) */
-    .plan-detail-row {
-        display: flex;
-        gap: 0.75rem;
-        margin-bottom: 0.75rem;
-        align-items: center;
-    }
+        .plan-detail-row .form-control {
+            flex: 1;
+        }
 
-    .plan-detail-row .form-control {
-        flex: 1;
-    }
+        .plan-detail-row .btn-danger {
+            flex-shrink: 0;
+            padding: 0.375rem 0.75rem;
+        }
 
-    .plan-detail-row .btn-danger {
-        flex-shrink: 0;
-        padding: 0.375rem 0.75rem;
-    }
+        /* Animasyonlu buton (Değişiklik yok) */
+        .btn-animated-gradient {
+            background: linear-gradient(-45deg,
+                    #667EEA, #F093FB, #4FD1C5, #FBD38D);
+            background-size: 400% 400%;
+            animation: gradientWave 18s ease infinite;
+            border: none;
+            color: white;
+            font-weight: bold;
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+        }
 
-    /* Animasyonlu buton (Değişiklik yok) */
-    .btn-animated-gradient {
-        background: linear-gradient(-45deg,
-                #667EEA, #F093FB, #4FD1C5, #FBD38D);
-        background-size: 400% 400%;
-        animation: gradientWave 18s ease infinite;
-        border: none;
-        color: white;
-        font-weight: bold;
-        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-    }
-
-    .btn-animated-gradient:hover {
-        color: white;
-        transform: scale(1.05);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
-</style>
+        .btn-animated-gradient:hover {
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+@endpush
 
 @section('content')
 
@@ -118,7 +120,8 @@
                         {{-- Controller ve list.blade.php'deki 'admin' kuralı baz alındı --}}
                         @if (Auth::user()->role === 'admin')
                             <form method="POST" action="{{ route('production.plans.destroy', $productionPlan->id) }}"
-                                onsubmit="return confirm('Bu üretim planını silmek istediğinizden emin misiniz?');">
+                                onsubmit="return confirm('Bu üretim planını silmek istediğinizden emin misiniz?');"
+                                autocomplete="off">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-danger btn-sm">Planı Sil</button>
@@ -132,7 +135,8 @@
                         @endif
 
                         {{-- Form action ve method güncellendi --}}
-                        <form method="POST" action="{{ route('production.plans.update', $productionPlan->id) }}">
+                        <form method="POST" action="{{ route('production.plans.update', $productionPlan->id) }}"
+                            autocomplete="off">
                             @csrf
                             @method('PUT') {{-- GÜNCELLENDİ --}}
 
@@ -144,7 +148,8 @@
                                         {{-- Veri doldurma güncellendi --}}
                                         <input type="text" class="form-control @error('plan_title') is-invalid @enderror"
                                             id="plan_title" name="plan_title"
-                                            value="{{ old('plan_title', $productionPlan->plan_title) }}" required>
+                                            value="{{ old('plan_title', $productionPlan->plan_title) }}" required
+                                            autocomplete="off">
                                         @error('plan_title')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -156,7 +161,7 @@
                                             class="form-control @error('week_start_date') is-invalid @enderror"
                                             id="week_start_date" name="week_start_date"
                                             value="{{ old('week_start_date', $productionPlan->week_start_date->format('Y-m-d')) }}"
-                                            required>
+                                            required autocomplete="off">
                                         @error('week_start_date')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -164,8 +169,8 @@
                                 </div>
 
                                 {{-- Sağ Sütun (Dinamik Plan Detayları) --}}
-                                <div class="col-md-6">
-                                    <label class="form-label">Plan Detayları (Makine, Ürün, Adet)</label>
+                                <fieldset class="col-md-6">
+                                    <legend class="form-label">Plan Detayları (Makine, Ürün, Adet)</legend>
 
                                     @if ($errors->has('plan_details.*'))
                                         <div class="alert alert-danger p-2 small">
@@ -182,17 +187,17 @@
                                                 <input type="text" name="plan_details[{{ $index }}][machine]"
                                                     class="form-control @error('plan_details.' . $index . '.machine') is-invalid @enderror"
                                                     placeholder="Makine Adı" value="{{ $details['machine'] ?? '' }}"
-                                                    required>
+                                                    required autocomplete="off">
 
                                                 <input type="text" name="plan_details[{{ $index }}][product]"
                                                     class="form-control @error('plan_details.' . $index . '.product') is-invalid @enderror"
                                                     placeholder="Ürün Kodu/Adı" value="{{ $details['product'] ?? '' }}"
-                                                    required>
+                                                    required autocomplete="off">
 
                                                 <input type="number" name="plan_details[{{ $index }}][quantity]"
                                                     class="form-control @error('plan_details.' . $index . '.quantity') is-invalid @enderror"
                                                     placeholder="Adet" value="{{ $details['quantity'] ?? '' }}" required
-                                                    min="1">
+                                                    min="1" autocomplete="off">
 
                                                 <button type="button"
                                                     class="btn btn-danger btn-sm remove-plan-row">&times;</button>
@@ -212,8 +217,9 @@
 
                                     <button type="button" id="add-plan-row" class="btn btn-success btn-sm mt-2">+ Satır
                                         Ekle</button>
-                                </div>
+                                </fieldset>
                             </div>
+
 
                             <div class="text-end mt-4">
                                 {{-- Butonlar güncellendi --}}
@@ -244,9 +250,9 @@
             addButton.addEventListener('click', function() {
                 const newRow = `
             <div class="plan-detail-row">
-                <input type="text" name="plan_details[${rowIndex}][machine]" class="form-control" placeholder="Makine Adı" required>
-                <input type="text" name="plan_details[${rowIndex}][product]" class="form-control" placeholder="Ürün Kodu/Adı" required>
-                <input type="number" name="plan_details[${rowIndex}][quantity]" class="form-control" placeholder="Adet" required min="1">
+                <input type="text" name="plan_details[${rowIndex}][machine]" class="form-control" placeholder="Makine Adı" required autocomplete="off">
+                <input type="text" name="plan_details[${rowIndex}][product]" class="form-control" placeholder="Ürün Kodu/Adı" required autocomplete="off">
+                <input type="number" name="plan_details[${rowIndex}][quantity]" class="form-control" placeholder="Adet" required min="1" autocomplete="off">
                 <button type="button" class="btn btn-danger btn-sm remove-plan-row">&times;</button>
             </div>
         `;

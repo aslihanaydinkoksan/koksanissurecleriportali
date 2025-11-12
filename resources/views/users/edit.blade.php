@@ -2,97 +2,92 @@
 
 @section('title', 'Kullanıcıyı Düzenle')
 
-{{-- 
-    YENİ EKLENEN STİL BÖLÜMÜ (Diğer form sayfalarıyla aynı)
-    1. Arka plan için animasyonlu gradyan
-    2. Kart için TAM ŞEFFAF stil
-    3. Form elemanları için yumuşak köşeler ve okunabilirlik
-    4. Buton için animasyonlu gradyan
---}}
-<style>
-    /* Ana içerik alanına (main) animasyonlu arka planı uygula */
-    #app>main.py-4 {
-        padding: 2.5rem 0 !important;
-        min-height: calc(100vh - 72px);
-        background: linear-gradient(-45deg,
-                #dbe4ff,
-                /* #667EEA (Canlı mavi-mor) tonu */
-                #fde2ff,
-                /* #F093FB (Yumuşak pembe) tonu */
-                #d9fcf7,
-                /* #4FD1C5 (Teal/turkuaz) tonu */
-                #fff0d9
-                /* #FBD38D (Sıcak sarı) tonu */
-            );
-        background-size: 400% 400%;
-        animation: gradientWave 18s ease infinite;
-    }
-
-    /* Arka plan dalgalanma animasyonu */
-    @keyframes gradientWave {
-        0% {
-            background-position: 0% 50%;
+@push('styles')
+    <style>
+        /* Ana içerik alanına (main) animasyonlu arka planı uygula */
+        #app>main.py-4 {
+            padding: 2.5rem 0 !important;
+            min-height: calc(100vh - 72px);
+            background: linear-gradient(-45deg,
+                    #dbe4ff,
+                    /* #667EEA (Canlı mavi-mor) tonu */
+                    #fde2ff,
+                    /* #F093FB (Yumuşak pembe) tonu */
+                    #d9fcf7,
+                    /* #4FD1C5 (Teal/turkuaz) tonu */
+                    #fff0d9
+                    /* #FBD38D (Sıcak sarı) tonu */
+                );
+            background-size: 400% 400%;
+            animation: gradientWave 18s ease infinite;
         }
 
-        50% {
-            background-position: 100% 50%;
+        /* Arka plan dalgalanma animasyonu */
+        @keyframes gradientWave {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
-        100% {
-            background-position: 0% 50%;
+        /* Ana Kart (Tam Şeffaf) */
+        .user-edit-card {
+            /* Bu sayfa için özel class adı */
+            border-radius: 1rem;
+            box-shadow: none !important;
+            border: 0;
+            background-color: transparent;
+            backdrop-filter: none;
         }
-    }
 
-    /* Ana Kart (Tam Şeffaf) */
-    .user-edit-card {
-        /* Bu sayfa için özel class adı */
-        border-radius: 1rem;
-        box-shadow: none !important;
-        border: 0;
-        background-color: transparent;
-        backdrop-filter: none;
-    }
+        /* Form Etiketleri (Okunabilirlik İçin) */
+        .user-edit-card .card-header,
+        .user-edit-card .form-label {
+            color: #444;
+            /* Koyu renk metin */
+            font-weight: bold;
+            /* Kalın Metin */
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
+        }
 
-    /* Form Etiketleri (Okunabilirlik İçin) */
-    .user-edit-card .card-header,
-    .user-edit-card .form-label {
-        color: #444;
-        /* Koyu renk metin */
-        font-weight: bold;
-        /* Kalın Metin */
-        text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
-    }
+        .user-edit-card .card-header {
+            color: #000;
+            /* Başlık siyah kalsın */
+        }
 
-    .user-edit-card .card-header {
-        color: #000;
-        /* Başlık siyah kalsın */
-    }
+        /* Form Elemanları (Yumuşak Köşe + Opak Arka Plan) */
+        .user-edit-card .form-control,
+        .user-edit-card .form-select {
+            border-radius: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
 
-    /* Form Elemanları (Yumuşak Köşe + Opak Arka Plan) */
-    .user-edit-card .form-control,
-    .user-edit-card .form-select {
-        border-radius: 0.5rem;
-        background-color: rgba(255, 255, 255, 0.8);
-    }
+        /* Animasyonlu Buton */
+        .btn-animated-gradient {
+            background: linear-gradient(-45deg,
+                    #667EEA, #F093FB, #4FD1C5, #FBD38D);
+            background-size: 400% 400%;
+            animation: gradientWave 18s ease infinite;
+            border: none;
+            color: white;
+            font-weight: bold;
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+        }
 
-    /* Animasyonlu Buton */
-    .btn-animated-gradient {
-        background: linear-gradient(-45deg,
-                #667EEA, #F093FB, #4FD1C5, #FBD38D);
-        background-size: 400% 400%;
-        animation: gradientWave 18s ease infinite;
-        border: none;
-        color: white;
-        font-weight: bold;
-        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-    }
-
-    .btn-animated-gradient:hover {
-        color: white;
-        transform: scale(1.05);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
-</style>
+        .btn-animated-gradient:hover {
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+@endpush
 
 @section('content')
     <div class="container">

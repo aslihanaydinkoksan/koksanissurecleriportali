@@ -59,11 +59,13 @@
             border: none !important;
         }
     </style>
+    <?php echo $__env->yieldPushContent('styles'); ?>
+</head>
 </head>
 
 <body>
     <div id="app">
-        <nav class="navbar navbar-expand-md navbar-light shadow-sm"
+        <nav class="navbar navbar-expand-lg navbar-light shadow-sm"
             style="background: linear-gradient(to right, #DDE3FB, #FFFFFF);">
             <div class="container-fluid"> <a class="navbar-brand d-flex align-items-center"
                     href="<?php echo e(route('welcome')); ?>"> <img src="<?php echo e(asset('koksan-logo.png')); ?>" alt="Köksan Logo"
@@ -181,6 +183,9 @@
                                 <a class="dropdown-item fw-bold" href="<?php echo e(route('departments.index')); ?>">
                                     <i class="fa-solid fa-building-user me-1" style="color: #667EEA;"></i>
                                     Departmanları Yönet
+                                </a>
+                                <a class="dropdown-item fw-bold" href="<?php echo e(route('logs.index')); ?>"> <i
+                                        class="fa-solid fa-plus me-1" style="color: #f78dfb;"></i> Loglar
                                 </a>
                             <?php endif; ?> <a class="dropdown-item fw-bold" href="<?php echo e(route('logout')); ?>"
                                 onclick="event.preventDefault(); document.getElementById('logout-form').submit();">

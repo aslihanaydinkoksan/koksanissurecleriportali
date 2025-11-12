@@ -43,8 +43,10 @@ class GeneralCalendarController extends Controller
             $cikisTarihi = null;
             $varisTarihi = null;
             try {
-                if ($shipment->cikis_tarihi) $cikisTarihi = Carbon::parse($shipment->cikis_tarihi);
-                if ($shipment->tahmini_varis_tarihi) $varisTarihi = Carbon::parse($shipment->tahmini_varis_tarihi);
+                if ($shipment->cikis_tarihi)
+                    $cikisTarihi = Carbon::parse($shipment->cikis_tarihi);
+                if ($shipment->tahmini_varis_tarihi)
+                    $varisTarihi = Carbon::parse($shipment->tahmini_varis_tarihi);
             } catch (\Exception $e) { /* Hatalı tarihi yoksay */
             }
 
@@ -208,7 +210,7 @@ class GeneralCalendarController extends Controller
 
 
             $events[] = [
-                'title' => 'Araç (' . ($assignment->vehicle->plate_number ?? '?') . '): ' . $assignment->task_description,
+                'title' => 'Araç (' . ($assignment->vehicle?->plate_number ?? '?') . '): ' . $assignment->task_description,
                 'start' => $assignment->start_time->format('Y-m-d\TH:i:s'),
                 'end' => $assignment->end_time->format('Y-m-d\TH:i:s'),
                 'color' => '#FBD38D',
@@ -235,7 +237,7 @@ class GeneralCalendarController extends Controller
             $events[] = [
                 'title' => '✈️ Seyahat: ' . $travel->name,
                 'start' => $travel->start_date->toDateString(),
-                'end'   => $endDate,
+                'end' => $endDate,
                 'allDay' => true,
                 'color' => '#A78BFA',
                 'extendedProps' => [
@@ -244,7 +246,7 @@ class GeneralCalendarController extends Controller
                     'is_important' => $travel->is_important,
                     'title' => '✈️ Seyahat Detayı: ' . $travel->name,
                     'id' => $travel->id,
-                    'url'   => route('travels.show', $travel),
+                    'url' => route('travels.show', $travel),
                     'editUrl' => $canManageThis ? route('travels.edit', $travel) : null,
                     'deleteUrl' => $canManageThis ? route('travels.destroy', $travel) : null,
                     'details' => [

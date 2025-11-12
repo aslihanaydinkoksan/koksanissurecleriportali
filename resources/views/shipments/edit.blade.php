@@ -2,81 +2,83 @@
 
 @section('title', 'Sevkiyat Kaydını Düzenle')
 
-<style>
-    /* Ana içerik alanına (main) animasyonlu arka planı uygula */
-    #app>main.py-4 {
-        padding: 2.5rem 0 !important;
-        min-height: calc(100vh - 72px);
-        background: linear-gradient(-45deg,
-                #dbe4ff,
-                #fde2ff,
-                #d9fcf7,
-                #fff0d9);
-        background-size: 400% 400%;
-        animation: gradientWave 18s ease infinite;
-    }
-
-    /* Arka plan dalgalanma animasyonu */
-    @keyframes gradientWave {
-        0% {
-            background-position: 0% 50%;
+@push('styles')
+    <style>
+        /* Ana içerik alanına (main) animasyonlu arka planı uygula */
+        #app>main.py-4 {
+            padding: 2.5rem 0 !important;
+            min-height: calc(100vh - 72px);
+            background: linear-gradient(-45deg,
+                    #dbe4ff,
+                    #fde2ff,
+                    #d9fcf7,
+                    #fff0d9);
+            background-size: 400% 400%;
+            animation: gradientWave 18s ease infinite;
         }
 
-        50% {
-            background-position: 100% 50%;
+        /* Arka plan dalgalanma animasyonu */
+        @keyframes gradientWave {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
-        100% {
-            background-position: 0% 50%;
+        /* Ana Kart (Tam Şeffaf) */
+        .shipment-edit-card {
+            border-radius: 1rem;
+            box-shadow: none !important;
+            border: 0;
+            background-color: transparent;
+            backdrop-filter: none;
         }
-    }
 
-    /* Ana Kart (Tam Şeffaf) */
-    .shipment-edit-card {
-        border-radius: 1rem;
-        box-shadow: none !important;
-        border: 0;
-        background-color: transparent;
-        backdrop-filter: none;
-    }
+        /* Form Etiketleri (Okunabilirlik İçin) */
+        .shipment-edit-card .card-header,
+        .shipment-edit-card .form-label {
+            color: #444;
+            font-weight: bold;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
+        }
 
-    /* Form Etiketleri (Okunabilirlik İçin) */
-    .shipment-edit-card .card-header,
-    .shipment-edit-card .form-label {
-        color: #444;
-        font-weight: bold;
-        text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
-    }
+        .shipment-edit-card .card-header {
+            color: #000;
+        }
 
-    .shipment-edit-card .card-header {
-        color: #000;
-    }
+        /* Form Elemanları (Yumuşak Köşe + Opak Arka Plan) */
+        .shipment-edit-card .form-control,
+        .shipment-edit-card .form-select {
+            border-radius: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
 
-    /* Form Elemanları (Yumuşak Köşe + Opak Arka Plan) */
-    .shipment-edit-card .form-control,
-    .shipment-edit-card .form-select {
-        border-radius: 0.5rem;
-        background-color: rgba(255, 255, 255, 0.8);
-    }
+        /* Animasyonlu Buton */
+        .btn-animated-gradient {
+            background: linear-gradient(-45deg,
+                    #667EEA, #F093FB, #4FD1C5, #FBD38D);
+            background-size: 400% 400%;
+            animation: gradientWave 18s ease infinite;
+            border: none;
+            color: white;
+            font-weight: bold;
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+        }
 
-    /* Animasyonlu Buton */
-    .btn-animated-gradient {
-        background: linear-gradient(-45deg,
-                #667EEA, #F093FB, #4FD1C5, #FBD38D);
-        background-size: 400% 400%;
-        animation: gradientWave 18s ease infinite;
-        border: none;
-        color: white;
-        font-weight: bold;
-        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-    }
-
-    .btn-animated-gradient:hover {
-        color: white;
-        transform: scale(1.05);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
-</style>
+        .btn-animated-gradient:hover {
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+@endpush
 
 @section('content')
     <div class="container">
@@ -128,7 +130,8 @@
                                         <div class="mb-3">
                                             <label for="plaka" class="form-label">Plaka</label>
                                             <input type="text" class="form-control @error('plaka') is-invalid @enderror"
-                                                id="plaka" name="plaka" value="{{ old('plaka', $shipment->plaka) }}">
+                                                id="plaka" name="plaka" value="{{ old('plaka', $shipment->plaka) }}"
+                                                autocomplete="off">
                                             @error('plaka')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -138,7 +141,8 @@
                                             <input type="text"
                                                 class="form-control @error('dorse_plakasi') is-invalid @enderror"
                                                 id="dorse_plakasi" name="dorse_plakasi"
-                                                value="{{ old('dorse_plakasi', $shipment->dorse_plakasi) }}">
+                                                value="{{ old('dorse_plakasi', $shipment->dorse_plakasi) }}"
+                                                autocomplete="off">
                                             @error('dorse_plakasi')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -147,7 +151,8 @@
                                             <label for="sofor_adi" class="form-label">Şoför Adı</label>
                                             <input type="text"
                                                 class="form-control @error('sofor_adi') is-invalid @enderror" id="sofor_adi"
-                                                name="sofor_adi" value="{{ old('sofor_adi', $shipment->sofor_adi) }}">
+                                                name="sofor_adi" value="{{ old('sofor_adi', $shipment->sofor_adi) }}"
+                                                autocomplete="off">
                                             @error('sofor_adi')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -158,7 +163,8 @@
                                             <input type="text"
                                                 class="form-control @error('kalkis_noktasi') is-invalid @enderror"
                                                 id="kalkis_noktasi" name="kalkis_noktasi"
-                                                value="{{ old('kalkis_noktasi', $shipment->kalkis_noktasi ?? '') }}">
+                                                value="{{ old('kalkis_noktasi', $shipment->kalkis_noktasi ?? '') }}"
+                                                autocomplete="off">
                                             @error('kalkis_noktasi')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -169,33 +175,33 @@
                                             <input type="text"
                                                 class="form-control @error('varis_noktasi') is-invalid @enderror"
                                                 id="varis_noktasi" name="varis_noktasi"
-                                                value="{{ old('varis_noktasi', $shipment->varis_noktasi ?? '') }}">
+                                                value="{{ old('varis_noktasi', $shipment->varis_noktasi ?? '') }}"
+                                                autocomplete="off">
                                             @error('varis_noktasi')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Sevkiyat Yönü (*)</label>
+                                        <fieldset class="mb-3">
+                                            <legend class="form-label fs-6">Sevkiyat Türü</legend>
                                             <div class="form-check">
                                                 <input class="form-check-input" type="radio" name="shipment_type"
                                                     id="type_import" value="import"
-                                                    {{ old('shipment_type', $shipment->shipment_type) == 'import' ? 'checked' : '' }}>
+                                                    {{ old('shipment_type', 'import') == 'import' ? 'checked' : '' }}
+                                                    autocomplete="off">
                                                 <label class="form-check-label" for="type_import">
-                                                    İthalat (Import)
+                                                    İthalat
                                                 </label>
                                             </div>
                                             <div class="form-check">
                                                 <input class="form-check-input" type="radio" name="shipment_type"
                                                     id="type_export" value="export"
-                                                    {{ old('shipment_type', $shipment->shipment_type) == 'export' ? 'checked' : '' }}>
+                                                    {{ old('shipment_type') == 'export' ? 'checked' : '' }}
+                                                    autocomplete="off">
                                                 <label class="form-check-label" for="type_export">
-                                                    İhracat (Export)
+                                                    İhracat
                                                 </label>
                                             </div>
-                                            @error('shipment_type')
-                                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                                            @enderror
-                                        </div>
+                                        </fieldset>
                                         <hr>
                                     </div>
 
@@ -206,7 +212,8 @@
                                             <input type="text"
                                                 class="form-control @error('imo_numarasi') is-invalid @enderror"
                                                 id="imo_numarasi" name="imo_numarasi"
-                                                value="{{ old('imo_numarasi', $shipment->imo_numarasi) }}">
+                                                value="{{ old('imo_numarasi', $shipment->imo_numarasi) }}"
+                                                autocomplete="off">
                                             @error('imo_numarasi')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -216,7 +223,7 @@
                                             <input type="text"
                                                 class="form-control @error('gemi_adi') is-invalid @enderror"
                                                 id="gemi_adi" name="gemi_adi"
-                                                value="{{ old('gemi_adi', $shipment->gemi_adi) }}">
+                                                value="{{ old('gemi_adi', $shipment->gemi_adi) }}" autocomplete="off">
                                             @error('gemi_adi')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -226,7 +233,8 @@
                                             <input type="text"
                                                 class="form-control @error('kalkis_limani') is-invalid @enderror"
                                                 id="kalkis_limani" name="kalkis_limani"
-                                                value="{{ old('kalkis_limani', $shipment->kalkis_limani) }}">
+                                                value="{{ old('kalkis_limani', $shipment->kalkis_limani) }}"
+                                                autocomplete="off">
                                             @error('kalkis_limani')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -236,7 +244,8 @@
                                             <input type="text"
                                                 class="form-control @error('varis_limani') is-invalid @enderror"
                                                 id="varis_limani" name="varis_limani"
-                                                value="{{ old('varis_limani', $shipment->varis_limani) }}">
+                                                value="{{ old('varis_limani', $shipment->varis_limani) }}"
+                                                autocomplete="off">
                                             @error('varis_limani')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -250,7 +259,7 @@
                                             class="form-control @error('cikis_tarihi') is-invalid @enderror"
                                             id="cikis_tarihi" name="cikis_tarihi"
                                             value="{{ old('cikis_tarihi', \Carbon\Carbon::parse($shipment->cikis_tarihi)->format('Y-m-d\TH:i')) }}"
-                                            required>
+                                            required autocomplete="off">
                                         @error('cikis_tarihi')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -262,7 +271,7 @@
                                             class="form-control @error('tahmini_varis_tarihi') is-invalid @enderror"
                                             id="tahmini_varis_tarihi" name="tahmini_varis_tarihi"
                                             value="{{ old('tahmini_varis_tarihi', \Carbon\Carbon::parse($shipment->tahmini_varis_tarihi)->format('Y-m-d\TH:i')) }}"
-                                            required>
+                                            required autocomplete="off">
                                         @error('tahmini_varis_tarihi')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -276,7 +285,8 @@
                                         <input type="text"
                                             class="form-control @error('kargo_icerigi') is-invalid @enderror"
                                             id="kargo_icerigi" name="kargo_icerigi"
-                                            value="{{ old('kargo_icerigi', $shipment->kargo_icerigi) }}" required>
+                                            value="{{ old('kargo_icerigi', $shipment->kargo_icerigi) }}" required
+                                            autocomplete="off">
                                         @error('kargo_icerigi')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -301,7 +311,8 @@
                                         <input type="text"
                                             class="form-control @error('kargo_miktari') is-invalid @enderror"
                                             id="kargo_miktari" name="kargo_miktari"
-                                            value="{{ old('kargo_miktari', $shipment->kargo_miktari) }}" required>
+                                            value="{{ old('kargo_miktari', $shipment->kargo_miktari) }}" required
+                                            autocomplete="off">
                                         @error('kargo_miktari')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -312,7 +323,7 @@
                                         <label for="ek_dosya" class="form-label">Yeni Ek Dosya (Mevcut Dosyayı
                                             Değiştirir)</label>
                                         <input class="form-control @error('ek_dosya') is-invalid @enderror"
-                                            type="file" id="ek_dosya" name="ek_dosya">
+                                            type="file" id="ek_dosya" name="ek_dosya" autocomplete="off">
                                         @error('ek_dosya')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -330,7 +341,7 @@
                                             {{-- DOSYA SİLME SEÇENEĞİ --}}
                                             <div class="form-check mt-2">
                                                 <input class="form-check-input" type="checkbox" name="dosya_sil"
-                                                    id="dosya_sil" value="1">
+                                                    id="dosya_sil" value="1" autocomplete="off">
                                                 <label class="form-check-label text-danger" for="dosya_sil">
                                                     Mevcut dosyayı sil
                                                 </label>
@@ -342,7 +353,7 @@
                                     <div class="mb-3">
                                         <label for="aciklamalar" class="form-label">Açıklamalar</label>
                                         <textarea class="form-control @error('aciklamalar') is-invalid @enderror" id="aciklamalar" name="aciklamalar"
-                                            rows="5">{{ old('aciklamalar', $shipment->aciklamalar) }}</textarea>
+                                            rows="5" autocomplete="off">{{ old('aciklamalar', $shipment->aciklamalar) }}</textarea>
                                         @error('aciklamalar')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror

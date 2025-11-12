@@ -2,92 +2,94 @@
 
 @section('title', 'Yeni Sevkiyat Kaydı')
 
-<style>
-    /* Ana içerik alanına (main) animasyonlu arka planı uygula */
-    #app>main.py-4 {
-        padding: 2.5rem 0 !important;
-        min-height: calc(100vh - 72px);
-        background: linear-gradient(-45deg,
-                #dbe4ff,
-                /* #667EEA (Canlı mavi-mor) tonu */
-                #fde2ff,
-                /* #F093FB (Yumuşak pembe) tonu */
-                #d9fcf7,
-                /* #4FD1C5 (Teal/turkuaz) tonu */
-                #fff0d9
-                /* #FBD38D (Sıcak sarı) tonu */
-            );
-        background-size: 400% 400%;
-        animation: gradientWave 18s ease infinite;
-    }
-
-    /* Arka plan dalgalanma animasyonu */
-    @keyframes gradientWave {
-        0% {
-            background-position: 0% 50%;
+@push('styles')
+    <style>
+        /* Ana içerik alanına (main) animasyonlu arka planı uygula */
+        #app>main.py-4 {
+            padding: 2.5rem 0 !important;
+            min-height: calc(100vh - 72px);
+            background: linear-gradient(-45deg,
+                    #dbe4ff,
+                    /* #667EEA (Canlı mavi-mor) tonu */
+                    #fde2ff,
+                    /* #F093FB (Yumuşak pembe) tonu */
+                    #d9fcf7,
+                    /* #4FD1C5 (Teal/turkuaz) tonu */
+                    #fff0d9
+                    /* #FBD38D (Sıcak sarı) tonu */
+                );
+            background-size: 400% 400%;
+            animation: gradientWave 18s ease infinite;
         }
 
-        50% {
-            background-position: 100% 50%;
+        /* Arka plan dalgalanma animasyonu */
+        @keyframes gradientWave {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
-        100% {
-            background-position: 0% 50%;
+        /* === GÜNCELLENDİ (TAM ŞEFFAF KART) === */
+        .create-shipment-card {
+            border-radius: 1rem;
+            /* Gölgeyi ve blur'u kaldırıyoruz */
+            box-shadow: none !important;
+            border: 0;
+            /* Arka planı tamamen şeffaf yapıyoruz */
+            background-color: transparent;
+            backdrop-filter: none;
         }
-    }
 
-    /* === GÜNCELLENDİ (TAM ŞEFFAF KART) === */
-    .create-shipment-card {
-        border-radius: 1rem;
-        /* Gölgeyi ve blur'u kaldırıyoruz */
-        box-shadow: none !important;
-        border: 0;
-        /* Arka planı tamamen şeffaf yapıyoruz */
-        background-color: transparent;
-        backdrop-filter: none;
-    }
+        .create-shipment-card .card-header,
+        .create-shipment-card .form-label {
+            color: #444;
+            /* Koyu renk (veya #FFFFFF beyaz) metin */
+            font-weight: bold;
+            /* Kalın Metin */
+            /* Hareketli arka plan üzerinde okunabilirlik için hafif gölge */
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
+        }
 
-    .create-shipment-card .card-header,
-    .create-shipment-card .form-label {
-        color: #444;
-        /* Koyu renk (veya #FFFFFF beyaz) metin */
-        font-weight: bold;
-        /* Kalın Metin */
-        /* Hareketli arka plan üzerinde okunabilirlik için hafif gölge */
-        text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
-    }
+        .create-shipment-card .card-header {
+            color: #000;
+            /* Başlık siyah kalsın */
+        }
 
-    .create-shipment-card .card-header {
-        color: #000;
-        /* Başlık siyah kalsın */
-    }
+        /* Yumuşak köşeli form elemanları */
+        .create-shipment-card .form-control,
+        .create-shipment-card .form-select {
+            border-radius: 0.5rem;
+            /* Formların içini daha okunaklı yapmak için hafif opaklık */
+            background-color: rgba(255, 255, 255, 0.8);
+        }
 
-    /* Yumuşak köşeli form elemanları */
-    .create-shipment-card .form-control,
-    .create-shipment-card .form-select {
-        border-radius: 0.5rem;
-        /* Formların içini daha okunaklı yapmak için hafif opaklık */
-        background-color: rgba(255, 255, 255, 0.8);
-    }
+        /* Animasyonlu buton (Değişiklik yok) */
+        .btn-animated-gradient {
+            background: linear-gradient(-45deg,
+                    #667EEA, #F093FB, #4FD1C5, #FBD38D);
+            background-size: 400% 400%;
+            animation: gradientWave 18s ease infinite;
+            border: none;
+            color: white;
+            font-weight: bold;
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+        }
 
-    /* Animasyonlu buton (Değişiklik yok) */
-    .btn-animated-gradient {
-        background: linear-gradient(-45deg,
-                #667EEA, #F093FB, #4FD1C5, #FBD38D);
-        background-size: 400% 400%;
-        animation: gradientWave 18s ease infinite;
-        border: none;
-        color: white;
-        font-weight: bold;
-        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-    }
-
-    .btn-animated-gradient:hover {
-        color: white;
-        transform: scale(1.05);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
-</style>
+        .btn-animated-gradient:hover {
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+@endpush
 
 @section('content')
     <div class="container">
@@ -100,7 +102,8 @@
                             <div class="alert alert-success" role="alert">{{ session('success') }}</div>
                         @endif
 
-                        <form method="POST" action="{{ route('shipments.store') }}" enctype="multipart/form-data">
+                        <form method="POST" action="{{ route('shipments.store') }}" enctype="multipart/form-data"
+                            autocomplete="off">
                             @csrf
                             <div class="row">
                                 {{-- Sol Sütun --}}
@@ -108,7 +111,8 @@
                                     <div class="mb-3">
                                         <label for="arac_tipi" class="form-label">Araç Tipi (*)</label>
                                         <select name="arac_tipi" id="arac_tipi"
-                                            class="form-select @error('arac_tipi') is-invalid @enderror" required>
+                                            class="form-select @error('arac_tipi') is-invalid @enderror" required
+                                            autocomplete="off">
                                             <option value="">Seçiniz...</option>
                                             <option value="tır" @if (old('arac_tipi') == 'tır') selected @endif>Tır
                                             </option>
@@ -126,27 +130,32 @@
                                         <div class="mb-3">
                                             <label for="plaka" class="form-label">Plaka (*)</label>
                                             <input type="text" class="form-control @error('plaka') is-invalid @enderror"
-                                                id="plaka" name="plaka" value="{{ old('plaka') }}">
+                                                id="plaka" name="plaka" value="{{ old('plaka') }}"
+                                                autocomplete="off">
                                             @error('plaka')
-                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                <div class="invalid-feedback">{{ $message }}
+                                                </div>
                                             @enderror
                                         </div>
                                         <div class="mb-3" id="dorse_plakasi_div">
                                             <label for="dorse_plakasi" class="form-label">Dorse Plakası (*)</label>
                                             <input type="text"
                                                 class="form-control @error('dorse_plakasi') is-invalid @enderror"
-                                                id="dorse_plakasi" name="dorse_plakasi" value="{{ old('dorse_plakasi') }}">
+                                                id="dorse_plakasi" name="dorse_plakasi" value="{{ old('dorse_plakasi') }}"
+                                                autocomplete="off">
                                             @error('dorse_plakasi')
-                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                <div class="invalid-feedback">{{ $message }}
+                                                </div>
                                             @enderror
                                         </div>
                                         <div class="mb-3">
                                             <label for="sofor_adi" class="form-label">Şoför Adı</label>
                                             <input type="text"
                                                 class="form-control @error('sofor_adi') is-invalid @enderror" id="sofor_adi"
-                                                name="sofor_adi" value="{{ old('sofor_adi') }}">
+                                                name="sofor_adi" value="{{ old('sofor_adi') }}" autocomplete="off">
                                             @error('sofor_adi')
-                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                <div class="invalid-feedback">{{ $message }}
+                                                </div>
                                             @enderror
                                         </div>
                                         <div class="mb-3">
@@ -154,14 +163,16 @@
                                                 (Gümrük/Tesis)</label>
                                             <input type="text" class="form-control" id="kalkis_noktasi"
                                                 name="kalkis_noktasi"
-                                                value="{{ old('kalkis_noktasi', $shipment->kalkis_noktasi ?? '') }}">
+                                                value="{{ old('kalkis_noktasi', $shipment->kalkis_noktasi ?? '') }}"
+                                                autocomplete="off">
                                         </div>
                                         <div class="mb-3">
                                             <label for="varis_noktasi" class="form-label">Varış Noktası
                                                 (Gümrük/Tesis)</label>
                                             <input type="text" class="form-control" id="varis_noktasi"
                                                 name="varis_noktasi"
-                                                value="{{ old('varis_noktasi', $shipment->varis_noktasi ?? '') }}">
+                                                value="{{ old('varis_noktasi', $shipment->varis_noktasi ?? '') }}"
+                                                autocomplete="off">
                                         </div>
                                     </div>
 
@@ -170,36 +181,43 @@
                                             <label for="imo_numarasi" class="form-label">IMO Numarası (*)</label>
                                             <input type="text"
                                                 class="form-control @error('imo_numarasi') is-invalid @enderror"
-                                                id="imo_numarasi" name="imo_numarasi" value="{{ old('imo_numarasi') }}">
+                                                id="imo_numarasi" name="imo_numarasi" value="{{ old('imo_numarasi') }}"
+                                                autocomplete="off">
                                             @error('imo_numarasi')
-                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                <div class="invalid-feedback">{{ $message }}
+                                                </div>
                                             @enderror
                                         </div>
                                         <div class="mb-3">
                                             <label for="gemi_adi" class="form-label">Gemi Adı (*)</label>
                                             <input type="text"
                                                 class="form-control @error('gemi_adi') is-invalid @enderror" id="gemi_adi"
-                                                name="gemi_adi" value="{{ old('gemi_adi') }}">
+                                                name="gemi_adi" value="{{ old('gemi_adi') }}" autocomplete="off">
                                             @error('gemi_adi')
-                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                <div class="invalid-feedback">{{ $message }}
+                                                </div>
                                             @enderror
                                         </div>
                                         <div class="mb-3">
                                             <label for="kalkis_limani" class="form-label">Kalkış Limanı (*)</label>
                                             <input type="text"
                                                 class="form-control @error('kalkis_limani') is-invalid @enderror"
-                                                id="kalkis_limani" name="kalkis_limani" value="{{ old('kalkis_limani') }}">
+                                                id="kalkis_limani" name="kalkis_limani"
+                                                value="{{ old('kalkis_limani') }}" autocomplete="off">
                                             @error('kalkis_limani')
-                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                <div class="invalid-feedback">{{ $message }}
+                                                </div>
                                             @enderror
                                         </div>
                                         <div class="mb-3">
                                             <label for="varis_limani" class="form-label">Varış Limanı (*)</label>
                                             <input type="text"
                                                 class="form-control @error('varis_limani') is-invalid @enderror"
-                                                id="varis_limani" name="varis_limani" value="{{ old('varis_limani') }}">
+                                                id="varis_limani" name="varis_limani" value="{{ old('varis_limani') }}"
+                                                autocomplete="off">
                                             @error('varis_limani')
-                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                <div class="invalid-feedback">{{ $message }}
+                                                </div>
                                             @enderror
                                         </div>
                                     </div>
@@ -210,9 +228,10 @@
                                         <input type="datetime-local"
                                             class="form-control @error('cikis_tarihi') is-invalid @enderror"
                                             id="cikis_tarihi" name="cikis_tarihi" value="{{ old('cikis_tarihi') }}"
-                                            required>
+                                            autocomplete="off" required>
                                         @error('cikis_tarihi')
-                                            <div class="invalid-feedback">{{ $message }}</div>
+                                            <div class="invalid-feedback">{{ $message }}
+                                            </div>
                                         @enderror
                                     </div>
                                     <div class="mb-3">
@@ -221,9 +240,10 @@
                                         <input type="datetime-local"
                                             class="form-control @error('tahmini_varis_tarihi') is-invalid @enderror"
                                             id="tahmini_varis_tarihi" name="tahmini_varis_tarihi"
-                                            value="{{ old('tahmini_varis_tarihi') }}" required>
+                                            value="{{ old('tahmini_varis_tarihi') }}" autocomplete="off" required>
                                         @error('tahmini_varis_tarihi')
-                                            <div class="invalid-feedback">{{ $message }}</div>
+                                            <div class="invalid-feedback">{{ $message }}
+                                            </div>
                                         @enderror
                                     </div>
                                 </div>
@@ -235,15 +255,17 @@
                                         <input type="text"
                                             class="form-control @error('kargo_icerigi') is-invalid @enderror"
                                             id="kargo_icerigi" name="kargo_icerigi" value="{{ old('kargo_icerigi') }}"
-                                            required>
+                                            autocomplete="off" required>
                                         @error('kargo_icerigi')
-                                            <div class="invalid-feedback">{{ $message }}</div>
+                                            <div class="invalid-feedback">{{ $message }}
+                                            </div>
                                         @enderror
                                     </div>
                                     <div class="mb-3">
                                         <label for="kargo_tipi" class="form-label">Kargo Yük Tipi (*)</label>
                                         <select name="kargo_tipi" id="kargo_tipi"
-                                            class="form-select @error('kargo_tipi') is-invalid @enderror" required>
+                                            class="form-select @error('kargo_tipi') is-invalid @enderror" required
+                                            autocomplete="off">
                                             <option value="">Birim Seçiniz...</option>
                                             @if (isset($birimler))
                                                 @foreach ($birimler as $birim)
@@ -262,17 +284,21 @@
                                         <input type="text"
                                             class="form-control @error('kargo_miktari') is-invalid @enderror"
                                             id="kargo_miktari" name="kargo_miktari" value="{{ old('kargo_miktari') }}"
-                                            required>
+                                            autocomplete="off" required>
                                         @error('kargo_miktari')
-                                            <div class="invalid-feedback">{{ $message }}</div>
+                                            <div class="invalid-feedback">{{ $message }}
+                                            </div>
                                         @enderror
                                     </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Sevkiyat Türü</label>
+
+                                    <fieldset class="mb-3">
+                                        <legend class="form-label fs-6">Sevkiyat Türü</legend>
+
                                         <div class="form-check">
                                             <input class="form-check-input" type="radio" name="shipment_type"
                                                 id="type_import" value="import"
-                                                {{ old('shipment_type', 'import') == 'import' ? 'checked' : '' }}>
+                                                {{ old('shipment_type', 'import') == 'import' ? 'checked' : '' }}
+                                                autocomplete="off">
                                             <label class="form-check-label" for="type_import">
                                                 İthalat
                                             </label>
@@ -280,17 +306,18 @@
                                         <div class="form-check">
                                             <input class="form-check-input" type="radio" name="shipment_type"
                                                 id="type_export" value="export"
-                                                {{ old('shipment_type') == 'export' ? 'checked' : '' }}>
+                                                {{ old('shipment_type') == 'export' ? 'checked' : '' }}
+                                                autocomplete="off">
                                             <label class="form-check-label" for="type_export">
                                                 İhracat
                                             </label>
                                         </div>
-                                    </div>
+                                    </fieldset>
                                     {{-- Ek Dosya Alanı --}}
                                     <div class="mb-3">
                                         <label for="ek_dosya" class="form-label">Ek Dosya (Opsiyonel)</label>
                                         <input class="form-control @error('ek_dosya') is-invalid @enderror"
-                                            type="file" id="ek_dosya" name="ek_dosya">
+                                            type="file" id="ek_dosya" name="ek_dosya" autocomplete="off">
                                         @error('ek_dosya')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -299,7 +326,7 @@
                                     <div class="mb-3">
                                         <label for="aciklamalar" class="form-label">Açıklamalar</label>
                                         <textarea class="form-control @error('aciklamalar') is-invalid @enderror" id="aciklamalar" name="aciklamalar"
-                                            rows="6">{{ old('aciklamalar') }}</textarea>
+                                            rows="6" autocomplete="off">{{ old('aciklamalar') }}</textarea>
                                         @error('aciklamalar')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror

@@ -2,121 +2,123 @@
 
 @section('title', $customer->name)
 
-<style>
-    /* === 1. Ana kartı transparan yapar === */
-    .customer-card {
-        background-color: transparent;
-        border-radius: 0.75rem;
-        box-shadow: none;
-        border: none;
-    }
+@push('styles')
+    <style>
+        /* === 1. Ana kartı transparan yapar === */
+        .customer-card {
+            background-color: transparent;
+            border-radius: 0.75rem;
+            box-shadow: none;
+            border: none;
+        }
 
-    /* === 2. Sekme (Tab) Stilini Güçlendirme === */
-    .nav-tabs {
-        border-bottom: none !important;
-    }
+        /* === 2. Sekme (Tab) Stilini Güçlendirme === */
+        .nav-tabs {
+            border-bottom: none !important;
+        }
 
-    .nav-tabs .nav-link {
-        border: none !important;
-        border-radius: 0.5rem;
-        color: #555;
-        font-weight: 500;
-        margin-right: 0.25rem;
-        transition: background-color 0.2s ease, color 0.2s ease;
-    }
+        .nav-tabs .nav-link {
+            border: none !important;
+            border-radius: 0.5rem;
+            color: #555;
+            font-weight: 500;
+            margin-right: 0.25rem;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
 
-    .nav-tabs .nav-link:not(.active):hover {
-        background-color: #f1f3f5;
-        color: #333;
-    }
+        .nav-tabs .nav-link:not(.active):hover {
+            background-color: #f1f3f5;
+            color: #333;
+        }
 
-    .nav-tabs .nav-link.active {
-        border-color: transparent !important;
-        background-color: #667EEA !important;
-        color: #ffffff !important;
-        font-weight: 500;
-        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
-    }
+        .nav-tabs .nav-link.active {
+            border-color: transparent !important;
+            background-color: #667EEA !important;
+            color: #ffffff !important;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
 
-    /* === 3. YENİ BÖLÜM: Sekme İÇERİKLERİNİ transparan yapma === */
+        /* === 3. YENİ BÖLÜM: Sekme İÇERİKLERİNİ transparan yapma === */
 
-    /* "Hızlı Ekle" formlarının arka planını kaldırır */
-    .quick-add-form {
-        background-color: transparent !important;
-        border: none !important;
-        padding: 1.5rem 0;
-        /* İçeriğin gövdeye yapışmaması için dikey padding kalsın */
-    }
+        /* "Hızlı Ekle" formlarının arka planını kaldırır */
+        .quick-add-form {
+            background-color: transparent !important;
+            border: none !important;
+            padding: 1.5rem 0;
+            /* İçeriğin gövdeye yapışmaması için dikey padding kalsın */
+        }
 
-    /* "Kayıtlı Şikayetler" gibi uyarı kutularını transparan yapar */
-    .alert {
-        background-color: transparent !important;
-        border: none !important;
-        padding-left: 0;
-        /* Kenar boşluklarını sıfırla */
-        padding-right: 0;
-    }
+        /* "Kayıtlı Şikayetler" gibi uyarı kutularını transparan yapar */
+        .alert {
+            background-color: transparent !important;
+            border: none !important;
+            padding-left: 0;
+            /* Kenar boşluklarını sıfırla */
+            padding-right: 0;
+        }
 
-    /* "Kayıtlı Makineler" gibi tabloları transparan yapar */
-    .table,
-    .table-striped>tbody>tr:nth-of-type(odd)>*,
-    .table> :not(caption)>*>* {
-        background-color: transparent !important;
-    }
+        /* "Kayıtlı Makineler" gibi tabloları transparan yapar */
+        .table,
+        .table-striped>tbody>tr:nth-of-type(odd)>*,
+        .table> :not(caption)>*>* {
+            background-color: transparent !important;
+        }
 
-    /* Uyarılardaki "Dosya" listeleme kutularını transparan yapar */
-    .file-list-item {
-        /* Tamamen şeffaf olunca kayboluyor, hafif yarı-şeffaf bir beyaz daha iyi durur */
-        background-color: rgba(255, 255, 255, 0.5) !important;
-        border: 1px solid rgba(0, 0, 0, 0.05);
-    }
+        /* Uyarılardaki "Dosya" listeleme kutularını transparan yapar */
+        .file-list-item {
+            /* Tamamen şeffaf olunca kayboluyor, hafif yarı-şeffaf bir beyaz daha iyi durur */
+            background-color: rgba(255, 255, 255, 0.5) !important;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
 
 
-    /* --- Orijinal stilleriniz (dokunulmadı) --- */
+        /* --- Orijinal stilleriniz (dokunulmadı) --- */
 
-    .btn-outline-primary {
-        border-color: #667EEA;
-        color: #667EEA;
-    }
+        .btn-outline-primary {
+            border-color: #667EEA;
+            color: #667EEA;
+        }
 
-    .btn-outline-primary:hover {
-        background-color: #667EEA;
-        color: #fff;
-    }
+        .btn-outline-primary:hover {
+            background-color: #667EEA;
+            color: #fff;
+        }
 
-    .detail-list dt {
-        font-weight: 500;
-        color: #555;
-    }
+        .detail-list dt {
+            font-weight: 500;
+            color: #555;
+        }
 
-    .detail-list dd {
-        color: #222;
-        font-weight: 400;
-    }
+        .detail-list dd {
+            color: #222;
+            font-weight: 400;
+        }
 
-    .create-event-card .form-control,
-    .create-event-card .form-select {
-        border-radius: 0.5rem;
-        background-color: rgba(255, 255, 255, 0.8);
-    }
+        .create-event-card .form-control,
+        .create-event-card .form-select {
+            border-radius: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
 
-    .btn-animated-gradient {
-        background: linear-gradient(-45deg,
-                #667EEA, #F093FB, #4FD1C5, #FBD38D);
-        background-size: 400% 400%;
-        animation: gradientWave 18s ease infinite;
-        border: none;
-        color: white;
-        font-weight: bold;
-        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-    }
+        .btn-animated-gradient {
+            background: linear-gradient(-45deg,
+                    #667EEA, #F093FB, #4FD1C5, #FBD38D);
+            background-size: 400% 400%;
+            animation: gradientWave 18s ease infinite;
+            border: none;
+            color: white;
+            font-weight: bold;
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+        }
 
-    .btn-animated-gradient:hover {
-        color: white;
-        transform: scale(1.05);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
-</style>
+        .btn-animated-gradient:hover {
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+@endpush
 
 @section('content')
     <div class="container py-4">
@@ -139,7 +141,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <form action="{{ route('customers.destroy', $customer) }}" method="POST" class="d-grid"
-                                        {{-- Formun da tam genişlik kaplamasını sağlar --}}
+                                        autocomplete="off" {{-- Formun da tam genişlik kaplamasını sağlar --}}
                                         onsubmit="return confirm('Bu müşteriyi silmek (arşivlemek) istediğinizden emin misiniz?');">
                                         @csrf
                                         @method('DELETE')
@@ -234,7 +236,7 @@
                             <div class="tab-pane fade" id="machines" role="tabpanel" aria-labelledby="machines-tab">
                                 <h5>Hızlı Makine Ekle</h5>
                                 <form action="{{ route('customers.machines.store', $customer) }}" method="POST"
-                                    class="quick-add-form mb-4">
+                                    autocomplete="off" class="quick-add-form mb-4">
                                     @csrf
                                     <div class="row">
                                         <div class="col-md-4 mb-3">
@@ -254,32 +256,33 @@
                                         class="btn btn-animated-gradient rounded-pill px-4 btn-modern">Makineyi
                                         Ekle</button>
                                 </form>
-
-                                <h5>Kayıtlı Makineler</h5>
-                                <table class="table table-sm table-striped">
-                                    <tbody>
-                                        @forelse ($customer->machines as $machine)
-                                            <tr>
-                                                <td>{{ $machine->model }}</td>
-                                                <td>{{ $machine->serial_number }}</td>
-                                                <td>{{ $machine->installation_date ? \Carbon\Carbon::parse($machine->installation_date)->format('d/m/Y') : '-' }}
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="3" class="text-center">Bu müşteriye ait makine kaydı
-                                                    bulunamadı.</td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <h5>Kayıtlı Makineler</h5>
+                                    <table class="table table-sm table-striped">
+                                        <tbody>
+                                            @forelse ($customer->machines as $machine)
+                                                <tr>
+                                                    <td>{{ $machine->model }}</td>
+                                                    <td>{{ $machine->serial_number }}</td>
+                                                    <td>{{ $machine->installation_date ? \Carbon\Carbon::parse($machine->installation_date)->format('d/m/Y') : '-' }}
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="3" class="text-center">Bu müşteriye ait makine kaydı
+                                                        bulunamadı.</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
 
                             <div class="tab-pane fade" id="tests" role="tabpanel" aria-labelledby="tests-tab">
                                 <h5>Hızlı Test Sonucu Yükle</h5>
                                 {{-- Dosya yükleme için 'enctype' şart! --}}
                                 <form action="{{ route('customers.test-results.store', $customer) }}" method="POST"
-                                    class="quick-add-form mb-4" enctype="multipart/form-data">
+                                    autocomplete="off" class="quick-add-form mb-4" enctype="multipart/form-data">
                                     @csrf
                                     <div class="row">
                                         <div class="col-md-4 mb-3">
@@ -304,50 +307,53 @@
                                         Ekle</button>
                                 </form>
 
-                                <h5>Kayıtlı Test Sonuçları</h5>
-                                <table class="table table-sm table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Test Adı</th>
-                                            <th>Tarih</th>
-                                            <th>Özet</th>
-                                            <th>Dosyalar</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse ($customer->testResults as $result)
+                                <div class="table-responsive">
+                                    <h5>Kayıtlı Test Sonuçları</h5>
+                                    <table class="table table-sm table-striped">
+                                        <thead>
                                             <tr>
-                                                <td>{{ $result->test_name }}</td>
-                                                <td>{{ \Carbon\Carbon::parse($result->test_date)->format('d/m/Y') }}</td>
-                                                <td>{{ $result->summary ?? '-' }}</td>
-                                                <td>
-                                                    {{-- YÜKLENEN DOSYALARI GÖSTER --}}
-                                                    @foreach ($result->getMedia('test_reports') as $media)
-                                                        <div class="file-list-item">
-                                                            <span>
-                                                                <i class="fa-solid fa-file-arrow-down me-2"></i>
-                                                                {{ $media->file_name }}
-                                                            </span>
-                                                            <a href="{{ $media->getUrl() }}" target="_blank"
-                                                                class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0">Görüntüle</a>
-                                                        </div>
-                                                    @endforeach
-                                                </td>
+                                                <th>Test Adı</th>
+                                                <th>Tarih</th>
+                                                <th>Özet</th>
+                                                <th>Dosyalar</th>
                                             </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="4" class="text-center">Bu müşteriye ait test sonucu
-                                                    bulunamadı.</td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            @forelse ($customer->testResults as $result)
+                                                <tr>
+                                                    <td>{{ $result->test_name }}</td>
+                                                    <td>{{ \Carbon\Carbon::parse($result->test_date)->format('d/m/Y') }}
+                                                    </td>
+                                                    <td>{{ $result->summary ?? '-' }}</td>
+                                                    <td>
+                                                        {{-- YÜKLENEN DOSYALARI GÖSTER --}}
+                                                        @foreach ($result->getMedia('test_reports') as $media)
+                                                            <div class="file-list-item">
+                                                                <span>
+                                                                    <i class="fa-solid fa-file-arrow-down me-2"></i>
+                                                                    {{ $media->file_name }}
+                                                                </span>
+                                                                <a href="{{ $media->getUrl() }}" target="_blank"
+                                                                    class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0">Görüntüle</a>
+                                                            </div>
+                                                        @endforeach
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="4" class="text-center">Bu müşteriye ait test sonucu
+                                                        bulunamadı.</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
 
                             <div class="tab-pane fade" id="complaints" role="tabpanel" aria-labelledby="complaints-tab">
                                 <h5>Hızlı Şikayet Kaydı Ekle</h5>
                                 <form action="{{ route('customers.complaints.store', $customer) }}" method="POST"
-                                    class="quick-add-form mb-4" enctype="multipart/form-data">
+                                    autocomplete="off" class="quick-add-form mb-4" enctype="multipart/form-data">
                                     @csrf
                                     <div class="row">
                                         <div class="col-md-8 mb-3">
@@ -356,7 +362,7 @@
                                         </div>
                                         <div class="col-md-4 mb-3">
                                             <label for="status" class="form-label">Durum (*)</label>
-                                            <select name="status" class="form-select" required>
+                                            <select name="status" class="form-select" required autocomplete="off">
                                                 <option value="open">Açık</option>
                                                 <option value="in_progress">İşlemde</option>
                                                 <option value="resolved">Çözüldü</option>

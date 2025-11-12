@@ -1,287 +1,290 @@
 @extends('layouts.app')
 @section('title', 'Genel KÖKSAN Takvimi')
-<style>
-    #app>main.py-4 {
 
-        padding: 2.5rem 0 !important;
+@push('styles')
+    <style>
+        #app>main.py-4 {
 
-        /* Padding'i home gibi yapalım */
+            padding: 2.5rem 0 !important;
 
-        min-height: calc(100vh - 72px);
+            /* Padding'i home gibi yapalım */
 
-        background: linear-gradient(-45deg,
+            min-height: calc(100vh - 72px);
 
-                #dbe4ff,
+            background: linear-gradient(-45deg,
 
-                #fde2ff,
+                    #dbe4ff,
 
-                #d9fcf7,
+                    #fde2ff,
 
-                #fff0d9);
+                    #d9fcf7,
 
-        background-size: 400% 400%;
+                    #fff0d9);
 
-        animation: gradientWave 18s ease infinite;
+            background-size: 400% 400%;
 
-    }
-
-
-
-    @keyframes gradientWave {
-
-        0% {
-
-            background-position: 0% 50%;
+            animation: gradientWave 18s ease infinite;
 
         }
 
 
 
-        50% {
+        @keyframes gradientWave {
 
-            background-position: 100% 50%;
+            0% {
+
+                background-position: 0% 50%;
+
+            }
+
+
+
+            50% {
+
+                background-position: 100% 50%;
+
+            }
+
+
+
+            100% {
+
+                background-position: 0% 50%;
+
+            }
 
         }
 
 
 
-        100% {
+        /* Modern Frosted Glass Kart (Takvim için kullanılacak) */
 
-            background-position: 0% 50%;
+        .create-shipment-card {
+
+            /* Bu class adını kullanalım ki stil aynı olsun */
+
+            border-radius: 1.25rem;
+
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+
+            border: 1px solid rgba(255, 255, 255, 0.4);
+
+            background-color: rgba(255, 255, 255, 0.85);
+
+            backdrop-filter: blur(10px);
+
+            -webkit-backdrop-filter: blur(10px);
+
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+            margin-bottom: 1.5rem;
+
+            /* Altına boşluk ekleyelim */
 
         }
 
-    }
 
 
+        .create-shipment-card .card-header {
 
-    /* Modern Frosted Glass Kart (Takvim için kullanılacak) */
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
 
-    .create-shipment-card {
+            border-bottom: 1px solid rgba(102, 126, 234, 0.2);
 
-        /* Bu class adını kullanalım ki stil aynı olsun */
+            font-weight: 700;
 
-        border-radius: 1.25rem;
+            font-size: 1.1rem;
 
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            color: #2d3748;
 
-        border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 1.25rem 1.5rem;
 
-        background-color: rgba(255, 255, 255, 0.85);
+            border-radius: 1.25rem 1.25rem 0 0;
 
-        backdrop-filter: blur(10px);
-
-        -webkit-backdrop-filter: blur(10px);
-
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-        margin-bottom: 1.5rem;
-
-        /* Altına boşluk ekleyelim */
-
-    }
-
-
-
-    .create-shipment-card .card-header {
-
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-
-        border-bottom: 1px solid rgba(102, 126, 234, 0.2);
-
-        font-weight: 700;
-
-        font-size: 1.1rem;
-
-        color: #2d3748;
-
-        padding: 1.25rem 1.5rem;
-
-        border-radius: 1.25rem 1.25rem 0 0;
-
-    }
-
-
-
-    .create-shipment-card .card-body {
-
-        padding: 1.5rem;
-
-        /* Kartın iç boşluğu */
-
-        color: #2d3748;
-
-    }
-
-
-
-    /* FullCalendar Özelleştirmeleri (home.blade.php'den) */
-
-    #calendar {
-
-        /* Arka planı ve padding'i card-body'den alacak, bu yüzden sadeleştirelim */
-
-        background: transparent;
-
-        /* Arka planı şeffaf yap */
-
-        border-radius: 0;
-
-        /* Köşeyi card-body ayarlar */
-
-        padding: 0;
-
-        /* Padding'i card-body ayarlar */
-
-    }
-
-
-
-    .fc .fc-button-primary {
-
-        background: linear-gradient(135deg, #667EEA, #764BA2);
-
-        border: none;
-
-        border-radius: 0.5rem;
-
-        font-weight: 600;
-
-        text-transform: uppercase;
-
-        font-size: 0.85rem;
-
-        letter-spacing: 0.5px;
-
-        transition: all 0.2s ease;
-
-        color: white;
-
-    }
-
-
-
-    .fc .fc-button-primary:hover {
-
-        background: linear-gradient(135deg, #764BA2, #667EEA);
-
-        transform: translateY(-1px);
-
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-
-        color: white;
-
-    }
-
-
-
-    .fc .fc-button-primary:not(:disabled).fc-button-active,
-
-    .fc .fc-button-primary:not(:disabled):active {
-
-        background: linear-gradient(135deg, #764BA2, #667EEA);
-
-        color: white;
-
-    }
-
-
-
-    .fc-event {
-
-        border-radius: 0.5rem;
-
-        border: none !important;
-
-        padding: 2px 6px;
-
-        font-weight: 600;
-
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-        cursor: pointer;
-        user-select: none;
-
-        font-size: 0.8em;
-
-    }
-
-
-
-    .fc-event:hover {
-
-        transform: scale(1.05);
-
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-
-    }
-
-
-
-    .fc .fc-daygrid-day-number {
-
-        font-weight: 600;
-
-        color: #4a5568;
-
-    }
-
-
-
-    .fc .fc-col-header-cell-cushion {
-
-        /* Hafta günleri (Pzt, Salı vb.) */
-
-        font-weight: 700;
-
-        color: #2d3748;
-
-        text-transform: uppercase;
-
-        font-size: 0.85rem;
-
-        letter-spacing: 0.5px;
-
-        text-decoration: none;
-
-    }
-
-
-
-    .fc .fc-daygrid-day.fc-day-today {
-
-        /* Bugünkü günün arka planı */
-
-        background: rgba(102, 126, 234, 0.1) !important;
-
-    }
-
-    .event-important-pulse {
-        /* "Kutucuk" görünümü için bir kenarlık veya gölge */
-        border: 2px solid #ff4136 !important;
-        /* !important, fc-event'i ezmek için */
-        box-shadow: 0 0 0 rgba(255, 65, 54, 0.4);
-        /* Gölgenin başlangıç durumu */
-
-        /* Animasyon tanımı */
-        animation: pulse-animation 2s infinite;
-    }
-
-    /* Animasyon Keyframes */
-    @keyframes pulse-animation {
-        0% {
-            box-shadow: 0 0 0 0 rgba(255, 65, 54, 0.7);
         }
 
-        70% {
-            box-shadow: 0 0 0 10px rgba(255, 65, 54, 0);
+
+
+        .create-shipment-card .card-body {
+
+            padding: 1.5rem;
+
+            /* Kartın iç boşluğu */
+
+            color: #2d3748;
+
         }
 
-        100% {
-            box-shadow: 0 0 0 0 rgba(255, 65, 54, 0);
+
+
+        /* FullCalendar Özelleştirmeleri (home.blade.php'den) */
+
+        #calendar {
+
+            /* Arka planı ve padding'i card-body'den alacak, bu yüzden sadeleştirelim */
+
+            background: transparent;
+
+            /* Arka planı şeffaf yap */
+
+            border-radius: 0;
+
+            /* Köşeyi card-body ayarlar */
+
+            padding: 0;
+
+            /* Padding'i card-body ayarlar */
+
         }
-    }
-</style>
+
+
+
+        .fc .fc-button-primary {
+
+            background: linear-gradient(135deg, #667EEA, #764BA2);
+
+            border: none;
+
+            border-radius: 0.5rem;
+
+            font-weight: 600;
+
+            text-transform: uppercase;
+
+            font-size: 0.85rem;
+
+            letter-spacing: 0.5px;
+
+            transition: all 0.2s ease;
+
+            color: white;
+
+        }
+
+
+
+        .fc .fc-button-primary:hover {
+
+            background: linear-gradient(135deg, #764BA2, #667EEA);
+
+            transform: translateY(-1px);
+
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+
+            color: white;
+
+        }
+
+
+
+        .fc .fc-button-primary:not(:disabled).fc-button-active,
+
+        .fc .fc-button-primary:not(:disabled):active {
+
+            background: linear-gradient(135deg, #764BA2, #667EEA);
+
+            color: white;
+
+        }
+
+
+
+        .fc-event {
+
+            border-radius: 0.5rem;
+
+            border: none !important;
+
+            padding: 2px 6px;
+
+            font-weight: 600;
+
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+            cursor: pointer;
+            user-select: none;
+
+            font-size: 0.8em;
+
+        }
+
+
+
+        .fc-event:hover {
+
+            transform: scale(1.05);
+
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+        }
+
+
+
+        .fc .fc-daygrid-day-number {
+
+            font-weight: 600;
+
+            color: #4a5568;
+
+        }
+
+
+
+        .fc .fc-col-header-cell-cushion {
+
+            /* Hafta günleri (Pzt, Salı vb.) */
+
+            font-weight: 700;
+
+            color: #2d3748;
+
+            text-transform: uppercase;
+
+            font-size: 0.85rem;
+
+            letter-spacing: 0.5px;
+
+            text-decoration: none;
+
+        }
+
+
+
+        .fc .fc-daygrid-day.fc-day-today {
+
+            /* Bugünkü günün arka planı */
+
+            background: rgba(102, 126, 234, 0.1) !important;
+
+        }
+
+        .event-important-pulse {
+            /* "Kutucuk" görünümü için bir kenarlık veya gölge */
+            border: 2px solid #ff4136 !important;
+            /* !important, fc-event'i ezmek için */
+            box-shadow: 0 0 0 rgba(255, 65, 54, 0.4);
+            /* Gölgenin başlangıç durumu */
+
+            /* Animasyon tanımı */
+            animation: pulse-animation 2s infinite;
+        }
+
+        /* Animasyon Keyframes */
+        @keyframes pulse-animation {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 65, 54, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 65, 54, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 65, 54, 0);
+            }
+        }
+    </style>
+@endpush
 @section('content')
     <div class="container">
         <div class="row justify-content-center">

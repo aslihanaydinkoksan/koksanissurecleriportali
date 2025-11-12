@@ -2,104 +2,106 @@
 
 @section('title', 'Yeni Üretim Planı Oluştur')
 
-<style>
-    /* Ana içerik alanına (main) animasyonlu arka planı uygula */
-    #app>main.py-4 {
-        padding: 2.5rem 0 !important;
-        min-height: calc(100vh - 72px);
-        background: linear-gradient(-45deg,
-                #dbe4ff,
-                #fde2ff,
-                #d9fcf7,
-                #fff0d9);
-        background-size: 400% 400%;
-        animation: gradientWave 18s ease infinite;
-    }
-
-    /* Arka plan dalgalanma animasyonu */
-    @keyframes gradientWave {
-        0% {
-            background-position: 0% 50%;
+@push('styles')
+    <style>
+        /* Ana içerik alanına (main) animasyonlu arka planı uygula */
+        #app>main.py-4 {
+            padding: 2.5rem 0 !important;
+            min-height: calc(100vh - 72px);
+            background: linear-gradient(-45deg,
+                    #dbe4ff,
+                    #fde2ff,
+                    #d9fcf7,
+                    #fff0d9);
+            background-size: 400% 400%;
+            animation: gradientWave 18s ease infinite;
         }
 
-        50% {
-            background-position: 100% 50%;
+        /* Arka plan dalgalanma animasyonu */
+        @keyframes gradientWave {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
-        100% {
-            background-position: 0% 50%;
+        /* === GÜNCELLENDİ (create-plan-card) === */
+        .create-plan-card {
+            border-radius: 1rem;
+            box-shadow: none !important;
+            border: 0;
+            background-color: transparent;
+            backdrop-filter: none;
         }
-    }
 
-    /* === GÜNCELLENDİ (create-plan-card) === */
-    .create-plan-card {
-        border-radius: 1rem;
-        box-shadow: none !important;
-        border: 0;
-        background-color: transparent;
-        backdrop-filter: none;
-    }
+        .create-plan-card .card-header,
+        .create-plan-card .form-label {
+            color: #444;
+            font-weight: bold;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
+        }
 
-    .create-plan-card .card-header,
-    .create-plan-card .form-label {
-        color: #444;
-        font-weight: bold;
-        text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
-    }
+        .create-plan-card .card-header {
+            color: #000;
+        }
 
-    .create-plan-card .card-header {
-        color: #000;
-    }
+        .create-plan-card .form-control,
+        .create-plan-card .form-select {
+            border-radius: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
 
-    .create-plan-card .form-control,
-    .create-plan-card .form-select {
-        border-radius: 0.5rem;
-        background-color: rgba(255, 255, 255, 0.8);
-    }
+        /* YENİ EKLENDİ: Plan detayları satırı için stiller */
+        .plan-detail-row {
+            display: flex;
+            gap: 0.75rem;
+            /* 12px */
+            margin-bottom: 0.75rem;
+            align-items: center;
+        }
 
-    /* YENİ EKLENDİ: Plan detayları satırı için stiller */
-    .plan-detail-row {
-        display: flex;
-        gap: 0.75rem;
-        /* 12px */
-        margin-bottom: 0.75rem;
-        align-items: center;
-    }
+        /* GÜNCELLENDİ: .form-select de flex: 1 almalı */
+        .plan-detail-row .form-control,
+        .plan-detail-row .form-select {
+            flex: 1;
+            /* Alanların eşit büyümesini sağlar */
+        }
 
-    /* GÜNCELLENDİ: .form-select de flex: 1 almalı */
-    .plan-detail-row .form-control,
-    .plan-detail-row .form-select {
-        flex: 1;
-        /* Alanların eşit büyümesini sağlar */
-    }
+        .plan-detail-row .btn-danger {
+            flex-shrink: 0;
+            /* Butonun küçülmesini engeller */
+            padding: 0.375rem 0.75rem;
+            /* Bootstrap btn-sm boyutu */
+        }
 
-    .plan-detail-row .btn-danger {
-        flex-shrink: 0;
-        /* Butonun küçülmesini engeller */
-        padding: 0.375rem 0.75rem;
-        /* Bootstrap btn-sm boyutu */
-    }
+        /* YENİ EKLENDİ BİTİŞ */
 
-    /* YENİ EKLENDİ BİTİŞ */
+        /* Animasyonlu buton (Değişiklik yok) */
+        .btn-animated-gradient {
+            background: linear-gradient(-45deg,
+                    #667EEA, #F093FB, #4FD1C5, #FBD38D);
+            background-size: 400% 400%;
+            animation: gradientWave 18s ease infinite;
+            border: none;
+            color: white;
+            font-weight: bold;
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+        }
 
-    /* Animasyonlu buton (Değişiklik yok) */
-    .btn-animated-gradient {
-        background: linear-gradient(-45deg,
-                #667EEA, #F093FB, #4FD1C5, #FBD38D);
-        background-size: 400% 400%;
-        animation: gradientWave 18s ease infinite;
-        border: none;
-        color: white;
-        font-weight: bold;
-        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-    }
-
-    .btn-animated-gradient:hover {
-        color: white;
-        transform: scale(1.05);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
-</style>
+        .btn-animated-gradient:hover {
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+@endpush
 
 @section('content')
     <div class="container">
@@ -115,7 +117,7 @@
                         @endif
 
                         {{-- Form action ve enctype güncellendi --}}
-                        <form method="POST" action="{{ route('production.plans.store') }}">
+                        <form method="POST" action="{{ route('production.plans.store') }}" autocomplete="off">
                             @csrf
                             <div class="row">
                                 {{-- Sol Sütun (Ana Bilgiler) --}}
@@ -123,7 +125,8 @@
                                     <div class="mb-3">
                                         <label for="plan_title" class="form-label">Plan Başlığı (*)</label>
                                         <input type="text" class="form-control @error('plan_title') is-invalid @enderror"
-                                            id="plan_title" name="plan_title" value="{{ old('plan_title') }}" required>
+                                            id="plan_title" name="plan_title" value="{{ old('plan_title') }}" required
+                                            autocomplete="off">
                                         @error('plan_title')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -133,7 +136,7 @@
                                         <input type="date"
                                             class="form-control @error('week_start_date') is-invalid @enderror"
                                             id="week_start_date" name="week_start_date" value="{{ old('week_start_date') }}"
-                                            required>
+                                            required autocomplete="off">
                                         @error('week_start_date')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -141,9 +144,9 @@
                                 </div>
 
                                 {{-- Sağ Sütun (Dinamik Plan Detayları) --}}
-                                <div class="col-md-6">
+                                <fieldset class="col-md-6">
                                     {{-- GÜNCELLENDİ: Label metni --}}
-                                    <label class="form-label">Plan Detayları (Makine, Ürün, Miktar, Birim)</label>
+                                    <legend class="form-legend">Plan Detayları (Makine, Ürün, Miktar, Birim)</legend>
 
                                     {{-- Hata durumunda eski verileri doldurmak için --}}
                                     @if ($errors->has('plan_details.*'))
@@ -163,19 +166,19 @@
                                                     <input type="text" name="plan_details[{{ $index }}][machine]"
                                                         class="form-control @error('plan_details.' . $index . '.machine') is-invalid @enderror"
                                                         placeholder="Makine Adı" value="{{ $details['machine'] ?? '' }}"
-                                                        required>
+                                                        required autocomplete="off">
 
                                                     <input type="text" name="plan_details[{{ $index }}][product]"
                                                         class="form-control @error('plan_details.' . $index . '.product') is-invalid @enderror"
                                                         placeholder="Ürün Kodu/Adı" value="{{ $details['product'] ?? '' }}"
-                                                        required>
+                                                        required autocomplete="off">
 
                                                     {{-- GÜNCELLENDİ: "Adet" -> "Miktar" --}}
                                                     <input type="number"
                                                         name="plan_details[{{ $index }}][quantity]"
                                                         class="form-control @error('plan_details.' . $index . '.quantity') is-invalid @enderror"
                                                         placeholder="Miktar" value="{{ $details['quantity'] ?? '' }}"
-                                                        required min="1">
+                                                        required min="1" autocomplete="off">
 
                                                     {{-- YENİ EKLENDİ: Birim Dropdown --}}
                                                     <select name="plan_details[{{ $index }}][birim_id]"
@@ -213,7 +216,7 @@
 
                                     <button type="button" id="add-plan-row" class="btn btn-success btn-sm mt-2">+ Satır
                                         Ekle</button>
-                                </div>
+                                </fieldset>
                             </div>
 
                             <div class="text-end mt-4">
@@ -262,9 +265,9 @@
                 // GÜNCELLENDİ: placeholder="Miktar" ve <select> eklendi
                 const newRow = `
             <div class="plan-detail-row">
-                <input type="text" name="plan_details[${rowIndex}][machine]" class="form-control" placeholder="Makine Adı" required>
-                <input type="text" name="plan_details[${rowIndex}][product]" class="form-control" placeholder="Ürün Kodu/Adı" required>
-                <input type="number" name="plan_details[${rowIndex}][quantity]" class="form-control" placeholder="Miktar" required min="1">
+                <input type="text" name="plan_details[${rowIndex}][machine]" class="form-control" placeholder="Makine Adı" required autocomplete="off">
+                <input type="text" name="plan_details[${rowIndex}][product]" class="form-control" placeholder="Ürün Kodu/Adı" required autocomplete="off">
+                <input type="number" name="plan_details[${rowIndex}][quantity]" class="form-control" placeholder="Miktar" required min="1" autocomplete="off">
                 <select name="plan_details[${rowIndex}][birim_id]" class="form-select" required>
                     ${birimOptions}
                 </select>

@@ -1,505 +1,498 @@
 
-
-
-
 <?php $__env->startSection('title', 'Hoş Geldiniz'); ?>
+<?php $__env->startPush('styles'); ?>
+    <style>
+        /* ... (Mevcut gradientWave, create-shipment-card, ikon vb. stilleriniz aynı kalır) ... */
 
+        #app>main.py-4 {
 
+            padding: 2.5rem 0 !important;
 
-<style>
-    /* ... (Mevcut gradientWave, create-shipment-card, ikon vb. stilleriniz aynı kalır) ... */
+            min-height: calc(100vh - 72px);
 
-    #app>main.py-4 {
+            background: linear-gradient(-45deg, #dbe4ff, #fde2ff, #d9fcf7, #fff0d9);
 
-        padding: 2.5rem 0 !important;
+            background-size: 400% 400%;
 
-        min-height: calc(100vh - 72px);
-
-        background: linear-gradient(-45deg, #dbe4ff, #fde2ff, #d9fcf7, #fff0d9);
-
-        background-size: 400% 400%;
-
-        animation: gradientWave 18s ease infinite;
-
-    }
-
-
-
-    @keyframes gradientWave {
-
-        0% {
-
-            background-position: 0% 50%;
+            animation: gradientWave 18s ease infinite;
 
         }
 
 
 
-        50% {
+        @keyframes gradientWave {
 
-            background-position: 100% 50%;
+            0% {
+
+                background-position: 0% 50%;
+
+            }
+
+
+
+            50% {
+
+                background-position: 100% 50%;
+
+            }
+
+
+
+            100% {
+
+                background-position: 0% 50%;
+
+            }
 
         }
 
 
 
-        100% {
+        .create-shipment-card {
 
-            background-position: 0% 50%;
+            border-radius: 1rem;
 
-        }
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 
-    }
+            border: 1px solid rgba(255, 255, 255, 0.3);
 
+            background-color: rgba(255, 255, 255, 0.75);
 
+            backdrop-filter: blur(5px);
 
-    .create-shipment-card {
-
-        border-radius: 1rem;
-
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-
-        border: 1px solid rgba(255, 255, 255, 0.3);
-
-        background-color: rgba(255, 255, 255, 0.75);
-
-        backdrop-filter: blur(5px);
-
-        -webkit-backdrop-filter: blur(5px);
-
-    }
-
-
-
-    .create-shipment-card .card-header,
-
-    .create-shipment-card .form-label,
-
-    .create-shipment-card .card-body {
-
-        color: #000;
-
-        font-weight: 500;
-
-    }
-
-
-
-    .create-shipment-card .card-header {
-
-        font-weight: bold;
-
-    }
-
-
-
-    .create-shipment-card .list-group-item {
-
-        background-color: transparent;
-
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-
-    }
-
-
-
-    .create-shipment-card .list-group-item:last-child {
-
-        border-bottom: 0;
-
-    }
-
-
-
-    .icon-gemi {
-
-        color: #9DECF9 !important;
-
-    }
-
-
-
-    .icon-tır,
-
-    .icon-tir {
-
-        color: #FFB84D !important;
-
-    }
-
-
-
-    .icon-kamyon {
-
-        color: #60D9A0 !important;
-
-    }
-
-
-
-    .icon-uretim {
-
-        color: #4FD1C5 !important;
-
-    }
-
-
-
-    .icon-aracgorevi {
-
-        color: #FBD38D !important;
-
-    }
-
-
-
-    .icon-etkinlik-genel {
-
-        color: #F093FB !important;
-
-    }
-
-
-
-    .icon-egitim {
-
-        color: #B794F4 !important;
-
-    }
-
-
-
-    .icon-toplanti {
-
-        color: #667EEA !important;
-
-    }
-
-
-
-    .icon-misafir {
-
-        color: #4FD1C5 !important;
-
-    }
-
-
-
-    .icon-musteri {
-
-        color: #0456f9 !important;
-
-    }
-
-
-
-    .icon-fuar {
-
-        color: #F6AD55 !important;
-
-    }
-
-
-
-    .icon-gezi {
-
-        color: #68D391 !important;
-
-    }
-
-    .icon-seyahat {
-
-        color: #68D391 !important;
-
-    }
-
-    .vehicle-icon {
-
-        width: 40px;
-
-        text-align: center;
-
-    }
-
-
-
-    .btn-animated-gradient {
-
-        background: linear-gradient(-45deg, #667EEA, #F093FB, #4FD1C5, #FBD38D);
-
-        background-size: 400% 400%;
-
-        animation: gradientWave 18s ease infinite;
-
-        border: none;
-
-        color: white;
-
-        font-weight: bold;
-
-        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-
-    }
-
-
-
-    .btn-animated-gradient:hover {
-
-        color: white;
-
-        transform: scale(1.05);
-
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-
-    }
-
-
-
-    .event-important-pulse-welcome {
-
-        border-radius: 0.75rem;
-
-        margin-bottom: 0.5rem;
-
-        border: 2px solid #ff4136 !important;
-
-        box-shadow: 0 0 0 rgba(255, 65, 54, 0.4);
-
-        animation: pulse-animation 2s infinite;
-
-        transition: background-color 0.2s ease-in-out;
-
-    }
-
-
-
-    .event-important-pulse-welcome:hover {
-
-        background-color: rgba(255, 65, 54, 0.05) !important;
-
-    }
-
-
-
-    @keyframes pulse-animation {
-
-        0% {
-
-            box-shadow: 0 0 0 0 rgba(255, 65, 54, 0.7);
+            -webkit-backdrop-filter: blur(5px);
 
         }
 
 
 
-        70% {
+        .create-shipment-card .card-header,
 
-            box-shadow: 0 0 0 10px rgba(255, 65, 54, 0);
+        .create-shipment-card .form-label,
 
-        }
+        .create-shipment-card .card-body {
 
+            color: #000;
 
-
-        100% {
-
-            box-shadow: 0 0 0 0 rgba(255, 65, 54, 0);
-
-        }
-
-    }
-
-
-
-    .list-group-item-action .fa-bell {
-
-        animation: ring 2s ease-in-out infinite;
-
-    }
-
-
-
-    @keyframes ring {
-
-        0% {
-
-            transform: rotate(0);
+            font-weight: 500;
 
         }
 
 
 
-        10% {
+        .create-shipment-card .card-header {
 
-            transform: rotate(14deg);
-
-        }
-
-
-
-        20% {
-
-            transform: rotate(-8deg);
+            font-weight: bold;
 
         }
 
 
 
-        30% {
+        .create-shipment-card .list-group-item {
 
-            transform: rotate(14deg);
+            background-color: transparent;
 
-        }
-
-
-
-        40% {
-
-            transform: rotate(-4deg);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 
         }
 
 
 
-        50% {
+        .create-shipment-card .list-group-item:last-child {
 
-            transform: rotate(10deg);
-
-        }
-
-
-
-        60% {
-
-            transform: rotate(0);
+            border-bottom: 0;
 
         }
 
 
 
-        100% {
+        .icon-gemi {
 
-            transform: rotate(0);
+            color: #9DECF9 !important;
 
         }
 
-    }
 
 
+        .icon-tır,
 
-    /* ========================================================= */
+        .icon-tir {
 
-    /* YENİ EKLENEN KPI KART STİLLERİ */
+            color: #FFB84D !important;
 
-    /* ========================================================= */
+        }
 
-    .kpi-card {
 
-        background-color: rgba(255, 255, 255, 0.85);
 
-        /* Hafif daha opak */
+        .icon-kamyon {
 
-        border-radius: 0.75rem;
+            color: #60D9A0 !important;
 
-        border: 1px solid rgba(255, 255, 255, 0.5);
+        }
 
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 
-        backdrop-filter: blur(3px);
 
-        -webkit-backdrop-filter: blur(3px);
+        .icon-uretim {
 
-        padding: 1.25rem;
+            color: #4FD1C5 !important;
 
-        text-align: center;
+        }
 
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
 
-    }
 
+        .icon-aracgorevi {
 
+            color: #FBD38D !important;
 
-    .kpi-card:hover {
+        }
 
-        transform: translateY(-5px);
 
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 
-    }
+        .icon-etkinlik-genel {
 
+            color: #F093FB !important;
 
+        }
 
-    .kpi-icon {
 
-        font-size: 2rem;
 
-        margin-bottom: 0.75rem;
+        .icon-egitim {
 
-    }
+            color: #B794F4 !important;
 
+        }
 
 
-    .kpi-value {
 
-        font-size: 2.25rem;
+        .icon-toplanti {
 
-        font-weight: 700;
+            color: #667EEA !important;
 
-        color: #000;
+        }
 
-    }
 
 
+        .icon-misafir {
 
-    .kpi-label {
+            color: #4FD1C5 !important;
 
-        font-size: 0.9rem;
+        }
 
-        font-weight: 500;
 
-        color: #333;
 
-        text-transform: uppercase;
+        .icon-musteri {
 
-        letter-spacing: 0.5px;
+            color: #0456f9 !important;
 
-    }
+        }
 
 
 
-    /* Renkler */
+        .icon-fuar {
 
-    .kpi-lojistik .kpi-icon {
+            color: #F6AD55 !important;
 
-        color: #667EEA;
+        }
 
-    }
 
 
+        .icon-gezi {
 
-    .kpi-uretim .kpi-icon {
+            color: #68D391 !important;
 
-        color: #4FD1C5;
+        }
 
-    }
+        .icon-seyahat {
 
+            color: #68D391 !important;
 
+        }
 
-    .kpi-hizmet .kpi-icon {
+        .vehicle-icon {
 
-        color: #F093FB;
+            width: 40px;
 
-    }
+            text-align: center;
 
+        }
 
 
-    .kpi-sistem .kpi-icon {
 
-        color: #FBD38D;
+        .btn-animated-gradient {
 
-    }
-</style>
+            background: linear-gradient(-45deg, #667EEA, #F093FB, #4FD1C5, #FBD38D);
 
+            background-size: 400% 400%;
 
+            animation: gradientWave 18s ease infinite;
 
+            border: none;
+
+            color: white;
+
+            font-weight: bold;
+
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+
+        }
+
+
+
+        .btn-animated-gradient:hover {
+
+            color: white;
+
+            transform: scale(1.05);
+
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+
+        }
+
+
+
+        .event-important-pulse-welcome {
+
+            border-radius: 0.75rem;
+
+            margin-bottom: 0.5rem;
+
+            border: 2px solid #ff4136 !important;
+
+            box-shadow: 0 0 0 rgba(255, 65, 54, 0.4);
+
+            animation: pulse-animation 2s infinite;
+
+            transition: background-color 0.2s ease-in-out;
+
+        }
+
+
+
+        .event-important-pulse-welcome:hover {
+
+            background-color: rgba(255, 65, 54, 0.05) !important;
+
+        }
+
+
+
+        @keyframes pulse-animation {
+
+            0% {
+
+                box-shadow: 0 0 0 0 rgba(255, 65, 54, 0.7);
+
+            }
+
+
+
+            70% {
+
+                box-shadow: 0 0 0 10px rgba(255, 65, 54, 0);
+
+            }
+
+
+
+            100% {
+
+                box-shadow: 0 0 0 0 rgba(255, 65, 54, 0);
+
+            }
+
+        }
+
+
+
+        .list-group-item-action .fa-bell {
+
+            animation: ring 2s ease-in-out infinite;
+
+        }
+
+
+
+        @keyframes ring {
+
+            0% {
+
+                transform: rotate(0);
+
+            }
+
+
+
+            10% {
+
+                transform: rotate(14deg);
+
+            }
+
+
+
+            20% {
+
+                transform: rotate(-8deg);
+
+            }
+
+
+
+            30% {
+
+                transform: rotate(14deg);
+
+            }
+
+
+
+            40% {
+
+                transform: rotate(-4deg);
+
+            }
+
+
+
+            50% {
+
+                transform: rotate(10deg);
+
+            }
+
+
+
+            60% {
+
+                transform: rotate(0);
+
+            }
+
+
+
+            100% {
+
+                transform: rotate(0);
+
+            }
+
+        }
+
+
+
+        /* ========================================================= */
+
+        /* YENİ EKLENEN KPI KART STİLLERİ */
+
+        /* ========================================================= */
+
+        .kpi-card {
+
+            background-color: rgba(255, 255, 255, 0.85);
+
+            /* Hafif daha opak */
+
+            border-radius: 0.75rem;
+
+            border: 1px solid rgba(255, 255, 255, 0.5);
+
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+
+            backdrop-filter: blur(3px);
+
+            -webkit-backdrop-filter: blur(3px);
+
+            padding: 1.25rem;
+
+            text-align: center;
+
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+        }
+
+
+
+        .kpi-card:hover {
+
+            transform: translateY(-5px);
+
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+
+        }
+
+
+
+        .kpi-icon {
+
+            font-size: 2rem;
+
+            margin-bottom: 0.75rem;
+
+        }
+
+
+
+        .kpi-value {
+
+            font-size: 2.25rem;
+
+            font-weight: 700;
+
+            color: #000;
+
+        }
+
+
+
+        .kpi-label {
+
+            font-size: 0.9rem;
+
+            font-weight: 500;
+
+            color: #333;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.5px;
+
+        }
+
+
+
+        /* Renkler */
+
+        .kpi-lojistik .kpi-icon {
+
+            color: #667EEA;
+
+        }
+
+
+
+        .kpi-uretim .kpi-icon {
+
+            color: #4FD1C5;
+
+        }
+
+
+
+        .kpi-hizmet .kpi-icon {
+
+            color: #F093FB;
+
+        }
+
+
+
+        .kpi-sistem .kpi-icon {
+
+            color: #FBD38D;
+
+        }
+    </style>
+<?php $__env->stopPush(); ?>
 <?php $__env->startSection('content'); ?>
     <div class="container">
         <div class="row justify-content-center">

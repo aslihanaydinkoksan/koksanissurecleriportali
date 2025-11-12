@@ -132,9 +132,10 @@ class TravelController extends Controller
             'customerVisits.customer',  // Ziyaretler VE bu ziyaretlerin müşterileri
             'customerVisits.event'      // Ziyaretler VE bu ziyaretlerin etkinlik detayları
         ]);
+        $travelActivities = $travel->activities()->latest()->get();
 
         // $travel değişkenini tüm bu yüklenmiş verilerle birlikte view'a gönder
-        return view('travels.show', compact('travel'));
+        return view('travels.show', compact('travel', 'travelActivities'));
     }
 
     /**

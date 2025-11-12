@@ -1,8 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Yeni Müşteri Ekle')
-
-@section('content')
+@push('styles')
     <style>
         /* Ana içerik alanına (main) animasyonlu arka planı uygula */
         #app>main.py-4 {
@@ -78,6 +77,8 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
     </style>
+@endpush
+@section('content')
     <div class="container py-4">
         <div class="row justify-content-center">
             <div class="col-md-10">
@@ -87,7 +88,7 @@
                     </div>
                     <div class="card-body px-4">
 
-                        <form action="{{ route('customers.store') }}" method="POST">
+                        <form action="{{ route('customers.store') }}" method="POST" autocomplete="off">
                             @csrf
                             @include('customers._form', ['customer' => null])
 

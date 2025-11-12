@@ -43,7 +43,7 @@
                         <div class="quick-add-form mb-4"
                             style="background-color: #f8f9fa; border-radius: 0.5rem; padding: 1.5rem; border: 1px solid #e9ecef;">
                             <h5><i class="fa-solid fa-ticket me-2"></i> Bu Seyahate Yeni Rezervasyon Ekle</h5>
-                            <form action="{{ route('travels.bookings.store', $travel) }}" method="POST"
+                            <form action="{{ route('travels.bookings.store', $travel) }}" method="POST" autocomplete="off"
                                 enctype="multipart/form-data">
                                 @csrf
                                 @include('bookings._form', ['booking' => null])
@@ -121,7 +121,7 @@
                                                             <i class="fa-solid fa-pen"></i>
                                                         </a>
                                                         <form action="{{ route('bookings.destroy', $booking) }}"
-                                                            method="POST"
+                                                            method="POST" autocomplete="off"
                                                             onsubmit="return confirm('Bu rezervasyon kaydını silmek istediğinizden emin misiniz?');">
                                                             @csrf
                                                             @method('DELETE')

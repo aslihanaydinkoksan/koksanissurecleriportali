@@ -1,198 +1,200 @@
 @extends('layouts.app')
 
-{{-- Stil bölümü (Referans dosya ile aynı) --}}
-<style>
-    /* Ana içerik alanına (main) animasyonlu arka planı uygula */
-    #app>main.py-4 {
-        padding: 2.5rem 0 !important;
-        min-height: calc(100vh - 72px);
-        background: linear-gradient(-45deg, #dbe4ff, #fde2ff, #d9fcf7, #fff0d9);
-        background-size: 400% 400%;
-        animation: gradientWave 18s ease infinite;
-    }
-
-    /* Arka plan dalgalanma animasyonu */
-    @keyframes gradientWave {
-        0% {
-            background-position: 0% 50%;
+@push('styles')
+    <style>
+        /* Ana içerik alanına (main) animasyonlu arka planı uygula */
+        #app>main.py-4 {
+            padding: 2.5rem 0 !important;
+            min-height: calc(100vh - 72px);
+            background: linear-gradient(-45deg, #dbe4ff, #fde2ff, #d9fcf7, #fff0d9);
+            background-size: 400% 400%;
+            animation: gradientWave 18s ease infinite;
         }
 
-        50% {
-            background-position: 100% 50%;
+        /* Arka plan dalgalanma animasyonu */
+        @keyframes gradientWave {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
-        100% {
-            background-position: 0% 50%;
+        /* Cam Kart Stili (Liste için) */
+        .list-card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
         }
-    }
 
-    /* Cam Kart Stili (Liste için) */
-    .list-card {
-        background: rgba(255, 255, 255, 0.75);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border-radius: 1rem;
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
-    }
+        /* Kart Başlığı (Liste için) */
+        .list-card .card-header {
+            background: rgba(255, 255, 255, 0.5);
+            color: #333;
+            font-weight: bold;
+            font-size: 1.25rem;
+            border-bottom: none;
+            border-top-left-radius: 1rem;
+            border-top-right-radius: 1rem;
+            padding: 1rem 1.5rem;
+        }
 
-    /* Kart Başlığı (Liste için) */
-    .list-card .card-header {
-        background: rgba(255, 255, 255, 0.5);
-        color: #333;
-        font-weight: bold;
-        font-size: 1.25rem;
-        border-bottom: none;
-        border-top-left-radius: 1rem;
-        border-top-right-radius: 1rem;
-        padding: 1rem 1.5rem;
-    }
+        /* Tablo Stilleri */
+        .table {
+            background-color: transparent;
+            margin-bottom: 0;
+        }
 
-    /* Tablo Stilleri */
-    .table {
-        background-color: transparent;
-        margin-bottom: 0;
-    }
+        .table thead th {
+            color: #333;
+            border-bottom-width: 2px;
+            border-color: rgba(0, 0, 0, 0.15);
+        }
 
-    .table thead th {
-        color: #333;
-        border-bottom-width: 2px;
-        border-color: rgba(0, 0, 0, 0.15);
-    }
+        .table-striped>tbody>tr:nth-of-type(odd)>* {
+            --bs-table-accent-bg: rgba(255, 255, 255, 0.4);
+            color: #212529;
+        }
 
-    .table-striped>tbody>tr:nth-of-type(odd)>* {
-        --bs-table-accent-bg: rgba(255, 255, 255, 0.4);
-        color: #212529;
-    }
+        .table-striped>tbody>tr:nth-of-type(even)>* {
+            --bs-table-accent-bg: transparent;
+            color: #212529;
+        }
 
-    .table-striped>tbody>tr:nth-of-type(even)>* {
-        --bs-table-accent-bg: transparent;
-        color: #212529;
-    }
+        .table-hover>tbody>tr:hover>* {
+            --bs-table-accent-bg: rgba(255, 255, 255, 0.8);
+            color: #000;
+        }
 
-    .table-hover>tbody>tr:hover>* {
-        --bs-table-accent-bg: rgba(255, 255, 255, 0.8);
-        color: #000;
-    }
+        .table td,
+        .table th {
+            vertical-align: middle;
+        }
 
-    .table td,
-    .table th {
-        vertical-align: middle;
-    }
+        /* Filtre Stilleri */
+        .btn-filter-toggle {
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #333;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
 
-    /* Filtre Stilleri */
-    .btn-filter-toggle {
-        background-color: rgba(255, 255, 255, 0.8);
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        color: #333;
-        font-weight: 500;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    }
+        .btn-filter-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-color: rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
 
-    .btn-filter-toggle:hover {
-        background-color: rgba(255, 255, 255, 0.95);
-        border-color: rgba(0, 0, 0, 0.15);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
+        .btn-filter-toggle[aria-expanded="true"] {
+            background-color: rgba(230, 235, 255, 0.9);
+        }
 
-    .btn-filter-toggle[aria-expanded="true"] {
-        background-color: rgba(230, 235, 255, 0.9);
-    }
+        .filter-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            padding: 1.5rem;
+        }
 
-    .filter-card {
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border-radius: 0.75rem;
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-        padding: 1.5rem;
-    }
+        .filter-card .form-label {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 0.3rem;
+        }
 
-    .filter-card .form-label {
-        font-weight: 500;
-        color: #333;
-        margin-bottom: 0.3rem;
-    }
+        .filter-card .form-control,
+        .filter-card .form-select {
+            border-radius: 0.5rem;
+            background-color: #fff;
+        }
 
-    .filter-card .form-control,
-    .filter-card .form-select {
-        border-radius: 0.5rem;
-        background-color: #fff;
-    }
+        .filter-card .row {
+            margin-bottom: -1rem;
+        }
 
-    .filter-card .row {
-        margin-bottom: -1rem;
-    }
+        .filter-card .row>div {
+            margin-bottom: 1rem;
+        }
 
-    .filter-card .row>div {
-        margin-bottom: 1rem;
-    }
+        .btn-apply-filter {
+            background: linear-gradient(-45deg, #667EEA, #F093FB, #4FD1C5, #FBD38D);
+            background-size: 400% 400%;
+            animation: gradientWave 18s ease infinite;
+            border: none;
+            color: white;
+            font-weight: bold;
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+            padding: 0.5rem 1.25rem;
+        }
 
-    .btn-apply-filter {
-        background: linear-gradient(-45deg, #667EEA, #F093FB, #4FD1C5, #FBD38D);
-        background-size: 400% 400%;
-        animation: gradientWave 18s ease infinite;
-        border: none;
-        color: white;
-        font-weight: bold;
-        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-        padding: 0.5rem 1.25rem;
-    }
+        .btn-apply-filter:hover {
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
 
-    .btn-apply-filter:hover {
-        color: white;
-        transform: scale(1.05);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
+        .btn-clear-filter {
+            padding: 0.5rem 1.25rem;
+        }
 
-    .btn-clear-filter {
-        padding: 0.5rem 1.25rem;
-    }
+        /* ... (mevcut genel stil kurallarınız) ... */
 
-    /* ... (mevcut genel stil kurallarınız) ... */
+        /* YENİ VE GELİŞTİRİLMİŞ: Önemli satırları vurgulamak için */
+        .row-important {
+            /* Daha belirgin bir arka plan rengi, ancak yine de hafif */
+            --bs-table-accent-bg: rgba(255, 235, 238, 0.8);
+            /* Açık pembe tonu, biraz şeffaf */
+            background-color: var(--bs-table-accent-bg) !important;
+            /* Önemli! Striped override */
 
-    /* YENİ VE GELİŞTİRİLMİŞ: Önemli satırları vurgulamak için */
-    .row-important {
-        /* Daha belirgin bir arka plan rengi, ancak yine de hafif */
-        --bs-table-accent-bg: rgba(255, 235, 238, 0.8);
-        /* Açık pembe tonu, biraz şeffaf */
-        background-color: var(--bs-table-accent-bg) !important;
-        /* Önemli! Striped override */
+            /* Metin rengini belirginleştir ama çok koyu yapma */
+            color: #c0392b;
+            /* Koyu kırmızımsı ton */
+            font-weight: 600;
 
-        /* Metin rengini belirginleştir ama çok koyu yapma */
-        color: #c0392b;
-        /* Koyu kırmızımsı ton */
-        font-weight: 600;
+            /* Hafif bir gölge efekti (isteğe bağlı, kaldırabilirsiniz) */
+            box-shadow: inset 0 0 5px rgba(252, 98, 117, 0.1);
+            /* İç gölge */
 
-        /* Hafif bir gölge efekti (isteğe bağlı, kaldırabilirsiniz) */
-        box-shadow: inset 0 0 5px rgba(252, 98, 117, 0.1);
-        /* İç gölge */
+            transition: all 0.2s ease-in-out;
+            /* Animasyonlu geçişler */
+        }
 
-        transition: all 0.2s ease-in-out;
-        /* Animasyonlu geçişler */
-    }
+        /* Önemli satırın üzerine gelindiğinde (hover) arka planı daha belirgin yap */
+        .table-hover>tbody>tr.row-important:hover {
+            --bs-table-accent-bg: rgba(255, 220, 224, 0.95);
+            /* Biraz daha koyu pembe */
+            background-color: var(--bs-table-accent-bg) !important;
+            /* Önemli! Striped override */
+            transform: translateY(-2px);
+            /* Hafif yukarı kayma efekti */
+            box-shadow: inset 0 0 8px rgba(252, 98, 117, 0.2), 0 2px 5px rgba(0, 0, 0, 0.05);
+            /* Daha belirgin gölge */
+        }
 
-    /* Önemli satırın üzerine gelindiğinde (hover) arka planı daha belirgin yap */
-    .table-hover>tbody>tr.row-important:hover {
-        --bs-table-accent-bg: rgba(255, 220, 224, 0.95);
-        /* Biraz daha koyu pembe */
-        background-color: var(--bs-table-accent-bg) !important;
-        /* Önemli! Striped override */
-        transform: translateY(-2px);
-        /* Hafif yukarı kayma efekti */
-        box-shadow: inset 0 0 8px rgba(252, 98, 117, 0.2), 0 2px 5px rgba(0, 0, 0, 0.05);
-        /* Daha belirgin gölge */
-    }
+        /* Önemli satırlardaki hücrelerin metin rengini korumak için */
+        .row-important td {
+            color: #c0392b;
+            /* Metin rengini koru */
+        }
+    </style>
+@endpush
 
-    /* Önemli satırlardaki hücrelerin metin rengini korumak için */
-    .row-important td {
-        color: #c0392b;
-        /* Metin rengini koru */
-    }
-</style>
 
 @section('content')
     <div class="container-fluid">

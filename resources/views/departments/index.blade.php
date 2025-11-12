@@ -1,22 +1,24 @@
 @extends('layouts.app')
 @section('title', 'Departman Yönetimi')
 
-<style>
-    .customer-card {
-        /* Customer'daki stili kullanalım */
-        background-color: #ffffff;
-        border-radius: 0.75rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-    }
+@push('styles')
+    <style>
+        .customer-card {
+            /* Customer'daki stili kullanalım */
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
 
-    .btn-primary-gradient {
-        background: linear-gradient(to right, #667EEA, #5a6ed0);
-        color: white;
-        border: none;
-        font-weight: 500;
-    }
-</style>
+        .btn-primary-gradient {
+            background: linear-gradient(to right, #667EEA, #5a6ed0);
+            color: white;
+            border: none;
+            font-weight: 500;
+        }
+    </style>
+@endpush
 
 @section('content')
     <div class="container py-4">

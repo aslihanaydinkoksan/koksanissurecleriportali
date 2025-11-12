@@ -2,459 +2,463 @@
 
 @section('title', 'Benim Takvimim')
 
-<style>
-    #app>main.py-4 {
-        padding: 2.5rem 0 !important;
-        min-height: calc(100vh - 72px);
-        background: linear-gradient(-45deg, #dbe4ff, #fde2ff, #d9fcf7, #fff0d9);
-        background-size: 400% 400%;
-        animation: gradientWave 18s ease infinite;
-    }
-
-    @keyframes gradientWave {
-        0% {
-            background-position: 0% 50%;
+@push('styles')
+    <style>
+        /* ... (Tüm CSS stiliniz burada, değişiklik yok) ... */
+        #app>main.py-4 {
+            padding: 2.5rem 0 !important;
+            min-height: calc(100vh - 72px);
+            background: linear-gradient(-45deg, #dbe4ff, #fde2ff, #d9fcf7, #fff0d9);
+            background-size: 400% 400%;
+            animation: gradientWave 18s ease infinite;
         }
 
-        50% {
-            background-position: 100% 50%;
+        @keyframes gradientWave {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
-        100% {
-            background-position: 0% 50%;
-        }
-    }
-
-    .create-shipment-card {
-        border-radius: 1.25rem;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        background-color: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .create-shipment-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
-    }
-
-    .create-shipment-card .card-header {
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-        border-bottom: 1px solid rgba(102, 126, 234, 0.2);
-        font-weight: 700;
-        font-size: 1.1rem;
-        color: #2d3748;
-        padding: 1.25rem 1.5rem;
-        border-radius: 1.25rem 1.25rem 0 0;
-    }
-
-    .create-shipment-card .card-body {
-        padding: 1.5rem;
-        color: #2d3748;
-    }
-
-    .create-shipment-card .form-label {
-        color: #2d3748;
-        font-weight: 600;
-        font-size: 0.95rem;
-    }
-
-    .create-shipment-card .form-control,
-    .create-shipment-card .form-select {
-        border-radius: 0.75rem;
-        background-color: rgba(255, 255, 255, 0.95);
-        border: 2px solid #e2e8f0;
-        transition: all 0.2s ease;
-    }
-
-    .create-shipment-card .form-control:focus,
-    .create-shipment-card .form-select:focus {
-        border-color: #667EEA;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-
-
-    .btn-animated-gradient {
-        background: linear-gradient(-45deg, #667EEA, #F093FB, #4FD1C5, #FBD38D);
-        background-size: 400% 400%;
-        animation: gradientWave 18s ease infinite;
-        border: none;
-        color: white;
-        font-weight: 700;
-        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-        border-radius: 0.75rem;
-        padding: 0.75rem 1.5rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        font-size: 0.9rem;
-    }
-
-    .btn-animated-gradient:hover {
-        color: white;
-        transform: scale(1.05) translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    }
-
-    .alert {
-        border-radius: 1rem;
-        border: none;
-        padding: 1rem 1.25rem;
-        backdrop-filter: blur(10px);
-        animation: slideInDown 0.4s ease;
-    }
-
-    @keyframes slideInDown {
-        from {
-            opacity: 0;
-            transform: translateY(-20px);
+        .create-shipment-card {
+            border-radius: 1.25rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        to {
-            opacity: 1;
-            transform: translateY(0);
+        .create-shipment-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
         }
-    }
 
-    .alert-success {
-        background: rgba(72, 187, 120, 0.15);
-        color: #2f855a;
-        border-left: 4px solid #48bb78;
-    }
-
-    .alert-danger {
-        background: rgba(245, 101, 101, 0.15);
-        color: #c53030;
-        border-left: 4px solid #f56565;
-    }
-
-
-    #calendar {
-        background: rgba(255, 255, 255, 0.5);
-        border-radius: 1rem;
-        padding: 1rem;
-    }
-
-    .fc .fc-button-primary {
-        background: linear-gradient(135deg, #667EEA, #764BA2);
-        border: none;
-        border-radius: 0.5rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        letter-spacing: 0.5px;
-        transition: all 0.2s ease;
-    }
-
-    .fc .fc-button-primary:hover {
-        background: linear-gradient(135deg, #764BA2, #667EEA);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    }
-
-    .fc .fc-button-primary:not(:disabled).fc-button-active,
-    .fc .fc-button-primary:not(:disabled):active {
-        background: linear-gradient(135deg, #764BA2, #667EEA);
-    }
-
-    .fc-event {
-        border-radius: 0.5rem;
-        border: none;
-        padding: 2px 6px;
-        font-weight: 600;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        cursor: pointer;
-        user-select: none;
-    }
-
-    .fc-event:hover {
-        transform: scale(1.05);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .fc .fc-daygrid-day-number {
-        font-weight: 600;
-        color: #4a5568;
-    }
-
-    .fc .fc-col-header-cell-cushion {
-        font-weight: 700;
-        color: #2d3748;
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        letter-spacing: 0.5px;
-    }
-
-    .fc .fc-daygrid-day.fc-day-today {
-        background: rgba(102, 126, 234, 0.1) !important;
-    }
-
-
-    .table {
-        border-collapse: separate;
-        border-spacing: 0 0.5rem;
-    }
-
-    .table thead th {
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
-        color: #2d3748;
-        font-weight: 700;
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        letter-spacing: 0.5px;
-        border: none;
-        padding: 1rem;
-        border-radius: 0.5rem;
-    }
-
-    .table tbody tr {
-        background: rgba(255, 255, 255, 0.7);
-        transition: all 0.2s ease;
-    }
-
-    .table tbody tr:hover {
-        background: rgba(255, 255, 255, 0.95);
-        transform: scale(1.01);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    }
-
-    .table tbody td {
-        border: none;
-        padding: 1rem;
-        vertical-align: middle;
-    }
-
-    .table tbody tr td:first-child {
-        border-radius: 0.5rem 0 0 0.5rem;
-    }
-
-    .table tbody tr td:last-child {
-        border-radius: 0 0.5rem 0.5rem 0;
-    }
-
-
-    .badge {
-        padding: 0.5rem 1rem;
-        border-radius: 2rem;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-        font-size: 0.8rem;
-    }
-
-    .bg-primary {
-        background: linear-gradient(135deg, #667EEA, #764BA2) !important;
-    }
-
-    .bg-info {
-        background: linear-gradient(135deg, #4FD1C5, #38B2AC) !important;
-    }
-
-    .bg-secondary {
-        background: linear-gradient(135deg, #718096, #4a5568) !important;
-    }
-
-    .bg-success {
-        background: linear-gradient(135deg, #48BB78, #38A169) !important;
-    }
-
-    .btn {
-        border-radius: 0.75rem;
-        font-weight: 600;
-        padding: 0.625rem 1.25rem;
-        transition: all 0.2s ease;
-        border: none;
-    }
-
-    .btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-    }
-
-    .btn-info {
-        background: linear-gradient(135deg, #4FD1C5, #38B2AC);
-        color: white !important;
-    }
-
-    .btn-secondary {
-        background: linear-gradient(135deg, #718096, #4a5568);
-        color: white;
-    }
-
-    .btn-warning {
-        background: linear-gradient(135deg, #F6AD55, #ED8936);
-        color: white;
-    }
-
-    .btn-success {
-        background: linear-gradient(135deg, #48BB78, #38A169);
-        color: white;
-    }
-
-    .btn-danger {
-        background: linear-gradient(135deg, #FC8181, #F56565);
-        color: white;
-    }
-
-    .btn-outline-primary {
-        border: 2px solid #667EEA;
-        color: #667EEA;
-        background: transparent;
-    }
-
-    .btn-outline-primary:hover {
-        background: linear-gradient(135deg, #667EEA, #764BA2);
-        border-color: #667EEA;
-        color: white;
-    }
-
-
-    .modal-content {
-        border-radius: 1.25rem;
-        border: none;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(10px);
-        background: rgba(255, 255, 255, 0.95);
-    }
-
-    .modal-header {
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-        border-bottom: 2px solid rgba(102, 126, 234, 0.2);
-        border-radius: 1.25rem 1.25rem 0 0;
-        padding: 1.5rem;
-    }
-
-    .modal-title {
-        font-weight: 700;
-        color: #2d3748;
-        font-size: 1.5rem;
-    }
-
-    .modal-body {
-        padding: 2rem;
-        color: #2d3748;
-    }
-
-    .modal-body p {
-        margin-bottom: 0.75rem;
-        line-height: 1.8;
-    }
-
-    .modal-body strong {
-        color: #667EEA;
-        font-weight: 700;
-        display: inline-block;
-        min-width: 180px;
-    }
-
-    .modal-body hr {
-        border: none;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.3), transparent);
-        margin: 1.5rem 0;
-    }
-
-    .modal-footer {
-        border-top: 2px solid rgba(102, 126, 234, 0.1);
-        padding: 1.5rem;
-        background: rgba(249, 250, 251, 0.5);
-        border-radius: 0 0 1.25rem 1.25rem;
-    }
-
-
-    #stats-card-body {
-        padding: 1.5rem;
-    }
-
-    #stats-card-body a {
-        color: #667EEA;
-        font-weight: 600;
-        text-decoration: none;
-        transition: all 0.2s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    #stats-card-body a:hover {
-        color: #764BA2;
-        transform: translateX(5px);
-    }
-
-    #stats-card-body a::after {
-        content: '→';
-        font-size: 1.2rem;
-        transition: transform 0.2s ease;
-    }
-
-    #stats-card-body a:hover::after {
-        transform: translateX(3px);
-    }
-
-
-    @media (max-width: 768px) {
         .create-shipment-card .card-header {
-            font-size: 1rem;
-            padding: 1rem;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #2d3748;
+            padding: 1.25rem 1.5rem;
+            border-radius: 1.25rem 1.25rem 0 0;
         }
 
-        .modal-body strong {
-            min-width: 120px;
+        .create-shipment-card .card-body {
+            padding: 1.5rem;
+            color: #2d3748;
+        }
+
+        .create-shipment-card .form-label {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .create-shipment-card .form-control,
+        .create-shipment-card .form-select {
+            border-radius: 0.75rem;
+            background-color: rgba(255, 255, 255, 0.95);
+            border: 2px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+
+        .create-shipment-card .form-control:focus,
+        .create-shipment-card .form-select:focus {
+            border-color: #667EEA;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+
+        .btn-animated-gradient {
+            background: linear-gradient(-45deg, #667EEA, #F093FB, #4FD1C5, #FBD38D);
+            background-size: 400% 400%;
+            animation: gradientWave 18s ease infinite;
+            border: none;
+            color: white;
+            font-weight: 700;
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             font-size: 0.9rem;
+        }
+
+        .btn-animated-gradient:hover {
+            color: white;
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .alert {
+            border-radius: 1rem;
+            border: none;
+            padding: 1rem 1.25rem;
+            backdrop-filter: blur(10px);
+            animation: slideInDown 0.4s ease;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-success {
+            background: rgba(72, 187, 120, 0.15);
+            color: #2f855a;
+            border-left: 4px solid #48bb78;
+        }
+
+        .alert-danger {
+            background: rgba(245, 101, 101, 0.15);
+            color: #c53030;
+            border-left: 4px solid #f56565;
+        }
+
+
+        #calendar {
+            background: transparent;
+            /* Şeffaf arka plan */
+            border-radius: 0;
+            padding: 0;
+        }
+
+        .fc .fc-button-primary {
+            background: linear-gradient(135deg, #667EEA, #764BA2);
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+        }
+
+        .fc .fc-button-primary:hover {
+            background: linear-gradient(135deg, #764BA2, #667EEA);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .fc .fc-button-primary:not(:disabled).fc-button-active,
+        .fc .fc-button-primary:not(:disabled):active {
+            background: linear-gradient(135deg, #764BA2, #667EEA);
+        }
+
+        .fc-event {
+            border-radius: 0.5rem;
+            border: none;
+            padding: 2px 6px;
+            font-weight: 600;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .fc-event:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .fc .fc-daygrid-day-number {
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .fc .fc-col-header-cell-cushion {
+            font-weight: 700;
+            color: #2d3748;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .fc .fc-daygrid-day.fc-day-today {
+            background: rgba(102, 126, 234, 0.1) !important;
+        }
+
+
+        .table {
+            border-collapse: separate;
+            border-spacing: 0 0.5rem;
+        }
+
+        .table thead th {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+            color: #2d3748;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            border: none;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+
+        .table tbody tr {
+            background: rgba(255, 255, 255, 0.7);
+            transition: all 0.2s ease;
+        }
+
+        .table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.95);
+            transform: scale(1.01);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .table tbody td {
+            border: none;
+            padding: 1rem;
+            vertical-align: middle;
+        }
+
+        .table tbody tr td:first-child {
+            border-radius: 0.5rem 0 0 0.5rem;
+        }
+
+        .table tbody tr td:last-child {
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+
+
+        .badge {
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            font-size: 0.8rem;
+        }
+
+        .bg-primary {
+            background: linear-gradient(135deg, #667EEA, #764BA2) !important;
+        }
+
+        .bg-info {
+            background: linear-gradient(135deg, #4FD1C5, #38B2AC) !important;
+        }
+
+        .bg-secondary {
+            background: linear-gradient(135deg, #718096, #4a5568) !important;
+        }
+
+        .bg-success {
+            background: linear-gradient(135deg, #48BB78, #38A169) !important;
         }
 
         .btn {
-            padding: 0.5rem 1rem;
-            font-size: 0.9rem;
-        }
-    }
-
-
-    html {
-        scroll-behavior: smooth;
-    }
-
-
-    @keyframes spin {
-        0% {
-            transform: rotate(0deg);
+            border-radius: 0.75rem;
+            font-weight: 600;
+            padding: 0.625rem 1.25rem;
+            transition: all 0.2s ease;
+            border: none;
         }
 
-        100% {
-            transform: rotate(360deg);
-        }
-    }
-
-    .spinner-border {
-        animation: spin 0.75s linear infinite;
-    }
-
-    .event-important-pulse {
-        /* "Kutucuk" görünümü için bir kenarlık veya gölge */
-        border: 2px solid #ff4136 !important;
-        /* !important, fc-event'i ezmek için */
-        box-shadow: 0 0 0 rgba(255, 65, 54, 0.4);
-        /* Gölgenin başlangıç durumu */
-
-        /* Animasyon tanımı */
-        animation: pulse-animation 2s infinite;
-    }
-
-    /* Animasyon Keyframes */
-    @keyframes pulse-animation {
-        0% {
-            box-shadow: 0 0 0 0 rgba(255, 65, 54, 0.7);
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
         }
 
-        70% {
-            box-shadow: 0 0 0 10px rgba(255, 65, 54, 0);
+        .btn-info {
+            background: linear-gradient(135deg, #4FD1C5, #38B2AC);
+            color: white !important;
         }
 
-        100% {
-            box-shadow: 0 0 0 0 rgba(255, 65, 54, 0);
+        .btn-secondary {
+            background: linear-gradient(135deg, #718096, #4a5568);
+            color: white;
         }
-    }
-</style>
+
+        .btn-warning {
+            background: linear-gradient(135deg, #F6AD55, #ED8936);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #48BB78, #38A169);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #FC8181, #F56565);
+            color: white;
+        }
+
+        .btn-outline-primary {
+            border: 2px solid #667EEA;
+            color: #667EEA;
+            background: transparent;
+        }
+
+        .btn-outline-primary:hover {
+            background: linear-gradient(135deg, #667EEA, #764BA2);
+            border-color: #667EEA;
+            color: white;
+        }
+
+
+        .modal-content {
+            border-radius: 1.25rem;
+            border: none;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 1.25rem 1.25rem 0 0;
+            padding: 1.5rem;
+        }
+
+        .modal-title {
+            font-weight: 700;
+            color: #2d3748;
+            font-size: 1.5rem;
+        }
+
+        .modal-body {
+            padding: 2rem;
+            color: #2d3748;
+        }
+
+        .modal-body p {
+            margin-bottom: 0.75rem;
+            line-height: 1.8;
+        }
+
+        .modal-body strong {
+            color: #667EEA;
+            font-weight: 700;
+            display: inline-block;
+            min-width: 180px;
+        }
+
+        .modal-body hr {
+            border: none;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.3), transparent);
+            margin: 1.5rem 0;
+        }
+
+        .modal-footer {
+            border-top: 2px solid rgba(102, 126, 234, 0.1);
+            padding: 1.5rem;
+            background: rgba(249, 250, 251, 0.5);
+            border-radius: 0 0 1.25rem 1.25rem;
+        }
+
+
+        #stats-card-body {
+            padding: 1.5rem;
+        }
+
+        #stats-card-body a {
+            color: #667EEA;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #stats-card-body a:hover {
+            color: #764BA2;
+            transform: translateX(5px);
+        }
+
+        #stats-card-body a::after {
+            content: '→';
+            font-size: 1.2rem;
+            transition: transform 0.2s ease;
+        }
+
+        #stats-card-body a:hover::after {
+            transform: translateX(3px);
+        }
+
+
+        @media (max-width: 768px) {
+            .create-shipment-card .card-header {
+                font-size: 1rem;
+                padding: 1rem;
+            }
+
+            .modal-body strong {
+                min-width: 120px;
+                font-size: 0.9rem;
+            }
+
+            .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spinner-border {
+            animation: spin 0.75s linear infinite;
+        }
+
+        .event-important-pulse {
+            /* "Kutucuk" görünümü için bir kenarlık veya gölge */
+            border: 2px solid #ff4136 !important;
+            /* !important, fc-event'i ezmek için */
+            box-shadow: 0 0 0 rgba(255, 65, 54, 0.4);
+            /* Gölgenin başlangıç durumu */
+
+            /* Animasyon tanımı */
+            animation: pulse-animation 2s infinite;
+        }
+
+        /* Animasyon Keyframes */
+        @keyframes pulse-animation {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 65, 54, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 65, 54, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 65, 54, 0);
+            }
+        }
+    </style>
+@endpush
 
 @section('content')
     <div class="container">
@@ -479,12 +483,10 @@
                         📅 {{ $departmentName }} Takvimi
                     </div>
                     <div class="card-body">
+                        {{-- === DÜZELTME: SADECE BİR TANE CALENDAR DIV'İ KALDI === --}}
                         <div id="calendar" data-events='@json($events)'
                             data-is-authorized="{{ in_array(Auth::user()->role, ['admin', 'yönetici']) ? 'true' : 'false' }}"
                             data-current-user-id="{{ Auth::id() }}">
-                        </div>
-                        <div id="calendar" data-events='@json($events)'
-                            data-is-authorized="{{ in_array(Auth::user()->role, ['admin', 'yönetici']) ? 'true' : 'false' }}">
                         </div>
                     </div>
                 </div>
@@ -653,7 +655,7 @@
 
             // === YARDIMCI FONKSİYON: Tarih/Saat Ayırıcı (Blade Hatası Düzeltilmiş) ===
             /**
-             * Bir tarih-saat dizesini (örn: "19.05.2025 11:30") 
+             * Bir tarih-saat dizesini (örn: "19.05.2025 11:30")
              * tarih ve saat olarak ayırır.
              * @@param {string} dateTimeString - Ayırılacak dize.
              * @@returns @{{ date: string, time: string }}
@@ -903,12 +905,12 @@
                     } else if (props.eventType === 'travel') {
                         // YENİ EKLENEN SEYAHAT KONTROLÜ
                         html += `<div class="col-md-12">
-                                <p><strong>✈️ Plan Adı:</strong> ${props.details['Plan Adı'] || '-'}</p>
-                                <p><strong>👤 Oluşturan:</strong> ${props.details['Oluşturan'] || '-'}</p>
-                                <p><strong>📅 Başlangıç:</strong> ${props.details['Başlangıç'] || '-'}</p>
-                                <p><strong>📅 Bitiş:</strong> ${props.details['Bitiş'] || '-'}</p>
-                                <p><strong>📊 Durum:</strong> ${props.details['Durum'] || '-'}</p>
-                             </div>`;
+                                <p><strong>✈️ Plan Adı:</strong> ${props.details['Plan Adı'] || '-'}</p>
+                                <p><strong>👤 Oluşturan:</strong> ${props.details['Oluşturan'] || '-'}</p>
+                                <p><strong>📅 Başlangıç:</strong> ${props.details['Başlangıç'] || '-'}</p>
+                                <p><strong>📅 Bitiş:</strong> ${props.details['Bitiş'] || '-'}</p>
+                                <p><strong>📊 Durum:</strong> ${props.details['Durum'] || '-'}</p>
+                               </div>`;
 
                         // Seyahat planının detay sayfasına gitmek için bir buton ekleyelim
                         // (modalExportButton'u bu amaçla yeniden kullanalım)
@@ -963,12 +965,13 @@
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,listWeek'
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
                 },
                 buttonText: {
                     today: 'Bugün',
                     dayGridMonth: 'Ay',
                     timeGridWeek: 'Hafta',
+                    timeGridDay: 'Gün',
                     listWeek: 'Liste'
                 },
                 events: eventsData,
@@ -983,6 +986,9 @@
                     minute: '2-digit',
                     hour12: false
                 },
+
+                eventDisplay: 'list-item',
+
                 eventClick: function(info) {
                     info.jsEvent.preventDefault();
                     if (info.event.url) {
@@ -1003,7 +1009,7 @@
             if (modalOnayForm) {
                 modalOnayForm.addEventListener('submit', function(e) {
 
-                    if (!confirm('Sevkiyatın tesise ulaştığını onaylıyor musunuz?')) e.preventDefault();
+                    if (!confirm('Sevkiyatın tesise ulaştığını onaylıyorsunuz?')) e.preventDefault();
                     else this.querySelector('button[type=submit]').disabled = true;
                 });
             }
