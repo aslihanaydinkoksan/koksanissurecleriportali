@@ -149,6 +149,28 @@
                                 <label class="form-check-label" for="is_active">Araç Aktif (Kullanımda)</label>
                             </div>
 
+                            <div class="mb-3 form-check border-top pt-3 mt-3">
+                                <input type="checkbox" class="form-check-input @error('kvkk_onay') is-invalid @enderror"
+                                    id="kvkk_onay" name="kvkk_onay" value="1" {{ old('kvkk_onay') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="kvkk_onay">
+                                    <!--
+                                                    !!! DİKKAT !!!
+                                                    Aşağıdaki 'href' adresini kendi KVKK metninizin
+                                                    bulunduğu sayfanın URL'si ile değiştirin.
+                                                -->
+                                    <a href="{{ url('/kvkk-aydinlatma-metni') }}" target="_blank"
+                                        class="text-decoration-underline" style="color: #0d6efd;">
+                                        KVKK Aydınlatma Metni'ni
+                                    </a>
+                                    okudum, anladım ve araç verilerinin (plaka, marka vb.)
+                                    kaydedilmesini ve işlenmesini kabul ediyorum.
+                                </label>
+                                @error('kvkk_onay')
+                                    {{-- Hata mesajı checkbox'ın altında görünür yapılır --}}
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+
 
                             <div class="text-end mt-4">
                                 {{-- Buton metni güncellendi --}}
@@ -165,4 +187,32 @@
     </div>
 @endsection
 
-{{-- @section('page_scripts') ... JavaScript gerekmiyor @endsection --}}
+@section('page_scripts')
+    <script>
+        // Sayfa tamamen yüklendiğinde çalış
+        document.addEventListener('DOMContentLoaded', function() {
+            // Gerekli elementleri seç
+            const kvkkCheckbox = document.getElementById('kvkk_onay');
+            const submitButton = document.getElementById('submit-button');
+
+            // Kontrol: Bu elementler sayfada varsa devam et
+            if (kvkkCheckbox && submitButton) {
+
+                // Butonun mevcut durumunu ayarlamak için bir fonksiyon
+                function toggleSubmitButton() {
+                    // Checkbox seçiliyse 'disabled' özelliğini kaldır,
+                    // seçili değilse 'disabled' özelliğini ekle (true yap).
+                    submitButton.disabled = !kvkkCheckbox.checked;
+                }
+
+                // 1. Sayfa ilk yüklendiğinde butonun durumunu ayarla
+                //    (Eğer form hatadan dolayı geri dönerse ve checkbox işaretliyse, buton aktif kalır)
+                toggleSubmitButton();
+
+                // 2. Checkbox'ın durumunda herhangi bir değişiklik olduğunda
+                //    (tıklandığında) fonksiyonu tekrar çalıştır
+                kvkkCheckbox.addEventListener('change', toggleSubmitButton);
+            }
+        });
+    </script>
+@endsection

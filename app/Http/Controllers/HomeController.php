@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\EventController;
 use Illuminate\Support\Facades\Gate;
 use App\Models\Department;
+use App\Data\StatisticsData;
+use Illuminate\Support\Collection;
 
 class HomeController extends Controller
 {
@@ -166,26 +168,18 @@ class HomeController extends Controller
         switch ($departmentSlug) {
             case 'lojistik':
                 $pageTitle = "Ayrıntılı Sevkiyat İstatistikleri";
-                $statsData = $this->getLojistikStatsData($startDate, $endDate);
+                $statsData = $this->getLojistikStatsData($startDate, $endDate)->toArray();
                 break;
             case 'uretim':
                 $pageTitle = "Ayrıntılı Üretim İstatistikleri";
-                $statsData = $this->getUretimStatsData($startDate, $endDate);
+                $statsData = $this->getUretimStatsData($startDate, $endDate)->toArray();
                 break;
             case 'hizmet':
                 $pageTitle = "Ayrıntılı İdari İşler İstatistikleri";
-                $statsData = $this->getHizmetStatsData($startDate, $endDate);
+                $statsData = $this->getHizmetStatsData($startDate, $endDate)->toArray();
                 break;
             default:
-                $statsData = [
-                    'chartData' => [],
-                    'shipmentsForFiltering' => [],
-                    'productionPlansForFiltering' => [],
-                    'eventsForFiltering' => [],
-                    'assignmentsForFiltering' => [],
-                    'vehiclesForFiltering' => [],
-                    'monthlyLabels' => []
-                ];
+                $statsData = (new StatisticsData(chartData: []))->toArray();
                 break;
         }
         return view('statistics.index', array_merge(
@@ -197,9 +191,6 @@ class HomeController extends Controller
             $statsData
         ));
     }
-
-
-
     private function getLojistikIndexData($user)
     {
         $events = [];
@@ -491,7 +482,7 @@ class HomeController extends Controller
         return ['events' => $events, 'chartData' => $chartData, 'statsTitle' => $statsTitle];
     }
 
-    private function getLojistikStatsData($startDate, $endDate)
+    private function getLojistikStatsData($startDate, $endDate): StatisticsData
     {
         $chartData = [];
         $shipmentQuery = Shipment::whereNotNull('cikis_tarihi')
@@ -550,18 +541,13 @@ class HomeController extends Controller
             })
             ->values()->all();
 
-        return [
-            'chartData' => $chartData,
-            'shipmentsForFiltering' => $shipmentsForFiltering,
-            'productionPlansForFiltering' => [],
-            'eventsForFiltering' => [],
-            'assignmentsForFiltering' => [],
-            'vehiclesForFiltering' => [],
-            'monthlyLabels' => []
-        ];
+        return new StatisticsData(
+            chartData: $chartData,
+            shipmentsForFiltering: $shipmentsForFiltering
+        );
     }
 
-    private function getUretimStatsData($startDate, $endDate)
+    private function getUretimStatsData($startDate, $endDate): StatisticsData
     {
         $chartData = [];
         $productionQuery = ProductionPlan::whereBetween('week_start_date', [$startDate, $endDate])
@@ -614,22 +600,57 @@ class HomeController extends Controller
         }
         $productionPlansForFiltering = $flatDetails;
 
-        return [
-            'chartData' => $chartData,
-            'shipmentsForFiltering' => [],
-            'productionPlansForFiltering' => $productionPlansForFiltering,
-            'eventsForFiltering' => [],
-            'assignmentsForFiltering' => [],
-            'vehiclesForFiltering' => [],
-            'monthlyLabels' => []
-        ];
+        return new StatisticsData(
+            chartData: $chartData,
+            productionPlansForFiltering: $productionPlansForFiltering
+        );
     }
-
-    private function getHizmetStatsData($startDate, $endDate)
+    private function getHizmetStatsData($startDate, $endDate): StatisticsData
     {
-        $chartData = [];
+        // YÖNETİCİ FONKSİYON:
+        // Artık sadece görev dağıtımı yapıyor.
         $eventTypesList = $this->getEventTypes();
 
+        // 1. Görev: Pasta grafik verisini getir.
+        $pieChartData = $this->getHizmetPieChartData($startDate, $endDate, $eventTypesList);
+
+        // 2. Görev: Aylık görev grafiği verisini getir.
+        $monthlyAssignmentData = $this->getHizmetMonthlyAssignmentChartData($startDate, $endDate);
+
+        // 3. Görev: Filtreleme için etkinlik verilerini getir.
+        $eventsForFiltering = $this->getHizmetEventFilterData($startDate, $endDate, $eventTypesList);
+
+        // 4. Görev: Filtreleme için atama verilerini getir.
+        $assignmentsForFiltering = $this->getHizmetAssignmentFilterData($startDate, $endDate);
+
+        // 5. Görev: Filtreleme için araç listesini getir.
+        $vehiclesForFiltering = $this->getHizmetVehicleFilterData();
+
+        // Tüm verileri topla
+        $chartData = [
+            'event_type_pie' => $pieChartData,
+            'monthly_assign' => $monthlyAssignmentData['chartData'],
+        ];
+
+        // DTO'yu doldur ve döndür
+        return new StatisticsData(
+            chartData: $chartData,
+            eventsForFiltering: $eventsForFiltering,
+            assignmentsForFiltering: $assignmentsForFiltering,
+            vehiclesForFiltering: $vehiclesForFiltering,
+            monthlyLabels: $monthlyAssignmentData['labels'] // Bu veriyi de 2. görevden aldık
+        );
+    }
+
+    // --- YENİ YARDIMCI FONKSİYONLAR ---
+    // (Bu 5 yeni fonksiyonu getHizmetStatsData'nın hemen altına ekleyin)
+
+    /**
+     * Hizmet departmanı için "Etkinlik Tipi" pasta grafiği verisini hazırlar.
+     */
+    private function getHizmetPieChartData($startDate, $endDate, array $eventTypesList): array
+    {
+        // 1. Etkinlikleri al
         $eventTypeCounts = Event::select(['event_type', DB::raw('COUNT(*) as count')])
             ->whereNotNull('event_type')
             ->whereBetween('start_datetime', [$startDate, $endDate])
@@ -644,20 +665,29 @@ class HomeController extends Controller
             $eventTypeCounts[' Seyahat Planı'] = $travelCount;
         }
 
-        $chartData['event_type_pie'] = [
+        // 3. Grafik için formatla
+        return [
             'labels' => $eventTypeCounts->keys()->all(),
             'data' => $eventTypeCounts->values()->all(),
             'title' => 'Etkinlik ve Seyahat Tipi Dağılımı'
         ];
+    }
 
+    /**
+     * Hizmet departmanı için "Aylık Araç Atama" çizgi grafiği verisini hazırlar.
+     * Hem grafik verisini hem de etiketleri döndürür.
+     */
+    private function getHizmetMonthlyAssignmentChartData($startDate, $endDate): array
+    {
         $monthlyAssignmentCounts = VehicleAssignment::select([DB::raw('YEAR(start_time) as year'), DB::raw('MONTH(start_time) as month'), DB::raw('COUNT(*) as count')])
-            ->whereBetween('start_time', [$startDate, $endDate]) // FİLTRE
+            ->whereBetween('start_time', [$startDate, $endDate])
             ->whereNotNull('start_time')
             ->groupBy('year', 'month')->orderBy('year')->orderBy('month')->get();
 
         $monthlyLabels = [];
         $monthlyData = [];
         $currentMonth = $startDate->copy()->startOfMonth();
+
         while ($currentMonth->lte($endDate)) {
             $year = $currentMonth->year;
             $month = $currentMonth->month;
@@ -666,14 +696,24 @@ class HomeController extends Controller
             $monthlyData[] = $count;
             $currentMonth->addMonth();
         }
-        $chartData['monthly_assign'] = ['labels' => $monthlyLabels, 'data' => $monthlyData, 'title' => '🚗 Aylık Araç Atama Sayısı'];
 
+        $chartData = ['labels' => $monthlyLabels, 'data' => $monthlyData, 'title' => '🚗 Aylık Araç Atama Sayısı'];
+
+        return ['chartData' => $chartData, 'labels' => $monthlyLabels];
+    }
+
+    /**
+     * İstatistik sayfasındaki filtreleme için Etkinlik ve Seyahat verilerini çeker.
+     */
+    private function getHizmetEventFilterData($startDate, $endDate, array $eventTypesList): array
+    {
         $eventsForFiltering = Event::whereBetween('start_datetime', [$startDate, $endDate])
             ->get(['event_type', 'location'])
             ->map(function ($event) use ($eventTypesList) {
                 return [
                     'type_name' => $eventTypesList[$event->event_type] ?? ucfirst($event->event_type),
                     'type_slug' => $event->event_type,
+                    'group' => 'Etkinlikler',
                 ];
             });
 
@@ -686,32 +726,37 @@ class HomeController extends Controller
                     'group' => 'Seyahatler',
                 ];
             });
-        $eventsForFiltering = $eventsForFiltering->merge($travelsForFiltering)->all();
 
-        $assignmentsForFiltering = VehicleAssignment::with('vehicle:id,plate_number')
+        return $eventsForFiltering->merge($travelsForFiltering)->all();
+    }
+
+    /**
+     * İstatistik sayfasındaki filtreleme için Araç Atama verilerini çeker.
+     */
+    private function getHizmetAssignmentFilterData($startDate, $endDate): array
+    {
+        return VehicleAssignment::with('vehicle:id,plate_number')
             ->whereBetween('start_time', [$startDate, $endDate])
             ->get(['vehicle_id', 'start_time'])
             ->map(function ($assignment) {
                 return [
                     'vehicle_id' => $assignment->vehicle_id,
                     'vehicle_plate' => $assignment->vehicle->plate_number ?? 'Bilinmeyen Araç',
-                    'start_month_label' => $assignment->start_time ? $assignment->start_time->translatedFormat('M Y') : null // JS'de tarihle uğraşmamak için
+                    'start_month_label' => $assignment->start_time ? $assignment->start_time->translatedFormat('M Y') : null
                 ];
             })
             ->filter(fn($a) => $a['start_month_label'] !== null)
             ->all();
+    }
 
-        $vehiclesForFiltering = \App\Models\Vehicle::orderBy('plate_number')->get(['id', 'plate_number']);
-
-        return [
-            'chartData' => $chartData,
-            'shipmentsForFiltering' => [],
-            'productionPlansForFiltering' => [],
-            'eventsForFiltering' => $eventsForFiltering,
-            'assignmentsForFiltering' => $assignmentsForFiltering,
-            'vehiclesForFiltering' => $vehiclesForFiltering,
-            'monthlyLabels' => $monthlyLabels
-        ];
+    /**
+     * İstatistik sayfasındaki filtreleme için tüm araçların listesini çeker.
+     */
+    private function getHizmetVehicleFilterData(): array
+    {
+        // Orijinal kodunuzda `->all()` vardı, ben de ekledim.
+        // Eğer StatisticsData DTO'su 'Collection' kabul ediyorsa `->all()` kısmını silebilirsiniz.
+        return \App\Models\Vehicle::orderBy('plate_number')->get(['id', 'plate_number'])->all();
     }
 
 

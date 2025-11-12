@@ -68,10 +68,13 @@ class VehicleController extends Controller
             'brand_model' => 'nullable|string|max:150',
             'description' => 'nullable|string',
             'is_active' => 'sometimes|boolean', // Gönderilirse boolean olmalı
+            'kvkk_onay' => 'required|accepted',
+            'kvkk_onay.accepted' => 'Devam etmek için KVKK Aydınlatma Metni\'ni onaylamanız zorunludur.'
         ]);
 
         // Checkbox'tan 'is_active' gelmezse 0 (false) olarak ayarla
         $validatedData['is_active'] = $request->has('is_active');
+        unset($validatedData['kvkk_onay']);
 
         Vehicle::create($validatedData);
 
