@@ -34,9 +34,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Birim withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|Birim withoutTrashed()
  * @mixin \Eloquent
- * @mixin IdeHelperBirim
  */
-	class Birim extends \Eloquent {}
+	#[\AllowDynamicProperties]
+	class IdeHelperBirim {}
 }
 
 namespace App\Models{
@@ -77,9 +77,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereUserId($value)
  * @mixin \Eloquent
- * @mixin IdeHelperBooking
  */
-	class Booking extends \Eloquent implements \Spatie\MediaLibrary\HasMedia {}
+	#[\AllowDynamicProperties]
+	class IdeHelperBooking {}
 }
 
 namespace App\Models{
@@ -113,9 +113,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Complaint whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Complaint whereUserId($value)
  * @mixin \Eloquent
- * @mixin IdeHelperComplaint
  */
-	class Complaint extends \Eloquent implements \Spatie\MediaLibrary\HasMedia {}
+	#[\AllowDynamicProperties]
+	class IdeHelperComplaint {}
 }
 
 namespace App\Models{
@@ -157,9 +157,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Customer withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|Customer withoutTrashed()
  * @mixin \Eloquent
- * @mixin IdeHelperCustomer
  */
-	class Customer extends \Eloquent {}
+	#[\AllowDynamicProperties]
+	class IdeHelperCustomer {}
 }
 
 namespace App\Models{
@@ -188,9 +188,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|CustomerActivityLog whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|CustomerActivityLog whereUserId($value)
  * @mixin \Eloquent
- * @mixin IdeHelperCustomerActivityLog
  */
-	class CustomerActivityLog extends \Eloquent {}
+	#[\AllowDynamicProperties]
+	class IdeHelperCustomerActivityLog {}
 }
 
 namespace App\Models{
@@ -218,9 +218,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|CustomerMachine whereSerialNumber($value)
  * @method static \Illuminate\Database\Eloquent\Builder|CustomerMachine whereUpdatedAt($value)
  * @mixin \Eloquent
- * @mixin IdeHelperCustomerMachine
  */
-	class CustomerMachine extends \Eloquent {}
+	#[\AllowDynamicProperties]
+	class IdeHelperCustomerMachine {}
 }
 
 namespace App\Models{
@@ -254,9 +254,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|CustomerVisit whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|CustomerVisit whereVisitPurpose($value)
  * @mixin \Eloquent
- * @mixin IdeHelperCustomerVisit
  */
-	class CustomerVisit extends \Eloquent {}
+	#[\AllowDynamicProperties]
+	class IdeHelperCustomerVisit {}
 }
 
 namespace App\Models{
@@ -286,9 +286,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Department withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|Department withoutTrashed()
  * @mixin \Eloquent
- * @mixin IdeHelperDepartment
  */
-	class Department extends \Eloquent {}
+	#[\AllowDynamicProperties]
+	class IdeHelperDepartment {}
 }
 
 namespace App\Models{
@@ -329,10 +329,24 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Event whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Event withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|Event withoutTrashed()
+ * @property string $visit_status
+ * @property string|null $cancellation_reason
+ * @property int|null $customer_id
+ * @property int|null $customer_machine_id
+ * @property string|null $visit_purpose
+ * @property string|null $after_sales_notes
+ * @property-read \App\Models\Customer|null $customer
+ * @property-read \App\Models\CustomerMachine|null $machine
+ * @method static \Illuminate\Database\Eloquent\Builder|Event whereAfterSalesNotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Event whereCancellationReason($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Event whereCustomerId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Event whereCustomerMachineId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Event whereVisitPurpose($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Event whereVisitStatus($value)
  * @mixin \Eloquent
- * @mixin IdeHelperEvent
  */
-	class Event extends \Eloquent {}
+	#[\AllowDynamicProperties]
+	class IdeHelperEvent {}
 }
 
 namespace App\Models{
@@ -367,9 +381,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|ProductionPlan withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|ProductionPlan withoutTrashed()
  * @mixin \Eloquent
- * @mixin IdeHelperProductionPlan
  */
-	class ProductionPlan extends \Eloquent {}
+	#[\AllowDynamicProperties]
+	class IdeHelperProductionPlan {}
 }
 
 namespace App\Models{
@@ -404,9 +418,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|ServiceSchedule withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|ServiceSchedule withoutTrashed()
  * @mixin \Eloquent
- * @mixin IdeHelperServiceSchedule
  */
-	class ServiceSchedule extends \Eloquent {}
+	#[\AllowDynamicProperties]
+	class IdeHelperServiceSchedule {}
 }
 
 namespace App\Models{
@@ -478,9 +492,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Shipment withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|Shipment withoutTrashed()
  * @mixin \Eloquent
- * @mixin IdeHelperShipment
  */
-	class Shipment extends \Eloquent {}
+	#[\AllowDynamicProperties]
+	class IdeHelperShipment {}
 }
 
 namespace App\Models{
@@ -514,9 +528,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|TestResult whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|TestResult whereUserId($value)
  * @mixin \Eloquent
- * @mixin IdeHelperTestResult
  */
-	class TestResult extends \Eloquent implements \Spatie\MediaLibrary\HasMedia {}
+	#[\AllowDynamicProperties]
+	class IdeHelperTestResult {}
 }
 
 namespace App\Models{
@@ -552,9 +566,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Travel whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Travel whereUserId($value)
  * @mixin \Eloquent
- * @mixin IdeHelperTravel
  */
-	class Travel extends \Eloquent {}
+	#[\AllowDynamicProperties]
+	class IdeHelperTravel {}
 }
 
 namespace App\Models{
@@ -600,9 +614,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|User withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|User withoutTrashed()
  * @mixin \Eloquent
- * @mixin IdeHelperUser
  */
-	class User extends \Eloquent {}
+	#[\AllowDynamicProperties]
+	class IdeHelperUser {}
 }
 
 namespace App\Models{
@@ -638,9 +652,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Vehicle withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|Vehicle withoutTrashed()
  * @mixin \Eloquent
- * @mixin IdeHelperVehicle
  */
-	class Vehicle extends \Eloquent {}
+	#[\AllowDynamicProperties]
+	class IdeHelperVehicle {}
 }
 
 namespace App\Models{
@@ -684,8 +698,8 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|VehicleAssignment withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|VehicleAssignment withoutTrashed()
  * @mixin \Eloquent
- * @mixin IdeHelperVehicleAssignment
  */
-	class VehicleAssignment extends \Eloquent {}
+	#[\AllowDynamicProperties]
+	class IdeHelperVehicleAssignment {}
 }
 

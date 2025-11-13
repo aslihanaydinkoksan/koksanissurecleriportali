@@ -63,6 +63,12 @@ class Event extends Model
         'location',
         'event_type',
         'is_important',
+        'customer_id',
+        'customer_machine_id',
+        'visit_status',
+        'cancellation_reason',
+        'visit_purpose',
+        'after_sales_notes',
     ];
 
     /**
@@ -85,5 +91,13 @@ class Event extends Model
     public function customerVisit()
     {
         return $this->hasOne(CustomerVisit::class);
+    }
+    public function machine()
+    {
+        return $this->belongsTo(\App\Models\CustomerMachine::class, 'customer_machine_id');
+    }
+    public function customer()
+    {
+        return $this->belongsTo(\App\Models\Customer::class, 'customer_id');
     }
 }

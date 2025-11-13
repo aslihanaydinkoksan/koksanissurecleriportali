@@ -172,6 +172,8 @@ class EventController extends Controller
 
             'customer_machine_id' => 'nullable|integer|exists:customer_machines,id',
             'after_sales_notes' => 'nullable|string',
+            'visit_status' => 'nullable|string|in:planlandi,gerceklesti,ertelendi,iptal',
+            'cancellation_reason' => 'nullable|required_if:visit_status,iptal,ertelendi|string',
         ]);
 
         // Veritabanı işlemini Transaction (bütünleşik işlem) içine alıyoruz.
@@ -188,6 +190,9 @@ class EventController extends Controller
                 'end_datetime' => $validatedData['end_datetime'],
                 'location' => $validatedData['location'],
                 'event_type' => $validatedData['event_type'],
+                'customer_id' => $validatedData['customer_id'] ?? null,
+                'visit_status' => $validatedData['visit_status'] ?? 'planlandi', // Varsayılan: planlandi
+                'cancellation_reason' => $validatedData['cancellation_reason'] ?? null,
             ]);
 
             // 2. Eğer tip 'Müşteri Ziyareti' ise, CustomerVisit kaydını oluştur
@@ -227,6 +232,11 @@ class EventController extends Controller
         }
 
         $eventTypes = $this->eventTypes;
+        $customers = Customer::orderBy('name')->get();
+        $availableTravels = Travel::where('status', '!=', 'completed')
+            ->where('user_id', Auth::id())
+            ->get();
+        $visitDetail = CustomerVisit::where('event_id', $event->id)->first();
         return view('service.events.edit', compact('event', 'eventTypes'));
     }
 
@@ -250,9 +260,22 @@ class EventController extends Controller
             'end_datetime' => 'required|date|after_or_equal:start_datetime',
             'location' => 'nullable|string|max:255',
             'event_type' => ['required', Rule::in(array_keys($this->eventTypes))],
+            'visit_status' => 'nullable|string|in:planlandi,gerceklesti,ertelendi,iptal',
+            'cancellation_reason' => 'nullable|required_if:visit_status,iptal,ertelendi|string',
+            'customer_id' => 'nullable|exists:customers,id',
         ]);
 
-        $event->update($validatedData);
+        $event->update([
+            'title' => $validatedData['title'],
+            'description' => $validatedData['description'],
+            'start_datetime' => $validatedData['start_datetime'],
+            'end_datetime' => $validatedData['end_datetime'],
+            'location' => $validatedData['location'],
+            'event_type' => $validatedData['event_type'],
+            'visit_status' => $validatedData['visit_status'] ?? $event->visit_status, // Değişmediyse eskisi kalsın
+            'cancellation_reason' => $validatedData['cancellation_reason'] ?? null,
+            'customer_id' => $validatedData['customer_id'] ?? $event->customer_id,
+        ]);
 
         return redirect()->route('service.events.index')
             ->with('success', 'Etkinlik başarıyla güncellendi.');
