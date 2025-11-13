@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
+use ReCaptcha\ReCaptcha;
 use Illuminate\Validation\ValidationException;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -36,7 +37,7 @@ class LoginController extends Controller
     }
 
     protected $maxAttempts = 3;
-    protected $decayMinutes = 2;
+    protected $decayMinutes = 1;
 
     protected $captchaThreshold = 3;
 
@@ -92,14 +93,13 @@ class LoginController extends Controller
         $attempts = Cache::get($key, 0);
 
         $showCaptcha = ($attempts >= $this->captchaThreshold);
+
         return view('auth.login', [
             'showCaptcha' => $showCaptcha
         ]);
     }
 
-    /**
-     * Başarısız giriş denemesi sayacını artırır. (Override)
-     */
+
     /**
      * Başarısız giriş denemesi sayacını artırır. (Override)
      */
@@ -112,27 +112,44 @@ class LoginController extends Controller
         Cache::put($key, $currentAttempts, $this->decayMinutes * 60);
     }
 
+
     /**
      * Giriş isteğini doğrular. (Override)
      */
     protected function validateLogin(Request $request)
     {
+        // 1. Standart kullanıcı adı ve şifre kontrolü
         $request->validate([
             $this->username() => 'required|string',
             'password' => 'required|string',
         ]);
 
-
+        // 2. Hatalı giriş sayısını kontrol et
         $key = 'login_ip_check|' . $request->ip();
         $attempts = Cache::get($key, 0);
 
+        // 3. Eğer eşik aşılmışsa (3 ve üzeri), CAPTCHA zorunlu olsun
         if ($attempts >= $this->captchaThreshold) {
+
+            // A) Önce kutucuk işaretlenmiş mi diye bak (Validation)
             $request->validate([
-                'g-recaptcha-response' => 'required|recaptcha'
+                'g-recaptcha-response' => 'required'
             ], [
                 'g-recaptcha-response.required' => 'Lütfen robot olmadığınızı doğrulayın.',
-                'g-recaptcha-response.recaptcha' => 'reCAPTCHA doğrulaması başarısız oldu, lütfen tekrar deneyin.',
             ]);
+
+            // B) İşaretlenmişse, Google'a sor: "Bu işaret gerçek mi?"
+            $recaptcha = new ReCaptcha(config('services.recaptcha.secret'));
+
+            // Formdan gelen değeri ve IP adresini gönderiyoruz
+            $response = $recaptcha->verify($request->input('g-recaptcha-response'), $request->ip());
+
+            // C) Google "Hayır, bu geçersiz" derse hatayı bas
+            if (!$response->isSuccess()) {
+                throw ValidationException::withMessages([
+                    'g-recaptcha-response' => ['reCAPTCHA doğrulaması başarısız oldu. Lütfen sayfayı yenileyip tekrar deneyin.'],
+                ]);
+            }
         }
     }
 
