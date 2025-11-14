@@ -457,6 +457,65 @@
                 box-shadow: 0 0 0 0 rgba(255, 65, 54, 0);
             }
         }
+
+        .fc-event-holiday {
+            font-weight: 600;
+            border: none !important;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%) !important;
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+
+            /* Taşmayı önle */
+            padding: 3px 6px;
+            font-size: 11px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            display: block;
+
+            /* Hover efekti */
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .fc-event-holiday::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shine 3s infinite;
+            pointer-events: none;
+            /* Hover'ı engellemez */
+        }
+
+        /* Hover'da tam metin göster */
+        .fc-event-holiday:hover {
+            transform: scale(1.05);
+            z-index: 1000;
+            white-space: normal;
+            min-width: max-content;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.5);
+            overflow: visible;
+        }
+
+        @keyframes shine {
+            to {
+                left: 100%;
+            }
+        }
+
+        /* Mobil için optimizasyon */
+        @media (max-width: 768px) {
+            .fc-event-holiday {
+                font-size: 9px;
+                padding: 2px 4px;
+            }
+        }
     </style>
 @endpush
 
@@ -483,6 +542,34 @@
                         📅 {{ $departmentName }} Takvimi
                     </div>
                     <div class="card-body">
+                        <div class="calendar-filters p-3 mb-3"
+                            style="background: rgba(102, 126, 234, 0.05); border-radius: 0.75rem;">
+                            <strong class="me-3"><i class="fa-solid fa-filter"></i> Filtrele:</strong>
+
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" value="lojistik" id="filterLojistik"
+                                    checked>
+                                <label class="form-check-label" for="filterLojistik"
+                                    style="color: #667EEA;">Lojistik</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" value="uretim" id="filterUretim" checked>
+                                <label class="form-check-label" for="filterUretim" style="color: #4FD1C5;">Üretim</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" value="hizmet" id="filterHizmet" checked>
+                                <label class="form-check-label" for="filterHizmet" style="color: #F093FB;">İdari
+                                    İşler</label>
+                            </div>
+
+                            <span class="mx-2">|</span>
+
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" value="important" id="filterImportant">
+                                <label class="form-check-label" for="filterImportant" style="color: #dc3545;"><strong>Sadece
+                                        Önemliler</strong></label>
+                            </div>
+                        </div>
                         {{-- === DÜZELTME: SADECE BİR TANE CALENDAR DIV'İ KALDI === --}}
                         <div id="calendar" data-events='@json($events)'
                             data-is-authorized="{{ in_array(Auth::user()->role, ['admin', 'yönetici']) ? 'true' : 'false' }}"
@@ -628,6 +715,7 @@
 @section('page_scripts')
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.13/index.global.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/google-calendar@6.1.13/index.global.min.js'></script>
     <script>
         function getCsrfToken() {
             return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -876,7 +964,7 @@
                     } else if (props.eventType === 'vehicle_assignment') {
 
 
-                        html += `<div class="col-md-12">`; // Info block
+                        html += `<div class="col-md-12">`;
                         html += `    <p><strong>Araç:</strong> ${props.details['Araç'] || '-'}</p>`;
                         html += `    <p><strong>Görev:</strong> ${props.details['Görev'] || '-'}</p>`;
                         html += `    <p><strong>Yer:</strong> ${props.details['Yer'] || '-'}</p>`;
@@ -903,7 +991,6 @@
                         html += `    <p><strong>Kayıt Yapan:</strong> ${props.details['Kayıt Yapan'] || '-'}</p>`;
                         html += `</div>`;
                     } else if (props.eventType === 'travel') {
-                        // YENİ EKLENEN SEYAHAT KONTROLÜ
                         html += `<div class="col-md-12">
                                 <p><strong>✈️ Plan Adı:</strong> ${props.details['Plan Adı'] || '-'}</p>
                                 <p><strong>👤 Oluşturan:</strong> ${props.details['Oluşturan'] || '-'}</p>
@@ -911,19 +998,14 @@
                                 <p><strong>📅 Bitiş:</strong> ${props.details['Bitiş'] || '-'}</p>
                                 <p><strong>📊 Durum:</strong> ${props.details['Durum'] || '-'}</p>
                                </div>`;
-
-                        // Seyahat planının detay sayfasına gitmek için bir buton ekleyelim
-                        // (modalExportButton'u bu amaçla yeniden kullanalım)
                         if (props.url) {
                             modalExportButton.href = props.url;
-                            modalExportButton.target = "_blank"; // Yeni sekmede aç
+                            modalExportButton.target = "_blank";
                             modalExportButton.textContent = "✈️ Seyahat Detayına Git";
                             modalExportButton.style.display = 'inline-block';
                         }
                     }
                 }
-
-
                 html += '</div>';
 
                 const aciklama = props.details['Açıklamalar'] || props.details['Notlar'] || props.details[
@@ -934,31 +1016,20 @@
                     html +=
                         `<p style="margin-left: 1rem; padding: 1rem; background: rgba(102, 126, 234, 0.05); border-radius: 0.5rem;">${aciklama}</p>`;
                 }
-
-
                 if (props.eventType === 'shipment' && props.details['Dosya Yolu']) {
                     html += '<hr>';
                     html += '<p><strong>📎 Ek Dosya:</strong></p>';
                     html +=
                         `<a href="${props.details['Dosya Yolu']}" target="_blank" class="btn btn-outline-primary btn-sm">📄 Dosyayı Görüntüle / İndir</a>`;
                 }
-
-
                 modalBody.innerHTML = html;
-
-
                 detailModal.show();
             }
-
-
             const editButton = document.getElementById('editShipmentButton');
             const exportButton = document.getElementById('exportExcelButton');
             const onayForm = document.getElementById('onayForm');
             const onayKaldirForm = document.getElementById('onayKaldirForm');
             const deleteForm = document.getElementById('deleteShipmentForm');
-
-
-
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 locale: 'tr',
@@ -974,7 +1045,20 @@
                     timeGridDay: 'Gün',
                     listWeek: 'Liste'
                 },
-                events: eventsData,
+                eventSources: [{
+                        id: 'databaseEvents',
+                        events: eventsData
+                    },
+
+                    // 2. Kaynak: Türkiye Resmi Tatilleri (Google Takvim)
+                    {
+                        googleCalendarId: 'tr.turkish#holiday@group.v.calendar.google.com',
+                        color: '#dc3545', // Kırmızı (Bootstrap danger rengi)
+                        textColor: 'white',
+                        className: 'fc-event-holiday', // Özel stil için
+                        googleCalendarApiKey: 'AIzaSyAQmEWGR-krGzcCk1r8R69ER-NyZM2BeWM'
+                    }
+                ],
                 timeZone: appTimezone,
                 dayMaxEvents: true,
                 moreLinkText: function(num) {
@@ -986,14 +1070,10 @@
                     minute: '2-digit',
                     hour12: false
                 },
-
                 eventDisplay: 'list-item',
-
                 eventClick: function(info) {
                     info.jsEvent.preventDefault();
-                    if (info.event.url) {
-                        window.location.href = info.event.url;
-                    } else {
+                    if (info.event.extendedProps && info.event.extendedProps.eventType) {
                         openUniversalModal(info.event.extendedProps);
                     }
                 },
@@ -1002,9 +1082,53 @@
                         info.el.classList.add('event-important-pulse');
                     }
                 }
-
             });
             calendar.render();
+
+            function applyCalendarFilters() {
+                const showLojistik = document.getElementById('filterLojistik').checked;
+                const showUretim = document.getElementById('filterUretim').checked;
+                const showHizmet = document.getElementById('filterHizmet').checked;
+                const showImportant = document.getElementById('filterImportant').checked;
+
+                let dbSource = calendar.getEventSourceById('databaseEvents');
+                if (dbSource) {
+                    dbSource.remove();
+                }
+                const filteredDbEvents = eventsData.filter(event => {
+                    const props = event.extendedProps;
+                    if (!props) return true;
+                    if (showImportant && !props.is_important) {
+                        return false;
+                    }
+                    const eventType = props.eventType;
+                    if (eventType === 'shipment') {
+                        return showLojistik;
+                    }
+
+                    if (eventType === 'production') {
+                        return showUretim;
+                    }
+                    const isHizmet = (
+                        eventType === 'service_event' ||
+                        eventType === 'vehicle_assignment' ||
+                        eventType === 'travel'
+                    );
+                    if (isHizmet) {
+                        return showHizmet;
+                    }
+                    return true;
+                });
+
+                // 5. Filtrelenmiş veriyi takvime geri ekle
+                calendar.addEventSource({
+                    id: 'databaseEvents', // Aynı ID'yi ver
+                    events: filteredDbEvents
+                });
+            }
+
+            const filters = document.querySelectorAll('.calendar-filters .form-check-input');
+            filters.forEach(filter => filter.addEventListener('change', applyCalendarFilters));
 
             if (modalOnayForm) {
                 modalOnayForm.addEventListener('submit', function(e) {

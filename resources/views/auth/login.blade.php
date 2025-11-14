@@ -228,7 +228,7 @@
                                 <input id="email" type="email"
                                     class="form-control form-control-custom @error('email') is-invalid @enderror"
                                     name="email" value="{{ old('email') }}" required autocomplete="email" autofocus
-                                    placeholder="ornek@email.com">
+                                    placeholder="ornek@koksan.com">
                                 @error('email')
                                     <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>
@@ -245,8 +245,7 @@
                                 <div class="password-group">
                                     <input id="password" type="password"
                                         class="form-control form-control-custom @error('password') is-invalid @enderror"
-                                        name="password" required autocomplete="current-password"
-                                        placeholder="••••••••">
+                                        name="password" required autocomplete="current-password" placeholder="••••••••">
                                     <button class="password-toggle-btn" type="button" id="togglePassword">
                                         <i class="fa-solid fa-eye" id="eyeIcon"></i>
                                     </button>
@@ -318,7 +317,7 @@
             togglePassword.addEventListener('click', function() {
                 const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
                 password.setAttribute('type', type);
-                
+
                 // İkon değiştirme
                 if (type === 'password') {
                     eyeIcon.classList.remove('fa-eye-slash');

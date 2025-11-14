@@ -38,11 +38,10 @@
     34 => 'Spatie\\Activitylog\\ActivitylogServiceProvider',
     35 => 'Spatie\\LaravelIgnition\\IgnitionServiceProvider',
     36 => 'Spatie\\MediaLibrary\\MediaLibraryServiceProvider',
-    37 => 'Biscolab\\ReCaptcha\\ReCaptchaServiceProvider',
-    38 => 'App\\Providers\\AppServiceProvider',
-    39 => 'App\\Providers\\AuthServiceProvider',
-    40 => 'App\\Providers\\EventServiceProvider',
-    41 => 'App\\Providers\\RouteServiceProvider',
+    37 => 'App\\Providers\\AppServiceProvider',
+    38 => 'App\\Providers\\AuthServiceProvider',
+    39 => 'App\\Providers\\EventServiceProvider',
+    40 => 'App\\Providers\\RouteServiceProvider',
   ),
   'eager' => 
   array (
@@ -66,11 +65,10 @@
     17 => 'Spatie\\Activitylog\\ActivitylogServiceProvider',
     18 => 'Spatie\\LaravelIgnition\\IgnitionServiceProvider',
     19 => 'Spatie\\MediaLibrary\\MediaLibraryServiceProvider',
-    20 => 'Biscolab\\ReCaptcha\\ReCaptchaServiceProvider',
-    21 => 'App\\Providers\\AppServiceProvider',
-    22 => 'App\\Providers\\AuthServiceProvider',
-    23 => 'App\\Providers\\EventServiceProvider',
-    24 => 'App\\Providers\\RouteServiceProvider',
+    20 => 'App\\Providers\\AppServiceProvider',
+    21 => 'App\\Providers\\AuthServiceProvider',
+    22 => 'App\\Providers\\EventServiceProvider',
+    23 => 'App\\Providers\\RouteServiceProvider',
   ),
   'deferred' => 
   array (

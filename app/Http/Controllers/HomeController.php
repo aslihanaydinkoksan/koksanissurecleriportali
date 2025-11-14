@@ -32,7 +32,7 @@ class HomeController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $departmentSlug = $user->department ? trim($user->department->slug) : null;
+        $departmentSlug = $user->department ? strtolower(trim($user->department->slug)) : null;
         $departmentName = $user->department?->name ?? 'Genel';
 
         $departmentData = [];
@@ -47,11 +47,32 @@ class HomeController extends Controller
                 $departmentData = $this->getHizmetIndexData($user);
                 break;
             default:
-                $departmentData = [
-                    'events' => [],
-                    'chartData' => [],
-                    'statsTitle' => $departmentName . " İstatistikleri"
-                ];
+                if ($user->role === 'admin' || ($user->role === 'yönetici' && is_null($departmentSlug))) {
+
+                    $lojistikData = $this->getLojistikIndexData($user);
+                    $uretimData = $this->getUretimIndexData($user);
+                    $hizmetData = $this->getHizmetIndexData($user);
+
+                    $allEvents = array_merge(
+                        $lojistikData['events'],
+                        $uretimData['events'],
+                        $hizmetData['events']
+                    );
+
+                    $departmentData = [
+                        'events' => $allEvents,
+                        'chartData' => [],
+                        'statsTitle' => "Tüm Departmanlar (Genel Bakış)"
+                    ];
+                    $departmentName = "Genel Takvim";
+
+                } else {
+                    $departmentData = [
+                        'events' => [],
+                        'chartData' => [],
+                        'statsTitle' => $departmentName . " İstatistikleri"
+                    ];
+                }
                 break;
         }
         $users = collect();
@@ -357,13 +378,19 @@ class HomeController extends Controller
 
         $serviceEvents = Event::with('user')->get();
         foreach ($serviceEvents as $event) {
+            $databaseEventType = $event->event_type ?? 'diger';
+
+            $finalEventType = 'service_event';
+            if ($databaseEventType === 'diger') {
+                $finalEventType = 'general';
+            }
             $events[] = [
                 'title' => 'Etkinlik: ' . $event->title,
                 'start' => $event->start_datetime->format('Y-m-d\TH:i:s'),
                 'end' => $event->end_datetime->format('Y-m-d\TH:i:s'),
                 'color' => '#F093FB',
                 'extendedProps' => [
-                    'eventType' => 'service_event',
+                    'eventType' => $finalEventType,
                     'model_type' => 'event',
                     'is_important' => $event->is_important,
                     'title' => '🎉 Etkinlik Detayı: ' . $event->title,
@@ -762,10 +789,14 @@ class HomeController extends Controller
 
     private function getMappedImportantItems(Request $request)
     {
+        $user = Auth::user();
         $typeFilter = $request->input('type', 'all');
         $deptFilter = $request->input('department_id', 'all');
         $dateFrom = $request->input('date_from');
         $dateTo = $request->input('date_to');
+        if ($user->department_id) {
+            $deptFilter = $user->department_id;
+        }
         $allMappedItems = collect();
         if ($typeFilter == 'all' || $typeFilter == 'shipment') {
             $query = Shipment::where('is_important', true);
@@ -886,14 +917,16 @@ class HomeController extends Controller
     }
     private function getLogisticsWelcomeData()
     {
-        $welcomeTitle = "Bugün Yaklaşan Sevkiyatlar (Genel Bakış)";
+        $welcomeTitle = "Yaklaşan Sevkiyatlar (Genel Bakış)";
         $chartTitle = "Kargo İçeriği -> Araç Tipi Akışı (Tüm Zamanlar)";
         $chartData = [];
 
-        $todayItems = Shipment::whereDate('tahmini_varis_tarihi', Carbon::today())
+        $todayItems = Shipment::whereBetween('tahmini_varis_tarihi', [
+            Carbon::today()->startOfDay(),
+            Carbon::today()->addDays(3)->endOfDay()
+        ])
             ->orderBy('tahmini_varis_tarihi', 'asc')
             ->get();
-
         $sankeyFlow = Shipment::select(['kargo_icerigi', 'arac_tipi', DB::raw('COUNT(*) as weight')])
             ->whereNotNull('kargo_icerigi')
             ->whereNotNull('arac_tipi')

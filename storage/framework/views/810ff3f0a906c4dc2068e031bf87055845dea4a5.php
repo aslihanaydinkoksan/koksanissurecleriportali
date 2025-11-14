@@ -283,6 +283,65 @@
                 box-shadow: 0 0 0 0 rgba(255, 65, 54, 0);
             }
         }
+
+        .fc-event-holiday {
+            font-weight: 600;
+            border: none !important;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%) !important;
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+
+            /* Taşmayı önle */
+            padding: 3px 6px;
+            font-size: 11px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            display: block;
+
+            /* Hover efekti */
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .fc-event-holiday::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shine 3s infinite;
+            pointer-events: none;
+            /* Hover'ı engellemez */
+        }
+
+        /* Hover'da tam metin göster */
+        .fc-event-holiday:hover {
+            transform: scale(1.05);
+            z-index: 1000;
+            white-space: normal;
+            min-width: max-content;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.5);
+            overflow: visible;
+        }
+
+        @keyframes shine {
+            to {
+                left: 100%;
+            }
+        }
+
+        /* Mobil için optimizasyon */
+        @media (max-width: 768px) {
+            .fc-event-holiday {
+                font-size: 9px;
+                padding: 2px 4px;
+            }
+        }
     </style>
 <?php $__env->stopPush(); ?>
 <?php $__env->startSection('content'); ?>
@@ -306,6 +365,7 @@
 <?php $__env->stopSection(); ?>
 <?php $__env->startSection('page_scripts'); ?>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.13/index.global.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/google-calendar@6.1.13/index.global.min.js'></script>
     <script>
         function getCsrfToken() {
             return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -600,7 +660,23 @@
                     day: 'Gün',
                     list: 'Liste'
                 },
-                events: '<?php echo e(route('web.calendar.events')); ?>', // AJAX rotası
+                eventSources: [
+                    // 1. Kaynak: Sizin AJAX rotanız
+                    {
+                        url: '<?php echo e(route('web.calendar.events')); ?>',
+                        failure: function() {
+                            alert('Veritabanı olayları yüklenirken bir hata oluştu!');
+                        }
+                    },
+                    // 2. Kaynak: Türkiye Resmi Tatilleri (API Anahtarınızla)
+                    {
+                        googleCalendarId: 'tr.turkish#holiday@group.v.calendar.google.com',
+                        color: '#dc3545',
+                        textColor: 'white',
+                        className: 'fc-event-holiday',
+                        googleCalendarApiKey: 'AIzaSyAQmEWGR-krGzcCk1r8R69ER-NyZM2BeWM'
+                    }
+                ],
                 eventTimeFormat: {
                     hour: '2-digit',
                     minute: '2-digit',
@@ -615,7 +691,9 @@
 
                 eventClick: function(info) {
                     info.jsEvent.preventDefault();
-                    openUniversalModal(info.event.extendedProps);
+                    if (info.event.extendedProps && info.event.extendedProps.eventType) {
+                        openUniversalModal(info.event.extendedProps);
+                    }
                 },
                 eventDidMount: function(info) {
                     if (info.event.extendedProps.is_important) {

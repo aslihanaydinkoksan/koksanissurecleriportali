@@ -512,25 +512,74 @@
                                 @endif
 
                             </div>
+                            <div class="row g-3 mb-4">
+                                {{-- Kart 1 --}}
+                                <div class="col-md-4">
+                                    <a href="#" class="text-decoration-none">
+                                        <div class="card create-shipment-card h-100 hover-effect">
+                                            <div class="card-body d-flex align-items-center">
+                                                <div class="rounded-circle p-3 me-3"
+                                                    style="background: rgba(102, 126, 234, 0.2);">
+                                                    <i class="fa-solid fa-plus fa-xl" style="color: #667EEA;"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0 fw-bold text-dark">Yeni Kayıt Oluştur</h6>
+                                                    <small class="text-muted">Sisteme veri girişi yap</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
 
-                            <div class="col-md-5 text-md-end mt-2 mt-md-0">
+                                {{-- Kart 2 --}}
+                                <div class="col-md-4">
+                                    <a href="{{ route('statistics.index') }}" class="text-decoration-none">
+                                        <div class="card create-shipment-card h-100 hover-effect">
+                                            <div class="card-body d-flex align-items-center">
+                                                <div class="rounded-circle p-3 me-3"
+                                                    style="background: rgba(240, 147, 251, 0.2);">
+                                                    <i class="fa-solid fa-chart-pie fa-xl" style="color: #F093FB;"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0 fw-bold text-dark">Detaylı Raporlar</h6>
+                                                    <small class="text-muted">Geçmiş verileri analiz et</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
 
-                                <a href="{{ route('statistics.index') }}" class="btn btn-light ms-2">
-
-                                    <i class="fa-solid fa-chart-simple me-1" style="color: #A78BFA;"></i> İstatistikler
-
-                                    &raquo;
-
-                                </a>
-
-                                <a href="{{ route('home') }}" class="btn btn-light ms-2">
-
-                                    <i class="fa-solid fa-calendar-alt me-1" style="color: #F093FB"></i> Takvim &raquo;
-
-                                </a>
-
+                                {{-- Kart 3 --}}
+                                <div class="col-md-4">
+                                    <a href="{{ route('home') }}" class="text-decoration-none">
+                                        <div class="card create-shipment-card h-100 hover-effect">
+                                            <div class="card-body d-flex align-items-center">
+                                                <div class="rounded-circle p-3 me-3"
+                                                    style="background: rgba(79, 209, 197, 0.2);">
+                                                    <i class="fa-solid fa-calendar-check fa-xl" style="color: #4FD1C5;"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0 fw-bold text-dark">Takvim & Planlama</h6>
+                                                    <small class="text-muted">Haftalık planı görüntüle</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
                             </div>
+                            <hr>
 
+                            {{-- Hover Efekti için CSS (style bloğuna ekleyin) --}}
+                            <style>
+                                .hover-effect {
+                                    transition: transform 0.2s ease, box-shadow 0.2s ease;
+                                }
+
+                                .hover-effect:hover {
+                                    transform: translateY(-3px);
+                                    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+                                }
+                            </style>
                         </div>
 
                         @if (isset($importantItems) && $importantItems->isNotEmpty())
@@ -736,16 +785,31 @@
                                                 'icon' => 'fa-question-circle',
                                                 'class' => 'text-muted',
                                             ];
+                                            // Tarihi ve saati parse et
+                                            $tarih = \Carbon\Carbon::parse($item->tahmini_varis_tarihi);
                                         @endphp
                                         <div class="list-group-item d-flex align-items-center py-3">
                                             <div class="me-3"><i
                                                     class="fa-solid {{ $iconInfo['icon'] }} fa-2x vehicle-icon {{ $iconInfo['class'] }}"></i>
                                             </div>
                                             <div class="d-flex flex-column flex-grow-1">
-                                                <h5 class="mb-1 fw-bold">Yaklaşan {{ $item->kargo_icerigi }} Sevkiyatı</h5>
-                                                <p class="mb-0 text-muted"><strong>Araç:</strong> {{ ucfirst($aracTipi) }}
-                                                    <span class="mx-2">|</span> <strong>Varış Saati:</strong> <span
-                                                        class="fw-bold text-dark">{{ \Carbon\Carbon::parse($item->tahmini_varis_tarihi)->format('H:i') }}</span>
+                                                <h5 class="mb-1 fw-bold">Yaklaşan {{ $item->kargo_icerigi }} Sevkiyatı
+                                                </h5>
+
+                                                {{-- DÜZENLENMİŞ KISIM (Tarih eklendi) --}}
+                                                <p class="mb-0 text-muted">
+                                                    <strong>Araç:</strong> {{ ucfirst($aracTipi) }}
+                                                    <span class="mx-2">|</span>
+
+                                                    {{-- Tarih --}}
+                                                    <i class="fa-regular fa-calendar me-1" style="color: #667EEA;"></i>
+                                                    <strong>{{ $tarih->format('d.m.Y') }}</strong>
+
+                                                    <span class="mx-2">-</span>
+
+                                                    {{-- Saat --}}
+                                                    <i class="fa-regular fa-clock me-1" style="color: #F093FB;"></i>
+                                                    <span class="fw-bold text-dark">{{ $tarih->format('H:i') }}</span>
                                                 </p>
                                             </div>
                                             <a href="{{ route('home') }}?open_modal_id={{ $item->id }}&open_modal_type=shipment"
