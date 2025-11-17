@@ -399,8 +399,8 @@
             /**
              * Bir tarih-saat dizesini (örn: "19.05.2025 11:30") 
              * tarih ve saat olarak ayırır.
-             * @@param {string} dateTimeString - Ayırılacak dize.
-             * @@returns @{{ date: string, time: string }}
+             * @param {string} dateTimeString - Ayırılacak dize.
+             * @returns @{{ date: string, time: string }}
              */
             function splitDateTime(dateTimeString) {
                 const dt = String(dateTimeString || '');
@@ -524,16 +524,16 @@
                     const cikis = splitDateTime(props.details['Çıkış Tarihi']);
                     const varis = splitDateTime(props.details['Tahmini Varış']);
                     html += '<div class="col-md-6">';
-                    html += `    <p><strong>📅 Çıkış Tarihi:</strong> ${cikis.date}</p>`;
+                    html += ` 	<p><strong>📅 Çıkış Tarihi:</strong> ${cikis.date}</p>`;
                     if (cikis.time !== '-') {
-                        html += `    <p><strong>🕒 Çıkış Saati:</strong> ${cikis.time}</p>`;
+                        html += ` 	<p><strong>🕒 Çıkış Saati:</strong> ${cikis.time}</p>`;
                     }
                     html += '</div>';
 
                     html += '<div class="col-md-6">';
-                    html += `    <p><strong>📅 Tahmini Varış:</strong> ${varis.date}</p>`;
+                    html += ` 	<p><strong>📅 Tahmini Varış:</strong> ${varis.date}</p>`;
                     if (varis.time !== '-') {
-                        html += `    <p><strong>🕒 Varış Saati:</strong> ${varis.time}</p>`;
+                        html += ` 	<p><strong>🕒 Varış Saati:</strong> ${varis.time}</p>`;
                     }
                     html += '</div>';
 
@@ -563,15 +563,15 @@
                         const baslangic = splitDateTime(props.details['Başlangıç']);
                         const bitis = splitDateTime(props.details['Bitiş']);
                         html += '<div class="col-md-6">';
-                        html += `    <p><strong>📅 Başlangıç Tarihi:</strong> ${baslangic.date}</p>`;
+                        html += ` 	<p><strong>📅 Başlangıç Tarihi:</strong> ${baslangic.date}</p>`;
                         if (baslangic.time !== '-') {
-                            html += `    <p><strong>🕒 Başlangıç Saati:</strong> ${baslangic.time}</p>`;
+                            html += ` 	<p><strong>🕒 Başlangıç Saati:</strong> ${baslangic.time}</p>`;
                         }
                         html += '</div>';
                         html += '<div class="col-md-6">';
-                        html += `    <p><strong>📅 Bitiş Tarihi:</strong> ${bitis.date}</p>`;
+                        html += ` 	<p><strong>📅 Bitiş Tarihi:</strong> ${bitis.date}</p>`;
                         if (bitis.time !== '-') {
-                            html += `    <p><strong>🕒 Bitiş Saati:</strong> ${bitis.time}</p>`;
+                            html += ` 	<p><strong>🕒 Bitiş Saati:</strong> ${bitis.time}</p>`;
                         }
                         html += '</div>';
 
@@ -582,25 +582,25 @@
                     } else if (props.eventType === 'vehicle_assignment') {
                         html +=
                             `<div class="col-md-12">
-                                <p><strong>🚘Araç:</strong> ${props.details['Araç'] || '-'}</p>
-                                <p><strong>📋Görev:</strong> ${props.details['Görev'] || '-'}</p>
-                                <p><strong>Yer:</strong> ${props.details['Yer'] || '-'}</p>
-                                <p><strong>Talep Eden:</strong> ${props.details['Talep Eden'] || '-'}</p>
-                            </div>`;
+                                 <p><strong>🚘Araç:</strong> ${props.details['Araç'] || '-'}</p>
+                                 <p><strong>📋Görev:</strong> ${props.details['Görev'] || '-'}</p>
+                                 <p><strong>Yer:</strong> ${props.details['Yer'] || '-'}</p>
+                                 <p><strong>Talep Eden:</strong> ${props.details['Talep Eden'] || '-'}</p>
+                                </div>`;
 
 
                         const baslangic = splitDateTime(props.details['Başlangıç']);
                         const bitis = splitDateTime(props.details['Bitiş']);
                         html += '<div class="col-md-6">';
-                        html += `    <p><strong>📅 Başlangıç Tarihi:</strong> ${baslangic.date}</p>`;
+                        html += ` 	<p><strong>📅 Başlangıç Tarihi:</strong> ${baslangic.date}</p>`;
                         if (baslangic.time !== '-') {
-                            html += `    <p><strong>🕒 Başlangıç Saati:</strong> ${baslangic.time}</p>`;
+                            html += ` 	<p><strong>🕒 Başlangıç Saati:</strong> ${baslangic.time}</p>`;
                         }
                         html += '</div>';
                         html += '<div class="col-md-6">';
-                        html += `    <p><strong>📅 Bitiş Tarihi:</strong> ${bitis.date}</p>`;
+                        html += ` 	<p><strong>📅 Bitiş Tarihi:</strong> ${bitis.date}</p>`;
                         if (bitis.time !== '-') {
-                            html += `    <p><strong>🕒 Bitiş Saati:</strong> ${bitis.time}</p>`;
+                            html += ` 	<p><strong>🕒 Bitiş Saati:</strong> ${bitis.time}</p>`;
                         }
                         html += '</div>';
 
@@ -610,12 +610,12 @@
                     } else if (props.eventType === 'travel') {
                         // YENİ EKLENEN SEYAHAT KONTROLÜ
                         html += `<div class="col-md-12">
-                                <p><strong>✈️ Plan Adı:</strong> ${props.details['Plan Adı'] || '-'}</p>
-                                <p><strong>👤 Oluşturan:</strong> ${props.details['Oluşturan'] || '-'}</p>
-                                <p><strong>📅 Başlangıç:</strong> ${props.details['Başlangıç'] || '-'}</p>
-                                <p><strong>📅 Bitiş:</strong> ${props.details['Bitiş'] || '-'}</p>
-                                <p><strong>📊 Durum:</strong> ${props.details['Durum'] || '-'}</p>
-                             </div>`;
+                                 <p><strong>✈️ Plan Adı:</strong> ${props.details['Plan Adı'] || '-'}</p>
+                                 <p><strong>👤 Oluşturan:</strong> ${props.details['Oluşturan'] || '-'}</p>
+                                 <p><strong>📅 Başlangıç:</strong> ${props.details['Başlangıç'] || '-'}</p>
+                                 <p><strong>📅 Bitiş:</strong> ${props.details['Bitiş'] || '-'}</p>
+                                 <p><strong>📊 Durum:</strong> ${props.details['Durum'] || '-'}</p>
+                                </div>`;
 
                         // Seyahat planının detay sayfasına gitmek için bir buton ekleyelim
                         // (modalExportButton'u bu amaçla yeniden kullanalım)

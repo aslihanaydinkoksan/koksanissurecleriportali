@@ -19,6 +19,7 @@ use App\Http\Controllers\TestResultController;
 use App\Http\Controllers\TravelController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\TeamController;
 use App\Http\Controllers\ActivityLogController;
 
 // Ana sayfa yönlendirmesi
@@ -87,18 +88,11 @@ Route::middleware('auth')->group(function () {
 
 // --- ÜRETİM BİRİMİ ROTALARI ---
 Route::middleware(['auth'])->prefix('production')->name('production.')->group(function () {
-    // /production/plans -> Planları listeleme sayfası
     Route::get('/plans', [ProductionPlanController::class, 'index'])->name('plans.index');
-    // /production/plans/create -> Yeni plan oluşturma formunu göster
     Route::get('/plans/create', [ProductionPlanController::class, 'create'])->name('plans.create');
-    // POST /production/plans -> Yeni planı veritabanına kaydet
     Route::post('/plans', [ProductionPlanController::class, 'store'])->name('plans.store');
-    // /production/plans/{plan}/edit -> Düzenleme formunu göster
-    // Not: Rota parametresi 'productionPlan' olmalı, model adıyla eşleşmeli
     Route::get('/plans/{productionPlan}/edit', [ProductionPlanController::class, 'edit'])->name('plans.edit');
-    // PUT/PATCH /production/plans/{plan} -> Güncelle
     Route::put('/plans/{productionPlan}', [ProductionPlanController::class, 'update'])->name('plans.update');
-    // DELETE /production/plans/{plan} -> Sil
     Route::delete('/plans/{productionPlan}', [ProductionPlanController::class, 'destroy'])->name('plans.destroy');
 });
 
@@ -112,12 +106,27 @@ Route::middleware(['auth'])->prefix('service')->name('service.')->group(function
     Route::get('/events/{event}/edit', [EventController::class, 'edit'])->name('events.edit');
     Route::put('/events/{event}', [EventController::class, 'update'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
+
+    // Araç Yönetimi
     Route::resource('vehicles', VehicleController::class);
-    Route::resource('assignments', VehicleAssignmentController::class);
+
+    // Araç Atama Yönetimi (GÜNCELLENDİ)
+    Route::get('/assignments', [VehicleAssignmentController::class, 'index'])->name('assignments.index');
+    Route::get('/assignments/create', [VehicleAssignmentController::class, 'create'])->name('assignments.create');
+    Route::post('/assignments', [VehicleAssignmentController::class, 'store'])->name('assignments.store');
+    Route::get('/assignments/{assignment}/edit', [VehicleAssignmentController::class, 'edit'])->name('assignments.edit');
+    Route::put('/assignments/{assignment}', [VehicleAssignmentController::class, 'update'])->name('assignments.update');
+    Route::delete('/assignments/{assignment}', [VehicleAssignmentController::class, 'destroy'])->name('assignments.destroy');
+
+    // YENİ: Görev durumu güncelleme (AJAX)
+    Route::patch('/assignments/{assignment}/status', [VehicleAssignmentController::class, 'updateStatus'])
+        ->name('assignments.update-status');
+
+    // Sefer Zamanları Yönetimi
     Route::resource('schedules', ServiceScheduleController::class);
 });
 
-// --- Genel KÖKSAN Takvimi Rotası (Giriş yapmış herkes erişebilir) ---
+// --- Genel KÖKSAN Takvimi Rotası ---
 Route::middleware('auth')->group(function () {
     Route::get('/general-calendar', [GeneralCalendarController::class, 'showCalendar'])->name('general.calendar');
     Route::get('/calendar-events-data', [GeneralCalendarController::class, 'getEvents'])->name('web.calendar.events');
@@ -126,21 +135,16 @@ Route::middleware('auth')->group(function () {
 
 // --- Müşteri Ziyaretleri Rotaları ---
 Route::middleware('auth')->group(function () {
-    // Ana Müşteri Rotaları (index, create, show, vb.)
     Route::resource('customers', CustomerController::class);
-    // Bu, /customers/{customer}/machines URL'sini oluşturur
     Route::resource('customers.machines', CustomerMachineController::class)
-        ->shallow() // Sadece 'customer_id' gereken rotaları (store, update, destroy) oluştur
-        ->except(['index', 'show']); // Bu sayfalara ihtiyacımız yok
-    // /customers/{customer}/complaints
+        ->shallow()
+        ->except(['index', 'show']);
     Route::resource('customers.complaints', ComplaintController::class)
         ->shallow()
         ->except(['index', 'show']);
-    // /customers/{customer}/test-results
     Route::resource('customers.test-results', TestResultController::class)
         ->shallow()
         ->except(['index', 'show']);
-    //    Seçilen müşteriye ait makineleri JSON olarak döndürür
     Route::get('/api/customers/{customer}/machines', [CustomerController::class, 'getMachinesJson'])
         ->name('api.customers.machines');
     Route::resource('travels', TravelController::class);
@@ -149,6 +153,32 @@ Route::middleware('auth')->group(function () {
         ->except(['index', 'show']);
 });
 
+// --- TAKIM YÖNETİMİ ROTALARI  ---
+Route::middleware('auth')->prefix('teams')->name('teams.')->group(function () {
+    // Temel CRUD
+    Route::get('/', [TeamController::class, 'index'])->name('index');
+    Route::get('/create', [TeamController::class, 'create'])->name('create');
+    Route::post('/', [TeamController::class, 'store'])->name('store');
+    Route::get('/{team}', [TeamController::class, 'show'])->name('show');
+    Route::get('/{team}/edit', [TeamController::class, 'edit'])->name('edit');
+    Route::put('/{team}', [TeamController::class, 'update'])->name('update');
+    Route::delete('/{team}', [TeamController::class, 'destroy'])->name('destroy');
+
+    // YENİ: Takım yönetim işlemleri
+    Route::patch('/{team}/toggle-active', [TeamController::class, 'toggleActive'])->name('toggle-active');
+    Route::post('/{team}/add-member', [TeamController::class, 'addMember'])->name('add-member');
+    Route::delete('/{team}/remove-member', [TeamController::class, 'removeMember'])->name('remove-member');
+
+    // YENİ: Kullanıcının takımlarını getir (AJAX)
+    Route::get('/user/{user}/teams', [TeamController::class, 'getUserTeams'])->name('user.teams');
+});
+
+// --- BENİM GÖREVLERİM ROTASI (GÜNCELLENDİ) ---
+Route::middleware('auth')->group(function () {
+    Route::get('/my-tasks', [VehicleAssignmentController::class, 'myTasks'])->name('my.tasks');
+});
+
+// --- SİSTEM LOGLARI (Sadece Global Manager) ---
 Route::middleware(['auth', 'can:is-global-manager'])->group(function () {
     Route::get('/system/logs', [ActivityLogController::class, 'index'])->name('logs.index');
 });

@@ -85,5 +85,21 @@ class AuthServiceProvider extends ServiceProvider
             return false;
         });
         Gate::define('access-admin-features', fn(User $user) => $user->role === 'admin');
+        //  Araç Görevleri Yönetimi Yetkilendirmesi
+        Gate::define('manage-assignment', function (User $user, VehicleAssignment $assignment) {
+
+            // Admin her zaman izinlidir
+            if ($user->role === 'admin') {
+                return true;
+            }
+            if ($user->id === $assignment->user_id) {
+                return true;
+            }
+            if ($user->role === 'yönetici') {
+                return true;
+            }
+
+            return false;
+        });
     }
 }

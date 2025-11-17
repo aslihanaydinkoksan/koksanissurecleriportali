@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Loggable;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * App\Models\Travel
@@ -60,7 +62,7 @@ class Travel extends Model
         'start_date' => 'date',
         'end_date' => 'date',
     ];
-    public function user()
+    public function user(): BelongsTo // İlişki tipini belirt
     {
         return $this->belongsTo(User::class);
     }

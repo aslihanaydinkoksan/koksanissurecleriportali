@@ -96,6 +96,9 @@
                                 <li><a class="dropdown-item fw-bold" href="<?php echo e(route('service.assignments.index')); ?>">
                                         <i class="fa-solid fa-list me-1" style="color: #667EEA"></i> Araç Görev
                                         Listesi</a></li>
+                                <li><a class="dropdown-item fw-bold" href="<?php echo e(route('teams.index')); ?>">
+                                        <i class="fa-solid fa-people-group me-1" style="color: #7a5ed1"></i> Takımlar ve
+                                        Yönetimleri</a></li>
                             </ul>
                         </li> <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('access-department', 'lojistik')): ?>
                             <li class="nav-item dropdown me-2"> <a class="nav-link dropdown-toggle fw-bold" href="#"

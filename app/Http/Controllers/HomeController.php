@@ -410,7 +410,7 @@ class HomeController extends Controller
             ];
         }
 
-        $assignments = VehicleAssignment::with(['vehicle', 'user'])->get();
+        $assignments = VehicleAssignment::with(['vehicle', 'createdBy'])->get();
         foreach ($assignments as $assignment) {
             $extendedProps = [
                 'eventType' => 'vehicle_assignment',
@@ -427,7 +427,7 @@ class HomeController extends Controller
                     'Başlangıç' => $assignment->start_time->format('d.m.Y H:i'),
                     'Bitiş' => $assignment->end_time->format('d.m.Y H:i'),
                     'Notlar' => $assignment->notes,
-                    'Kayıt Yapan' => $assignment->user?->name,
+                    'Kayıt Yapan' => $assignment->createdBy?->name,
                 ]
             ];
             if (Gate::allows('manage-assignment', $assignment)) {

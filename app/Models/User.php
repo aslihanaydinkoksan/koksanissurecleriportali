@@ -103,4 +103,67 @@ class User extends Authenticatable
     {
         return $this->hasMany(Travel::class);
     }
+    public function assignments()
+    {
+        return $this->morphMany(VehicleAssignment::class, 'responsible');
+    }
+
+    public function teams()
+    {
+        return $this->belongsToMany(Team::class, 'team_user')
+            ->withTimestamps();
+    }
+
+    /**
+     * Kullanıcının oluşturduğu takımlar
+     */
+    public function createdTeams()
+    {
+        return $this->hasMany(Team::class, 'created_by_user_id');
+    }
+
+    /**
+     * Kullanıcının oluşturduğu görevler
+     */
+    public function createdAssignments()
+    {
+        return $this->hasMany(VehicleAssignment::class, 'created_by_user_id');
+    }
+
+    /**
+     * Bana atanan tüm görevleri getir
+     * (Direkt bana atananlar + takım görevleri)
+     */
+    public function allAssignments()
+    {
+        return VehicleAssignment::query()
+            ->where(function ($query) {
+                // Direkt bana atanan görevler
+                $query->where('responsible_type', User::class)
+                    ->where('responsible_id', $this->id);
+            })
+            ->orWhere(function ($query) {
+                // Veya takımlarıma atanan görevler
+                $query->where('responsible_type', Team::class)
+                    ->whereHas('responsible.users', function ($q) {
+                    $q->where('users.id', $this->id);
+                });
+            });
+    }
+
+    /**
+     * Check: Bu takımın üyesi miyim?
+     */
+    public function isMemberOf($teamId): bool
+    {
+        return $this->teams()->where('teams.id', $teamId)->exists();
+    }
+
+    /**
+     * Check: Bu takımı ben oluşturdum mu?
+     */
+    public function isCreatorOf($teamId): bool
+    {
+        return $this->createdTeams()->where('id', $teamId)->exists();
+    }
 }

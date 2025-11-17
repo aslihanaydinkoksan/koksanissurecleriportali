@@ -516,11 +516,20 @@
                 padding: 2px 4px;
             }
         }
+
+        .wide-container {
+            max-width: 1600px;
+            /* Ekran ne kadar büyük olursa olsun, içerik en fazla 1600px olsun */
+            margin-left: auto;
+            /* Ortalanmasını sağlar */
+            margin-right: auto;
+            /* Ortalanmasını sağlar */
+        }
     </style>
 <?php $__env->stopPush(); ?>
 
 <?php $__env->startSection('content'); ?>
-    <div class="container">
+    <div class="container-fluid wide-container">
 
         <?php if(session('success')): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -538,7 +547,7 @@
         <?php endif; ?>
 
         <div class="row">
-            <div class="col-md-8">
+            <div class="col-md-9">
                 <div class="card create-shipment-card">
                     <div class="card-header">
                         📅 <?php echo e($departmentName); ?> Takvimi
@@ -582,7 +591,7 @@
             </div>
 
 
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('is-global-manager')): ?>
                     <div class="card create-shipment-card mb-3">
                         <div class="card-header">⚡ <?php echo e(__('Hızlı Eylemler')); ?></div>
@@ -1065,7 +1074,7 @@
                     }
                 ],
                 timeZone: appTimezone,
-                dayMaxEvents: true,
+                dayMaxEvents: false,
                 moreLinkText: function(num) {
                     return '+ ' + num + ' tane daha';
                 },

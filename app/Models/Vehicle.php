@@ -13,38 +13,18 @@ use App\Traits\Loggable;
  *
  * @property int $id
  * @property string $plate_number
- * @property string $type
+ * @property string $type (company, logistics)
  * @property string|null $brand_model
  * @property string|null $description
- * @property int $is_active
+ * @property bool $is_active
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activities
- * @property-read int|null $activities_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\VehicleAssignment> $assignments
- * @property-read int|null $assignments_count
- * @method static \Illuminate\Database\Eloquent\Builder|Vehicle newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Vehicle newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Vehicle onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|Vehicle query()
- * @method static \Illuminate\Database\Eloquent\Builder|Vehicle whereBrandModel($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Vehicle whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Vehicle whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Vehicle whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Vehicle whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Vehicle whereIsActive($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Vehicle wherePlateNumber($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Vehicle whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Vehicle whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Vehicle withTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|Vehicle withoutTrashed()
- * @mixin \Eloquent
- * @mixin IdeHelperVehicle
  */
 class Vehicle extends Model
 {
     use HasFactory, SoftDeletes, Loggable;
+
     protected $fillable = [
         'plate_number',
         'type',
@@ -53,11 +33,87 @@ class Vehicle extends Model
         'is_active',
     ];
 
+    protected $casts = [
+        'is_active' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
     /**
-     * Bu araca ait tüm atamaları (görevleri) getirir.
+     * Bu araca ait görevler
      */
-    public function assignments(): HasMany // YENİ EKLENDİ
+    public function assignments(): HasMany
     {
         return $this->hasMany(VehicleAssignment::class);
+    }
+
+    /**
+     * Scope: Sadece aktif araçlar
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope: Şirket araçları
+     */
+    public function scopeCompany($query)
+    {
+        return $query->where('type', 'company');
+    }
+
+    /**
+     * Scope: Nakliye araçları
+     */
+    public function scopeLogistics($query)
+    {
+        return $query->where('type', 'logistics');
+    }
+
+    /**
+     * Accessor: Araç tipi ismi
+     */
+    public function getTypeNameAttribute(): string
+    {
+        return match ($this->type) {
+            'company' => 'Şirket Aracı',
+            'logistics' => 'Nakliye Aracı',
+            default => 'Bilinmeyen'
+        };
+    }
+
+    /**
+     * Accessor: Tam araç bilgisi
+     */
+    public function getFullNameAttribute(): string
+    {
+        return "{$this->plate_number} - {$this->brand_model}";
+    }
+
+    /**
+     * Check: Müsait mi? (Şu anda kullanımda değil)
+     */
+    public function isAvailable(): bool
+    {
+        return $this->is_active && !$this->hasActiveAssignment();
+    }
+
+    /**
+     * Check: Şu anda aktif bir görevi var mı?
+     */
+    public function hasActiveAssignment(): bool
+    {
+        return $this->assignments()
+            ->whereIn('status', ['pending', 'in_progress'])
+            ->exists();
+    }
+
+    /**
+     * Son görevi getir
+     */
+    public function lastAssignment()
+    {
+        return $this->assignments()->latest()->first();
     }
 }
