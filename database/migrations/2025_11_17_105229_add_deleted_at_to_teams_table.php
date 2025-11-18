@@ -13,7 +13,9 @@ return new class extends Migration {
     public function up()
     {
         Schema::table('teams', function (Blueprint $table) {
-            $table->softDeletes();
+            if (!Schema::hasColumn('teams', 'deleted_at')) { // 👈 KONTROL EKLEYİN
+                $table->softDeletes();
+            }
         });
     }
 
@@ -25,7 +27,9 @@ return new class extends Migration {
     public function down()
     {
         Schema::table('teams', function (Blueprint $table) {
-            $table->dropSoftDeletes();
+            if (Schema::hasColumn('teams', 'deleted_at')) { // 👈 KONTROL EKLEYİN
+                $table->dropSoftDeletes();
+            }
         });
     }
 };

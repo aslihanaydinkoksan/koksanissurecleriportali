@@ -525,6 +525,101 @@
             margin-right: auto;
             /* Ortalanmasını sağlar */
         }
+
+        /* Event'leri dengeli göster */
+        .fc-timegrid-event {
+            font-size: 0.85em !important;
+            padding: 5px 8px !important;
+            line-height: 1.3 !important;
+            border-radius: 5px !important;
+            font-weight: 600 !important;
+
+            /* Minimum yükseklik - okunaklı */
+            min-height: 30px !important;
+
+            /* MAKSIMUM yükseklik - ~2 saat (event çok uzun olsa bile max bu kadar) */
+            max-height: 65px !important;
+
+            overflow: hidden !important;
+            transition: all 0.2s ease !important;
+        }
+
+        /* Event başlığı - 2-3 satır göster */
+        .fc-event-title {
+            white-space: normal !important;
+            overflow: hidden !important;
+            display: -webkit-box !important;
+            -webkit-line-clamp: 2 !important;
+            /* Maksimum 2 satır başlık */
+            -webkit-box-orient: vertical !important;
+            line-height: 1.3 !important;
+        }
+
+        /* Event zamanı */
+        .fc-event-time {
+            font-size: 0.85em !important;
+            font-weight: 700 !important;
+            opacity: 0.95 !important;
+            display: block !important;
+            margin-bottom: 2px !important;
+        }
+
+        /* Event container */
+        .fc-timegrid-event-harness {
+            margin-bottom: 2px !important;
+        }
+
+        .fc-timegrid-event-harness-inset {
+            /* Event'in maksimum yüksekliğini sınırla */
+            max-height: 65px !important;
+            overflow: hidden !important;
+        }
+
+        /* Slot yüksekliği - rahat görünsün */
+        .fc-timegrid-slot {
+            height: 2em !important;
+        }
+
+        /* Hover durumunda tam detayı göster */
+        .fc-timegrid-event:hover {
+            max-height: none !important;
+            z-index: 1000 !important;
+            transform: scale(1.05) !important;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25) !important;
+            -webkit-line-clamp: unset !important;
+            cursor: pointer !important;
+        }
+
+        /* "+X more" linki */
+        .fc-more-link {
+            font-size: 0.8em !important;
+            font-weight: 600 !important;
+            color: #667EEA !important;
+            background: rgba(102, 126, 234, 0.15) !important;
+            padding: 4px 8px !important;
+            border-radius: 4px !important;
+            margin-top: 2px !important;
+            display: inline-block !important;
+        }
+
+        .fc-more-link:hover {
+            background: rgba(102, 126, 234, 0.25) !important;
+            transform: translateY(-1px) !important;
+        }
+
+        /* Mobil optimizasyon */
+        @media (max-width: 768px) {
+            .fc-timegrid-event {
+                font-size: 0.75em !important;
+                padding: 4px 6px !important;
+                min-height: 26px !important;
+                max-height: 55px !important;
+            }
+
+            .fc-timegrid-slot {
+                height: 1.75em !important;
+            }
+        }
     </style>
 <?php $__env->stopPush(); ?>
 
@@ -644,7 +739,7 @@
 
         <?php if(in_array(Auth::user()->role, ['admin', 'yönetici'])): ?>
             <div class="row mt-4" id="userListContainer" style="display: none;">
-                <div class="col-md-8">
+                <div class="col-md-9">
                     <div class="card create-shipment-card">
                         <div class="card-header">
                             👥 <?php echo e(__('Sistemdeki Mevcut Kullanıcılar')); ?>
@@ -1059,6 +1154,15 @@
                     timeGridDay: 'Gün',
                     listWeek: 'Liste'
                 },
+                slotEventOverlap: false, // Olayları üst üste bindirme
+                dayMaxEvents: 4, // Bir günde max 4 olay göster
+                eventMaxStack: 3, // Hafta/Gün görünümünde max 3 event yanyana
+                slotDuration: '00:30:00', // 30 dakikalık slotlar
+                height: 'auto',
+                slotMinTime: '06:00:00', // Sabah 6'dan başlat
+                slotMaxTime: '22:00:00', // Akşam 10'a kadar göster
+                scrollTime: '08:00:00', // Sayfa açılınca saat 8'i göster
+                nowIndicator: true, // Şu anki zamanı göster (kırmızı çizgi)
                 eventSources: [{
                         id: 'databaseEvents',
                         events: eventsData

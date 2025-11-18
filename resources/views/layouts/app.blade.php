@@ -100,6 +100,16 @@
                                         <i class="fa-solid fa-people-group me-1" style="color: #7a5ed1"></i> Takımlar ve
                                         Yönetimleri</a></li>
                             </ul>
+                            @if (Auth::check() && Auth::user()->pending_assignments_count > 0)
+                        <li class="nav-item">
+                            <a class="nav-link fw-bold" href="{{ route('my-assignments.index') }}">
+                                <i class="fas fa-tasks me-1" style="color: #d15e5e"></i> Görevlerim
+                                <span class="badge bg-danger rounded-pill ms-1">
+                                    {{ Auth::user()->pending_assignments_count }}
+                                </span>
+                            </a>
+                        </li>
+                        @endif
                         </li> @can('access-department', 'lojistik')
                             <li class="nav-item dropdown me-2"> <a class="nav-link dropdown-toggle fw-bold" href="#"
                                     id="navbarDropdownProducts" role="button" data-bs-toggle="dropdown"
@@ -116,9 +126,10 @@
                                 </ul>
                             </li>
                             @endcan @can('access-department', 'uretim')
-                            <li class="nav-item dropdown me-2"> <a class="nav-link dropdown-toggle fw-bold" href="#"
-                                    id="navbarDropdownProduction" role="button" data-bs-toggle="dropdown"
-                                    aria-expanded="false"> <i class="fa-solid fa-industry" style="color: #4FD1C5;"></i>
+                            <li class="nav-item dropdown me-2"> <a class="nav-link dropdown-toggle fw-bold"
+                                    href="#" id="navbarDropdownProduction" role="button"
+                                    data-bs-toggle="dropdown" aria-expanded="false"> <i class="fa-solid fa-industry"
+                                        style="color: #4FD1C5;"></i>
                                     Üretim </a>
                                 <ul class="dropdown-menu" aria-labelledby="navbarDropdownProduction">
                                     <li> <a class="dropdown-item fw-bold" href="{{ route('production.plans.create') }}">

@@ -7,6 +7,7 @@ use App\Models\Vehicle;
 use App\Models\ServiceSchedule;
 use App\Models\User;
 use App\Models\Team;
+use App\Notifications\VehicleAssignmentCreated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -131,7 +132,6 @@ class VehicleAssignmentController extends Controller
         ], [
             // Özel Hata Mesajları
             'needs_vehicle.required' => 'Araç gerekliliği seçmelisiniz.',
-            'vehicle_id.required_if' => 'Araç tipi seçmelisiniz.',
             'vehicle_id.required_if' => 'Lütfen bir araç seçin.',
             'responsible_user_id.required_if' => 'Lütfen sorumlu kişiyi seçin.',
             'responsible_team_id.required_if' => 'Lütfen sorumlu takımı seçin.',
@@ -195,9 +195,68 @@ class VehicleAssignmentController extends Controller
 
         // 6. Kaydet
         $assignment->save();
+        $recipients = collect();
+
+        if ($assignmentType === 'individual') {
+            // Bireysel atama: Sadece sorumlu kullanıcıya gönder
+            $responsibleUser = User::find($validatedData['responsible_user_id']);
+            if ($responsibleUser) {
+                $recipients->push($responsibleUser);
+            }
+        } elseif ($assignmentType === 'team') {
+            // Takım ataması: Takımdaki tüm üyelere gönder
+            $team = Team::with('users')->find($validatedData['team_id']);
+            if ($team) {
+                $recipients = $recipients->merge($team->users);
+            }
+        }
+
+        // Bildirimi alıcılara gönder
+        foreach ($recipients->unique() as $recipient) {
+            $recipient->notify(new VehicleAssignmentCreated($assignment));
+        }
 
         return redirect()->route('service.assignments.index')
             ->with('success', $successMessage);
+    }
+    /**
+     * Oturum açmış kullanıcıya atanmış görevleri listeler.
+     */
+    public function myAssignments(): View
+    {
+        $user = Auth::user();
+
+        // Kullanıcının üye olduğu takımların ID'leri
+        $teamIds = $user->teams()->pluck('teams.id');
+
+        $assignments = VehicleAssignment::with(['vehicle', 'createdBy', 'responsible', 'responsible.users'])
+            ->where(function ($query) use ($user, $teamIds) {
+                // 1. Kural: Kullanıcıya bireysel atanmış görevler
+                $query->where(function ($q) use ($user) {
+                    // Not: user::class yerine 'user' veya 'App\Models\User' olmalı. Modelinizde tam sınıf yolu kullanılıyordu:
+                    $q->where('responsible_type', User::class)
+                        ->where('responsible_id', $user->id);
+                })
+                    // 2. Kural: Kullanıcının üyesi olduğu takımlara atanmış görevler
+                    ->orWhere(function ($q) use ($teamIds) {
+                    $q->where('responsible_type', Team::class)
+                        ->whereIn('responsible_id', $teamIds);
+                });
+            })
+            ->latest('start_time')
+            ->paginate(15);
+
+        return view('service.assignments.my_assignments', compact('assignments'));
+    }
+    public function show(VehicleAssignment $assignment): View
+    {
+        // Gerekli ilişkileri yükleyelim
+        $assignment->load(['vehicle', 'createdBy', 'responsible']);
+
+        // Yetki kontrolü eklemek isteyebilirsiniz (Örn: sadece atanana veya admin'e göster)
+        // if (Gate::denies('view-assignment', $assignment)) { /* ... */ }
+
+        return view('service.assignments.show', compact('assignment'));
     }
 
     /**

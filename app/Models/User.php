@@ -166,4 +166,24 @@ class User extends Authenticatable
     {
         return $this->createdTeams()->where('id', $teamId)->exists();
     }
+    public function getPendingAssignmentsCountAttribute(): int
+    {
+        // Kullanıcının sorumlu olduğu bekleyen görevleri sayar
+        $count = VehicleAssignment::where('status', 'pending')
+            ->where(function ($query) {
+                // 1. Direkt bireysel atama
+                $query->where('responsible_type', self::class) // User::class
+                    ->where('responsible_id', $this->id);
+            })
+            ->orWhere(function ($query) {
+                // 2. Takım ataması
+                $teamIds = $this->teams()->pluck('teams.id');
+                $query->where('responsible_type', Team::class)
+                    ->whereIn('responsible_id', $teamIds);
+            })
+            ->count();
+
+        return $count;
+    }
+
 }

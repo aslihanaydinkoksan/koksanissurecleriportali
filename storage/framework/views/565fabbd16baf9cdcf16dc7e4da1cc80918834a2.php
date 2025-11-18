@@ -445,7 +445,7 @@
                                         </option>
                                         <?php $__currentLoopData = $vehicles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $vehicle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                             <option value="<?php echo e($vehicle->id); ?>">
-                                                <?php echo e($vehicle->plate_number); ?> - <?php echo e($vehicle->model); ?>
+                                                <?php echo e($vehicle->plate_number); ?> <?php echo e($vehicle->model); ?>
 
                                             </option>
                                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>

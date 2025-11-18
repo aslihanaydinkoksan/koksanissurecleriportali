@@ -444,7 +444,7 @@
                                         </option>
                                         @foreach ($vehicles as $vehicle)
                                             <option value="{{ $vehicle->id }}">
-                                                {{ $vehicle->plate_number }} - {{ $vehicle->model }}
+                                                {{ $vehicle->plate_number }} {{ $vehicle->model }}
                                             </option>
                                         @endforeach
                                         <template x-if="vehicleType === 'logistics'">

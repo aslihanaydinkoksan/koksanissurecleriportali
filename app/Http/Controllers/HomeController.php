@@ -865,7 +865,7 @@ class HomeController extends Controller
             if ($dateTo)
                 $query->where('start_time', '<=', Carbon::parse($dateTo)->endOfDay());
             if ($deptFilter != 'all') {
-                $query->whereHas('user', fn($q) => $q->where('department_id', $deptFilter));
+                $query->whereHas('createdBy', fn($q) => $q->where('department_id', $deptFilter));
             }
             $allMappedItems = $allMappedItems->merge(
                 $query->get()->map(function ($item) {

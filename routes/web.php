@@ -114,6 +114,7 @@ Route::middleware(['auth'])->prefix('service')->name('service.')->group(function
     Route::get('/assignments', [VehicleAssignmentController::class, 'index'])->name('assignments.index');
     Route::get('/assignments/create', [VehicleAssignmentController::class, 'create'])->name('assignments.create');
     Route::post('/assignments', [VehicleAssignmentController::class, 'store'])->name('assignments.store');
+    Route::get('/assignments/{assignment}', [VehicleAssignmentController::class, 'show'])->name('assignments.show');
     Route::get('/assignments/{assignment}/edit', [VehicleAssignmentController::class, 'edit'])->name('assignments.edit');
     Route::put('/assignments/{assignment}', [VehicleAssignmentController::class, 'update'])->name('assignments.update');
     Route::delete('/assignments/{assignment}', [VehicleAssignmentController::class, 'destroy'])->name('assignments.destroy');
@@ -151,6 +152,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('travels.bookings', BookingController::class)
         ->shallow()
         ->except(['index', 'show']);
+    Route::get('/my-assignments', [VehicleAssignmentController::class, 'myAssignments'])
+        ->name('my-assignments.index');
 });
 
 // --- TAKIM YÖNETİMİ ROTALARI  ---
