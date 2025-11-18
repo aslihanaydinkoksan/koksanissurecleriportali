@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', 'Müşteri Yönetimi')
 
-@push('styles')
+<?php $__env->startSection('title', 'Müşteri Yönetimi'); ?>
+
+<?php $__env->startPush('styles'); ?>
     <style>
         /* Ana içerik alanına animasyonlu arka plan */
         #app>main.py-4 {
@@ -191,9 +191,9 @@
             }
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container py-4">
         <div class="row justify-content-center">
             <div class="col-lg-12">
@@ -208,7 +208,7 @@
                                 </h2>
                                 <p class="text-muted mb-0">Tüm müşterilerinizi görüntüleyin ve yönetin</p>
                             </div>
-                            <a href="{{ route('customers.create') }}"
+                            <a href="<?php echo e(route('customers.create')); ?>"
                                 class="btn btn-primary-gradient rounded-pill px-4 py-2">
                                 <i class="fa-solid fa-plus me-2"></i>
                                 Yeni Müşteri Ekle
@@ -218,23 +218,24 @@
 
                     <div class="card-body px-4">
                         <!-- Arama Formu -->
-                        <form method="GET" action="{{ route('customers.index') }}" class="mb-4" autocomplete="off">
+                        <form method="GET" action="<?php echo e(route('customers.index')); ?>" class="mb-4" autocomplete="off">
                             <div class="position-relative">
                                 <i class="fa-solid fa-search search-icon"></i>
                                 <input type="text" name="search" class="form-control search-input"
-                                    placeholder="Müşteri adı, email veya telefona göre ara..." value="{{ $search ?? '' }}">
+                                    placeholder="Müşteri adı, email veya telefona göre ara..." value="<?php echo e($search ?? ''); ?>">
                             </div>
                         </form>
 
                         <!-- Başarı Mesajı -->
-                        @if (session('success'))
+                        <?php if(session('success')): ?>
                             <div class="alert success-alert d-flex align-items-center mb-4" role="alert">
                                 <i class="fa-solid fa-circle-check me-3 fs-4"></i>
                                 <div>
-                                    <strong>Başarılı!</strong> {{ session('success') }}
+                                    <strong>Başarılı!</strong> <?php echo e(session('success')); ?>
+
                                 </div>
                             </div>
-                        @endif
+                        <?php endif; ?>
 
                         <!-- Müşteri Tablosu -->
                         <div class="table-responsive">
@@ -259,29 +260,29 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse ($customers as $customer)
+                                    <?php $__empty_1 = true; $__currentLoopData = $customers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $customer): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                         <tr>
                                             <td>
-                                                <strong class="text-dark">{{ $customer->name }}</strong>
+                                                <strong class="text-dark"><?php echo e($customer->name); ?></strong>
                                             </td>
                                             <td>
-                                                <span class="text-muted">{{ $customer->email ?? '-' }}</span>
+                                                <span class="text-muted"><?php echo e($customer->email ?? '-'); ?></span>
                                             </td>
                                             <td>
-                                                <span class="text-muted">{{ $customer->phone ?? '-' }}</span>
+                                                <span class="text-muted"><?php echo e($customer->phone ?? '-'); ?></span>
                                             </td>
                                             <td>
-                                                <span class="text-muted">{{ $customer->contact_person ?? '-' }}</span>
+                                                <span class="text-muted"><?php echo e($customer->contact_person ?? '-'); ?></span>
                                             </td>
                                             <td class="text-end">
                                                 <div class="btn-group" role="group">
-                                                    <a href="{{ route('customers.show', $customer) }}"
+                                                    <a href="<?php echo e(route('customers.show', $customer)); ?>"
                                                         class="btn btn-sm btn-outline-primary rounded-pill px-3 me-2"
                                                         title="Görüntüle">
                                                         <i class="fa-solid fa-eye me-1"></i>
                                                         Görüntüle
                                                     </a>
-                                                    <a href="{{ route('customers.edit', $customer) }}"
+                                                    <a href="<?php echo e(route('customers.edit', $customer)); ?>"
                                                         class="btn btn-sm btn-outline-secondary rounded-pill px-3"
                                                         title="Düzenle">
                                                         <i class="fa-solid fa-pen me-1"></i>
@@ -290,7 +291,7 @@
                                                 </div>
                                             </td>
                                         </tr>
-                                    @empty
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                         <tr>
                                             <td colspan="5" class="text-center py-5">
                                                 <div class="text-muted">
@@ -301,20 +302,23 @@
                                                 </div>
                                             </td>
                                         </tr>
-                                    @endforelse
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>
 
                         <!-- Sayfalama -->
-                        @if ($customers->hasPages())
+                        <?php if($customers->hasPages()): ?>
                             <div class="mt-4 d-flex justify-content-center">
-                                {{ $customers->appends(['search' => $search])->links() }}
+                                <?php echo e($customers->appends(['search' => $search])->links()); ?>
+
                             </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp\htdocs\koksanissurecleriportali\resources\views/customers/index.blade.php ENDPATH**/ ?>

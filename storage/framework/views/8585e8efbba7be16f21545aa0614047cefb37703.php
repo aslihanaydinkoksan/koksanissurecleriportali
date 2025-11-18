@@ -1,36 +1,50 @@
-@if ($errors->any())
+<?php if($errors->any()): ?>
     <div class="alert alert-danger d-flex align-items-start" role="alert">
         <i class="fa-solid fa-triangle-exclamation me-3 fs-4 mt-1"></i>
         <div class="flex-grow-1">
             <strong>Lütfen aşağıdaki hataları düzeltin:</strong>
             <ul class="mb-0 mt-2">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
+                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <li><?php echo e($error); ?></li>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </ul>
         </div>
     </div>
-@endif
+<?php endif; ?>
 
 <div class="row g-3">
     <div class="col-md-6">
         <div class="form-floating mb-3">
-            <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name"
-                value="{{ old('name', $customer->name ?? '') }}" placeholder="Müşteri Unvanı" autocomplete="off"
+            <input type="text" class="form-control <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="name" name="name"
+                value="<?php echo e(old('name', $customer->name ?? '')); ?>" placeholder="Müşteri Unvanı" autocomplete="off"
                 required>
             <label for="name">
                 <i class="fa-solid fa-building me-2 text-primary"></i>Müşteri Unvanı <span class="text-danger">*</span>
             </label>
-            @error('name')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
+            <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                <div class="invalid-feedback"><?php echo e($message); ?></div>
+            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
         </div>
     </div>
 
     <div class="col-md-6">
         <div class="form-floating mb-3">
             <input type="text" class="form-control" id="contact_person" name="contact_person"
-                value="{{ old('contact_person', $customer->contact_person ?? '') }}" placeholder="İlgili Kişi"
+                value="<?php echo e(old('contact_person', $customer->contact_person ?? '')); ?>" placeholder="İlgili Kişi"
                 autocomplete="off">
             <label for="contact_person">
                 <i class="fa-solid fa-user me-2 text-primary"></i>İlgili Kişi
@@ -42,22 +56,36 @@
 <div class="row g-3">
     <div class="col-md-6">
         <div class="form-floating mb-3">
-            <input type="email" class="form-control @error('email') is-invalid @enderror" id="email"
-                name="email" value="{{ old('email', $customer->email ?? '') }}" placeholder="Email Adresi"
+            <input type="email" class="form-control <?php $__errorArgs = ['email'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="email"
+                name="email" value="<?php echo e(old('email', $customer->email ?? '')); ?>" placeholder="Email Adresi"
                 autocomplete="off">
             <label for="email">
                 <i class="fa-solid fa-envelope me-2 text-primary"></i>Email Adresi
             </label>
-            @error('email')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
+            <?php $__errorArgs = ['email'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                <div class="invalid-feedback"><?php echo e($message); ?></div>
+            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
         </div>
     </div>
 
     <div class="col-md-6">
         <div class="form-floating mb-3">
             <input type="tel" class="form-control" id="phone" name="phone"
-                value="{{ old('phone', $customer->phone ?? '') }}" placeholder="Telefon Numarası" autocomplete="off">
+                value="<?php echo e(old('phone', $customer->phone ?? '')); ?>" placeholder="Telefon Numarası" autocomplete="off">
             <label for="phone">
                 <i class="fa-solid fa-phone me-2 text-primary"></i>Telefon Numarası
             </label>
@@ -67,7 +95,7 @@
 
 <div class="form-floating mb-3">
     <textarea class="form-control" id="address" name="address" placeholder="Adres" style="height: 120px"
-        autocomplete="off">{{ old('address', $customer->address ?? '') }}</textarea>
+        autocomplete="off"><?php echo e(old('address', $customer->address ?? '')); ?></textarea>
     <label for="address">
         <i class="fa-solid fa-location-dot me-2 text-primary"></i>Adres
     </label>
@@ -140,3 +168,4 @@
         box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
     }
 </style>
+<?php /**PATH C:\xampp\htdocs\koksanissurecleriportali\resources\views/customers/_form.blade.php ENDPATH**/ ?>

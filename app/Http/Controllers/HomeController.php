@@ -112,6 +112,19 @@ class HomeController extends Controller
             list($welcomeTitle, $chartTitle, $todayItems, $chartData) = $this->getLogisticsWelcomeData();
         } elseif ($userRole == 'admin' || (empty($departmentSlug) && $userRole == 'yönetici')) {
             $welcomeTitle = "Genel Bakış";
+            $chartTitle = "Şirket Geneli İş Akışı (Toplam Kayıt)";
+
+            // KRİTİK EKLEME: Admin/Genel Yönetici için tüm görevleri birleştir.
+
+            $lojistikWelcomeData = $this->getLogisticsWelcomeData();
+            $uretimWelcomeData = $this->getProductionWelcomeData();
+            $hizmetWelcomeData = $this->getServiceWelcomeData();
+
+            // todayItems'ı tüm metotlardan birleştir (indeks [2] todayItems'dır)
+            $todayItems = $lojistikWelcomeData[2]
+                ->merge($uretimWelcomeData[2])
+                ->merge($hizmetWelcomeData[2])
+                ->sortBy(fn($item) => $item->start_datetime ?? $item->start_time ?? $item->start_date ?? $item->week_start_date);
             $kpiData = [
                 'sevkiyat_sayisi' => \App\Models\Shipment::whereDate('tahmini_varis_tarihi', Carbon::today())->count(),
                 'plan_sayisi' => \App\Models\ProductionPlan::whereDate('week_start_date', Carbon::today())->count(),
@@ -791,22 +804,36 @@ class HomeController extends Controller
     {
         $user = Auth::user();
         $typeFilter = $request->input('type', 'all');
-        $deptFilter = $request->input('department_id', 'all');
         $dateFrom = $request->input('date_from');
         $dateTo = $request->input('date_to');
-        if ($user->department_id) {
-            $deptFilter = $user->department_id;
+
+        // Varsayılan departman filtresi (Admin için null/all, bireysel için ID)
+        $deptFilter = $request->input('department_id', null);
+
+        // Admin veya Global Yönetici değilse VE bir departmana bağlıysa, 
+        // filtreyi kendi departman ID'sine zorla.
+        $isUserFiltered = false;
+        if ($user->department_id && $user->role !== 'admin' && !Auth::user()->can('is-global-manager')) {
+            $deptFilter = $user->department_id; // Departman ID'si ile filtrelemeye zorla
+            $isUserFiltered = true;
         }
+        // Admin/Global Yönetici ise, $deptFilter null/all kalır ve $isUserFiltered false kalır.
+
         $allMappedItems = collect();
+
+        // --- SHIPMENT (Sevkiyat) ---
         if ($typeFilter == 'all' || $typeFilter == 'shipment') {
             $query = Shipment::where('is_important', true);
             if ($dateFrom)
                 $query->where('tahmini_varis_tarihi', '>=', Carbon::parse($dateFrom)->startOfDay());
             if ($dateTo)
                 $query->where('tahmini_varis_tarihi', '<=', Carbon::parse($dateTo)->endOfDay());
-            if ($deptFilter != 'all') {
+
+            // KRİTİK FİLTRE: Sadece bireysel kullanıcı departman filtresine zorlanırsa çalıştır.
+            if ($isUserFiltered) {
                 $query->whereHas('user', fn($q) => $q->where('department_id', $deptFilter));
             }
+
             $allMappedItems = $allMappedItems->merge(
                 $query->get()->map(function ($item) {
                     return (object) [
@@ -818,15 +845,19 @@ class HomeController extends Controller
                 })
             );
         }
+
+        // --- PRODUCTION PLAN (Üretim Planı) ---
         if ($typeFilter == 'all' || $typeFilter == 'production_plan') {
             $query = ProductionPlan::where('is_important', true);
             if ($dateFrom)
                 $query->where('week_start_date', '>=', Carbon::parse($dateFrom)->startOfDay());
             if ($dateTo)
                 $query->where('week_start_date', '<=', Carbon::parse($dateTo)->endOfDay());
-            if ($deptFilter != 'all') {
+
+            if ($isUserFiltered) {
                 $query->whereHas('user', fn($q) => $q->where('department_id', $deptFilter));
             }
+
             $allMappedItems = $allMappedItems->merge(
                 $query->get()->map(function ($item) {
                     return (object) [
@@ -838,15 +869,19 @@ class HomeController extends Controller
                 })
             );
         }
+
+        // --- EVENT (Etkinlik) ---
         if ($typeFilter == 'all' || $typeFilter == 'event') {
             $query = Event::where('is_important', true);
             if ($dateFrom)
                 $query->where('start_datetime', '>=', Carbon::parse($dateFrom)->startOfDay());
             if ($dateTo)
                 $query->where('start_datetime', '<=', Carbon::parse($dateTo)->endOfDay());
-            if ($deptFilter != 'all') {
+
+            if ($isUserFiltered) {
                 $query->whereHas('user', fn($q) => $q->where('department_id', $deptFilter));
             }
+
             $allMappedItems = $allMappedItems->merge(
                 $query->get()->map(function ($item) {
                     return (object) [
@@ -858,15 +893,19 @@ class HomeController extends Controller
                 })
             );
         }
+
+        // --- VEHICLE ASSIGNMENT (Araç Görevi) ---
         if ($typeFilter == 'all' || $typeFilter == 'vehicle_assignment') {
             $query = VehicleAssignment::where('is_important', true);
             if ($dateFrom)
                 $query->where('start_time', '>=', Carbon::parse($dateFrom)->startOfDay());
             if ($dateTo)
                 $query->where('start_time', '<=', Carbon::parse($dateTo)->endOfDay());
-            if ($deptFilter != 'all') {
+
+            if ($isUserFiltered) {
                 $query->whereHas('createdBy', fn($q) => $q->where('department_id', $deptFilter));
             }
+
             $allMappedItems = $allMappedItems->merge(
                 $query->get()->map(function ($item) {
                     return (object) [
@@ -878,6 +917,8 @@ class HomeController extends Controller
                 })
             );
         }
+
+        // --- TRAVEL (Seyahat) ---
         if ($typeFilter == 'all' || $typeFilter == 'travel') {
             $query = Travel::where('is_important', true);
 
@@ -886,7 +927,7 @@ class HomeController extends Controller
             if ($dateTo)
                 $query->where('start_date', '<=', Carbon::parse($dateTo)->endOfDay());
 
-            if ($deptFilter != 'all') {
+            if ($isUserFiltered) {
                 $query->whereHas('user', fn($q) => $q->where('department_id', $deptFilter));
             }
 
@@ -901,6 +942,7 @@ class HomeController extends Controller
                 })
             );
         }
+
         return $allMappedItems->sortByDesc('date');
     }
 
@@ -958,8 +1000,11 @@ class HomeController extends Controller
         $chartTitle = "Makine -> Ürün Planlama Akışı (Toplam Adet)";
         $chartData = [];
 
-        $todayItems = ProductionPlan::whereDate('week_start_date', Carbon::today())
-            ->orderBy('created_at', 'asc')
+        $todayItems = ProductionPlan::whereBetween('week_start_date', [
+            Carbon::now()->startOfWeek(),
+            Carbon::now()->endOfWeek()
+        ])
+            ->orderBy('week_start_date', 'asc')
             ->get();
 
         $plans = ProductionPlan::whereNotNull('plan_details')->get();

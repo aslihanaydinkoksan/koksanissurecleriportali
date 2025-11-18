@@ -344,7 +344,31 @@
                                                     @endif
                                                 </td>
                                                 <td>{{ $assignment->start_time->format('d.m.Y H:i') }}</td>
-                                                <td>{{ ucfirst($assignment->status) }}</td>
+                                                <td>
+                                                    @switch($assignment->status)
+                                                        @case('completed')
+                                                            Tamamlandı
+                                                        @break
+
+                                                        @case('pending')
+                                                            Beklemede
+                                                        @break
+
+                                                        @case('in_progress')
+                                                            Devam Ediyor
+                                                        @break
+
+                                                        @case('cancelled')
+                                                            İptal Edildi
+                                                        @break
+
+                                                        {{-- İhtiyacınız olan diğer durumları buraya ekleyebilirsiniz --}}
+
+                                                        @default
+                                                            {{-- Bilinmeyen bir durum gelirse orijinalini bassın --}}
+                                                            {{ ucfirst($assignment->status) }}
+                                                    @endswitch
+                                                </td>
                                                 {{-- Butona modern stil (btn-primary) ve ikon uygulandı --}}
                                                 <td class="text-end pe-3">
                                                     <a href="{{ route('service.assignments.show', $assignment) }}"

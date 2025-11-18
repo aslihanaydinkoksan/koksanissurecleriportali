@@ -6,7 +6,7 @@
         #app>main.py-4 {
             padding: 2.5rem 0 !important;
             min-height: calc(100vh - 72px);
-            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe);
+            background: linear-gradient(-45deg, #667eea, hsl(270, 37%, 46%), #f093fb, #4facfe);
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
             position: relative;
@@ -345,7 +345,32 @@
                                                     <?php endif; ?>
                                                 </td>
                                                 <td><?php echo e($assignment->start_time->format('d.m.Y H:i')); ?></td>
-                                                <td><?php echo e(ucfirst($assignment->status)); ?></td>
+                                                <td>
+                                                    <?php switch($assignment->status):
+                                                        case ('completed'): ?>
+                                                            Tamamlandı
+                                                        <?php break; ?>
+
+                                                        <?php case ('pending'): ?>
+                                                            Beklemede
+                                                        <?php break; ?>
+
+                                                        <?php case ('in_progress'): ?>
+                                                            Devam Ediyor
+                                                        <?php break; ?>
+
+                                                        <?php case ('cancelled'): ?>
+                                                            İptal Edildi
+                                                        <?php break; ?>
+
+                                                        
+
+                                                        <?php default: ?>
+                                                            
+                                                            <?php echo e(ucfirst($assignment->status)); ?>
+
+                                                    <?php endswitch; ?>
+                                                </td>
                                                 
                                                 <td class="text-end pe-3">
                                                     <a href="<?php echo e(route('service.assignments.show', $assignment)); ?>"

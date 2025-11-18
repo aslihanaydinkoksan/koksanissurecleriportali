@@ -491,9 +491,51 @@
             color: #FBD38D;
 
         }
+
+        .hover-effect {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .hover-effect:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+        }
     </style>
 <?php $__env->stopPush(); ?>
 <?php $__env->startSection('content'); ?>
+    <div class="modal fade" id="createSelectionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content"
+                style="background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border:none; border-radius: 1rem;">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold">Ne Oluşturmak İstersiniz?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="d-grid gap-3">
+                        <a href="<?php echo e(route('production.plans.create')); ?>"
+                            class="btn btn-lg btn-outline-success d-flex align-items-center justify-content-between p-3">
+                            <span><i class="fa-solid fa-industry me-2"></i> Yeni Üretim Planı</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+
+                        <a href="<?php echo e(route('shipments.create')); ?>"
+                            class="btn btn-lg btn-outline-primary d-flex align-items-center justify-content-between p-3">
+                            <span><i class="fa-solid fa-truck-fast me-2"></i> Yeni
+                                Sevkiyat</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+
+                        <a href="<?php echo e(route('service.events.create')); ?>"
+                            class="btn btn-lg btn-outline-warning d-flex align-items-center justify-content-between p-3">
+                            <span><i class="fa-solid fa-calendar-plus me-2"></i> Yeni Etkinlik</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-12">
@@ -515,7 +557,8 @@
                             <div class="row g-3 mb-4">
                                 
                                 <div class="col-md-4">
-                                    <a href="#" class="text-decoration-none">
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#createSelectionModal"
+                                        class="text-decoration-none">
                                         <div class="card create-shipment-card h-100 hover-effect">
                                             <div class="card-body d-flex align-items-center">
                                                 <div class="rounded-circle p-3 me-3"
@@ -568,18 +611,6 @@
                                 </div>
                             </div>
                             <hr>
-
-                            
-                            <style>
-                                .hover-effect {
-                                    transition: transform 0.2s ease, box-shadow 0.2s ease;
-                                }
-
-                                .hover-effect:hover {
-                                    transform: translateY(-3px);
-                                    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
-                                }
-                            </style>
                         </div>
 
                         <?php if(isset($importantItems) && $importantItems->isNotEmpty()): ?>
@@ -626,6 +657,8 @@
                                                     <span class="badge bg-danger rounded-pill float-end">
                                                         <?php echo e($item->date->format('d.m.Y')); ?>
 
+                                                        <span class="ms-2">| Saat:
+                                                            <?php echo e($item->date->format('H:i')); ?></span>
                                                     </span>
                                                 <?php endif; ?>
                                             </a>
@@ -750,7 +783,9 @@
                                                 $baslik = 'Araç Görevi: ' . $item->task_description;
                                                 $detay =
                                                     '<strong>Araç:</strong> ' .
-                                                    ($item->vehicle->plate_number ?? 'Bilinmiyor');
+                                                    ($item->vehicle->plate_number ?? 'Bilinmiyor') .
+                                                    ' &bull; <strong>Hedef:</strong> ' .
+                                                    ($item->destination ?? '-');
                                                 $modalType = 'vehicle_assignment';
                                             } elseif ($isTravel) {
                                                 $iconInfo = ['icon' => 'fa-route', 'class' => 'icon-seyahat'];
@@ -827,6 +862,72 @@
                     </div>
 
                 </div>
+                <?php if($todayItems->isNotEmpty() && (Auth::user()->role === 'admin' || $departmentSlug === null)): ?>
+                    <h4 class="mt-4">
+                        <i class="fa-solid fa-list-check me-1" style="color: #667EEA;"></i>
+                        Genel Bakış: Güncel Görevler (Bugün)
+                    </h4>
+                    <div class="card create-shipment-card mb-4 mt-3">
+                        <div class="list-group list-group-flush">
+                            <?php $__empty_1 = true; $__currentLoopData = $todayItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                                <?php
+                                    $isAssignment = $item instanceof \App\Models\VehicleAssignment;
+                                    $isToday = true; // Zaten todayItems koleksiyonunda olduğu için bugün varsayabiliriz
+                                    $baslik = '';
+                                    $saat = '';
+                                    $detay = '';
+                                    $icon = 'fa-calendar-day';
+                                    $colorClass = $isToday ? 'fw-bold' : 'text-muted'; // Bugün olanlar kalın gösterilir.
+
+                                    if ($isAssignment) {
+                                        $icon = 'fa-car-side';
+                                        $baslik = '🚗 Araç Görevi: ' . Str::limit($item->task_description, 40);
+                                        $saat = $item->start_time->format('H:i');
+                                        $detay = 'Araç: ' . ($item->vehicle->plate_number ?? 'Bilinmiyor');
+                                    } elseif ($item instanceof \App\Models\Shipment) {
+                                        $icon = 'fa-truck-fast';
+                                        $baslik = '🚚 Sevkiyat Varış: ' . $item->kargo_icerigi;
+                                        $saat = $item->tahmini_varis_tarihi->format('H:i');
+                                        $detay = 'Hedef: ' . ($item->varis_noktasi ?? '-');
+                                    } elseif ($item instanceof \App\Models\Event) {
+                                        $icon = 'fa-calendar-star';
+                                        $baslik = '🎉 Etkinlik: ' . $item->title;
+                                        $saat = $item->start_datetime->format('H:i');
+                                        $detay = 'Tip: ' . ($this->getEventTypes()[$item->event_type] ?? 'Diğer');
+                                    } elseif ($item instanceof \App\Models\ProductionPlan) {
+                                        $icon = 'fa-industry';
+                                        $baslik = '⚙️ Üretim Planı: ' . $item->plan_title;
+                                        $saat = $item->week_start_date->format('d.m');
+                                        $detay = 'Başlangıç Tarihi';
+                                    } elseif ($item instanceof \App\Models\Travel) {
+                                        $icon = 'fa-route';
+                                        $baslik = '✈️ Seyahat: ' . $item->name;
+                                        $saat = $item->start_date->format('d.m');
+                                        $detay = 'Durum: ' . ($item->status == 'planned' ? 'Planlı' : 'Tamamlandı');
+                                    }
+                                ?>
+
+                                <div class="list-group-item d-flex align-items-center py-2"
+                                    style="background-color: transparent;">
+                                    <div class="vehicle-icon me-3">
+                                        <i class="fa-solid <?php echo e($icon); ?> fa-lg" style="color: #667EEA;"></i>
+                                    </div>
+                                    <div class="d-flex flex-column flex-grow-1">
+                                        <span class="mb-0 <?php echo e($colorClass); ?>"><?php echo e($baslik); ?></span>
+                                        <small class="text-muted"><?php echo e($detay); ?></small>
+                                    </div>
+                                    <span class="<?php echo e($colorClass); ?> ms-auto"><?php echo e($saat); ?></span>
+                                    <a href="#" class="btn btn-sm btn-outline-secondary ms-3"
+                                        title="Detaylar için takvime git">
+                                        <i class="fa-solid fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                                <div class="alert alert-info m-3">Bugün başlayan görev veya etkinlik bulunmamaktadır.</div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
                 <?php if(isset($chartData) && !empty($chartData)): ?>
                     <div class="card create-shipment-card">
 

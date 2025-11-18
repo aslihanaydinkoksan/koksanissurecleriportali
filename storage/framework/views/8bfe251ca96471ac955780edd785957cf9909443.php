@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', 'Müşteri Bilgilerini Düzenle')
 
-@push('styles')
+<?php $__env->startSection('title', 'Yeni Müşteri Ekle'); ?>
+
+<?php $__env->startPush('styles'); ?>
     <style>
         /* Ana içerik alanına animasyonlu arka plan */
         #app>main.py-4 {
@@ -68,19 +68,6 @@
             padding: 2rem;
         }
 
-        /* Müşteri adı badge */
-        .customer-name-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
-            color: white;
-            padding: 0.5rem 1.5rem;
-            border-radius: 2rem;
-            font-weight: 600;
-            font-size: 1rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
         /* Animasyonlu buton */
         .btn-animated-gradient {
             background: linear-gradient(-45deg, #667EEA, #F093FB, #4FD1C5, #FBD38D);
@@ -102,25 +89,23 @@
         }
 
         /* İptal butonu */
-        .btn-outline-secondary {
-            border: 2px solid #6c757d;
-            background-color: transparent;
-            color: #6c757d;
+        .btn-secondary {
+            background-color: #6c757d;
+            border: none;
+            color: white;
             font-weight: 600;
             padding: 0.75rem 2rem;
             border-radius: 0.75rem;
             transition: all 0.2s ease;
         }
 
-        .btn-outline-secondary:hover {
-            background-color: #6c757d;
-            border-color: #6c757d;
-            color: white;
+        .btn-secondary:hover {
+            background-color: #5a6268;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
         }
 
-        /* Form bölümü */
+        /* Form bölümü için özel stil */
         .form-section {
             background-color: rgba(255, 255, 255, 0.6);
             border-radius: 1rem;
@@ -140,20 +125,6 @@
             flex-wrap: wrap;
         }
 
-        /* Uyarı kutusu */
-        .edit-warning {
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 191, 36, 0.1) 100%);
-            border-left: 4px solid #F59E0B;
-            border-radius: 0.75rem;
-            padding: 1rem 1.25rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .edit-warning i {
-            color: #F59E0B;
-            font-size: 1.25rem;
-        }
-
         @media (max-width: 576px) {
             .action-buttons {
                 flex-direction: column;
@@ -162,93 +133,61 @@
             .action-buttons .btn {
                 width: 100%;
             }
-
-            .customer-name-badge {
-                font-size: 0.9rem;
-                padding: 0.4rem 1rem;
-            }
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container py-4">
         <div class="row justify-content-center">
             <div class="col-md-10 col-lg-9">
                 <div class="customer-card">
                     <div class="card-header">
                         <h4>
-                            <i class="fa-solid fa-pen-to-square"></i>
-                            Müşteri Bilgilerini Düzenle
+                            <i class="fa-solid fa-user-plus"></i>
+                            Yeni Müşteri Bilgileri
                         </h4>
                     </div>
 
                     <div class="card-body">
-                        <!-- Düzenlenen Müşteri Bilgisi -->
-                        <div class="text-center">
-                            <span class="customer-name-badge">
-                                <i class="fa-solid fa-building me-2"></i>
-                                {{ $customer->name }}
-                            </span>
-                        </div>
-
-                        <!-- Uyarı Mesajı -->
-                        <div class="edit-warning d-flex align-items-start">
-                            <i class="fa-solid fa-info-circle me-3 mt-1"></i>
-                            <div>
-                                <strong class="d-block mb-1">Düzenleme Modu</strong>
-                                <small class="text-muted">
-                                    Bu müşteriye ait mevcut bilgileri güncelliyorsunuz. Değişiklikleri kaydetmek için formu
-                                    doldurup "Değişiklikleri Kaydet" butonuna tıklayın.
-                                </small>
-                            </div>
-                        </div>
-
-                        <form action="{{ route('customers.update', $customer) }}" method="POST" autocomplete="off">
-                            @csrf
-                            @method('PUT')
+                        <form action="<?php echo e(route('customers.store')); ?>" method="POST" autocomplete="off">
+                            <?php echo csrf_field(); ?>
 
                             <div class="form-section">
-                                @include('customers._form', ['customer' => $customer])
+                                <?php echo $__env->make('customers._form', ['customer' => null], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                             </div>
 
                             <div class="action-buttons">
-                                <a href="{{ route('customers.show', $customer) }}" class="btn btn-outline-secondary">
+                                <a href="<?php echo e(route('customers.index')); ?>" class="btn btn-secondary">
                                     <i class="fa-solid fa-times me-2"></i>
                                     İptal
                                 </a>
                                 <button type="submit" class="btn btn-animated-gradient">
-                                    <i class="fa-solid fa-check me-2"></i>
-                                    Değişiklikleri Kaydet
+                                    <i class="fa-solid fa-save me-2"></i>
+                                    Müşteriyi Kaydet
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
 
-                <!-- Hızlı Erişim Kartı -->
+                <!-- Bilgilendirme Kartı -->
                 <div class="mt-4 p-4 rounded-3"
-                    style="background: rgba(255, 255, 255, 0.7); border: 2px solid rgba(102, 126, 234, 0.2);">
-                    <div class="row align-items-center">
-                        <div class="col-md-8">
-                            <h6 class="fw-bold mb-2" style="color: #2d3748;">
-                                <i class="fa-solid fa-rocket me-2" style="color: #667EEA;"></i>
-                                Hızlı Erişim
-                            </h6>
+                    style="background: rgba(255, 255, 255, 0.7); border: 2px dashed rgba(102, 126, 234, 0.3);">
+                    <div class="d-flex align-items-start">
+                        <i class="fa-solid fa-lightbulb me-3 mt-1" style="color: #F59E0B; font-size: 1.5rem;"></i>
+                        <div>
+                            <h6 class="fw-bold mb-2" style="color: #2d3748;">İpucu</h6>
                             <p class="mb-0 text-muted small">
-                                Müşteri detay sayfasından makine, test sonucu ve şikayet bilgilerini yönetebilirsiniz.
+                                Müşteri kaydını tamamladıktan sonra müşteri detay sayfasından makine, test sonucu ve şikayet
+                                bilgileri ekleyebilirsiniz.
                             </p>
-                        </div>
-                        <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                            <a href="{{ route('customers.show', $customer) }}"
-                                class="btn btn-outline-primary btn-sm rounded-pill px-4">
-                                <i class="fa-solid fa-eye me-2"></i>
-                                Detaylara Git
-                            </a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp\htdocs\koksanissurecleriportali\resources\views/customers/create.blade.php ENDPATH**/ ?>

@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', $customer->name)
 
-@push('styles')
+<?php $__env->startSection('title', $customer->name); ?>
+
+<?php $__env->startPush('styles'); ?>
     <style>
         /* Ana içerik alanına animasyonlu arka plan */
         #app>main.py-4 {
@@ -213,9 +213,9 @@
             border-bottom: 2px solid rgba(102, 126, 234, 0.2);
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container py-4">
         <div class="row justify-content-center">
             <div class="col-lg-12">
@@ -226,21 +226,22 @@
                             <div>
                                 <h2 class="mb-2 fw-bold" style="color: #2d3748;">
                                     <i class="fa-solid fa-building me-2" style="color: #667EEA;"></i>
-                                    {{ $customer->name }}
+                                    <?php echo e($customer->name); ?>
+
                                 </h2>
                                 <p class="text-muted mb-0">Müşteri Detayları ve İşlemler</p>
                             </div>
                             <div class="d-flex gap-2 flex-wrap">
-                                <a href="{{ route('customers.edit', $customer) }}"
+                                <a href="<?php echo e(route('customers.edit', $customer)); ?>"
                                     class="btn btn-animated-gradient rounded-pill px-4">
                                     <i class="fa-solid fa-pen me-2"></i>
                                     Bilgileri Düzenle
                                 </a>
-                                <form action="{{ route('customers.destroy', $customer) }}" method="POST" class="d-inline"
+                                <form action="<?php echo e(route('customers.destroy', $customer)); ?>" method="POST" class="d-inline"
                                     autocomplete="off"
                                     onsubmit="return confirm('Bu müşteriyi silmek istediğinizden emin misiniz?');">
-                                    @csrf
-                                    @method('DELETE')
+                                    <?php echo csrf_field(); ?>
+                                    <?php echo method_field('DELETE'); ?>
                                     <button type="submit" class="btn btn-animated-gradient rounded-pill px-4">
                                         <i class="fa-solid fa-trash-alt me-2"></i>
                                         Kaydı Sil
@@ -252,31 +253,31 @@
 
                     <div class="card-body px-4">
                         <!-- Mesajlar -->
-                        @if (session('success'))
+                        <?php if(session('success')): ?>
                             <div class="alert alert-success d-flex align-items-center">
                                 <i class="fa-solid fa-circle-check me-3 fs-4"></i>
-                                <div>{{ session('success') }}</div>
+                                <div><?php echo e(session('success')); ?></div>
                             </div>
-                        @endif
+                        <?php endif; ?>
 
-                        @if (session('error'))
+                        <?php if(session('error')): ?>
                             <div class="alert alert-danger d-flex align-items-center">
                                 <i class="fa-solid fa-circle-xmark me-3 fs-4"></i>
-                                <div>{{ session('error') }}</div>
+                                <div><?php echo e(session('error')); ?></div>
                             </div>
-                        @endif
+                        <?php endif; ?>
 
-                        @if ($errors->any())
+                        <?php if($errors->any()): ?>
                             <div class="alert alert-danger">
                                 <strong><i class="fa-solid fa-triangle-exclamation me-2"></i>Kayıt eklenirken bir hata
                                     oluştu:</strong>
                                 <ul class="mb-0 mt-2">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
+                                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <li><?php echo e($error); ?></li>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </ul>
                             </div>
-                        @endif
+                        <?php endif; ?>
 
                         <!-- Sekmeler -->
                         <ul class="nav nav-tabs mt-4" id="customerTab" role="tablist">
@@ -289,26 +290,26 @@
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="machines-tab" data-bs-toggle="tab" data-bs-target="#machines"
                                     type="button" role="tab">
-                                    <i class="fa-solid fa-industry"></i>Makineler ({{ $customer->machines->count() }})
+                                    <i class="fa-solid fa-industry"></i>Makineler (<?php echo e($customer->machines->count()); ?>)
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="tests-tab" data-bs-toggle="tab" data-bs-target="#tests"
                                     type="button" role="tab">
-                                    <i class="fa-solid fa-vial"></i>Test Sonuçları ({{ $customer->testResults->count() }})
+                                    <i class="fa-solid fa-vial"></i>Test Sonuçları (<?php echo e($customer->testResults->count()); ?>)
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="complaints-tab" data-bs-toggle="tab"
                                     data-bs-target="#complaints" type="button" role="tab">
                                     <i class="fa-solid fa-exclamation-triangle"></i>Şikayetler
-                                    ({{ $customer->complaints->count() }})
+                                    (<?php echo e($customer->complaints->count()); ?>)
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="visits-tab" data-bs-toggle="tab" data-bs-target="#visits"
                                     type="button" role="tab">
-                                    <i class="fa-solid fa-calendar-days"></i>Ziyaretler ({{ $customer->visits->count() }})
+                                    <i class="fa-solid fa-calendar-days"></i>Ziyaretler (<?php echo e($customer->visits->count()); ?>)
                                 </button>
                             </li>
                         </ul>
@@ -320,26 +321,26 @@
                                 <h5><i class="fa-solid fa-address-card me-2"></i>Müşteri İletişim Bilgileri</h5>
                                 <dl class="row detail-list mt-3">
                                     <dt class="col-sm-3"><i class="fa-solid fa-user me-2 text-primary"></i>İlgili Kişi</dt>
-                                    <dd class="col-sm-9">{{ $customer->contact_person ?? '-' }}</dd>
+                                    <dd class="col-sm-9"><?php echo e($customer->contact_person ?? '-'); ?></dd>
 
                                     <dt class="col-sm-3"><i class="fa-solid fa-envelope me-2 text-primary"></i>Email</dt>
-                                    <dd class="col-sm-9">{{ $customer->email ?? '-' }}</dd>
+                                    <dd class="col-sm-9"><?php echo e($customer->email ?? '-'); ?></dd>
 
                                     <dt class="col-sm-3"><i class="fa-solid fa-phone me-2 text-primary"></i>Telefon</dt>
-                                    <dd class="col-sm-9">{{ $customer->phone ?? '-' }}</dd>
+                                    <dd class="col-sm-9"><?php echo e($customer->phone ?? '-'); ?></dd>
 
                                     <dt class="col-sm-3"><i class="fa-solid fa-location-dot me-2 text-primary"></i>Adres
                                     </dt>
-                                    <dd class="col-sm-9">{{ $customer->address ?? '-' }}</dd>
+                                    <dd class="col-sm-9"><?php echo e($customer->address ?? '-'); ?></dd>
                                 </dl>
                             </div>
 
                             <!-- Makineler Sekmesi -->
                             <div class="tab-pane fade" id="machines" role="tabpanel">
                                 <h5><i class="fa-solid fa-plus-circle me-2"></i>Hızlı Makine Ekle</h5>
-                                <form action="{{ route('customers.machines.store', $customer) }}" method="POST"
+                                <form action="<?php echo e(route('customers.machines.store', $customer)); ?>" method="POST"
                                     autocomplete="off" class="quick-add-form">
-                                    @csrf
+                                    <?php echo csrf_field(); ?>
                                     <div class="row">
                                         <div class="col-md-4 mb-3">
                                             <label for="model" class="form-label">Model (*)</label>
@@ -370,20 +371,21 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @forelse ($customer->machines as $machine)
+                                            <?php $__empty_1 = true; $__currentLoopData = $customer->machines; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $machine): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                                 <tr>
-                                                    <td><strong>{{ $machine->model }}</strong></td>
-                                                    <td>{{ $machine->serial_number ?? '-' }}</td>
-                                                    <td>{{ $machine->installation_date ? \Carbon\Carbon::parse($machine->installation_date)->format('d/m/Y') : '-' }}
+                                                    <td><strong><?php echo e($machine->model); ?></strong></td>
+                                                    <td><?php echo e($machine->serial_number ?? '-'); ?></td>
+                                                    <td><?php echo e($machine->installation_date ? \Carbon\Carbon::parse($machine->installation_date)->format('d/m/Y') : '-'); ?>
+
                                                     </td>
                                                 </tr>
-                                            @empty
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                                 <tr>
                                                     <td colspan="3" class="text-center text-muted py-4">
                                                         Bu müşteriye ait makine kaydı bulunamadı.
                                                     </td>
                                                 </tr>
-                                            @endforelse
+                                            <?php endif; ?>
                                         </tbody>
                                     </table>
                                 </div>
@@ -392,9 +394,9 @@
                             <!-- Test Sonuçları Sekmesi -->
                             <div class="tab-pane fade" id="tests" role="tabpanel">
                                 <h5><i class="fa-solid fa-upload me-2"></i>Hızlı Test Sonucu Yükle</h5>
-                                <form action="{{ route('customers.test-results.store', $customer) }}" method="POST"
+                                <form action="<?php echo e(route('customers.test-results.store', $customer)); ?>" method="POST"
                                     autocomplete="off" class="quick-add-form" enctype="multipart/form-data">
-                                    @csrf
+                                    <?php echo csrf_field(); ?>
                                     <div class="row">
                                         <div class="col-md-4 mb-3">
                                             <label for="test_name" class="form-label">Test Adı (*)</label>
@@ -430,34 +432,36 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @forelse ($customer->testResults as $result)
+                                            <?php $__empty_1 = true; $__currentLoopData = $customer->testResults; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $result): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                                 <tr>
-                                                    <td><strong>{{ $result->test_name }}</strong></td>
-                                                    <td>{{ \Carbon\Carbon::parse($result->test_date)->format('d/m/Y') }}
+                                                    <td><strong><?php echo e($result->test_name); ?></strong></td>
+                                                    <td><?php echo e(\Carbon\Carbon::parse($result->test_date)->format('d/m/Y')); ?>
+
                                                     </td>
-                                                    <td>{{ $result->summary ?? '-' }}</td>
+                                                    <td><?php echo e($result->summary ?? '-'); ?></td>
                                                     <td>
-                                                        @foreach ($result->getMedia('test_reports') as $media)
+                                                        <?php $__currentLoopData = $result->getMedia('test_reports'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $media): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                             <div class="file-list-item">
                                                                 <span>
                                                                     <i class="fa-solid fa-file-pdf me-2"></i>
-                                                                    {{ $media->file_name }}
+                                                                    <?php echo e($media->file_name); ?>
+
                                                                 </span>
-                                                                <a href="{{ $media->getUrl() }}" target="_blank"
+                                                                <a href="<?php echo e($media->getUrl()); ?>" target="_blank"
                                                                     class="btn btn-sm btn-outline-primary rounded-pill px-3">
                                                                     <i class="fa-solid fa-eye me-1"></i>Görüntüle
                                                                 </a>
                                                             </div>
-                                                        @endforeach
+                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                     </td>
                                                 </tr>
-                                            @empty
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                                 <tr>
                                                     <td colspan="4" class="text-center text-muted py-4">
                                                         Bu müşteriye ait test sonucu bulunamadı.
                                                     </td>
                                                 </tr>
-                                            @endforelse
+                                            <?php endif; ?>
                                         </tbody>
                                     </table>
                                 </div>
@@ -466,9 +470,9 @@
                             <!-- Şikayetler Sekmesi -->
                             <div class="tab-pane fade" id="complaints" role="tabpanel">
                                 <h5><i class="fa-solid fa-plus-circle me-2"></i>Hızlı Şikayet Kaydı Ekle</h5>
-                                <form action="{{ route('customers.complaints.store', $customer) }}" method="POST"
+                                <form action="<?php echo e(route('customers.complaints.store', $customer)); ?>" method="POST"
                                     autocomplete="off" class="quick-add-form" enctype="multipart/form-data">
-                                    @csrf
+                                    <?php echo csrf_field(); ?>
                                     <div class="row">
                                         <div class="col-md-8 mb-3">
                                             <label for="title" class="form-label">Şikayet Başlığı (*)</label>
@@ -497,39 +501,40 @@
                                 </form>
 
                                 <h5><i class="fa-solid fa-list me-2"></i>Kayıtlı Şikayetler</h5>
-                                @forelse ($customer->complaints as $complaint)
+                                <?php $__empty_1 = true; $__currentLoopData = $customer->complaints; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $complaint): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                     <div
-                                        class="alert {{ $complaint->status == 'resolved' ? 'alert-success' : 'alert-warning' }}">
+                                        class="alert <?php echo e($complaint->status == 'resolved' ? 'alert-success' : 'alert-warning'); ?>">
                                         <div class="d-flex justify-content-between align-items-start">
                                             <div class="flex-grow-1">
                                                 <h6 class="mb-2">
                                                     <i class="fa-solid fa-exclamation-circle me-2"></i>
-                                                    <strong>{{ $complaint->title }}</strong>
+                                                    <strong><?php echo e($complaint->title); ?></strong>
                                                 </h6>
                                                 <p class="mb-2"><small>Durum:
-                                                        <strong>{{ $complaint->status }}</strong></small></p>
-                                                <p class="mb-3">{{ $complaint->description }}</p>
-                                                @foreach ($complaint->getMedia('complaint_attachments') as $media)
+                                                        <strong><?php echo e($complaint->status); ?></strong></small></p>
+                                                <p class="mb-3"><?php echo e($complaint->description); ?></p>
+                                                <?php $__currentLoopData = $complaint->getMedia('complaint_attachments'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $media): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                     <div class="file-list-item">
                                                         <span>
                                                             <i
-                                                                class="fa-solid fa-paperclip me-2"></i>{{ $media->file_name }}
+                                                                class="fa-solid fa-paperclip me-2"></i><?php echo e($media->file_name); ?>
+
                                                         </span>
-                                                        <a href="{{ $media->getUrl() }}" target="_blank"
+                                                        <a href="<?php echo e($media->getUrl()); ?>" target="_blank"
                                                             class="btn btn-sm btn-outline-secondary rounded-pill px-3">
                                                             <i class="fa-solid fa-eye me-1"></i>Görüntüle
                                                         </a>
                                                     </div>
-                                                @endforeach
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </div>
                                         </div>
                                     </div>
-                                @empty
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                     <div class="alert alert-secondary text-center">
                                         <i class="fa-solid fa-inbox fa-2x mb-3 d-block" style="opacity: 0.3;"></i>
                                         Bu müşteriye ait şikayet kaydı bulunamadı.
                                     </div>
-                                @endforelse
+                                <?php endif; ?>
                             </div>
 
                             <!-- Ziyaretler Sekmesi -->
@@ -546,21 +551,22 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @forelse ($customer->visits as $visit)
+                                            <?php $__empty_1 = true; $__currentLoopData = $customer->visits; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $visit): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                                 <tr>
-                                                    <td><strong>{{ $visit->event->title ?? 'N/A' }}</strong></td>
-                                                    <td>{{ $visit->event ? \Carbon\Carbon::parse($visit->event->start_datetime)->format('d/m/Y H:i') : '-' }}
+                                                    <td><strong><?php echo e($visit->event->title ?? 'N/A'); ?></strong></td>
+                                                    <td><?php echo e($visit->event ? \Carbon\Carbon::parse($visit->event->start_datetime)->format('d/m/Y H:i') : '-'); ?>
+
                                                     </td>
-                                                    <td>{{ $visit->visit_purpose ?? '-' }}</td>
-                                                    <td>{{ $visit->travel->name ?? 'Bağımsız Ziyaret' }}</td>
+                                                    <td><?php echo e($visit->visit_purpose ?? '-'); ?></td>
+                                                    <td><?php echo e($visit->travel->name ?? 'Bağımsız Ziyaret'); ?></td>
                                                 </tr>
-                                            @empty
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                                 <tr>
                                                     <td colspan="4" class="text-center text-muted py-4">
                                                         Bu müşteriye ait ziyaret kaydı bulunamadı.
                                                     </td>
                                                 </tr>
-                                            @endforelse
+                                            <?php endif; ?>
                                         </tbody>
                                     </table>
                                 </div>
@@ -571,4 +577,6 @@
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp\htdocs\koksanissurecleriportali\resources\views/customers/show.blade.php ENDPATH**/ ?>

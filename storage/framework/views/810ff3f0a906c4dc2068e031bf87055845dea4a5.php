@@ -437,6 +437,444 @@
                 height: 1.75em !important;
             }
         }
+
+        /* Modern Modal Overlay */
+        .modal-backdrop.show {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        /* Modern Modal Container */
+        #detailModal .modal-dialog {
+            max-width: 700px;
+        }
+
+        #detailModal .modal-content {
+            border: none;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-40px) scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Modal Header - Gradient ve Modern */
+        #detailModal .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 2rem 2.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #detailModal .modal-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.1)" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,165.3C1248,149,1344,107,1392,85.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') bottom center / cover no-repeat;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        #detailModal .modal-title {
+            font-weight: 700;
+            font-size: 1.75rem;
+            margin: 0;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        #detailModal .btn-close {
+            background: rgba(255, 255, 255, 0.25);
+            opacity: 1;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        #detailModal .btn-close:hover {
+            background: rgba(255, 255, 255, 0.35);
+            transform: rotate(90deg) scale(1.1);
+        }
+
+        /* Modal Body - Modern Kartlar */
+        #detailModal .modal-body {
+            padding: 2.5rem;
+            color: #2d3748;
+            background: #fafbfc;
+        }
+
+        #detailModal .modal-body .row {
+            margin-bottom: 1rem;
+        }
+
+        #detailModal .modal-body p {
+            margin-bottom: 1rem;
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        #detailModal .modal-body strong {
+            color: #667eea;
+            font-weight: 700;
+            display: inline-block;
+            margin-right: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        /* İnfo Kartları */
+        .modal-info-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(102, 126, 234, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .modal-info-card:hover {
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+            transform: translateY(-2px);
+        }
+
+        /* Onay Badge - Modern */
+        #modalOnayBadge {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+            animation: badgeSlideIn 0.5s ease;
+        }
+
+        @keyframes badgeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        #modalOnayBadge strong {
+            color: white;
+            font-size: 1rem;
+        }
+
+        /* Önemli Checkbox Container */
+        #modalImportantCheckboxContainer {
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(255, 107, 107, 0.1));
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 2px solid rgba(220, 53, 69, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        #modalImportantCheckboxContainer label {
+            margin: 0;
+            font-weight: 600;
+            color: #dc3545;
+            cursor: pointer;
+        }
+
+        #modalImportantCheckbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #dc3545;
+        }
+
+        /* HR Ayırıcı */
+        #detailModal .modal-body hr {
+            border: none;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.3), transparent);
+            margin: 2rem 0;
+        }
+
+        /* Tablo Stilleri */
+        #detailModal .table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+            margin-top: 1rem;
+        }
+
+        #detailModal .table thead {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+        }
+
+        #detailModal .table thead th {
+            border: none;
+            padding: 1rem;
+            font-weight: 700;
+            color: #667eea;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        #detailModal .table tbody td {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 1rem;
+            vertical-align: middle;
+        }
+
+        #detailModal .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        #detailModal .table tbody tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        /* Notlar Bölümü */
+        .modal-notes-box {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.08), rgba(56, 249, 215, 0.08));
+            border-left: 4px solid #43e97b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            color: #2d3748;
+            line-height: 1.7;
+        }
+
+        .modal-notes-title {
+            font-weight: 700;
+            color: #43e97b;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Modal Footer - Modern Butonlar */
+        #detailModal .modal-footer {
+            background: white;
+            border: none;
+            padding: 1.5rem 2.5rem;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        /* Buton Stilleri */
+        #detailModal .btn {
+            border-radius: 12px;
+            font-weight: 700;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            letter-spacing: 0.5px;
+        }
+
+        #detailModal .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        #detailModal .btn:hover::before {
+            left: 100%;
+        }
+
+        #detailModal .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        #detailModal .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Düzenle Butonu */
+        #modalEditButton {
+            background: linear-gradient(135deg, #ffa726, #fb8c00);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 167, 38, 0.4);
+        }
+
+        #modalEditButton:hover {
+            box-shadow: 0 8px 25px rgba(255, 167, 38, 0.5);
+        }
+
+        /* Export Butonu */
+        #modalExportButton {
+            background: linear-gradient(135deg, #4fd1c5, #38b2ac);
+            color: white;
+            box-shadow: 0 4px 15px rgba(79, 209, 197, 0.4);
+        }
+
+        #modalExportButton:hover {
+            box-shadow: 0 8px 25px rgba(79, 209, 197, 0.5);
+        }
+
+        /* Onay Butonları */
+        #modalOnayForm .btn-success {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        #modalOnayForm .btn-success:hover {
+            box-shadow: 0 8px 25px rgba(72, 187, 120, 0.5);
+        }
+
+        #modalOnayKaldirForm .btn-warning {
+            background: linear-gradient(135deg, #f6ad55, #ed8936);
+            color: white;
+            box-shadow: 0 4px 15px rgba(246, 173, 85, 0.4);
+        }
+
+        #modalOnayKaldirForm .btn-warning:hover {
+            box-shadow: 0 8px 25px rgba(246, 173, 85, 0.5);
+        }
+
+        /* Sil Butonu */
+        #modalDeleteForm .btn-danger {
+            background: linear-gradient(135deg, #fc8181, #f56565);
+            color: white;
+            box-shadow: 0 4px 15px rgba(245, 101, 101, 0.4);
+        }
+
+        #modalDeleteForm .btn-danger:hover {
+            box-shadow: 0 8px 25px rgba(245, 101, 101, 0.5);
+        }
+
+        /* Kapat Butonu */
+        .btn-secondary {
+            background: linear-gradient(135deg, #718096, #4a5568);
+            color: white;
+            box-shadow: 0 4px 15px rgba(113, 128, 150, 0.4);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 8px 25px rgba(113, 128, 150, 0.5);
+        }
+
+        /* Dosya Görüntüle Butonu */
+        .btn-outline-primary {
+            border: 2px solid #667eea;
+            color: #667eea;
+            background: transparent;
+            font-weight: 700;
+        }
+
+        .btn-outline-primary:hover {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-color: transparent;
+            color: white;
+        }
+
+        /* Responsive Optimizasyon */
+        @media (max-width: 768px) {
+            #detailModal .modal-dialog {
+                margin: 1rem;
+            }
+
+            #detailModal .modal-content {
+                border-radius: 16px;
+            }
+
+            #detailModal .modal-header {
+                padding: 1.5rem;
+            }
+
+            #detailModal .modal-title {
+                font-size: 1.35rem;
+            }
+
+            #detailModal .modal-body {
+                padding: 1.5rem;
+            }
+
+            #detailModal .modal-footer {
+                padding: 1rem 1.5rem;
+            }
+
+            #detailModal .btn {
+                padding: 0.625rem 1.25rem;
+                font-size: 0.8rem;
+            }
+
+            .modal-info-card {
+                padding: 1.25rem;
+            }
+        }
+
+        /* Loading Spinner için */
+        .modal-loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+        }
+
+        .modal-spinner {
+            border: 4px solid rgba(102, 126, 234, 0.2);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 <?php $__env->stopPush(); ?>
 <?php $__env->startSection('content'); ?>
@@ -452,6 +890,104 @@
                             data-is-authorized="<?php echo e(in_array(Auth::user()->role, ['admin', 'yönetici']) ? 'true' : 'false'); ?>">
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <!-- Header -->
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Detaylar</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+
+                <!-- Body -->
+                <div class="modal-body">
+                    <!-- Onay Badge (Sevkiyat için) -->
+                    <div id="modalOnayBadge" style="display: none;">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <strong>✓ Onaylandı</strong>
+                                <div class="small mt-1">
+                                    <i class="fas fa-calendar-check me-1"></i>
+                                    <span id="modalOnayBadgeTarih"></span>
+                                </div>
+                                <div class="small">
+                                    <i class="fas fa-user me-1"></i>
+                                    <span id="modalOnayBadgeKullanici"></span>
+                                </div>
+                            </div>
+                            <i class="fas fa-check-circle fa-3x" style="opacity: 0.5;"></i>
+                        </div>
+                    </div>
+
+                    <!-- Önemli Checkbox (Yönetici için) -->
+                    <div id="modalImportantCheckboxContainer" style="display: none;">
+                        <input type="checkbox" id="modalImportantCheckbox" class="form-check-input">
+                        <label for="modalImportantCheckbox" class="form-check-label">
+                            <i class="fas fa-exclamation-circle me-1"></i>
+                            Bu Etkinliği Önemli Olarak İşaretle
+                        </label>
+                    </div>
+
+                    <!-- Dinamik İçerik -->
+                    <div id="modalDynamicBody">
+                        <!-- JavaScript ile doldurulacak -->
+                        <div class="modal-loading">
+                            <div class="modal-spinner"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="modal-footer">
+                    <!-- Düzenle Butonu -->
+                    <a href="#" id="modalEditButton" class="btn" style="display: none;">
+                        <i class="fas fa-edit me-2"></i> Düzenle
+                    </a>
+
+                    <!-- Excel Export Butonu -->
+                    <a href="#" id="modalExportButton" class="btn" style="display: none;">
+                        <i class="fas fa-file-excel me-2"></i> Excel İndir
+                    </a>
+
+                    <!-- Onay Formu -->
+                    <form method="POST" id="modalOnayForm" style="display: none;" class="d-inline">
+                        <?php echo csrf_field(); ?>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check me-2"></i> Tesise Ulaştı
+                        </button>
+                    </form>
+
+                    <!-- Onay Kaldırma Formu -->
+                    <form method="POST" id="modalOnayKaldirForm" style="display: none;" class="d-inline">
+                        <?php echo csrf_field(); ?>
+                        <?php echo method_field('DELETE'); ?>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-undo me-2"></i> Onayı Kaldır
+                        </button>
+                    </form>
+
+                    <!-- Silme Formu -->
+                    <form method="POST" id="modalDeleteForm" style="display: none;" class="d-inline"
+                        onsubmit="return confirm('Bu kaydı silmek istediğinizden emin misiniz?');">
+                        <?php echo csrf_field(); ?>
+                        <?php echo method_field('DELETE'); ?>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-2"></i> Sil
+                        </button>
+                    </form>
+
+                    <!-- Kapat Butonu -->
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i> Kapat
+                    </button>
                 </div>
             </div>
         </div>
@@ -512,27 +1048,38 @@
                 };
             }
 
+            // openUniversalModal fonksiyonunu şu şekilde güncelleyin:
+
             function openUniversalModal(props) {
                 console.log('--- MODAL PROPS GELDİ ---', props);
                 if (!props || !props.eventType) {
                     console.error("Modal için geçersiz veri:", props);
                     return;
                 }
+
+                // Önemli checkbox ayarları
                 if (isAuthorized) {
-                    // Checkbox'ı görünür yap
                     modalImportantContainer.style.display = 'block';
-
-                    // Gelen veriye göre 'checked' durumunu ayarla
                     modalImportantCheckbox.checked = props.is_important || false;
-
-                    // AJAX isteği için gerekli verileri checkbox'a ata
                     modalImportantCheckbox.dataset.modelType = props.model_type;
                     modalImportantCheckbox.dataset.modelId = props.id;
                 } else {
-                    // Yetkisi yoksa checkbox'ı gizle
                     modalImportantContainer.style.display = 'none';
                 }
-                modalTitle.textContent = props.title || 'Detaylar';
+
+                // Başlık ikonları
+                const iconMap = {
+                    'shipment': 'fa-truck',
+                    'production': 'fa-industry',
+                    'service_event': 'fa-calendar-star',
+                    'vehicle_assignment': 'fa-car',
+                    'travel': 'fa-plane-departure'
+                };
+
+                const icon = iconMap[props.eventType] || 'fa-info-circle';
+                modalTitle.innerHTML = `<i class="fas ${icon}"></i> <span>${props.title || 'Detaylar'}</span>`;
+
+                // Buton görünürlük kontrolü
                 let showButtons = false;
                 if (props.eventType === 'production' || props.eventType === 'service_event' || props.eventType ===
                     'vehicle_assignment') {
@@ -542,8 +1089,6 @@
                         showButtons = (props.user_id === currentUserId);
                     } else {
                         showButtons = false;
-                        console.warn(
-                            `'${props.eventType}' etkinliğinde 'user_id' prop'u eksik. Butonlar gizlendi.`);
                     }
                 } else {
                     showButtons = true;
@@ -566,17 +1111,22 @@
                         modalDeleteForm.style.display = 'none';
                     }
                 }
-                let html = '<div class="row">';
+
+                let html = '';
+
+                // === SEVKİYAT (SHIPMENT) ===
                 if (props.eventType === 'shipment') {
                     modalExportButton.href = props.exportUrl || '#';
                     modalExportButton.style.display = 'inline-block';
+
+                    // Onay durumu
                     if (props.details['Onay Durumu']) {
                         modalOnayForm.style.display = 'none';
                         if (modalOnayKaldirForm) {
                             modalOnayKaldirForm.action = props.onayKaldirUrl;
                             modalOnayKaldirForm.style.display = 'inline-block';
                         }
-                        modalOnayBadge.style.display = 'inline-block';
+                        modalOnayBadge.style.display = 'block';
                         document.getElementById('modalOnayBadgeTarih').textContent = props.details['Onay Durumu'];
                         document.getElementById('modalOnayBadgeKullanici').textContent = props.details[
                             'Onaylayan'] || '';
@@ -586,153 +1136,241 @@
                         if (modalOnayKaldirForm) modalOnayKaldirForm.style.display = 'none';
                         modalOnayBadge.style.display = 'none';
                     }
+
                     const isGemi = (props.details['Araç Tipi'] || '').toLowerCase().includes('gemi');
-                    const col1 = [],
-                        col2 = [];
-                    col1.push(`<strong>🚛 Araç Tipi:</strong> ${props.details['Araç Tipi'] || '-'}`);
-                    if (!isGemi) {
-                        col1.push(`<strong>🔢 Plaka:</strong> ${props.details['Plaka'] || '-'}`);
-                        col1.push(`<strong>🔢 Dorse Plakası:</strong> ${props.details['Dorse Plakası'] || '-'}`);
-                        col1.push(`<strong>👨‍✈️ Şoför Adı:</strong> ${props.details['Şoför Adı'] || '-'}`);
-                    } else {
-                        col1.push(`<strong>⚓ IMO Numarası:</strong> ${props.details['IMO Numarası'] || '-'}`);
-                        col1.push(`<strong>🚢 Gemi Adı:</strong> ${props.details['Gemi Adı'] || '-'}`);
-                    }
-                    if (!isGemi) {
-                        col2.push(`<strong>📍 Kalkış Noktası:</strong> ${props.details['Kalkış Noktası'] || '-'}`);
-                        col2.push(`<strong>📍 Varış Noktası:</strong> ${props.details['Varış Noktası'] || '-'}`);
-                    } else {
-                        col2.push(`<strong>🏁 Kalkış Limanı:</strong> ${props.details['Kalkış Limanı'] || '-'}`);
-                        col2.push(`<strong>🎯 Varış Limanı:</strong> ${props.details['Varış Limanı'] || '-'}`);
-                    }
-                    col2.push(`<strong>🔄 Sevkiyat Türü:</strong> ${props.details['Sevkiyat Türü'] || '-'}`);
-                    html += `<div class="col-md-6">${col1.map(item => `<p>${item}</p>`).join('')}</div>`;
-                    html += `<div class="col-md-6">${col2.map(item => `<p>${item}</p>`).join('')}</div>`;
-                    html += '</div><hr><div class="row">';
+
+                    // Araç Bilgileri Kartı
+                    html += '<div class="modal-info-card">';
                     html +=
-                        `<div class="col-md-12"><p><strong>📦 Kargo Yükü:</strong> ${props.details['Kargo Yükü'] || '-'}</p></div>`;
+                        '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-truck me-2"></i>Araç Bilgileri</h6>';
+                    html += '<div class="row">';
+                    html +=
+                        `<div class="col-md-6"><p><strong>🚛 Araç Tipi:</strong> ${props.details['Araç Tipi'] || '-'}</p></div>`;
+
+                    if (!isGemi) {
+                        html +=
+                            `<div class="col-md-6"><p><strong>🔢 Plaka:</strong> ${props.details['Plaka'] || '-'}</p></div>`;
+                        html +=
+                            `<div class="col-md-6"><p><strong>🔢 Dorse Plakası:</strong> ${props.details['Dorse Plakası'] || '-'}</p></div>`;
+                        html +=
+                            `<div class="col-md-6"><p><strong>👨‍✈️ Şoför Adı:</strong> ${props.details['Şoför Adı'] || '-'}</p></div>`;
+                    } else {
+                        html +=
+                            `<div class="col-md-6"><p><strong>⚓ IMO Numarası:</strong> ${props.details['IMO Numarası'] || '-'}</p></div>`;
+                        html +=
+                            `<div class="col-md-6"><p><strong>🚢 Gemi Adı:</strong> ${props.details['Gemi Adı'] || '-'}</p></div>`;
+                    }
+                    html += '</div></div>';
+
+                    // Rota Bilgileri Kartı
+                    html += '<div class="modal-info-card">';
+                    html +=
+                        '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-route me-2"></i>Rota Bilgileri</h6>';
+                    html += '<div class="row">';
+
+                    if (!isGemi) {
+                        html +=
+                            `<div class="col-md-6"><p><strong>📍 Kalkış Noktası:</strong> ${props.details['Kalkış Noktası'] || '-'}</p></div>`;
+                        html +=
+                            `<div class="col-md-6"><p><strong>📍 Varış Noktası:</strong> ${props.details['Varış Noktası'] || '-'}</p></div>`;
+                    } else {
+                        html +=
+                            `<div class="col-md-6"><p><strong>🏁 Kalkış Limanı:</strong> ${props.details['Kalkış Limanı'] || '-'}</p></div>`;
+                        html +=
+                            `<div class="col-md-6"><p><strong>🎯 Varış Limanı:</strong> ${props.details['Varış Limanı'] || '-'}</p></div>`;
+                    }
+
+                    html +=
+                        `<div class="col-md-12"><p><strong>🔄 Sevkiyat Türü:</strong> ${props.details['Sevkiyat Türü'] || '-'}</p></div>`;
+                    html += '</div></div>';
+
+                    // Kargo Bilgileri Kartı
+                    html += '<div class="modal-info-card">';
+                    html +=
+                        '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-box me-2"></i>Kargo Bilgileri</h6>';
+                    html += `<p><strong>📦 Kargo Yükü:</strong> ${props.details['Kargo Yükü'] || '-'}</p>`;
+                    html += '<div class="row">';
                     html +=
                         `<div class="col-md-6"><p><strong>🏷️ Kargo Tipi:</strong> ${props.details['Kargo Tipi'] || '-'}</p></div>`;
                     html +=
                         `<div class="col-md-6"><p><strong>⚖️ Kargo Miktarı:</strong> ${props.details['Kargo Miktarı'] || '-'}</p></div>`;
-                    html += '</div><hr><div class="row">';
+                    html += '</div></div>';
+
+                    // Zaman Bilgileri Kartı
                     const cikis = splitDateTime(props.details['Çıkış Tarihi']);
                     const varis = splitDateTime(props.details['Tahmini Varış']);
+
+                    html += '<div class="modal-info-card">';
+                    html +=
+                        '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-clock me-2"></i>Zaman Bilgileri</h6>';
+                    html += '<div class="row">';
                     html += '<div class="col-md-6">';
-                    html += ` 	<p><strong>📅 Çıkış Tarihi:</strong> ${cikis.date}</p>`;
+                    html += `<p><strong>📅 Çıkış Tarihi:</strong> ${cikis.date}</p>`;
                     if (cikis.time !== '-') {
-                        html += ` 	<p><strong>🕒 Çıkış Saati:</strong> ${cikis.time}</p>`;
+                        html += `<p><strong>🕒 Çıkış Saati:</strong> ${cikis.time}</p>`;
                     }
                     html += '</div>';
-
                     html += '<div class="col-md-6">';
-                    html += ` 	<p><strong>📅 Tahmini Varış:</strong> ${varis.date}</p>`;
+                    html += `<p><strong>📅 Tahmini Varış:</strong> ${varis.date}</p>`;
                     if (varis.time !== '-') {
-                        html += ` 	<p><strong>🕒 Varış Saati:</strong> ${varis.time}</p>`;
+                        html += `<p><strong>🕒 Varış Saati:</strong> ${varis.time}</p>`;
                     }
                     html += '</div>';
-
-                } else {
+                    html += '</div></div>';
+                }
+                // === ÜRETİM (PRODUCTION) ===
+                else if (props.eventType === 'production') {
                     modalExportButton.style.display = 'none';
                     modalOnayForm.style.display = 'none';
                     if (modalOnayKaldirForm) modalOnayKaldirForm.style.display = 'none';
                     modalOnayBadge.style.display = 'none';
-                    if (props.eventType === 'production') {
+
+                    html += '<div class="modal-info-card">';
+                    html +=
+                        '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-industry me-2"></i>Üretim Planı Bilgileri</h6>';
+                    html += `<p><strong>📝 Plan Başlığı:</strong> ${props.details['Plan Başlığı'] || '-'}</p>`;
+                    html +=
+                        `<p><strong>📅 Hafta Başlangıcı:</strong> ${props.details['Hafta Başlangıcı'] || '-'}</p>`;
+                    html += `<p><strong>👤 Oluşturan:</strong> ${props.details['Oluşturan'] || '-'}</p>`;
+                    html += '</div>';
+
+                    if (props.details['Plan Detayları'] && props.details['Plan Detayları'].length > 0) {
+                        html += '<div class="modal-info-card">';
                         html +=
-                            `<div class="col-md-12"><p><strong>📝Plan Başlığı:</strong> ${props.details['Plan Başlığı'] || '-'}</p><p><strong>Hafta Başlangıcı:</strong> ${props.details['Hafta Başlangıcı'] || '-'}</p><p><strong>Oluşturan:</strong> ${props.details['Oluşturan'] || '-'}</p>`;
-                        if (props.details['Plan Detayları'] && props.details['Plan Detayları'].length > 0) {
+                            '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-list-check me-2"></i>Plan Detayları</h6>';
+                        html += '<table class="table table-sm mb-0">';
+                        html += '<thead><tr><th>⚙️ Makine</th><th>📦 Ürün</th><th>🧮 Adet</th></tr></thead><tbody>';
+                        props.details['Plan Detayları'].forEach(item => {
                             html +=
-                                '<strong>📋Plan Detayları:</strong><table class="table table-sm table-bordered mt-2" style="background: rgba(255,255,255,0.5);">';
-                            html +=
-                                '<thead><tr><th>⚙️Makine</th><th>📦📦Ürün</th><th>🧮Adet</th></tr></thead><tbody>';
-                            props.details['Plan Detayları'].forEach(item => {
-                                html +=
-                                    `<tr><td>${item.machine || '-'}</td><td>${item.product || '-'}</td><td>${item.quantity || '-'}</td></tr>`;
-                            });
-                            html += '</tbody></table>';
-                        }
-                        html += `</div>`;
-                    } else if (props.eventType === 'service_event') {
-                        html +=
-                            `<div class="col-md-12"><p><strong>🤩Etkinlik Tipi:</strong> ${props.details['Etkinlik Tipi'] || '-'}</p><p><strong>📍Konum:</strong> ${props.details['Konum'] || '-'}</p></div>`;
-                        const baslangic = splitDateTime(props.details['Başlangıç']);
-                        const bitis = splitDateTime(props.details['Bitiş']);
-                        html += '<div class="col-md-6">';
-                        html += ` 	<p><strong>📅 Başlangıç Tarihi:</strong> ${baslangic.date}</p>`;
-                        if (baslangic.time !== '-') {
-                            html += ` 	<p><strong>🕒 Başlangıç Saati:</strong> ${baslangic.time}</p>`;
-                        }
-                        html += '</div>';
-                        html += '<div class="col-md-6">';
-                        html += ` 	<p><strong>📅 Bitiş Tarihi:</strong> ${bitis.date}</p>`;
-                        if (bitis.time !== '-') {
-                            html += ` 	<p><strong>🕒 Bitiş Saati:</strong> ${bitis.time}</p>`;
-                        }
-                        html += '</div>';
-
-                        html +=
-                            `<div class="col-md-12 mt-3"><p><strong>👩🏻‍💻Kayıt Yapan:</strong> ${props.details['Kayıt Yapan'] || '-'}</p></div>`;
-
-
-                    } else if (props.eventType === 'vehicle_assignment') {
-                        html +=
-                            `<div class="col-md-12">
-                                 <p><strong>🚘Araç:</strong> ${props.details['Araç'] || '-'}</p>
-                                 <p><strong>📋Görev:</strong> ${props.details['Görev'] || '-'}</p>
-                                 <p><strong>Yer:</strong> ${props.details['Yer'] || '-'}</p>
-                                 <p><strong>Talep Eden:</strong> ${props.details['Talep Eden'] || '-'}</p>
-                                </div>`;
-
-
-                        const baslangic = splitDateTime(props.details['Başlangıç']);
-                        const bitis = splitDateTime(props.details['Bitiş']);
-                        html += '<div class="col-md-6">';
-                        html += ` 	<p><strong>📅 Başlangıç Tarihi:</strong> ${baslangic.date}</p>`;
-                        if (baslangic.time !== '-') {
-                            html += ` 	<p><strong>🕒 Başlangıç Saati:</strong> ${baslangic.time}</p>`;
-                        }
-                        html += '</div>';
-                        html += '<div class="col-md-6">';
-                        html += ` 	<p><strong>📅 Bitiş Tarihi:</strong> ${bitis.date}</p>`;
-                        if (bitis.time !== '-') {
-                            html += ` 	<p><strong>🕒 Bitiş Saati:</strong> ${bitis.time}</p>`;
-                        }
-                        html += '</div>';
-
-                        html +=
-                            `<div class="col-md-12 mt-3"><p><strong>Kayıt Yapan:</strong> ${props.details['Kayıt Yapan'] || '-'}</p></div>`; // Kalan bilgi
-
-                    } else if (props.eventType === 'travel') {
-                        // YENİ EKLENEN SEYAHAT KONTROLÜ
-                        html += `<div class="col-md-12">
-                                 <p><strong>✈️ Plan Adı:</strong> ${props.details['Plan Adı'] || '-'}</p>
-                                 <p><strong>👤 Oluşturan:</strong> ${props.details['Oluşturan'] || '-'}</p>
-                                 <p><strong>📅 Başlangıç:</strong> ${props.details['Başlangıç'] || '-'}</p>
-                                 <p><strong>📅 Bitiş:</strong> ${props.details['Bitiş'] || '-'}</p>
-                                 <p><strong>📊 Durum:</strong> ${props.details['Durum'] || '-'}</p>
-                                </div>`;
-
-                        // Seyahat planının detay sayfasına gitmek için bir buton ekleyelim
-                        // (modalExportButton'u bu amaçla yeniden kullanalım)
-                        if (props.url) {
-                            modalExportButton.href = props.url;
-                            modalExportButton.target = "_blank"; // Yeni sekmede aç
-                            modalExportButton.textContent = "✈️ Seyahat Detayına Git";
-                            modalExportButton.style.display = 'inline-block';
-                        }
+                                `<tr><td>${item.machine || '-'}</td><td>${item.product || '-'}</td><td>${item.quantity || '-'}</td></tr>`;
+                        });
+                        html += '</tbody></table></div>';
                     }
                 }
-                html += '</div>';
+                // === HİZMET ETKİNLİĞİ (SERVICE EVENT) ===
+                else if (props.eventType === 'service_event') {
+                    modalExportButton.style.display = 'none';
+                    modalOnayForm.style.display = 'none';
+                    if (modalOnayKaldirForm) modalOnayKaldirForm.style.display = 'none';
+                    modalOnayBadge.style.display = 'none';
+
+                    html += '<div class="modal-info-card">';
+                    html +=
+                        '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-calendar-star me-2"></i>Etkinlik Bilgileri</h6>';
+                    html += `<p><strong>🎯 Etkinlik Tipi:</strong> ${props.details['Etkinlik Tipi'] || '-'}</p>`;
+                    html += `<p><strong>📍 Konum:</strong> ${props.details['Konum'] || '-'}</p>`;
+                    html += '</div>';
+
+                    const baslangic = splitDateTime(props.details['Başlangıç']);
+                    const bitis = splitDateTime(props.details['Bitiş']);
+
+                    html += '<div class="modal-info-card">';
+                    html +=
+                        '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-clock me-2"></i>Zaman Bilgileri</h6>';
+                    html += '<div class="row">';
+                    html += '<div class="col-md-6">';
+                    html += `<p><strong>📅 Başlangıç Tarihi:</strong> ${baslangic.date}</p>`;
+                    if (baslangic.time !== '-') {
+                        html += `<p><strong>🕒 Başlangıç Saati:</strong> ${baslangic.time}</p>`;
+                    }
+                    html += '</div>';
+                    html += '<div class="col-md-6">';
+                    html += `<p><strong>📅 Bitiş Tarihi:</strong> ${bitis.date}</p>`;
+                    if (bitis.time !== '-') {
+                        html += `<p><strong>🕒 Bitiş Saati:</strong> ${bitis.time}</p>`;
+                    }
+                    html += '</div>';
+                    html += '</div>';
+                    html +=
+                        `<p class="mt-2"><strong>👩‍💻 Kayıt Yapan:</strong> ${props.details['Kayıt Yapan'] || '-'}</p>`;
+                    html += '</div>';
+                }
+                // === ARAÇ ATAMA (VEHICLE ASSIGNMENT) ===
+                else if (props.eventType === 'vehicle_assignment') {
+                    modalExportButton.style.display = 'none';
+                    modalOnayForm.style.display = 'none';
+                    if (modalOnayKaldirForm) modalOnayKaldirForm.style.display = 'none';
+                    modalOnayBadge.style.display = 'none';
+
+                    html += '<div class="modal-info-card">';
+                    html +=
+                        '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-car me-2"></i>Görev Bilgileri</h6>';
+                    html += `<p><strong>🚘 Araç:</strong> ${props.details['Araç'] || '-'}</p>`;
+                    html += `<p><strong>📋 Görev:</strong> ${props.details['Görev'] || '-'}</p>`;
+                    html += `<p><strong>📍 Yer:</strong> ${props.details['Yer'] || '-'}</p>`;
+                    html += `<p><strong>👤 Talep Eden:</strong> ${props.details['Talep Eden'] || '-'}</p>`;
+                    html += '</div>';
+
+                    const baslangic = splitDateTime(props.details['Başlangıç']);
+                    const bitis = splitDateTime(props.details['Bitiş']);
+
+                    html += '<div class="modal-info-card">';
+                    html +=
+                        '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-clock me-2"></i>Zaman Bilgileri</h6>';
+                    html += '<div class="row">';
+                    html += '<div class="col-md-6">';
+                    html += `<p><strong>📅 Başlangıç Tarihi:</strong> ${baslangic.date}</p>`;
+                    if (baslangic.time !== '-') {
+                        html += `<p><strong>🕒 Başlangıç Saati:</strong> ${baslangic.time}</p>`;
+                    }
+                    html += '</div>';
+                    html += '<div class="col-md-6">';
+                    html += `<p><strong>📅 Bitiş Tarihi:</strong> ${bitis.date}</p>`;
+                    if (bitis.time !== '-') {
+                        html += `<p><strong>🕒 Bitiş Saati:</strong> ${bitis.time}</p>`;
+                    }
+                    html += '</div>';
+                    html += '</div>';
+                    html +=
+                        `<p class="mt-2"><strong>👩‍💻 Kayıt Yapan:</strong> ${props.details['Kayıt Yapan'] || '-'}</p>`;
+                    html += '</div>';
+                }
+                // === SEYAHAT (TRAVEL) ===
+                else if (props.eventType === 'travel') {
+                    modalExportButton.style.display = 'none';
+                    modalOnayForm.style.display = 'none';
+                    if (modalOnayKaldirForm) modalOnayKaldirForm.style.display = 'none';
+                    modalOnayBadge.style.display = 'none';
+
+                    html += '<div class="modal-info-card">';
+                    html +=
+                        '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-plane-departure me-2"></i>Seyahat Bilgileri</h6>';
+                    html += `<p><strong>✈️ Plan Adı:</strong> ${props.details['Plan Adı'] || '-'}</p>`;
+                    html += `<p><strong>👤 Oluşturan:</strong> ${props.details['Oluşturan'] || '-'}</p>`;
+                    html += `<p><strong>📅 Başlangıç:</strong> ${props.details['Başlangıç'] || '-'}</p>`;
+                    html += `<p><strong>📅 Bitiş:</strong> ${props.details['Bitiş'] || '-'}</p>`;
+                    html += `<p><strong>📊 Durum:</strong> ${props.details['Durum'] || '-'}</p>`;
+                    html += '</div>';
+
+                    if (props.url) {
+                        modalExportButton.href = props.url;
+                        modalExportButton.target = "_blank";
+                        modalExportButton.innerHTML =
+                            '<i class="fas fa-plane-departure me-2"></i> Seyahat Detayına Git';
+                        modalExportButton.style.display = 'inline-block';
+                    }
+                }
+
+                // Notlar / Açıklamalar
                 const aciklama = props.details['Açıklamalar'] || props.details['Notlar'] || props.details[
                     'Açıklama'];
                 if (aciklama) {
+                    html += '<div class="modal-notes-box">';
                     html +=
-                        `<hr><p><strong>📝 Notlar / Açıklamalar:</strong></p><p style="margin-left: 1rem; padding: 1rem; background: rgba(102, 126, 234, 0.05); border-radius: 0.5rem;">${aciklama}</p>`;
+                        '<div class="modal-notes-title"><i class="fas fa-sticky-note"></i> Notlar / Açıklamalar</div>';
+                    html += `<p class="mb-0">${aciklama}</p>`;
+                    html += '</div>';
                 }
+
+                // Ek Dosya (Sevkiyat için)
                 if (props.eventType === 'shipment' && props.details['Dosya Yolu']) {
+                    html += '<div class="text-center mt-3">';
                     html +=
-                        `<hr><p><strong>📎 Ek Dosya:</strong></p><a href="${props.details['Dosya Yolu']}" target="_blank" class="btn btn-outline-primary btn-sm">📄 Dosyayı Görüntüle / İndir</a>`;
+                        `<a href="${props.details['Dosya Yolu']}" target="_blank" class="btn btn-outline-primary">`;
+                    html += '<i class="fas fa-paperclip me-2"></i> Ek Dosyayı Görüntüle / İndir';
+                    html += '</a></div>';
                 }
+
                 modalBody.innerHTML = html;
                 detailModal.show();
             }

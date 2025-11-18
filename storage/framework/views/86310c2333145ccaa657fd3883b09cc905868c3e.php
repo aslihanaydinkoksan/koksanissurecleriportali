@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', 'Takımı Düzenle')
 
-@push('styles')
+<?php $__env->startSection('title', 'Takımı Düzenle'); ?>
+
+<?php $__env->startPush('styles'); ?>
     <style>
         /* Arka plan animasyonu */
         #app>main.py-4 {
@@ -233,9 +233,9 @@
             }
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-8">
@@ -248,26 +248,27 @@
                             <div>
                                 Takımı Düzenle
                                 <div class="team-name-badge">
-                                    <i class="fas fa-layer-group me-2"></i>{{ $team->name }}
+                                    <i class="fas fa-layer-group me-2"></i><?php echo e($team->name); ?>
+
                                 </div>
                             </div>
                         </h4>
                     </div>
                     <div class="card-body p-4 p-md-5">
 
-                        @if ($errors->any())
+                        <?php if($errors->any()): ?>
                             <div class="alert alert-edit alert-danger-edit">
                                 <ul class="mb-0">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
+                                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <li><?php echo e($error); ?></li>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </ul>
                             </div>
-                        @endif
+                        <?php endif; ?>
 
-                        <form method="POST" action="{{ route('teams.update', $team->id) }}">
-                            @csrf
-                            @method('PUT')
+                        <form method="POST" action="<?php echo e(route('teams.update', $team->id)); ?>">
+                            <?php echo csrf_field(); ?>
+                            <?php echo method_field('PUT'); ?>
 
                             <div class="mb-4">
                                 <label for="name" class="form-label form-label-edit">
@@ -276,8 +277,15 @@
                                     <span style="color: #f56565;">*</span>
                                 </label>
                                 <input type="text"
-                                    class="form-control form-control-edit @error('name') is-invalid @enderror"
-                                    id="name" name="name" value="{{ old('name', $team->name) }}"
+                                    class="form-control form-control-edit <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                    id="name" name="name" value="<?php echo e(old('name', $team->name)); ?>"
                                     placeholder="Örn: Proje Alpha Takımı" required>
                             </div>
 
@@ -288,26 +296,41 @@
                                     <span style="color: #f56565;">*</span>
                                 </label>
 
-                                {{-- KRİTİK ALAN: KAYDIRILABİLİR CHECKBOX LİSTESİ --}}
-                                <div class="checkbox-list-container @error('members') is-invalid @enderror">
+                                
+                                <div class="checkbox-list-container <?php $__errorArgs = ['members'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>">
 
-                                    {{-- Validasyon hatası gösterimi --}}
-                                    @error('members')
+                                    
+                                    <?php $__errorArgs = ['members'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
                                         <div class="text-danger small mb-2">Takıma en az bir üye seçmelisiniz.</div>
-                                    @enderror
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
 
-                                    {{-- Checkbox'ları sarmalayan Fieldset --}}
+                                    
                                     <fieldset class="p-0 border-0">
-                                        @foreach ($users as $user)
+                                        <?php $__currentLoopData = $users; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                             <div class="form-check py-1">
                                                 <input class="form-check-input" type="checkbox" name="members[]"
-                                                    value="{{ $user->id }}" id="user_{{ $user->id }}"
-                                                    {{ in_array($user->id, old('members', [])) ? 'checked' : '' }}>
-                                                <label class="form-check-label" for="user_{{ $user->id }}">
-                                                    {{ $user->name }}
+                                                    value="<?php echo e($user->id); ?>" id="user_<?php echo e($user->id); ?>"
+                                                    <?php echo e(in_array($user->id, old('members', [])) ? 'checked' : ''); ?>>
+                                                <label class="form-check-label" for="user_<?php echo e($user->id); ?>">
+                                                    <?php echo e($user->name); ?>
+
                                                 </label>
                                             </div>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </fieldset>
                                 </div>
                                 <div class="form-text form-text-modern">
@@ -318,7 +341,7 @@
 
 
                             <div class="d-flex flex-column flex-md-row justify-content-end gap-2 mt-5">
-                                <a href="{{ route('teams.index') }}" class="btn btn-cancel-edit">
+                                <a href="<?php echo e(route('teams.index')); ?>" class="btn btn-cancel-edit">
                                     <i class="fas fa-times me-2"></i>İptal
                                 </a>
                                 <button type="submit" class="btn btn-update-gradient">
@@ -331,7 +354,9 @@
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@push('scripts')
-@endpush
+<?php $__env->startPush('scripts'); ?>
+<?php $__env->stopPush(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp\htdocs\koksanissurecleriportali\resources\views/teams/edit.blade.php ENDPATH**/ ?>

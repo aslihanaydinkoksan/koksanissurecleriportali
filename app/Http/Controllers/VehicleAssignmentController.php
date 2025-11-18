@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class VehicleAssignmentController extends Controller
 {
@@ -229,11 +230,22 @@ class VehicleAssignmentController extends Controller
         // Kullanıcının üye olduğu takımların ID'leri
         $teamIds = $user->teams()->pluck('teams.id');
 
-        $assignments = VehicleAssignment::with(['vehicle', 'createdBy', 'responsible', 'responsible.users'])
+        $assignments = VehicleAssignment::with([
+            'vehicle',
+            'createdBy',
+            // Hata veren kısmı MorphTo ile koşullu yüklüyoruz:
+            'responsible' => function (MorphTo $morphTo) {
+                $morphTo->morphWith([
+                        // Eğer responsible bir Team ise, Team'in 'users' ilişkisini yükle
+                    Team::class => ['users'],
+                        // Eğer responsible bir User ise, ek ilişki yükleme
+                    User::class => [],
+                ]);
+            }
+        ])
             ->where(function ($query) use ($user, $teamIds) {
                 // 1. Kural: Kullanıcıya bireysel atanmış görevler
                 $query->where(function ($q) use ($user) {
-                    // Not: user::class yerine 'user' veya 'App\Models\User' olmalı. Modelinizde tam sınıf yolu kullanılıyordu:
                     $q->where('responsible_type', User::class)
                         ->where('responsible_id', $user->id);
                 })
@@ -391,11 +403,48 @@ class VehicleAssignmentController extends Controller
             'status' => 'required|in:pending,in_progress,completed,cancelled',
         ]);
 
-        $assignment->status = $validatedData['status'];
+        // 1. ESKİ DURUMU KAYDET
+        $oldStatus = $assignment->status;
+        $newStatus = $validatedData['status'];
 
-        // Tamamlandıysa bitiş zamanını güncelle
-        if ($validatedData['status'] === 'completed' && !$assignment->end_time) {
-            $assignment->end_time = now();
+        $assignment->status = $newStatus;
+
+        // 2. TAMAMLANDIYSA İŞLEM YAP
+        if ($newStatus === 'completed') {
+            // Tamamlama zamanını ayarla
+            if (!$assignment->end_time) {
+                $assignment->end_time = now();
+            }
+
+            // Görev tamamlandığı için bildirimleri SİL (Rozeti kaldır)
+            $this->deleteAssignmentNotifications($assignment);
+
+            // 3. TAMAMLANMIŞTAN GERİ DÖNÜYORSA İŞLEM YAP
+        } elseif ($oldStatus === 'completed' && in_array($newStatus, ['pending', 'in_progress'])) {
+            // Tamamlanmış bir görev tekrar aktif bir duruma alındı.
+            // Bildirimi tekrar OLUŞTUR ve alıcılara gönder (Rozeti geri getir)
+
+            // Sorumluları bul
+            $recipients = collect();
+            if ($assignment->responsible_type === User::class && $assignment->responsible) {
+                $recipients->push($assignment->responsible);
+            } elseif ($assignment->responsible_type === Team::class && $assignment->responsible) {
+                $assignment->responsible->loadMissing('users');
+                $recipients = $recipients->merge($assignment->responsible->users);
+            }
+
+            // Bildirimi gönder (Notification Created sınıfınız kullanılacak)
+            foreach ($recipients->unique() as $recipient) {
+                $recipient->notify(new VehicleAssignmentCreated($assignment));
+            }
+
+            // Bitiş zamanını temizle (istenirse)
+            $assignment->end_time = null;
+        }
+
+        // Not: Görev 'cancelled' (iptal) edilirse de bildirimlerin silinmesi mantıklı olabilir.
+        if ($newStatus === 'cancelled') {
+            $this->deleteAssignmentNotifications($assignment);
         }
 
         $assignment->save();
@@ -409,5 +458,32 @@ class VehicleAssignmentController extends Controller
         }
 
         return back()->with('success', 'Görev durumu güncellendi.');
+    }
+    private function deleteAssignmentNotifications(VehicleAssignment $assignment): void
+    {
+        // Bildirimlerin alıcıları (Sorumlu Kullanıcı ve Takım Üyeleri)
+        $recipients = collect();
+
+        // 1. Bireysel Sorumluluk
+        if ($assignment->responsible_type === User::class) {
+            $recipients->push($assignment->responsible);
+        }
+        // 2. Takım Sorumluluğu
+        elseif ($assignment->responsible_type === Team::class && $assignment->responsible) {
+            // Team üyelerini yükle
+            $assignment->responsible->loadMissing('users');
+            $recipients = $recipients->merge($assignment->responsible->users);
+        }
+
+        // Alıcıları döngüye al
+        foreach ($recipients->unique() as $recipient) {
+            // Kullanıcının, bu assignment_id'yi içeren okunmamış bildirimlerini sil
+            $recipient->unreadNotifications()
+                ->where('data', 'like', '%"assignment_id":' . $assignment->id . '%') // Bildirim verisi içinde assignment_id'yi ara
+                ->markAsRead();
+
+            // Not: Eğer bildirimler okunduktan sonra da kalıyorsa, 'notifications()' yerine 
+            // 'notifications()' kullanıp tüm bildirimleri silmeyi düşünebilirsiniz.
+        }
     }
 }
