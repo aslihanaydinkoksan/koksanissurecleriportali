@@ -98,6 +98,12 @@ class HomeController extends Controller
 
         $departmentSlug = $user->department ? trim($user->department->slug) : null;
         $userRole = $user->role;
+        $isTvUser = ($user->email === 'tv@koksan.com');
+
+        //ekrandan takip etmek icin kullanici
+        if ($isTvUser) {
+            $departmentSlug = null;
+        }
 
         $welcomeTitle = "Hoş Geldiniz";
         $todayItems = collect();
@@ -110,7 +116,7 @@ class HomeController extends Controller
             list($welcomeTitle, $chartTitle, $todayItems, $chartData) = $this->getServiceWelcomeData();
         } elseif ($departmentSlug === 'lojistik') {
             list($welcomeTitle, $chartTitle, $todayItems, $chartData) = $this->getLogisticsWelcomeData();
-        } elseif ($userRole == 'admin' || (empty($departmentSlug) && $userRole == 'yönetici')) {
+        } elseif ($userRole == 'admin' || (empty($departmentSlug) && $userRole == 'yönetici') || $isTvUser) {
             $welcomeTitle = "Genel Bakış";
             $chartTitle = "Şirket Geneli İş Akışı (Toplam Kayıt)";
 
@@ -183,8 +189,21 @@ class HomeController extends Controller
     public function showStatistics(Request $request)
     {
         $user = Auth::user();
-        $departmentSlug = $user->department ? trim($user->department->slug) : null;
-        $departmentName = $user->department?->name ?? 'Genel';
+        $isTvUser = ($user->email === 'tv@koksan.com');
+        $isSuperUser = $user->role === 'admin' || $user->role === 'yönetici' || $isTvUser;
+        if ($isSuperUser) {
+            $departmentSlug = $request->input('target_dept', 'genel'); // Varsayılan: Genel
+        } else {
+            $departmentSlug = $user->department ? trim($user->department->slug) : 'genel';
+        }
+
+        if ($departmentSlug === 'genel') {
+            $departmentName = 'Genel Bakış';
+        } else {
+            // Seçilen slug'a ait departman ismini bulalım (Görsel açıdan düzgün görünmesi için)
+            $targetDeptObj = \App\Models\Department::where('slug', $departmentSlug)->first();
+            $departmentName = $targetDeptObj ? $targetDeptObj->name : ucfirst($departmentSlug);
+        }
         $pageTitle = $departmentName . " İstatistikleri";
 
 
@@ -213,17 +232,59 @@ class HomeController extends Controller
                 $statsData = $this->getHizmetStatsData($startDate, $endDate)->toArray();
                 break;
             default:
-                $statsData = (new StatisticsData(chartData: []))->toArray();
+                $pageTitle = "Genel Bakış İstatistikleri"; // Başlığı da netleştirelim
+                $statsData = $this->getGenelBakisData($startDate, $endDate)->toArray();
                 break;
+        }
+        $allDepartments = collect();
+        if ($isSuperUser) {
+            $allDepartments = Department::orderBy('name')->get();
         }
         return view('statistics.index', array_merge(
             [
                 'pageTitle' => $pageTitle,
                 'departmentSlug' => $departmentSlug,
+                'departmentName' => $departmentName,
                 'filters' => $filters,
+                'isSuperUser' => $isSuperUser,
+                'allDepartments' => $allDepartments,
+                'isTvUser' => $isTvUser // View'da stil ayarı için
             ],
             $statsData
         ));
+    }
+    /**
+     * Genel bakış için özet istatistikler
+     */
+    private function getGenelBakisData(Carbon $startDate, Carbon $endDate): StatisticsData
+    {
+        // Tüm departmanların özet verilerini topla
+        $lojistikCount = \App\Models\Shipment::whereBetween('created_at', [$startDate, $endDate])->count();
+        $uretimCount = \App\Models\ProductionPlan::whereBetween('week_start_date', [$startDate, $endDate])->count();
+        $hizmetEventCount = \App\Models\Event::whereBetween('start_datetime', [$startDate, $endDate])->count();
+        $hizmetTravelCount = \App\Models\Travel::whereBetween('start_date', [$startDate, $endDate])->count();
+
+        $chartData = [
+            'departmentSummary' => [
+                'title' => 'Departman Aktivite Özeti',
+                'labels' => ['Lojistik', 'Üretim', 'İdari İşler'],
+                'data' => [
+                    $lojistikCount,
+                    $uretimCount,
+                    $hizmetEventCount + $hizmetTravelCount
+                ]
+            ]
+        ];
+
+        return new StatisticsData(
+            chartData: $chartData,
+            shipmentsForFiltering: [],
+            productionPlansForFiltering: [],
+            eventsForFiltering: [],
+            assignmentsForFiltering: [],
+            vehiclesForFiltering: [],
+            monthlyLabels: []
+        );
     }
     private function getLojistikIndexData($user)
     {

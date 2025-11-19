@@ -371,13 +371,23 @@
 
                                                     <?php endswitch; ?>
                                                 </td>
-                                                
                                                 <td class="text-end pe-3">
+                                                    <?php
+                                                        $isPendingOrInProgress = in_array($assignment->status, [
+                                                            'pending',
+                                                            'in_progress',
+                                                        ]);
+                                                    ?>
                                                     <a href="<?php echo e(route('service.assignments.show', $assignment)); ?>"
-                                                        class="btn btn-sm btn-primary" title="Detay">
+                                                        class="btn btn-sm btn-primary" title="Detay">Görev Detayı
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    
+                                                    <?php if($isPendingOrInProgress): ?>
+                                                        <a href="<?php echo e(route('service.assignments.edit', $assignment)); ?>"
+                                                            class="btn btn-sm btn-primary" title="Görevi Yönet">
+                                                            <i class="fas fa-check-circle me-1"></i> Görevi Yönet / Tamamla
+                                                        </a>
+                                                    <?php endif; ?>
                                                 </td>
                                             </tr>
                                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -401,4 +411,4 @@
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp\htdocs\koksanissurecleriportali\resources\views/service/assignments/my_assignments.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/service/assignments/my_assignments.blade.php ENDPATH**/ ?>

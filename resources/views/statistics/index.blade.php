@@ -1,350 +1,809 @@
 @extends('layouts.app')
 
-@section('title', $pageTitle) {{-- Dinamik Başlık --}}
+@section('title', $pageTitle)
 
 <style>
-    /* ... (Mevcut CSS stilleriniz aynı kalır) ... */
+    /* Modern Gradient Background */
     #app>main.py-4 {
         padding: 2.5rem 0 !important;
         min-height: calc(100vh - 72px);
-        background: linear-gradient(-45deg, #dbe4ff, #fde2ff, #d9fcf7, #fff0d9);
-        background-size: 400% 400%;
-        animation: gradientWave 18s ease infinite;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        position: relative;
+        overflow: hidden;
     }
 
-    @keyframes gradientWave {
-        0% {
-            background-position: 0% 50%;
-        }
-
-        50% {
-            background-position: 100% 50%;
-        }
-
-        100% {
-            background-position: 0% 50%;
-        }
+    #app>main.py-4::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+            radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+        pointer-events: none;
     }
 
-    .create-shipment-card {
-        border-radius: 1rem;
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    .container-fluid {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Modern Card Styling */
+    .modern-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
         border: 1px solid rgba(255, 255, 255, 0.3);
-        background-color: rgba(255, 255, 255, 0.75);
-        backdrop-filter: blur(5px);
-        -webkit-backdrop-filter: blur(5px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
     }
 
-    .create-shipment-card .card-header,
-    .create-shipment-card .form-label,
-    .create-shipment-card .form-check-label,
-    .create-shipment-card .card-body {
-        color: #000;
+    .modern-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Page Header */
+    .page-header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0;
+    }
+
+    /* Admin Filter Panel */
+    .admin-filter-panel {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 2px solid rgba(102, 126, 234, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .filter-section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .filter-section-title i {
+        font-size: 1.75rem;
+    }
+
+    /* Modern Form Controls */
+    .modern-input,
+    .modern-select {
+        border: 2px solid rgba(102, 126, 234, 0.2);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
         font-weight: 500;
+        transition: all 0.3s ease;
+        background: white;
     }
 
-    .create-shipment-card .card-header {
-        font-weight: bold;
-        background-color: transparent;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    .modern-input:focus,
+    .modern-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        outline: none;
     }
 
-    .create-shipment-card .form-control,
-    .create-shipment-card .form-select {
-        border-radius: 0.5rem;
-        background-color: rgba(255, 255, 255, 1);
-        border: 1px solid #ced4da;
+    .modern-label {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
+
+    /* Modern Buttons */
+    .btn-modern {
+        border-radius: 12px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border: none;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.875rem;
+    }
+
+    .btn-modern-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-modern-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        color: white;
+    }
+
+    .btn-modern-secondary {
+        background: white;
+        color: #667eea;
+        border: 2px solid #667eea;
+    }
+
+    .btn-modern-secondary:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Filter Cards */
+    .filter-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    .filter-card:hover {
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Department Badge */
+    .dept-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    /* Chart Container */
+    .chart-container {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        height: 100%;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .chart-header {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f7fafc;
+    }
+
+    /* Quick Stats Cards */
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 16px;
+        padding: 1.5rem;
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+    }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0.5rem 0;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Section Divider */
+    .section-divider {
+        margin: 3rem 0;
+        border: none;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.3), transparent);
+    }
+
+    /* Loading State */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(5px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .loading-overlay.active {
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(102, 126, 234, 0.2);
+        border-top-color: #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Alert Styling */
+    .modern-alert {
+        border-radius: 16px;
+        border: none;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .modern-alert-info {
+        background: linear-gradient(135deg, rgba(52, 211, 153, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+        border-left: 4px solid #10b981;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .page-title {
+            font-size: 1.5rem;
+        }
+
+        .admin-filter-panel {
+            padding: 1.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+        }
+    }
+
+    /* TV Mode Adjustments */
+    @if (isset($isTvUser) && $isTvUser)
+        body {
+            cursor: auto !important;
+        }
+
+        a {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+        }
+    @endif
 </style>
 
 @section('content')
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
     <div class="container-fluid">
-
-        {{-- JS'nin verileri okuması için gizli alanlar --}}
-        <div id="stats-data-container" style="display: none;" data-chart-data='@json($chartData ?? [])'
-            data-department-slug="{{ $departmentSlug ?? '' }}" {{-- Departmana özel JS verilerini ekliyoruz --}}
-            @if ($departmentSlug === 'lojistik') data-shipments='@json($shipmentsForFiltering ?? [])'
-             
-             @elseif ($departmentSlug === 'uretim')
-                data-production-plans='@json($productionPlansForFiltering ?? [])'
-             
-             @elseif ($departmentSlug === 'hizmet')
-                data-events='@json($eventsForFiltering ?? [])'
-                data-assignments='@json($assignmentsForFiltering ?? [])'
-                data-vehicles='@json($vehiclesForFiltering ?? [])'
-                data-monthly-labels='@json($monthlyLabels ?? [])' {{-- Hizmet aylık grafik etiketleri --}} @endif>
-        </div>
-
-        {{-- Sayfa Başlığı ve Geri Dön Butonu --}}
-        <div class="row mb-3 align-items-center">
-            <div class="col-md-6">
-                <h3 class="mb-0" style="color: #1e3a5f; text-shadow: 0 1px 3px rgba(0,0,0,0.3);">
-                    {{ $pageTitle }}
-                </h3>
-            </div>
-            <div class="col-md-6 text-md-end">
-                <a href="{{ route('home') }}" class="btn btn-link w-40"
-                    style="border-color: #1a2332; font-weight: bold; color:#1e3a5f">&larr; Takvime Geri Dön</a>
+        {{-- Page Header --}}
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1 class="page-title">
+                        <i class="fa-solid fa-chart-line me-2"></i>
+                        {{ $pageTitle }}
+                    </h1>
+                    @if ($departmentSlug !== 'genel')
+                        <div class="mt-2">
+                            <span class="dept-badge">
+                                <i class="fa-solid fa-building"></i>
+                                {{ $departmentName ?? $pageTitle }}
+                            </span>
+                        </div>
+                    @endif
+                </div>
+                <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                    <a href="{{ route('home') }}" class="btn btn-modern btn-modern-secondary">
+                        <i class="fa-solid fa-arrow-left me-2"></i> Takvime Dön
+                    </a>
+                </div>
             </div>
         </div>
 
-        {{-- ================= FİLTRELEME BÖLÜMÜ (BİRLEŞTİRİLMİŞ) ================= --}}
-        <div class="card create-shipment-card mb-4">
-            <div class="card-header">📊 Grafik Filtreleri</div>
-            <div class="card-body">
+        {{-- ================================================================================= --}}
+        {{-- SENARYO A: YÖNETİCİ (SUPER USER) İÇİN FİLTRE PANELİ --}}
+        {{-- ================================================================================= --}}
+        @if (isset($isSuperUser) && $isSuperUser)
+            <div class="admin-filter-panel">
+                <div class="filter-section-title">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-sliders" style="color: #667eea;"></i>
+                        <span>Yönetici Kontrol Paneli</span>
+                    </div>
+                    <small class="ms-auto" style="font-size: 0.75rem; font-weight: normal; color: #718096;">
+                        <i class="fa-solid fa-bolt text-warning me-1"></i> Anlık Güncellenir
+                    </small>
+                </div>
 
-                {{-- BÖLÜM 1: Ana Tarih Filtresi (Sunucu Taraflı - Sayfayı Yeniler) --}}
-                <form method="GET" action="{{ route('statistics.index') }}">
-                    <h6 class="mb-3">Ana Tarih Aralığı </h6>
+                <form method="GET" action="{{ route('statistics.index') }}" id="adminFilterForm">
                     <div class="row g-3 align-items-end">
-                        <div class="col-md-4">
-                            <label for="date_from" class="form-label">Başlangıç Tarihi:</label>
-                            <input type="date" id="date_from" name="date_from" class="form-control"
-                                value="{{ $filters['date_from'] ?? '' }}">
+                        {{-- 1. Departman Seçimi --}}
+                        <div class="col-md-3">
+                            <label class="modern-label">
+                                <i class="fa-solid fa-building me-2"></i> Departman
+                            </label>
+                            <select name="target_dept" id="deptSelect" class="form-select modern-select">
+                                <option value="genel" {{ $departmentSlug == 'genel' ? 'selected' : '' }}>
+                                    📊 Genel Bakış
+                                </option>
+                                @foreach ($allDepartments as $dept)
+                                    <option value="{{ $dept->slug }}"
+                                        {{ $departmentSlug == $dept->slug ? 'selected' : '' }}>
+                                        {{ $dept->name }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
-                        <div class="col-md-4">
-                            <label for="date_to" class="form-label">Bitiş Tarihi:</label>
-                            <input type="date" id="date_to" name="date_to" class="form-control"
-                                value="{{ $filters['date_to'] ?? '' }}">
+
+                        {{-- 2. Başlangıç Tarihi --}}
+                        <div class="col-md-3">
+                            <label class="modern-label">
+                                <i class="fa-solid fa-calendar-day me-2"></i> Başlangıç
+                            </label>
+                            <input type="date" name="date_from" id="adminDateFrom" class="form-control modern-input"
+                                value="{{ $filters['date_from'] }}">
                         </div>
-                        <div class="col-md-4 d-flex">
-                            <button type="submit" class="btn btn-primary w-50 me-2"
-                                style="background-color: #667EEA; border: none;">
-                                <i class="fa-solid fa-filter me-1"></i> Filtrele
-                            </button>
-                            <a href="{{ route('statistics.index') }}" class="btn btn-outline-secondary w-50">
-                                Temizle
+
+                        {{-- 3. Bitiş Tarihi --}}
+                        <div class="col-md-3">
+                            <label class="modern-label">
+                                <i class="fa-solid fa-calendar-check me-2"></i> Bitiş
+                            </label>
+                            <input type="date" name="date_to" id="adminDateTo" class="form-control modern-input"
+                                value="{{ $filters['date_to'] }}">
+                        </div>
+
+                        {{-- 4. İşlem Butonları (Sıfırla vb.) --}}
+                        <div class="col-md-3">
+                            <a href="{{ route('statistics.index', ['target_dept' => 'genel']) }}"
+                                class="btn btn-modern btn-modern-secondary w-100 d-flex align-items-center justify-content-center gap-2">
+                                <i class="fa-solid fa-rotate-right"></i> Filtreleri Sıfırla
                             </a>
                         </div>
                     </div>
                 </form>
-
-                {{-- BÖLÜM 2: Departmana Özel Hızlı Filtreler (JS Taraflı) --}}
-                @if ($departmentSlug === 'lojistik')
-                    <hr class="my-4">
-                    <h6 class="mb-3">Lojistik Hızlı Filtreleri </h6>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label for="shipmentTypeFilter" class="form-label">Sevkiyat Türü:</label>
-                            <select id="shipmentTypeFilter" class="form-select">
-                                <option value="all">Tümü (İthalat/İhracat)</option>
-                                {{-- JS tarafından doldurulacak --}}
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="vehicleTypeFilter" class="form-label">Araç Tipi:</label>
-                            <select id="vehicleTypeFilter" class="form-select">
-                                <option value="all">Tüm Araç Tipleri</option>
-                                {{-- JS tarafından doldurulacak --}}
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="cargoContentFilter" class="form-label">Kargo İçeriği:</label>
-                            <select id="cargoContentFilter" class="form-select">
-                                <option value="all">Tüm Kargolar</option>
-                                {{-- JS tarafından doldurulacak --}}
-                            </select>
-                        </div>
-                    </div>
-                @elseif ($departmentSlug === 'uretim')
-                    <hr class="my-4">
-                    <h6 class="mb-3">Üretim Hızlı Filtreleri (Anlık Günceller)</h6>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="machineFilter" class="form-label">Makine:</label>
-                            <select id="machineFilter" class="form-select">
-                                <option value="all">Tüm Makineler</option>
-                                {{-- JS tarafından doldurulacak --}}
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="productFilter" class="form-label">Ürün:</label>
-                            <select id="productFilter" class="form-select">
-                                <option value="all">Tüm Ürünler</option>
-                                {{-- JS tarafından doldurulacak --}}
-                            </select>
-                        </div>
-                    </div>
-                @elseif ($departmentSlug === 'hizmet')
-                    <hr class="my-4">
-                    <h6 class="mb-3">İdari İşler Hızlı Filtreleri (Anlık Günceller)</h6>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="eventTypeFilter" class="form-label">Etkinlik Tipi:</label>
-                            <select id="eventTypeFilter" class="form-select">
-                                <option value="all">Tüm Etkinlik Tipleri</option>
-                                {{-- JS tarafından doldurulacak --}}
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="vehicleFilter" class="form-label">Araç:</label>
-                            <select id="vehicleFilter" class="form-select">
-                                <option value="all">Tüm Araçlar</option>
-                                {{-- JS tarafından doldurulacak --}}
-                            </select>
-                        </div>
-                    </div>
-                @endif
-
             </div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const form = document.getElementById('adminFilterForm');
+                    const deptSelect = document.getElementById('deptSelect');
+                    const dateFrom = document.getElementById('adminDateFrom');
+                    const dateTo = document.getElementById('adminDateTo');
+                    const loadingOverlay = document.getElementById('loadingOverlay');
+
+                    function submitWithLoading() {
+                        loadingOverlay.classList.add('active');
+                        form.submit();
+                    }
+
+                    deptSelect?.addEventListener('change', submitWithLoading);
+
+                    dateFrom?.addEventListener('change', function() {
+                        if (dateTo.value) submitWithLoading();
+                    });
+
+                    dateTo?.addEventListener('change', function() {
+                        if (dateFrom.value) submitWithLoading();
+                    });
+                });
+            </script>
+        @endif
+
+
+        {{-- Hidden Data Container --}}
+        <div id="stats-data-container" style="display: none;" data-chart-data='@json($chartData ?? [])'
+            data-department-slug="{{ $departmentSlug ?? '' }}"
+            @if ($departmentSlug === 'lojistik') data-shipments='@json($shipmentsForFiltering ?? [])'
+         @elseif ($departmentSlug === 'uretim')
+             data-production-plans='@json($productionPlansForFiltering ?? [])'
+         @elseif ($departmentSlug === 'hizmet')
+             data-events='@json($eventsForFiltering ?? [])'
+             data-assignments='@json($assignmentsForFiltering ?? [])'
+             data-vehicles='@json($vehiclesForFiltering ?? [])'
+             data-monthly-labels='@json($monthlyLabels ?? [])' @endif>
         </div>
-        {{-- ================= FİLTRELEME BÖLÜMÜ SONU ================= --}}
 
 
-        {{-- ================= GRAFİK ALANLARI (DEPARTMANA ÖZEL) ================= --}}
+        {{-- ================================================================================= --}}
+        {{-- SENARYO B: STANDART KULLANICI İÇİN FİLTRE PANELİ --}}
+        {{-- (Yönetici değilse burayı gösterir) --}}
+        {{-- ================================================================================= --}}
+        @if (!isset($isSuperUser) || !$isSuperUser)
+            <div class="modern-card mb-4">
+                <div class="card-body p-4">
+                    <div class="filter-section-title mb-4 d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="fa-solid fa-filter"></i> Tarih Filtreleri
+                        </div>
+                        <small class="text-muted" style="font-size: 0.75rem; font-weight: normal;">
+                            <i class="fa-solid fa-bolt text-warning me-1"></i> Otomatik güncellenir
+                        </small>
+                    </div>
 
-        {{-- Lojistik Bölümü --}}
-        @if ($departmentSlug === 'lojistik')
-            <div class="row mb-4">
-                <div class="col-lg-6">
-                    <div class="card create-shipment-card">
-                        <div class="card-header" id="vehicle-chart-title">Araç Tipi Kullanımı (Hızlı Filtre)</div>
-                        <div class="card-body">
-                            <div id="vehicle-type-chart" style="height: 350px;"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="card create-shipment-card">
-                        <div class="card-header" id="cargo-chart-title">Kargo İçeriği Dağılımı (Hızlı Filtre)</div>
-                        <div class="card-body">
-                            <div id="cargo-content-chart" style="height: 350px;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <hr class="my-4" style="border-color: rgba(255,255,255,0.5);">
-            <h4 class="mb-3" style="color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.3);">
-                Genel İstatistikler (Tarih Aralığı: {{ $filters['date_from'] }} - {{ $filters['date_to'] }})
-            </h4>
-            <div class="row">
-                <div class="col-lg-8">
-                    <div class="card create-shipment-card">
-                        <div class="card-body">
-                            <div id="monthly-chart-lojistik" style="height: 350px;"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="card create-shipment-card">
-                        <div class="card-body">
-                            <div id="pie-chart-lojistik" style="height: 350px;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row mt-4">
-                <div class="col-lg-8">
-                    <div class="card create-shipment-card">
-                        <div class="card-body">
-                            <div id="hourly-chart-lojistik" style="height: 300px;"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="card create-shipment-card">
-                        <div class="card-body">
-                            <div id="daily-chart-lojistik" style="height: 300px;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="card create-shipment-card">
-                        <div class="card-body">
-                            <div id="yearly-chart-lojistik" style="height: 300px;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                    {{-- Form ID eklendi: standardFilterForm --}}
+                    <form method="GET" action="{{ route('statistics.index') }}" id="standardFilterForm">
+                        {{-- Standart kullanıcı kendi departmanında kalmalı --}}
+                        @if (request()->has('target_dept'))
+                            <input type="hidden" name="target_dept" value="{{ $departmentSlug }}">
+                        @endif
 
-            {{-- Üretim Bölümü --}}
-        @elseif($departmentSlug === 'uretim')
-            <div class="row mb-4">
-                <div class="col-lg-6">
-                    <div class="card create-shipment-card">
-                        <div class="card-header" id="machine-chart-title">Makine Kullanım Sayısı (Hızlı Filtre)</div>
-                        <div class="card-body">
-                            <div id="machine-chart-uretim" style="height: 350px;"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="card create-shipment-card">
-                        <div class="card-header" id="product-chart-title">Ürün Miktar Dağılımı (Hızlı Filtre)</div>
-                        <div class="card-body">
-                            <div id="product-chart-uretim" style="height: 350px;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <hr class="my-4" style="border-color: rgba(255,255,255,0.5);">
-            <h4 class="mb-3" style="color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.3);">
-                Genel İstatistikler (Tarih Aralığı: {{ $filters['date_from'] }} - {{ $filters['date_to'] }})
-            </h4>
-            <div class="row">
-                <div class="col-lg-6">
-                    <div class="card create-shipment-card">
-                        <div class="card-body">
-                            <div id="weekly-prod-chart" style="height: 350px;"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="card create-shipment-card">
-                        <div class="card-body">
-                            <div id="monthly-prod-chart" style="height: 350px;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                        <div class="row g-3 align-items-end">
+                            {{-- Başlangıç Tarihi --}}
+                            <div class="col-md-4">
+                                <label class="modern-label">Başlangıç Tarihi</label>
+                                {{-- ID eklendi: std_date_from --}}
+                                <input type="date" name="date_from" id="std_date_from" class="form-control modern-input"
+                                    value="{{ $filters['date_from'] ?? '' }}">
+                            </div>
 
-            {{-- Hizmet Bölümü --}}
-        @elseif($departmentSlug === 'hizmet')
-            <div class="row mb-4">
-                <div class="col-lg-6">
-                    <div class="card create-shipment-card">
-                        <div class="card-header" id="event-pie-chart-title">Etkinlik Tipi Dağılımı (Hızlı Filtre)</div>
-                        <div class="card-body">
-                            <div id="event-type-pie-chart" style="height: 350px;"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="card create-shipment-card">
-                        <div class="card-header" id="assignment-chart-title">Aylık Araç Atama Sayısı (Hızlı Filtre)</div>
-                        <div class="card-body">
-                            <div id="monthly-assign-chart" style="height: 350px;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                            {{-- Bitiş Tarihi --}}
+                            <div class="col-md-4">
+                                <label class="modern-label">Bitiş Tarihi</label>
+                                {{-- ID eklendi: std_date_to --}}
+                                <input type="date" name="date_to" id="std_date_to" class="form-control modern-input"
+                                    value="{{ $filters['date_to'] ?? '' }}">
+                            </div>
 
-            {{-- Hizmet departmanında genel istatistikler ve hızlı istatistikler aynı --}}
-
-            {{-- Diğer Durumlar --}}
-        @else
-            <div class="alert alert-info create-shipment-card">Bu departman için özel istatistikler henüz mevcut değil.
+                            {{-- Sadece Sıfırla Butonu Kaldı --}}
+                            <div class="col-md-4">
+                                <a href="{{ route('statistics.index') }}"
+                                    class="btn btn-modern btn-modern-secondary w-100 d-flex align-items-center justify-content-center">
+                                    <i class="fa-solid fa-rotate-right me-2"></i> Filtreleri Sıfırla
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
         @endif
-        {{-- ================= GRAFİK ALANLARI SONU ================= --}}
 
-    </div> {{-- container-fluid sonu --}}
+        {{-- ================================================================================= --}}
+        {{-- DEPARTMANA ÖZEL HIZLI FİLTRELER (HERKES GÖRÜR) --}}
+        {{-- ================================================================================= --}}
+        @if ($departmentSlug !== 'genel')
+            {{-- Hızlı filtreler sadece genel bakış dışındaki sayfalarda anlamlı --}}
+            <div class="modern-card mb-4">
+                <div class="card-body p-4">
+                    @if ($departmentSlug === 'lojistik')
+                        <h6 class="modern-label mb-3">
+                            <i class="fa-solid fa-truck-fast me-2"></i> Lojistik Hızlı Filtreleri (Anlık)
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="modern-label">Sevkiyat Türü</label>
+                                <select id="shipmentTypeFilter" class="form-select modern-select">
+                                    <option value="all">Tümü</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="modern-label">Araç Tipi</label>
+                                <select id="vehicleTypeFilter" class="form-select modern-select">
+                                    <option value="all">Tümü</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="modern-label">Kargo İçeriği</label>
+                                <select id="cargoContentFilter" class="form-select modern-select">
+                                    <option value="all">Tümü</option>
+                                </select>
+                            </div>
+                        </div>
+                    @elseif ($departmentSlug === 'uretim')
+                        <h6 class="modern-label mb-3">
+                            <i class="fa-solid fa-gears me-2"></i> Üretim Hızlı Filtreleri (Anlık)
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="modern-label">Makine</label>
+                                <select id="machineFilter" class="form-select modern-select">
+                                    <option value="all">Tüm Makineler</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="modern-label">Ürün</label>
+                                <select id="productFilter" class="form-select modern-select">
+                                    <option value="all">Tüm Ürünler</option>
+                                </select>
+                            </div>
+                        </div>
+                    @elseif ($departmentSlug === 'hizmet')
+                        <h6 class="modern-label mb-3">
+                            <i class="fa-solid fa-briefcase me-2"></i> İdari İşler Hızlı Filtreleri (Anlık)
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="modern-label">Etkinlik Tipi</label>
+                                <select id="eventTypeFilter" class="form-select modern-select">
+                                    <option value="all">Tümü</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="modern-label">Araç</label>
+                                <select id="vehicleFilter" class="form-select modern-select">
+                                    <option value="all">Tümü</option>
+                                </select>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
+
+        {{-- CHART SECTIONS --}}
+        @if ($departmentSlug === 'genel')
+            {{-- General Overview --}}
+            <div class="modern-alert modern-alert-info mb-4">
+                <div class="d-flex align-items-center">
+                    <i class="fa-solid fa-circle-info me-3" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <strong>Genel Bakış Modu</strong>
+                        <p class="mb-0 mt-1">Tüm departmanların özet istatistikleri görüntüleniyor. Detaylı analiz için
+                            yukarıdan departman seçin.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="chart-container">
+                        <div class="chart-header">📊 Departman Aktivite Özeti</div>
+                        <div id="department-summary-chart" style="height: 350px;"></div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="stat-card mb-3">
+                        <div class="stat-label">Toplam Aktivite</div>
+                        <div class="stat-value">
+                            {{ isset($chartData['departmentSummary']['data']) ? array_sum($chartData['departmentSummary']['data']) : 0 }}
+                        </div>
+                    </div>
+                    <div class="stat-card mb-3" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                        <div class="stat-label">Başlangıç</div>
+                        <div class="stat-value" style="font-size: 1.25rem;">{{ $filters['date_from'] }}</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                        <div class="stat-label">Bitiş</div>
+                        <div class="stat-value" style="font-size: 1.25rem;">{{ $filters['date_to'] }}</div>
+                    </div>
+                </div>
+            </div>
+        @elseif ($departmentSlug === 'lojistik')
+            {{-- Logistics Charts --}}
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <div class="chart-container">
+                        <div class="chart-header" id="vehicle-chart-title">🚛 Araç Tipi Kullanımı</div>
+                        <div id="vehicle-type-chart" style="height: 350px;"></div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="chart-container">
+                        <div class="chart-header" id="cargo-chart-title">📦 Kargo İçeriği Dağılımı</div>
+                        <div id="cargo-content-chart" style="height: 350px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <h4 class="mb-4" style="color: white; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                <i class="fa-solid fa-chart-column me-2"></i>
+                Detaylı İstatistikler ({{ $filters['date_from'] }} - {{ $filters['date_to'] }})
+            </h4>
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-8">
+                    <div class="chart-container">
+                        <div id="monthly-chart-lojistik" style="height: 350px;"></div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="chart-container">
+                        <div id="pie-chart-lojistik" style="height: 350px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-8">
+                    <div class="chart-container">
+                        <div id="hourly-chart-lojistik" style="height: 300px;"></div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="chart-container">
+                        <div id="daily-chart-lojistik" style="height: 300px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-12">
+                    <div class="chart-container">
+                        <div id="yearly-chart-lojistik" style="height: 300px;"></div>
+                    </div>
+                </div>
+            </div>
+        @elseif($departmentSlug === 'uretim')
+            {{-- Production Charts --}}
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <div class="chart-container">
+                        <div class="chart-header" id="machine-chart-title">⚙️ Makine Kullanımı</div>
+                        <div id="machine-chart-uretim" style="height: 350px;"></div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="chart-container">
+                        <div class="chart-header" id="product-chart-title">📊 Ürün Dağılımı</div>
+                        <div id="product-chart-uretim" style="height: 350px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <h4 class="mb-4" style="color: white; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                <i class="fa-solid fa-chart-column me-2"></i>
+                Detaylı İstatistikler ({{ $filters['date_from'] }} - {{ $filters['date_to'] }})
+            </h4>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="chart-container">
+                        <div id="weekly-prod-chart" style="height: 350px;"></div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="chart-container">
+                        <div id="monthly-prod-chart" style="height: 350px;"></div>
+                    </div>
+                </div>
+            </div>
+        @elseif($departmentSlug === 'hizmet')
+            {{-- Service Charts --}}
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="chart-container">
+                        <div class="chart-header" id="event-pie-chart-title">📅 Etkinlik Dağılımı</div>
+                        <div id="event-type-pie-chart" style="height: 350px;"></div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="chart-container">
+                        <div class="chart-header" id="assignment-chart-title">🚗 Aylık Araç Atama</div>
+                        <div id="monthly-assign-chart" style="height: 350px;"></div>
+                    </div>
+                </div>
+            </div>
+        @else
+            <div class="modern-alert modern-alert-info">
+                <div class="d-flex align-items-center">
+                    <i class="fa-solid fa-info-circle me-3" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <strong>Veri Bulunamadı</strong>
+                        <p class="mb-0 mt-1">Bu departman için henüz istatistik verisi bulunmamaktadır.</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+    </div>
 @endsection
 
 @section('page_scripts')
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // --- 1. GENEL AYARLAR VE VERİ OKUMA ---
-            const colorPalette = ['#A78BFA', '#60D9A0', '#FDB4C8', '#FFB84D', '#9DECF9', '#667EEA', '#764BA2'];
+            // --- 1. OTOMATİK FİLTRELEME MANTIĞI (HEM ADMİN HEM STANDART) ---
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            // Formları ve Inputları Tanımla
+            const forms = [{
+                    id: 'adminFilterForm',
+                    from: 'adminDateFrom',
+                    to: 'adminDateTo',
+                    select: 'deptSelect'
+                },
+                {
+                    id: 'standardFilterForm',
+                    from: 'std_date_from',
+                    to: 'std_date_to',
+                    select: null // Standart kullanıcıda departman seçimi yok
+                }
+            ];
+
+            // Fonksiyon: Yükleniyor ekranını aç ve formu gönder
+            function submitForm(formId) {
+                const form = document.getElementById(formId);
+                if (form) {
+                    if (loadingOverlay) loadingOverlay.classList.add('active');
+                    form.submit();
+                }
+            }
+
+            // Her bir form seti için dinleyicileri ekle
+            forms.forEach(item => {
+                const formEl = document.getElementById(item.id);
+                if (formEl) {
+                    const dateFromEl = document.getElementById(item.from);
+                    const dateToEl = document.getElementById(item.to);
+                    const selectEl = item.select ? document.getElementById(item.select) : null;
+
+                    // Departman değişirse (Varsa)
+                    if (selectEl) {
+                        selectEl.addEventListener('change', () => submitWithLoading(item.id));
+                    }
+
+                    // Başlangıç tarihi değişirse
+                    if (dateFromEl) {
+                        dateFromEl.addEventListener('change', function() {
+                            // Eğer bitiş tarihi de doluysa gönder, boşsa bekle
+                            if (dateToEl && dateToEl.value) {
+                                submitForm(item.id);
+                            }
+                        });
+                    }
+
+                    // Bitiş tarihi değişirse
+                    if (dateToEl) {
+                        dateToEl.addEventListener('change', function() {
+                            // Eğer başlangıç tarihi de doluysa gönder
+                            if (dateFromEl && dateFromEl.value) {
+                                submitForm(item.id);
+                            }
+                        });
+                    }
+                }
+            });
+            const colorPalette = ['#667EEA', '#764BA2', '#A78BFA', '#60D9A0', '#FDB4C8', '#FFB84D', '#9DECF9'];
             const statsContainer = document.getElementById('stats-data-container');
 
-            if (!statsContainer) {
-                console.error('stats-data-container bulunamadı!');
-                return;
-            }
+            if (!statsContainer) return;
 
             let chartData = {};
             let departmentSlug = '';
@@ -353,11 +812,11 @@
                 chartData = JSON.parse(statsContainer.dataset.chartData || '{}');
                 departmentSlug = statsContainer.dataset.departmentSlug || '';
             } catch (error) {
-                console.error('Chart data parse hatası:', error);
+                console.error('Chart data parse error:', error);
                 return;
             }
 
-            // --- 2. GENEL GRAFİK AYARLARI ---
+            // Common Chart Options
             const commonChartOptions = {
                 chart: {
                     height: 350,
@@ -387,6 +846,7 @@
                     enabled: false
                 }
             };
+
             const commonBarOptions = {
                 ...commonChartOptions,
                 chart: {
@@ -400,6 +860,7 @@
                     }
                 }
             };
+
             const commonAreaOptions = {
                 ...commonChartOptions,
                 chart: {
@@ -418,6 +879,7 @@
                     }
                 }
             };
+
             const commonPieOptions = {
                 ...commonChartOptions,
                 chart: {
@@ -430,24 +892,62 @@
                 }
             };
 
+            // === GENERAL OVERVIEW ===
+            if (departmentSlug === 'genel') {
+                if (chartData.departmentSummary) {
+                    new ApexCharts(document.querySelector("#department-summary-chart"), {
+                        chart: {
+                            type: 'bar',
+                            height: 350,
+                            toolbar: {
+                                show: false
+                            }
+                        },
+                        series: [{
+                            name: 'Aktivite Sayısı',
+                            data: chartData.departmentSummary.data || []
+                        }],
+                        xaxis: {
+                            categories: chartData.departmentSummary.labels || []
+                        },
+                        colors: colorPalette,
+                        plotOptions: {
+                            bar: {
+                                distributed: true,
+                                borderRadius: 8,
+                                columnWidth: '60%'
+                            }
+                        },
+                        dataLabels: {
+                            enabled: true,
+                            style: {
+                                fontSize: '14px',
+                                fontWeight: 'bold'
+                            }
+                        },
+                        title: {
+                            text: chartData.departmentSummary.title || 'Departman Özeti',
+                            align: 'left',
+                            style: {
+                                fontSize: '16px',
+                                fontWeight: 'bold',
+                                color: '#2d3748'
+                            }
+                        },
+                        legend: {
+                            show: false
+                        }
+                    }).render();
+                }
+            }
 
-            // --- 3. DEPARTMANA ÖZEL GRAFİK MANTIĞI ---
-
-            // --- LOJİSTİK BÖLÜMÜ ---
-            if (departmentSlug === 'lojistik') {
-                console.log('Lojistik grafikleri çiziliyor...');
-
-                // --- BÖLÜM 1: HIZLI FİLTRE GRAFİKLERİ (JS) ---
+            // === LOGISTICS ===
+            else if (departmentSlug === 'lojistik') {
                 const allShipmentsData = JSON.parse(statsContainer.dataset.shipments || '[]');
-
                 const shipmentTypeDropdown = document.getElementById('shipmentTypeFilter');
                 const vehicleTypeDropdown = document.getElementById('vehicleTypeFilter');
                 const cargoContentDropdown = document.getElementById('cargoContentFilter');
 
-                const vehicleChartTitle = document.getElementById('vehicle-chart-title');
-                const cargoChartTitle = document.getElementById('cargo-chart-title');
-
-                // Grafikleri Başlat
                 let vehicleChart = new ApexCharts(document.querySelector("#vehicle-type-chart"), {
                     ...commonBarOptions,
                     series: [{
@@ -459,7 +959,7 @@
                     },
                     title: {
                         ...commonBarOptions.title,
-                        text: 'Araç Tipi Kullanımı (Hızlı Filtre)'
+                        text: 'Araç Tipi Kullanımı'
                     }
                 });
                 vehicleChart.render();
@@ -475,12 +975,11 @@
                     },
                     title: {
                         ...commonBarOptions.title,
-                        text: 'Kargo İçeriği Dağılımı (Hızlı Filtre)'
+                        text: 'Kargo İçeriği Dağılımı'
                     }
                 });
                 cargoChart.render();
 
-                // Dropdown'ları Doldurma
                 function populateLojistikFilters() {
                     if (!allShipmentsData) return;
                     const types = new Set(allShipmentsData.map(s => s.shipment_type));
@@ -501,7 +1000,6 @@
                     });
                 }
 
-                // Grafikleri Güncelleme
                 function updateLojistikCharts() {
                     const selectedType = shipmentTypeDropdown.value;
                     const selectedVehicle = vehicleTypeDropdown.value;
@@ -509,23 +1007,19 @@
 
                     let filteredData = allShipmentsData;
 
-                    if (selectedType !== 'all') {
-                        filteredData = filteredData.filter(s => s.shipment_type === selectedType);
-                    }
-                    if (selectedVehicle !== 'all') {
-                        filteredData = filteredData.filter(s => s.vehicle === selectedVehicle);
-                    }
-                    if (selectedCargo !== 'all') {
-                        filteredData = filteredData.filter(s => s.cargo === selectedCargo);
-                    }
+                    if (selectedType !== 'all') filteredData = filteredData.filter(s => s.shipment_type ===
+                        selectedType);
+                    if (selectedVehicle !== 'all') filteredData = filteredData.filter(s => s.vehicle ===
+                        selectedVehicle);
+                    if (selectedCargo !== 'all') filteredData = filteredData.filter(s => s.cargo === selectedCargo);
 
                     const vehicleCounts = {},
                         cargoCounts = {};
                     filteredData.forEach(shipment => {
-                        if (shipment && shipment.vehicle) vehicleCounts[shipment.vehicle] = (vehicleCounts[
-                            shipment.vehicle] || 0) + 1;
-                        if (shipment && shipment.cargo) cargoCounts[shipment.cargo] = (cargoCounts[shipment
-                            .cargo] || 0) + 1;
+                        if (shipment?.vehicle) vehicleCounts[shipment.vehicle] = (vehicleCounts[shipment
+                            .vehicle] || 0) + 1;
+                        if (shipment?.cargo) cargoCounts[shipment.cargo] = (cargoCounts[shipment.cargo] ||
+                            0) + 1;
                     });
 
                     const sortedVehicles = Object.entries(vehicleCounts).sort((a, b) => b[1] - a[1]);
@@ -550,14 +1044,14 @@
                     }], true);
                 }
 
-                shipmentTypeDropdown.addEventListener('change', updateLojistikCharts);
-                vehicleTypeDropdown.addEventListener('change', updateLojistikCharts);
-                cargoContentDropdown.addEventListener('change', updateLojistikCharts);
+                shipmentTypeDropdown?.addEventListener('change', updateLojistikCharts);
+                vehicleTypeDropdown?.addEventListener('change', updateLojistikCharts);
+                cargoContentDropdown?.addEventListener('change', updateLojistikCharts);
 
                 populateLojistikFilters();
                 updateLojistikCharts();
 
-                // --- BÖLÜM 2: GENEL (SUNUCU TARAFLI FİLTRELENMİŞ) GRAFİKLER ---
+                // General Charts
                 if (chartData.monthly) new ApexCharts(document.querySelector("#monthly-chart-lojistik"), {
                     ...commonAreaOptions,
                     series: [{
@@ -572,6 +1066,7 @@
                         categories: chartData.monthly.labels || []
                     }
                 }).render();
+
                 if (chartData.pie) new ApexCharts(document.querySelector("#pie-chart-lojistik"), {
                     ...commonPieOptions,
                     series: chartData.pie.data || [],
@@ -581,6 +1076,7 @@
                         text: chartData.pie.title
                     }
                 }).render();
+
                 if (chartData.hourly) new ApexCharts(document.querySelector("#hourly-chart-lojistik"), {
                     ...commonBarOptions,
                     chart: {
@@ -600,6 +1096,7 @@
                         tickAmount: 12
                     }
                 }).render();
+
                 if (chartData.daily) new ApexCharts(document.querySelector("#daily-chart-lojistik"), {
                     ...commonBarOptions,
                     chart: {
@@ -618,6 +1115,7 @@
                         categories: chartData.daily.labels || []
                     }
                 }).render();
+
                 if (chartData.yearly) new ApexCharts(document.querySelector("#yearly-chart-lojistik"), {
                     ...commonBarOptions,
                     chart: {
@@ -643,16 +1141,11 @@
                         }
                     }
                 }).render();
-                console.log('Lojistik genel grafikleri tamamlandı');
             }
 
-            // --- ÜRETİM BÖLÜMÜ ---
+            // === PRODUCTION ===
             else if (departmentSlug === 'uretim') {
-                console.log('Üretim grafikleri çiziliyor...');
-
-                // --- BÖLÜM 1: HIZLI FİLTRE GRAFİKLERİ (JS) ---
                 const allPlansData = JSON.parse(statsContainer.dataset.productionPlans || '[]');
-
                 const machineDropdown = document.getElementById('machineFilter');
                 const productDropdown = document.getElementById('productFilter');
 
@@ -667,7 +1160,7 @@
                     },
                     title: {
                         ...commonBarOptions.title,
-                        text: 'Makine Kullanım Sayısı (Hızlı Filtre)'
+                        text: 'Makine Kullanım Sayısı'
                     }
                 });
                 machineChart.render();
@@ -680,7 +1173,7 @@
                             distributed: true,
                             borderRadius: 8
                         }
-                    }, // Yatay bar
+                    },
                     series: [{
                         name: 'Üretim Miktarı',
                         data: []
@@ -690,7 +1183,7 @@
                     },
                     title: {
                         ...commonBarOptions.title,
-                        text: 'Ürün Miktar Dağılımı (Hızlı Filtre)'
+                        text: 'Ürün Miktar Dağılımı'
                     }
                 });
                 productChart.render();
@@ -701,12 +1194,12 @@
                     const products = new Set(allPlansData.map(p => p.product));
 
                     machines.forEach(machine => {
-                        if (machine && machine !== 'Bilinmiyor') machineDropdown.innerHTML +=
-                            `<option value="${machine}">${machine}</option>`;
+                        if (machine && machine !== 'Bilinmiyor')
+                            machineDropdown.innerHTML += `<option value="${machine}">${machine}</option>`;
                     });
                     products.forEach(product => {
-                        if (product && product !== 'Bilinmiyor') productDropdown.innerHTML +=
-                            `<option value="${product}">${product}</option>`;
+                        if (product && product !== 'Bilinmiyor')
+                            productDropdown.innerHTML += `<option value="${product}">${product}</option>`;
                     });
                 }
 
@@ -716,12 +1209,10 @@
 
                     let filteredData = allPlansData;
 
-                    if (selectedMachine !== 'all') {
-                        filteredData = filteredData.filter(p => p.machine === selectedMachine);
-                    }
-                    if (selectedProduct !== 'all') {
-                        filteredData = filteredData.filter(p => p.product === selectedProduct);
-                    }
+                    if (selectedMachine !== 'all') filteredData = filteredData.filter(p => p.machine ===
+                        selectedMachine);
+                    if (selectedProduct !== 'all') filteredData = filteredData.filter(p => p.product ===
+                        selectedProduct);
 
                     const machineCounts = {},
                         productQuantities = {};
@@ -735,7 +1226,7 @@
 
                     const sortedMachines = Object.entries(machineCounts).sort((a, b) => b[1] - a[1]);
                     const sortedProducts = Object.entries(productQuantities).sort((a, b) => b[1] - a[1]).slice(0,
-                        15); // Çok fazla ürün varsa ilk 15'i al
+                        15);
 
                     machineChart.updateOptions({
                         xaxis: {
@@ -756,13 +1247,12 @@
                     }], true);
                 }
 
-                machineDropdown.addEventListener('change', updateProductionCharts);
-                productDropdown.addEventListener('change', updateProductionCharts);
+                machineDropdown?.addEventListener('change', updateProductionCharts);
+                productDropdown?.addEventListener('change', updateProductionCharts);
 
                 populateProductionFilters();
                 updateProductionCharts();
 
-                // --- BÖLÜM 2: GENEL (SUNUCU TARAFLI FİLTRELENMİŞ) GRAFİKLER ---
                 if (chartData.weekly_prod) new ApexCharts(document.querySelector("#weekly-prod-chart"), {
                     ...commonAreaOptions,
                     series: [{
@@ -784,6 +1274,7 @@
                         }
                     }
                 }).render();
+
                 if (chartData.monthly_prod) new ApexCharts(document.querySelector("#monthly-prod-chart"), {
                     ...commonAreaOptions,
                     series: [{
@@ -804,32 +1295,25 @@
                         }
                     }
                 }).render();
-
-                console.log('Üretim grafikleri tamamlandı');
             }
 
-            // --- HİZMET BÖLÜMÜ ---
+            // === SERVICE ===
             else if (departmentSlug === 'hizmet') {
-                console.log('İdari İşler grafikleri çiziliyor...');
-
-                // --- BÖLÜM 1: HIZLI FİLTRE GRAFİKLERİ (JS) ---
                 const allEventsData = JSON.parse(statsContainer.dataset.events || '[]');
                 const allAssignmentsData = JSON.parse(statsContainer.dataset.assignments || '[]');
                 const allVehicles = JSON.parse(statsContainer.dataset.vehicles || '[]');
                 const monthlyLabels = JSON.parse(statsContainer.dataset.monthlyLabels || '[]');
 
-                // 2. DOM Elemanlarını Seç
                 const eventTypeDropdown = document.getElementById('eventTypeFilter');
                 const vehicleDropdown = document.getElementById('vehicleFilter');
 
-                // 3. Grafikleri Başlat
                 let eventPieChart = new ApexCharts(document.querySelector("#event-type-pie-chart"), {
                     ...commonPieOptions,
                     series: [],
                     labels: [],
                     title: {
                         ...commonPieOptions.title,
-                        text: 'Etkinlik Tipi Dağılımı (Hızlı Filtre)'
+                        text: 'Etkinlik Tipi Dağılımı'
                     }
                 });
                 eventPieChart.render();
@@ -842,23 +1326,20 @@
                     }],
                     title: {
                         ...commonAreaOptions.title,
-                        text: 'Aylık Araç Atama Sayısı (Hızlı Filtre)'
+                        text: 'Aylık Araç Atama Sayısı'
                     },
                     xaxis: {
                         categories: monthlyLabels
-                    } // Etiketleri PHP'den al
+                    }
                 });
                 assignmentChart.render();
 
-                // 4. Filtreleri Doldur
                 function populateServiceFilters() {
                     const eventTypes = new Map();
-                    // Gelen tüm veriyi (Event + Travel) işle
                     allEventsData.forEach(e => {
                         if (e.type_name) eventTypes.set(e.type_slug, e.type_name);
                     });
 
-                    // Dropdown'ı doldur
                     eventTypes.forEach((name, slug) => {
                         eventTypeDropdown.innerHTML += `<option value="${slug}">${name}</option>`;
                     });
@@ -869,20 +1350,16 @@
                     });
                 }
 
-                // 5. Grafikleri Güncelle
                 function updateServiceCharts() {
                     const selectedEventType = eventTypeDropdown.value;
                     const selectedVehicleId = vehicleDropdown.value;
 
-                    // 1. Etkinlik Pastasını Güncelle
                     let filteredEvents = allEventsData;
                     if (selectedEventType !== 'all') {
-                        // 'type_slug'a göre filtrele ('event' veya 'travel' olabilir)
                         filteredEvents = filteredEvents.filter(e => e.type_slug === selectedEventType);
                     }
 
                     const eventCounts = {};
-                    // 'type_name'e göre sayım yap
                     filteredEvents.forEach(event => {
                         eventCounts[event.type_name] = (eventCounts[event.type_name] || 0) + 1;
                     });
@@ -894,14 +1371,13 @@
                         series: sortedEventTypes.map(([, count]) => count)
                     });
 
-                    // 2. Araç Atama Grafiğini Güncelle
                     let filteredAssignments = allAssignmentsData;
                     if (selectedVehicleId !== 'all') {
                         filteredAssignments = filteredAssignments.filter(a => a.vehicle_id == selectedVehicleId);
                     }
 
                     const monthlyCounts = {};
-                    monthlyLabels.forEach(label => monthlyCounts[label] = 0); // ['Oca 2025': 0, ...]
+                    monthlyLabels.forEach(label => monthlyCounts[label] = 0);
 
                     filteredAssignments.forEach(assignment => {
                         const monthLabel = assignment.start_month_label;
@@ -915,16 +1391,12 @@
                     }]);
                 }
 
-                // 6. Dinleyicileri Ekle
-                eventTypeDropdown.addEventListener('change', updateServiceCharts);
-                vehicleDropdown.addEventListener('change', updateServiceCharts);
+                eventTypeDropdown?.addEventListener('change', updateServiceCharts);
+                vehicleDropdown?.addEventListener('change', updateServiceCharts);
 
-                // 7. İlk Yükleme
                 populateServiceFilters();
                 updateServiceCharts();
-
-                console.log('İdari İşler grafikleri tamamlandı');
             }
-        }); // DOMContentLoaded sonu
+        });
     </script>
 @endsection

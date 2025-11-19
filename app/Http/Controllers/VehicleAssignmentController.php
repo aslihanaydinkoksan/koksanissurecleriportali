@@ -112,8 +112,7 @@ class VehicleAssignmentController extends Controller
         $validatedData = $request->validate([
             // Temel Alanlar
             'needs_vehicle' => 'required|in:yes,no',
-            //'vehicle_id' => 'required_if:needs_vehicle,yes|in:company,logistics',
-            'vehicle_id' => 'required_if:needs_vehicle,yes|exists:vehicles,id',
+            'vehicle_id' => 'nullable|required_if:needs_vehicle,yes|exists:vehicles,id',
 
             // Sorumlu Bilgisi
             'responsible_type' => 'required|in:user,team',
@@ -124,7 +123,7 @@ class VehicleAssignmentController extends Controller
             'title' => 'required|string|max:255',
             'task_description' => 'required|string',
             'destination' => 'nullable|string|max:255',
-            'requester_name' => 'nullable|string|max:255',
+            //'requester_name' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
 
             // Nakliye Özel Alanları
@@ -150,7 +149,7 @@ class VehicleAssignmentController extends Controller
         $assignment->title = $validatedData['title'];
         $assignment->task_description = $validatedData['task_description'];
         $assignment->destination = $validatedData['destination'] ?? null;
-        $assignment->requester_name = $validatedData['requester_name'] ?? null;
+        $assignment->requester_name = Auth::user()->name;
         $assignment->notes = $validatedData['notes'] ?? null;
         $assignment->status = 'pending';
         $assignment->user_id = auth()->id();
@@ -329,6 +328,7 @@ class VehicleAssignmentController extends Controller
     public function update(Request $request, VehicleAssignment $assignment): RedirectResponse
     {
         $this->authorize('manage-assignment', $assignment);
+        $needsVehicle = $assignment->requiresVehicle() ? 'yes' : 'no';
 
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
@@ -336,11 +336,30 @@ class VehicleAssignmentController extends Controller
             'destination' => 'nullable|string|max:255',
             'status' => 'required|in:pending,in_progress,completed,cancelled',
             'notes' => 'nullable|string',
+            'vehicle_id' => [
+                'nullable',
+                Rule::requiredIf($needsVehicle === 'yes'),
+                'exists:vehicles,id',
+            ],
 
             // Nakliye tamamlama alanları
-            'final_km' => 'nullable|numeric|min:0',
-            'final_fuel' => 'nullable|numeric|min:0',
-            'fuel_cost' => 'nullable|numeric|min:0',
+            'final_km' => [
+                'nullable',
+                Rule::requiredIf($assignment->isLogistics() && $request->input('status') === 'completed'),
+                'numeric',
+                'min:0'
+            ],
+            'final_fuel' => [
+                'nullable',
+                Rule::requiredIf($assignment->isLogistics() && $request->input('status') === 'completed'),
+                'string'
+            ],
+            'fuel_cost' => [
+                'nullable',
+                Rule::requiredIf($assignment->isLogistics() && $request->input('status') === 'completed'),
+                'numeric',
+                'min:0'
+            ],
         ]);
 
         $assignment->update($validatedData);

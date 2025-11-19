@@ -1,12 +1,12 @@
 ﻿<!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="<?php echo e(str_replace('_', '-', app()->getLocale())); ?>">
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title') | {{ config('app.name') }}</title>
-    <link rel="icon" href="{{ asset('koksan.ico?v=13') }}" type="image/ico">
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
+    <title><?php echo $__env->yieldContent('title'); ?> | <?php echo e(config('app.name')); ?></title>
+    <link rel="icon" href="<?php echo e(asset('koksan.ico?v=13')); ?>" type="image/ico">
     <link rel="dns-prefetch" href="//fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=Nunito:400,600,700,800" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -292,15 +292,15 @@
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(102, 126, 234, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
         }
     </style>
-    @stack('styles')
+    <?php echo $__env->yieldPushContent('styles'); ?>
 </head>
 
 <body>
     <div id="app">
         <nav class="navbar navbar-expand-lg navbar-light">
             <div class="container-fluid px-lg-4">
-                <a class="navbar-brand d-flex align-items-center" href="{{ route('welcome') }}">
-                    <img src="{{ asset('koksan-logo.png') }}" alt="Köksan Logo" class="me-2">
+                <a class="navbar-brand d-flex align-items-center" href="<?php echo e(route('welcome')); ?>">
+                    <img src="<?php echo e(asset('koksan-logo.png')); ?>" alt="Köksan Logo" class="me-2">
                     <strong>Köksan İş Süreçleri Portalı</strong>
                 </a>
 
@@ -311,31 +311,31 @@
 
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav ms-auto align-items-lg-center">
-                        @guest
-                            @if (Route::has('login'))
+                        <?php if(auth()->guard()->guest()): ?>
+                            <?php if(Route::has('login')): ?>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('login') }}">
+                                    <a class="nav-link" href="<?php echo e(route('login')); ?>">
                                         <i class="fa-solid fa-right-to-bracket"></i>
                                         <span>Giriş Yap</span>
                                     </a>
                                 </li>
-                            @endif
-                        @else
+                            <?php endif; ?>
+                        <?php else: ?>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('general.calendar') }}">
+                                <a class="nav-link" href="<?php echo e(route('general.calendar')); ?>">
                                     <i class="fa-solid fa-calendar-days" style="color: #667EEA;"></i>
                                     <span>Genel Takvim</span>
                                 </a>
                             </li>
 
-                            @auth
+                            <?php if(auth()->guard()->check()): ?>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('home') }}">
+                                    <a class="nav-link" href="<?php echo e(route('home')); ?>">
                                         <i class="fa-solid fa-calendar-check" style="color: #4FD1C5;"></i>
                                         <span>Takvimim</span>
                                     </a>
                                 </li>
-                            @endauth
+                            <?php endif; ?>
 
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownVehicles"
@@ -344,31 +344,32 @@
                                     <span>Araç Görevleri</span>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item" href="{{ route('service.assignments.create') }}">
+                                    <li><a class="dropdown-item" href="<?php echo e(route('service.assignments.create')); ?>">
                                             <i class="fa-solid fa-plus" style="color: #A78BFA;"></i> Araç Görevi Ekle
                                         </a></li>
-                                    <li><a class="dropdown-item" href="{{ route('service.assignments.index') }}">
+                                    <li><a class="dropdown-item" href="<?php echo e(route('service.assignments.index')); ?>">
                                             <i class="fa-solid fa-list" style="color: #667EEA;"></i> Görev Listesi
                                         </a></li>
-                                    <li><a class="dropdown-item" href="{{ route('teams.index') }}">
+                                    <li><a class="dropdown-item" href="<?php echo e(route('teams.index')); ?>">
                                             <i class="fa-solid fa-people-group" style="color: #7a5ed1;"></i> Takımlar
                                         </a></li>
                                 </ul>
                             </li>
 
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('my-assignments.index') }}">
+                                <a class="nav-link" href="<?php echo e(route('my-assignments.index')); ?>">
                                     <i class="fas fa-tasks" style="color: #df6060;"></i>
                                     <span>Görevlerim</span>
-                                    @if (Auth::user()->pending_assignments_count > 0)
+                                    <?php if(Auth::user()->pending_assignments_count > 0): ?>
                                         <span class="badge bg-danger rounded-pill">
-                                            {{ Auth::user()->pending_assignments_count }}
+                                            <?php echo e(Auth::user()->pending_assignments_count); ?>
+
                                         </span>
-                                    @endif
+                                    <?php endif; ?>
                                 </a>
                             </li>
 
-                            @can('access-department', 'lojistik')
+                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('access-department', 'lojistik')): ?>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownShipments"
                                         role="button" data-bs-toggle="dropdown">
@@ -376,18 +377,18 @@
                                         <span>Sevkiyatlar</span>
                                     </a>
                                     <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><a class="dropdown-item" href="{{ route('shipments.create') }}">
+                                        <li><a class="dropdown-item" href="<?php echo e(route('shipments.create')); ?>">
                                                 <i class="fa-solid fa-truck-fast" style="color: #FBD38D;"></i> Yeni Sevkiyat
                                             </a></li>
-                                        <li><a class="dropdown-item" href="{{ route('products.list') }}">
+                                        <li><a class="dropdown-item" href="<?php echo e(route('products.list')); ?>">
                                                 <i class="fa-solid fa-truck-ramp-box" style="color: #4FD1C5;"></i> Sevkiyat
                                                 Listesi
                                             </a></li>
                                     </ul>
                                 </li>
-                            @endcan
+                            <?php endif; ?>
 
-                            @can('access-department', 'uretim')
+                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('access-department', 'uretim')): ?>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownProduction"
                                         role="button" data-bs-toggle="dropdown">
@@ -395,17 +396,17 @@
                                         <span>Üretim</span>
                                     </a>
                                     <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><a class="dropdown-item" href="{{ route('production.plans.create') }}">
+                                        <li><a class="dropdown-item" href="<?php echo e(route('production.plans.create')); ?>">
                                                 <i class="fa-solid fa-plus-circle" style="color: #F093FB;"></i> Yeni Plan
                                             </a></li>
-                                        <li><a class="dropdown-item" href="{{ route('production.plans.index') }}">
+                                        <li><a class="dropdown-item" href="<?php echo e(route('production.plans.index')); ?>">
                                                 <i class="fa-solid fa-list-check" style="color: #A78BFA;"></i> Plan Listesi
                                             </a></li>
                                     </ul>
                                 </li>
-                            @endcan
+                            <?php endif; ?>
 
-                            @can('access-department', 'hizmet')
+                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('access-department', 'hizmet')): ?>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownService"
                                         role="button" data-bs-toggle="dropdown">
@@ -413,98 +414,99 @@
                                         <span>İdari İşler</span>
                                     </a>
                                     <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><a class="dropdown-item" href="{{ route('service.events.create') }}">
+                                        <li><a class="dropdown-item" href="<?php echo e(route('service.events.create')); ?>">
                                                 <i class="fa-solid fa-calendar-plus" style="color: #667EEA;"></i> Yeni
                                                 Etkinlik
                                             </a></li>
-                                        <li><a class="dropdown-item" href="{{ route('service.events.index') }}">
+                                        <li><a class="dropdown-item" href="<?php echo e(route('service.events.index')); ?>">
                                                 <i class="fa-solid fa-calendar-days" style="color: #4FD1C5;"></i> Etkinlik
                                                 Listesi
                                             </a></li>
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
-                                        <li><a class="dropdown-item" href="{{ route('service.vehicles.index') }}">
+                                        <li><a class="dropdown-item" href="<?php echo e(route('service.vehicles.index')); ?>">
                                                 <i class="fa-solid fa-car" style="color: #FBD38D;"></i> Araç Tanımları
                                             </a></li>
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
-                                        <li><a class="dropdown-item" href="{{ route('travels.create') }}">
+                                        <li><a class="dropdown-item" href="<?php echo e(route('travels.create')); ?>">
                                                 <i class="fa-solid fa-route" style="color: #A78BFA;"></i> Yeni Seyahat
                                             </a></li>
-                                        <li><a class="dropdown-item" href="{{ route('travels.index') }}">
+                                        <li><a class="dropdown-item" href="<?php echo e(route('travels.index')); ?>">
                                                 <i class="fa-solid fa-list-check" style="color: #A78BFA;"></i> Seyahat Listesi
                                             </a></li>
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
-                                        <li><a class="dropdown-item" href="{{ route('customers.index') }}">
+                                        <li><a class="dropdown-item" href="<?php echo e(route('customers.index')); ?>">
                                                 <i class="fa-solid fa-users" style="color: #A78BFA;"></i> Müşteri Yönetimi
                                             </a></li>
                                     </ul>
                                 </li>
-                            @endcan
+                            <?php endif; ?>
 
                             <li class="nav-item dropdown">
                                 <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button"
                                     data-bs-toggle="dropdown">
                                     <i class="fa-solid fa-user-gear me-1"></i>
                                     <span class="d-inline-block text-truncate" style="max-width: 100px;"
-                                        title="{{ Auth::user()->name }}">
-                                        {{ Auth::user()->name }}
+                                        title="<?php echo e(Auth::user()->name); ?>">
+                                        <?php echo e(Auth::user()->name); ?>
+
                                     </span>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item" href="{{ route('profile.edit') }}">
+                                    <li><a class="dropdown-item" href="<?php echo e(route('profile.edit')); ?>">
                                             <i class="fa-solid fa-user-pen" style="color: #4FD1C5;"></i> Profilimi Düzenle
                                         </a></li>
 
-                                    @can('is-global-manager')
-                                        <li><a class="dropdown-item" href="{{ route('users.create') }}">
+                                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('is-global-manager')): ?>
+                                        <li><a class="dropdown-item" href="<?php echo e(route('users.create')); ?>">
                                                 <i class="fa-solid fa-user-plus" style="color: #667EEA;"></i> Kullanıcı Ekle
                                             </a></li>
-                                    @endcan
+                                    <?php endif; ?>
 
-                                    @if (Auth::user()->role === 'admin')
-                                        <li><a class="dropdown-item" href="{{ route('birimler.index') }}">
+                                    <?php if(Auth::user()->role === 'admin'): ?>
+                                        <li><a class="dropdown-item" href="<?php echo e(route('birimler.index')); ?>">
                                                 <i class="fa-solid fa-tags" style="color: #FBD38D;"></i> Birimleri Yönet
                                             </a></li>
-                                        <li><a class="dropdown-item" href="{{ route('departments.index') }}">
+                                        <li><a class="dropdown-item" href="<?php echo e(route('departments.index')); ?>">
                                                 <i class="fa-solid fa-building-user" style="color: #667EEA;"></i>
                                                 Departmanlar
                                             </a></li>
-                                        <li><a class="dropdown-item" href="{{ route('logs.index') }}">
+                                        <li><a class="dropdown-item" href="<?php echo e(route('logs.index')); ?>">
                                                 <i class="fa-solid fa-file-lines" style="color: #f78dfb;"></i> Loglar
                                             </a></li>
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
-                                    @endif
+                                    <?php endif; ?>
 
-                                    <li><a class="dropdown-item" href="{{ route('logout') }}"
+                                    <li><a class="dropdown-item" href="<?php echo e(route('logout')); ?>"
                                             onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                             <i class="fa-solid fa-right-from-bracket" style="color: #FC8181;"></i> Çıkış
                                             Yap
                                         </a></li>
-                                    <form id="logout-form" action="{{ route('logout') }}" method="POST"
+                                    <form id="logout-form" action="<?php echo e(route('logout')); ?>" method="POST"
                                         class="d-none">
-                                        @csrf
+                                        <?php echo csrf_field(); ?>
                                     </form>
                                 </ul>
                             </li>
-                        @endguest
+                        <?php endif; ?>
                     </ul>
                 </div>
             </div>
         </nav>
 
         <main>
-            @yield('content')
+            <?php echo $__env->yieldContent('content'); ?>
         </main>
     </div>
 
-    @yield('page_scripts')
+    <?php echo $__env->yieldContent('page_scripts'); ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Scroll effect for navbar
@@ -533,3 +535,4 @@
 </body>
 
 </html>
+<?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/layouts/app.blade.php ENDPATH**/ ?>

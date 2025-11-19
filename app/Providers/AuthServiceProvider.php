@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use App\Models\User;
+use App\Models\Team;
 use App\Models\VehicleAssignment;
 use Illuminate\Support\Facades\Log;
 
@@ -97,6 +98,19 @@ class AuthServiceProvider extends ServiceProvider
             }
             if ($user->role === 'yönetici') {
                 return true;
+            }
+            // Görevin kendisine atanmış olması (bireysel veya takım üyesi)
+            // Bireysel atama kontrolü
+            if ($assignment->responsible_type === User::class && $assignment->responsible_id === $user->id) {
+                return true;
+            }
+            // Takım ataması kontrolü (Kullanıcı takımın üyesi mi?)
+            if ($assignment->responsible_type === Team::class) {
+                // Not: Team modeli user'ları eagerly load etmelidir.
+                // Veya user'ın takımlarından biri mi diye kontrol etmelisiniz.
+                if ($user->teams()->where('id', $assignment->responsible_id)->exists()) {
+                    return true;
+                }
             }
 
             return false;

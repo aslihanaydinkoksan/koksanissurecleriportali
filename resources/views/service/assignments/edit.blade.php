@@ -268,6 +268,10 @@
 @endpush
 
 @section('content')
+    @php
+        $canChangeResponsible = Auth::user()->id === $assignment->user_id || Auth::user()->role === 'admin';
+        $disableInput = $canChangeResponsible ? '' : 'disabled';
+    @endphp
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-9">
@@ -314,6 +318,14 @@
                         <form method="POST" action="{{ route('service.assignments.update', $assignment->id) }}">
                             @csrf
                             @method('PUT')
+                            <input type="hidden" name="responsible_type" value="{{ $assignment->responsible_type }}">
+                            <input type="hidden" name="responsible_id" value="{{ $assignment->responsible_id }}">
+
+                            @if ($assignment->requiresVehicle())
+                                <input type="hidden" name="vehicle_id" value="{{ $assignment->vehicle_id }}">
+                            @else
+                                <input type="hidden" name="vehicle_id" value="">
+                            @endif
 
                             {{-- GÖREV BİLGİLERİ --}}
                             <div class="section-header">
@@ -361,29 +373,32 @@
                                 <div class="icon">🚗</div>
                                 <h5>Araç Bilgileri</h5>
                             </div>
-
-                            <div class="mb-4">
-                                <label for="vehicle_id" class="form-label">
-                                    <span x-show="vehicleType === 'company'">🚙</span>
-                                    <span x-show="vehicleType === 'logistics'">🚚</span>
-                                    Araç Seçimi *
-                                </label>
-                                <select name="vehicle_id" id="vehicle_id"
-                                    class="form-select @error('vehicle_id') is-invalid @enderror" required>
-                                    <option value="">Araç Seçiniz...</option>
-                                    @foreach ($vehicles as $vehicle)
-                                        <option value="{{ $vehicle->id }}"
-                                            {{ old('vehicle_id', $assignment->vehicle_id) == $vehicle->id ? 'selected' : '' }}>
-                                            {{ $vehicle->plate_number }} - {{ $vehicle->model }}
-                                            ({{ $vehicle->type === 'company' ? '🚙 Şirket' : '🚚 Nakliye' }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('vehicle_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
+                            @if ($assignment->requiresVehicle())
+                                <div class="mb-4">
+                                    <label for="vehicle_id" class="form-label">
+                                        <span x-show="vehicleType === 'company'">🚙</span>
+                                        <span x-show="vehicleType === 'logistics'">🚚</span>
+                                        Araç Seçimi *
+                                    </label>
+                                    <select name="vehicle_id" id="vehicle_id"
+                                        class="form-select @error('vehicle_id') is-invalid @enderror" required>
+                                        <option value="">Araç Seçiniz...</option>
+                                        @foreach ($vehicles as $vehicle)
+                                            <option value="{{ $vehicle->id }}"
+                                                {{ old('vehicle_id', $assignment->vehicle_id) == $vehicle->id ? 'selected' : '' }}>
+                                                {{ $vehicle->plate_number }} - {{ $vehicle->model }}
+                                                ({{ $vehicle->type === 'company' ? '🚙 Şirket' : '🚚 Nakliye' }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('vehicle_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            @else
+                                <input type="hidden" name="vehicle_id" value="">
+                                <div class="alert alert-info">Bu görev için araç ataması gerekmemektedir.</div>
+                            @endif
                             {{-- NAKLİYE DETAYLARI --}}
                             <div x-show="isLogistics()" class="fade-in">
                                 <div class="section-header">
@@ -446,13 +461,17 @@
                             <div class="section-header">
                                 <div class="icon">👥</div>
                                 <h5>Sorumlu Atama</h5>
+                                @if (!$canChangeResponsible)
+                                    <span class="ms-3 text-muted small">(Sadece Görevi Atayan Değiştirebilir)</span>
+                                @endif
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Sorumlu Tipi</label>
                                 <div class="d-flex gap-2">
                                     <label class="selection-card flex-fill mb-0">
-                                        <input type="radio" x-model="responsibleType" value="user">
+                                        <input type="radio" x-model="responsibleType" value="user"
+                                            {{ $disableInput }}>
                                         <div class="card-content">
                                             <div class="card-icon">👤</div>
                                             <div class="card-text">
@@ -463,7 +482,8 @@
                                     </label>
 
                                     <label class="selection-card flex-fill mb-0">
-                                        <input type="radio" x-model="responsibleType" value="team">
+                                        <input type="radio" x-model="responsibleType" value="team"
+                                            {{ $disableInput }}>
                                         <div class="card-content">
                                             <div class="card-icon">👥</div>
                                             <div class="card-text">
@@ -482,7 +502,7 @@
                                 <select :name="responsibleType === 'user' ? 'responsible_user_id' : ''"
                                     id="responsible_user_id"
                                     class="form-select @error('responsible_user_id') is-invalid @enderror"
-                                    :required="responsibleType === 'user'">
+                                    :required="responsibleType === 'user'" {{ $disableInput }}>
                                     <option value="">Kişi seçiniz...</option>
                                     @foreach ($users as $user)
                                         <option value="{{ $user->id }}"
@@ -501,7 +521,7 @@
                                 <select :name="responsibleType === 'team' ? 'responsible_team_id' : ''"
                                     id="responsible_team_id"
                                     class="form-select @error('responsible_team_id') is-invalid @enderror"
-                                    :required="responsibleType === 'team'">
+                                    :required="responsibleType === 'team'" {{ $disableInput }}>
                                     <option value="">Takım seçiniz...</option>
                                     @foreach ($teams as $team)
                                         <option value="{{ $team->id }}"
@@ -523,13 +543,20 @@
 
                             <div class="mb-4">
                                 <label for="task_description" class="form-label">📋 Görev Açıklaması *</label>
-                                <textarea class="form-control @error('task_description') is-invalid @enderror" id="task_description"
-                                    name="task_description" rows="3" required placeholder="Ne yapılması gerekiyor? Detaylı açıklayın...">{{ old('task_description', $assignment->task_description) }}</textarea>
+                                <input type="text" class="form-control @error('task_description') is-invalid @enderror"
+                                    id="task_description" name="task_description"
+                                    value="{{ old('task_description', $assignment->task_description) }}" required
+                                    {{ $disableInput === 'disabled' ? 'readonly' : '' }}>
+
+                                @if ($disableInput === 'disabled')
+                                    <small class="form-text text-muted">Bu alanı yalnızca görevi atayan kişi
+                                        düzenleyebilir.</small>
+                                @endif
+
                                 @error('task_description')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-
                             <div class="row mb-4">
                                 <div class="col-md-6 mb-3">
                                     <label for="destination" class="form-label">📍 Hedef Konum</label>
@@ -543,12 +570,13 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="requester_name" class="form-label">🙋 Talep Eden</label>
+                                    <label for="requester_name" class="form-label">🙋 Talep Eden Kişi / Departman</label>
                                     <input type="text"
                                         class="form-control @error('requester_name') is-invalid @enderror"
                                         id="requester_name" name="requester_name"
-                                        value="{{ old('requester_name', $assignment->requester_name) }}"
-                                        placeholder="Kişi veya Departman adı">
+                                        value="{{ $assignment->createdBy->name ?? 'Bilinmiyor' }}" disabled readonly>
+                                    <small class="form-text text-muted">Bu görev, görev atan kişi tarafından
+                                        oluşturulmuştur.</small>
                                     @error('requester_name')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror

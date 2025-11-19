@@ -369,13 +369,23 @@
                                                             {{ ucfirst($assignment->status) }}
                                                     @endswitch
                                                 </td>
-                                                {{-- Butona modern stil (btn-primary) ve ikon uygulandı --}}
                                                 <td class="text-end pe-3">
+                                                    @php
+                                                        $isPendingOrInProgress = in_array($assignment->status, [
+                                                            'pending',
+                                                            'in_progress',
+                                                        ]);
+                                                    @endphp
                                                     <a href="{{ route('service.assignments.show', $assignment) }}"
-                                                        class="btn btn-sm btn-primary" title="Detay">
+                                                        class="btn btn-sm btn-primary" title="Detay">Görev Detayı
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    {{-- Görevi Tamamla veya Güncelleme Butonları eklenebilir --}}
+                                                    @if ($isPendingOrInProgress)
+                                                        <a href="{{ route('service.assignments.edit', $assignment) }}"
+                                                            class="btn btn-sm btn-primary" title="Görevi Yönet">
+                                                            <i class="fas fa-check-circle me-1"></i> Görevi Yönet / Tamamla
+                                                        </a>
+                                                    @endif
                                                 </td>
                                             </tr>
                                         @endforeach

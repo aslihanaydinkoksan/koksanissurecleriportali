@@ -279,7 +279,7 @@
                                                         class="btn btn-sm btn-outline-primary rounded-pill px-3 me-2"
                                                         title="Görüntüle">
                                                         <i class="fa-solid fa-eye me-1"></i>
-                                                        Görüntüle
+                                                        Müşteri Detaylarını Görüntüle
                                                     </a>
                                                     <a href="{{ route('customers.edit', $customer) }}"
                                                         class="btn btn-sm btn-outline-secondary rounded-pill px-3"

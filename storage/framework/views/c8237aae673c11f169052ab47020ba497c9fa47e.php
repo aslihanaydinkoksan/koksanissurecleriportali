@@ -1,13 +1,13 @@
-@extends('layouts.app')
-@section('title', 'Hoş Geldiniz')
 
-{{-- TV Kullanıcısı Kontrolü --}}
-@php
+<?php $__env->startSection('title', 'Hoş Geldiniz'); ?>
+
+
+<?php
     $isTvUser = Auth::check() && Auth::user()->email === 'tv@koksan.com';
-@endphp
+?>
 
-@push('styles')
-    {{-- 1. STANDART STİLLER (Herkes için geçerli) --}}
+<?php $__env->startPush('styles'); ?>
+    
     <style>
         #app>main.py-4 {
             padding: 2.5rem 0 !important;
@@ -261,8 +261,8 @@
         }
     </style>
 
-    {{-- 2. TV MODU STİLLERİ (Blade @if bloğu style etiketinin dışında!) --}}
-    @if (request('mode') == 'tv' || $isTvUser)
+    
+    <?php if(request('mode') == 'tv' || $isTvUser): ?>
         <style>
             /* Navbar, Sidebar, Footer Gizle */
             nav.navbar,
@@ -376,12 +376,12 @@
                 }
             }
         </style>
-    @endif
-@endpush
+    <?php endif; ?>
+<?php $__env->stopPush(); ?>
 
-@section('content')
-    {{-- Hızlı Seçim Modalı (Sayfanın Başında Olması Daha İyi) --}}
-    {{-- Hızlı Seçim Modalı --}}
+<?php $__env->startSection('content'); ?>
+    
+    
     <div class="modal fade" id="createSelectionModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content"
@@ -391,69 +391,69 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
                 </div>
                 <div class="modal-body p-4">
-                    {{-- YETKİ KONTROLÜ İÇİN DEĞİŞKENLER --}}
-                    @php
+                    
+                    <?php
                         $currentUser = Auth::user();
                         $userDept = $currentUser->department ? $currentUser->department->slug : null;
                         // Admin veya Yönetici ise her şeyi görsün
                         $isAdmin = in_array($currentUser->role, ['admin', 'yönetici']);
-                    @endphp
+                    ?>
 
                     <div class="d-grid gap-3">
 
-                        {{-- 1. ÜRETİM PLANI (Sadece Üretim Departmanı veya Admin) --}}
-                        @if (Route::has('production.plans.create') && ($isAdmin || $userDept === 'uretim'))
-                            <a href="{{ route('production.plans.create') }}"
+                        
+                        <?php if(Route::has('production.plans.create') && ($isAdmin || $userDept === 'uretim')): ?>
+                            <a href="<?php echo e(route('production.plans.create')); ?>"
                                 class="btn btn-lg btn-outline-success d-flex align-items-center justify-content-between p-3">
                                 <span><i class="fa-solid fa-industry me-2"></i> Yeni Üretim Planı</span>
                                 <i class="fa-solid fa-chevron-right"></i>
                             </a>
-                        @endif
+                        <?php endif; ?>
 
-                        {{-- 2. SEVKİYAT (Sadece Lojistik Departmanı veya Admin) --}}
-                        @if (Route::has('shipments.create') && ($isAdmin || $userDept === 'lojistik'))
-                            <a href="{{ route('shipments.create') }}"
+                        
+                        <?php if(Route::has('shipments.create') && ($isAdmin || $userDept === 'lojistik')): ?>
+                            <a href="<?php echo e(route('shipments.create')); ?>"
                                 class="btn btn-lg btn-outline-primary d-flex align-items-center justify-content-between p-3">
                                 <span><i class="fa-solid fa-truck-fast me-2"></i> Yeni Sevkiyat</span>
                                 <i class="fa-solid fa-chevron-right"></i>
                             </a>
-                        @endif
+                        <?php endif; ?>
 
-                        {{-- 3. ETKİNLİK (Sadece Hizmet/İdari İşler Departmanı veya Admin) --}}
-                        @php
+                        
+                        <?php
                             $eventRoute = Route::has('service.events.create')
                                 ? route('service.events.create')
                                 : (Route::has('events.create')
                                     ? route('events.create')
                                     : '#');
-                        @endphp
+                        ?>
 
-                        @if ($eventRoute !== '#' && ($isAdmin || $userDept === 'hizmet'))
-                            <a href="{{ $eventRoute }}"
+                        <?php if($eventRoute !== '#' && ($isAdmin || $userDept === 'hizmet')): ?>
+                            <a href="<?php echo e($eventRoute); ?>"
                                 class="btn btn-lg btn-outline-warning d-flex align-items-center justify-content-between p-3">
                                 <span><i class="fa-solid fa-calendar-plus me-2"></i> Yeni Etkinlik</span>
                                 <i class="fa-solid fa-chevron-right"></i>
                             </a>
-                        @endif
-                        {{-- 4. ARAÇ GÖREVİ (HERKES İÇİN AÇIK) --}}
-                        {{-- Departman fark etmeksizin herkes araç talep edebilir --}}
-                        @if (Route::has('service.assignments.create'))
-                            <a href="{{ route('service.assignments.create') }}"
+                        <?php endif; ?>
+                        
+                        
+                        <?php if(Route::has('service.assignments.create')): ?>
+                            <a href="<?php echo e(route('service.assignments.create')); ?>"
                                 class="btn btn-lg btn-outline-info d-flex align-items-center justify-content-between p-3">
                                 <span><i class="fa-solid fa-car-side me-2"></i> Yeni Araç Görevi</span>
                                 <i class="fa-solid fa-chevron-right"></i>
                             </a>
-                        @endif
+                        <?php endif; ?>
 
-                        {{-- HİÇBİR YETKİSİ YOKSA GÖSTERİLECEK MESAJ --}}
-                        @if (!$isAdmin && $userDept !== 'uretim' && $userDept !== 'lojistik' && $userDept !== 'hizmet')
+                        
+                        <?php if(!$isAdmin && $userDept !== 'uretim' && $userDept !== 'lojistik' && $userDept !== 'hizmet'): ?>
                             <div class="alert alert-warning d-flex align-items-center mb-0">
                                 <i class="fa-solid fa-circle-exclamation me-2"></i>
                                 <div>
                                     Bu alanda yapabileceğiniz hızlı bir işlem bulunmuyor.
                                 </div>
                             </div>
-                        @endif
+                        <?php endif; ?>
 
                     </div>
                 </div>
@@ -468,21 +468,21 @@
                     <div class="card-body p-4">
                         <div class="row align-items-center mb-3">
                             <div class="col-md-7">
-                                <h2 class="card-title mb-0">Hoş Geldiniz, {{ Auth::user()->name }}!</h2>
-                                {{-- TV kullanıcısı ise rolü veya departmanı göstermeye gerek yok, temiz kalsın --}}
-                                @if (Auth::user()->department && !$isTvUser)
-                                    {{-- Normal departman gösterimi --}}
-                                @elseif(!$isTvUser)
+                                <h2 class="card-title mb-0">Hoş Geldiniz, <?php echo e(Auth::user()->name); ?>!</h2>
+                                
+                                <?php if(Auth::user()->department && !$isTvUser): ?>
+                                    
+                                <?php elseif(!$isTvUser): ?>
                                     <p class="mb-0 text-muted fs-5" style="color: #707D88 !important;">
-                                        <strong>{{ ucfirst(Auth::user()->role) }}</strong>
+                                        <strong><?php echo e(ucfirst(Auth::user()->role)); ?></strong>
                                     </p>
-                                @endif
+                                <?php endif; ?>
                             </div>
 
-                            {{-- KARTLAR BÖLÜMÜ --}}
+                            
                             <div class="row g-3 mb-4">
-                                @if (!$isTvUser && request('mode') != 'tv')
-                                    {{-- Kart 1: Hızlı İşlem --}}
+                                <?php if(!$isTvUser && request('mode') != 'tv'): ?>
+                                    
                                     <div class="col-md-4">
                                         <a href="#" data-bs-toggle="modal" data-bs-target="#createSelectionModal"
                                             class="text-decoration-none">
@@ -501,9 +501,9 @@
                                         </a>
                                     </div>
 
-                                    {{-- Kart 2: Raporlar --}}
+                                    
                                     <div class="col-md-4">
-                                        <a href="{{ route('statistics.index') }}" class="text-decoration-none">
+                                        <a href="<?php echo e(route('statistics.index')); ?>" class="text-decoration-none">
                                             <div class="card create-shipment-card h-100 hover-effect">
                                                 <div class="card-body d-flex align-items-center">
                                                     <div class="rounded-circle p-3 me-3"
@@ -519,9 +519,9 @@
                                         </a>
                                     </div>
 
-                                    {{-- Kart 3: Takvim --}}
+                                    
                                     <div class="col-md-4">
-                                        <a href="{{ route('home') }}" class="text-decoration-none">
+                                        <a href="<?php echo e(route('home')); ?>" class="text-decoration-none">
                                             <div class="card create-shipment-card h-100 hover-effect">
                                                 <div class="card-body d-flex align-items-center">
                                                     <div class="rounded-circle p-3 me-3"
@@ -537,8 +537,8 @@
                                             </div>
                                         </a>
                                     </div>
-                                @else
-                                    {{-- Widget 1: Canlı Saat --}}
+                                <?php else: ?>
+                                    
                                     <div class="col-md-4">
                                         <div class="card create-shipment-card h-100">
                                             <div class="card-body d-flex align-items-center justify-content-between">
@@ -554,16 +554,16 @@
                                         </div>
                                     </div>
 
-                                    {{-- Widget 2: Bugünün Tarihi --}}
+                                    
                                     <div class="col-md-4">
                                         <div class="card create-shipment-card h-100">
                                             <div class="card-body d-flex align-items-center justify-content-between">
                                                 <div>
                                                     <h6 class="text-muted mb-1 text-uppercase small fw-bold">Tarih</h6>
                                                     <h3 class="mb-0 fw-bold text-dark">
-                                                        {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</h3>
+                                                        <?php echo e(\Carbon\Carbon::now()->translatedFormat('d F Y')); ?></h3>
                                                     <small
-                                                        class="text-muted">{{ \Carbon\Carbon::now()->translatedFormat('l') }}</small>
+                                                        class="text-muted"><?php echo e(\Carbon\Carbon::now()->translatedFormat('l')); ?></small>
                                                 </div>
                                                 <div class="rounded-circle p-3"
                                                     style="background: rgba(240, 147, 251, 0.1);">
@@ -573,7 +573,7 @@
                                         </div>
                                     </div>
 
-                                    {{-- Widget 3: Son Güncelleme / Durum --}}
+                                    
                                     <div class="col-md-4">
                                         <div class="card create-shipment-card h-100">
                                             <div class="card-body d-flex align-items-center justify-content-between">
@@ -585,7 +585,8 @@
                                                         <small class="text-muted">Veriler Güncel</small>
                                                     </div>
                                                     <small class="text-muted d-block mt-1" style="font-size: 0.75rem">
-                                                        Son Yenileme: {{ now()->format('H:i') }}
+                                                        Son Yenileme: <?php echo e(now()->format('H:i')); ?>
+
                                                     </small>
                                                 </div>
                                                 <div class="rounded-circle p-3"
@@ -595,13 +596,13 @@
                                             </div>
                                         </div>
                                     </div>
-                                @endif
+                                <?php endif; ?>
                             </div>
                             <hr>
                         </div>
 
-                        {{-- ÖNEMLİ BİLDİRİMLER --}}
-                        @if (isset($importantItems) && $importantItems->isNotEmpty())
+                        
+                        <?php if(isset($importantItems) && $importantItems->isNotEmpty()): ?>
                             <div class="card create-shipment-card mb-4" id="important-items-card">
                                 <div class="card-header"
                                     style="background: linear-gradient(135deg, rgba(255, 65, 54, 0.1), rgba(255, 100, 80, 0.1)); border-bottom: 1px solid rgba(255, 65, 54, 0.2);">
@@ -611,8 +612,8 @@
                                 </div>
                                 <div class="card-body" style="padding: 1rem 1.5rem;">
                                     <div class="list-group list-group-flush">
-                                        @foreach ($importantItems as $item)
-                                            @php
+                                        <?php $__currentLoopData = $importantItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <?php
                                                 $params = [];
                                                 if ($item->date) {
                                                     $params['date'] = $item->date->format('Y-m-d');
@@ -620,78 +621,80 @@
                                                 $params['open_modal_id'] = $item->model_id;
                                                 $params['open_modal_type'] = $item->model_type;
                                                 $url = route('general.calendar', $params);
-                                            @endphp
-                                            <a href="{{ $url }}"
+                                            ?>
+                                            <a href="<?php echo e($url); ?>"
                                                 class="list-group-item list-group-item-action event-important-pulse-welcome"
                                                 style="background: transparent; border: none; padding: 0.75rem 0.5rem;"
                                                 title="Takvimde görmek ve detayı açmak için tıklayın...">
-                                                <strong>{{ $item->title }}</strong>
-                                                @if ($item->date)
+                                                <strong><?php echo e($item->title); ?></strong>
+                                                <?php if($item->date): ?>
                                                     <span class="badge bg-danger rounded-pill float-end">
-                                                        {{ $item->date->format('d.m.Y') }}
+                                                        <?php echo e($item->date->format('d.m.Y')); ?>
+
                                                         <span class="ms-2">| Saat:
-                                                            {{ $item->date->format('H:i') }}</span>
+                                                            <?php echo e($item->date->format('H:i')); ?></span>
                                                     </span>
-                                                @endif
+                                                <?php endif; ?>
                                             </a>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </div>
-                                    @if ($importantItemsCount > 3)
+                                    <?php if($importantItemsCount > 3): ?>
                                         <div class="text-center mt-3">
-                                            <a href="{{ route('important.all') }}" class="btn btn-outline-danger btn-sm">
-                                                Tüm ({{ $importantItemsCount }}) Veriyi Görüntüle...
+                                            <a href="<?php echo e(route('important.all')); ?>" class="btn btn-outline-danger btn-sm">
+                                                Tüm (<?php echo e($importantItemsCount); ?>) Veriyi Görüntüle...
                                             </a>
                                         </div>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
                             </div>
-                        @endif
+                        <?php endif; ?>
                         <hr>
 
-                        {{-- KPI KARTLARI --}}
-                        @if (isset($kpiData) && !empty($kpiData))
+                        
+                        <?php if(isset($kpiData) && !empty($kpiData)): ?>
                             <h4 class="mt-4"><i class="fa-solid fa-chart-line me-1" style="color: #667EEA;"></i> Sistem
                                 Geneli (Bugün)</h4>
                             <div class="row g-4 mt-2 mb-3">
                                 <div class="col-lg-3 col-md-6">
                                     <div class="kpi-card kpi-lojistik">
                                         <div class="kpi-icon"><i class="fa-solid fa-truck-fast"></i></div>
-                                        <div class="kpi-value">{{ $kpiData['sevkiyat_sayisi'] }}</div>
+                                        <div class="kpi-value"><?php echo e($kpiData['sevkiyat_sayisi']); ?></div>
                                         <div class="kpi-label">Yaklaşan Sevkiyat</div>
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-md-6">
                                     <div class="kpi-card kpi-uretim">
                                         <div class="kpi-icon"><i class="fa-solid fa-industry"></i></div>
-                                        <div class="kpi-value">{{ $kpiData['plan_sayisi'] }}</div>
+                                        <div class="kpi-value"><?php echo e($kpiData['plan_sayisi']); ?></div>
                                         <div class="kpi-label">Başlayan Plan</div>
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-md-6">
                                     <div class="kpi-card kpi-hizmet">
                                         <div class="kpi-icon"><i class="fa-solid fa-car-side"></i></div>
-                                        <div class="kpi-value">{{ $kpiData['gorev_sayisi'] }}</div>
+                                        <div class="kpi-value"><?php echo e($kpiData['gorev_sayisi']); ?></div>
                                         <div class="kpi-label">Görev & Etkinlik</div>
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-md-6">
                                     <div class="kpi-card kpi-sistem">
                                         <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
-                                        <div class="kpi-value">{{ $kpiData['kullanici_sayisi'] }}</div>
+                                        <div class="kpi-value"><?php echo e($kpiData['kullanici_sayisi']); ?></div>
                                         <div class="kpi-label">Toplam Kullanıcı</div>
                                     </div>
                                 </div>
                             </div>
-                        @endif
+                        <?php endif; ?>
 
-                        {{-- GÜNLÜK GÖREVLER --}}
-                        @if ($todayItems->isNotEmpty())
+                        
+                        <?php if($todayItems->isNotEmpty()): ?>
                             <h4 class="mt-4">
                                 <i class="fa-solid fa-clock me-1" style="color: #A78BFA;"></i>
-                                {{ $welcomeTitle }}
+                                <?php echo e($welcomeTitle); ?>
+
                             </h4>
 
-                            @php
+                            <?php
                                 $iconMap = [
                                     'gemi' => ['icon' => 'fa-ship', 'class' => 'icon-gemi'],
                                     'tır' => ['icon' => 'fa-truck-moving', 'class' => 'icon-tir'],
@@ -709,12 +712,12 @@
                                     'seyahat' => ['icon' => 'fa-route', 'class' => 'icon-seyahat'],
                                     'diger' => ['icon' => 'fa-calendar-star', 'class' => 'icon-etkinlik-genel'],
                                 ];
-                            @endphp
+                            ?>
 
                             <div class="list-group mt-3">
-                                @forelse($todayItems as $item)
-                                    {{-- PHP LOJİĞİ --}}
-                                    @php
+                                <?php $__empty_1 = true; $__currentLoopData = $todayItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                                    
+                                    <?php
                                         $icon = 'fa-calendar-day';
                                         $iconClass = 'text-muted';
                                         $baslik = 'Kayıt';
@@ -765,41 +768,42 @@
                                             $detay = $item->status == 'planned' ? 'Planlı' : 'Tamamlandı';
                                             $modalType = 'travel';
                                         }
-                                    @endphp
+                                    ?>
 
                                     <div class="list-group-item d-flex align-items-center py-3"
                                         style="background-color: transparent;">
                                         <div class="me-3">
                                             <i
-                                                class="fa-solid {{ $icon }} fa-2x vehicle-icon {{ $iconClass }}"></i>
+                                                class="fa-solid <?php echo e($icon); ?> fa-2x vehicle-icon <?php echo e($iconClass); ?>"></i>
                                         </div>
                                         <div class="d-flex flex-column flex-grow-1">
-                                            <h5 class="mb-1 fw-bold">{{ $baslik }}</h5>
-                                            <p class="mb-0 text-muted">{{ $detay }}</p>
+                                            <h5 class="mb-1 fw-bold"><?php echo e($baslik); ?></h5>
+                                            <p class="mb-0 text-muted"><?php echo e($detay); ?></p>
                                         </div>
-                                        <span class="fw-bold text-dark ms-3">{{ $saat }}</span>
-                                        <a href="{{ route('home') }}?open_modal_id={{ $modalId }}&open_modal_type={{ $modalType }}"
+                                        <span class="fw-bold text-dark ms-3"><?php echo e($saat); ?></span>
+                                        <a href="<?php echo e(route('home')); ?>?open_modal_id=<?php echo e($modalId); ?>&open_modal_type=<?php echo e($modalType); ?>"
                                             class="btn btn-outline-secondary btn-sm ms-3">
                                             <i class="fa-solid fa-arrow-right-long"></i>
                                         </a>
                                     </div>
-                                @empty
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                     <div class="alert alert-info">Kayıt bulunamadı.</div>
-                                @endforelse
+                                <?php endif; ?>
                             </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
 
-                {{-- GRAFİK KARTI --}}
-                @if (isset($chartData) && !empty($chartData))
+                
+                <?php if(isset($chartData) && !empty($chartData)): ?>
                     <div class="card create-shipment-card">
                         <div class="card-header">
-                            📊 {{ $chartTitle ?? 'Genel Veri Akışı' }}
+                            📊 <?php echo e($chartTitle ?? 'Genel Veri Akışı'); ?>
+
                         </div>
                         <div class="card-body">
                             <div class="sankey-container-wrapper">
-                                <div id="sankey-chart" data-sankey='@json($chartData)'
+                                <div id="sankey-chart" data-sankey='<?php echo json_encode($chartData, 15, 512) ?>'
                                     style="width: 100%; height: 500px;">
                                     <p class="text-center text-muted p-5">Grafik
                                         yükleniyor...</p>
@@ -807,13 +811,13 @@
                             </div>
                         </div>
                     </div>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('page_scripts')
+<?php $__env->startSection('page_scripts'); ?>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function() {
@@ -835,7 +839,7 @@
 
             // --- 1. TV MODU OTOMASYONU ---
             // Değişkenleri PHP'den al
-            const isTvUser = @json($isTvUser);
+            const isTvUser = <?php echo json_encode($isTvUser, 15, 512) ?>;
             const urlParams = new URLSearchParams(window.location.search);
             const isTvModeUrl = urlParams.get('mode') === 'tv';
 
@@ -1007,19 +1011,19 @@
             }
         });
     </script>
-    {{-- ACİL ÇIKIŞ SİSTEMİ (Klavye + Buton) --}}
-    @if (request('mode') == 'tv' || $isTvUser)
-        {{-- 1. Çıkış Formu --}}
-        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-            @csrf
+    
+    <?php if(request('mode') == 'tv' || $isTvUser): ?>
+        
+        <form id="logout-form" action="<?php echo e(route('logout')); ?>" method="POST" style="display: none;">
+            <?php echo csrf_field(); ?>
         </form>
 
-        {{-- 2. Görünür Çıkış Butonu (Sağ Alt Köşe) --}}
+        
         <div onclick="document.getElementById('logout-form').submit();" class="emergency-exit-btn" title="Çıkış Yap">
             <i class="fa-solid fa-power-off"></i>
         </div>
 
-        {{-- 3. Stiller ve Script --}}
+        
         <script>
             document.addEventListener('keydown', function(event) {
                 // ESC tuşuna basılırsa çıkış yap
@@ -1075,5 +1079,7 @@
                 cursor: pointer !important;
             }
         </style>
-    @endif
-@endsection
+    <?php endif; ?>
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/welcome.blade.php ENDPATH**/ ?>
