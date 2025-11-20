@@ -2,17 +2,16 @@
 
 @push('styles')
     <style>
-        /* Ana içerik alanına (main) animasyonlu arka planı uygula */
+        /* Ana içerik alanı - Modern gradient arka plan */
         #app>main.py-4 {
-            padding: 2.5rem 0 !important;
+            padding: 2rem 0 !important;
             min-height: calc(100vh - 72px);
-            background: linear-gradient(-45deg, #dbe4ff, #fde2ff, #d9fcf7, #fff0d9);
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe);
             background-size: 400% 400%;
-            animation: gradientWave 18s ease infinite;
+            animation: gradientShift 15s ease infinite;
         }
 
-        /* Arka plan dalgalanma animasyonu */
-        @keyframes gradientWave {
+        @keyframes gradientShift {
             0% {
                 background-position: 0% 50%;
             }
@@ -26,229 +25,438 @@
             }
         }
 
-        /* Cam Kart Stili (Liste için) */
-        .list-card {
-            background: rgba(255, 255, 255, 0.75);
+        /* Container için max-width */
+        .modern-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Üst başlık bölümü */
+        .page-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-header p {
+            margin: 0.5rem 0 0 0;
+            color: #6c757d;
+            font-size: 0.95rem;
+        }
+
+        /* Alert mesajları - Modern stil */
+        .alert {
+            border-radius: 15px;
+            border: none;
             backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: 1rem;
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
         }
 
-        /* Kart Başlığı (Liste için) */
-        .list-card .card-header {
-            background: rgba(255, 255, 255, 0.5);
-            color: #333;
-            font-weight: bold;
-            font-size: 1.25rem;
-            border-bottom: none;
-            border-top-left-radius: 1rem;
-            border-top-right-radius: 1rem;
+        .alert-success {
+            background: rgba(40, 199, 111, 0.15);
+            color: #1e7e34;
+        }
+
+        .alert-danger {
+            background: rgba(235, 87, 87, 0.15);
+            color: #c82333;
+        }
+
+        .alert-warning {
+            background: rgba(255, 193, 7, 0.15);
+            color: #856404;
+        }
+
+        /* Filtre butonu */
+        .btn-filter-toggle {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 15px;
+            color: #667eea;
+            font-weight: 600;
             padding: 1rem 1.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
         }
 
-        /* Tablo Stilleri */
+        .btn-filter-toggle:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-filter-toggle[aria-expanded="true"] {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .btn-filter-toggle i {
+            transition: transform 0.3s ease;
+        }
+
+        .btn-filter-toggle[aria-expanded="true"] i.fa-chevron-down {
+            transform: rotate(180deg);
+        }
+
+        /* Filtre kartı */
+        .filter-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .filter-card .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .filter-card .form-label i {
+            margin-right: 0.5rem;
+            color: #667eea;
+        }
+
+        .filter-card .form-control,
+        .filter-card .form-select {
+            border-radius: 12px;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+            background-color: white;
+        }
+
+        .filter-card .form-control:focus,
+        .filter-card .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+        }
+
+        /* Filtre butonları */
+        .btn-apply-filter {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 2rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-apply-filter:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .btn-clear-filter {
+            background: white;
+            border: 2px solid #e9ecef;
+            color: #6c757d;
+            font-weight: 600;
+            padding: 0.75rem 2rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-clear-filter:hover {
+            background: #f8f9fa;
+            border-color: #dee2e6;
+            transform: translateY(-2px);
+        }
+
+        /* Ana liste kartı */
+        .list-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .list-card .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 700;
+            font-size: 1.3rem;
+            border: none;
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .list-card .card-header i {
+            font-size: 1.5rem;
+        }
+
+        /* Tablo stilleri */
         .table {
             background-color: transparent;
             margin-bottom: 0;
         }
 
+        .table thead {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
         .table thead th {
-            color: #333;
-            border-bottom-width: 2px;
-            border-color: rgba(0, 0, 0, 0.15);
+            color: #495057;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+            padding: 1.25rem 1rem;
         }
 
-        .table-striped>tbody>tr:nth-of-type(odd)>* {
-            --bs-table-accent-bg: rgba(255, 255, 255, 0.4);
-            color: #212529;
-        }
-
-        .table-striped>tbody>tr:nth-of-type(even)>* {
-            --bs-table-accent-bg: transparent;
-            color: #212529;
-        }
-
-        .table-hover>tbody>tr:hover>* {
-            --bs-table-accent-bg: rgba(255, 255, 255, 0.8);
-            color: #000;
-        }
-
-        .table td,
-        .table th {
-            vertical-align: middle;
-        }
-
-        /* Filtre Stilleri (Sevkiyat listesiyle aynı) */
-        .btn-filter-toggle {
-            background-color: rgba(255, 255, 255, 0.8);
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            color: #333;
-            font-weight: 500;
+        .table tbody tr {
             transition: all 0.3s ease;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
 
-        .btn-filter-toggle:hover {
-            background-color: rgba(255, 255, 255, 0.95);
-            border-color: rgba(0, 0, 0, 0.15);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        .table tbody tr:hover {
+            background: rgba(102, 126, 234, 0.08) !important;
+            transform: scale(1.01);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
         }
 
-        .btn-filter-toggle[aria-expanded="true"] {
-            background-color: rgba(230, 235, 255, 0.9);
+        .table td {
+            vertical-align: middle;
+            padding: 1.25rem 1rem;
+            color: #495057;
+            font-size: 0.95rem;
         }
 
-        .filter-card {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border-radius: 0.75rem;
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            padding: 1.5rem;
-        }
-
-        .filter-card .form-label {
-            font-weight: 500;
-            color: #333;
-            margin-bottom: 0.3rem;
-        }
-
-        .filter-card .form-control,
-        .filter-card .form-select {
-            border-radius: 0.5rem;
-            background-color: #fff;
-        }
-
-        .filter-card .row {
-            margin-bottom: -1rem;
-        }
-
-        .filter-card .row>div {
-            margin-bottom: 1rem;
-        }
-
-        .btn-apply-filter {
-            background: linear-gradient(-45deg, #667EEA, #F093FB, #4FD1C5, #FBD38D);
-            background-size: 400% 400%;
-            animation: gradientWave 18s ease infinite;
-            border: none;
-            color: white;
-            font-weight: bold;
-            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-            padding: 0.5rem 1.25rem;
-        }
-
-        .btn-apply-filter:hover {
-            color: white;
-            transform: scale(1.05);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn-clear-filter {
-            padding: 0.5rem 1.25rem;
-        }
-
-        /* ... (mevcut genel stil kurallarınız) ... */
-
-        /* YENİ VE GELİŞTİRİLMİŞ: Önemli satırları vurgulamak için */
+        /* Önemli satır vurgusu */
         .row-important {
-            /* Daha belirgin bir arka plan rengi, ancak yine de hafif */
-            --bs-table-accent-bg: rgba(255, 235, 238, 0.8);
-            /* Açık pembe tonu, biraz şeffaf */
-            background-color: var(--bs-table-accent-bg) !important;
-            /* Önemli! Striped override */
-
-            /* Metin rengini belirginleştir ama çok koyu yapma */
-            color: #c0392b;
-            /* Koyu kırmızımsı ton */
-            font-weight: 600;
-
-            /* Hafif bir gölge efekti (isteğe bağlı, kaldırabilirsiniz) */
-            box-shadow: inset 0 0 5px rgba(252, 98, 117, 0.1);
-            /* İç gölge */
-
-            transition: all 0.2s ease-in-out;
-            /* Animasyonlu geçişler */
+            background: linear-gradient(90deg, rgba(255, 107, 107, 0.15) 0%, rgba(255, 107, 107, 0.05) 100%) !important;
+            border-left: 4px solid #ff6b6b !important;
         }
 
-        /* Önemli satırın üzerine gelindiğinde (hover) arka planı daha belirgin yap */
-        .table-hover>tbody>tr.row-important:hover {
-            --bs-table-accent-bg: rgba(255, 220, 224, 0.95);
-            /* Biraz daha koyu pembe */
-            background-color: var(--bs-table-accent-bg) !important;
-            /* Önemli! Striped override */
-            transform: translateY(-2px);
-            /* Hafif yukarı kayma efekti */
-            box-shadow: inset 0 0 8px rgba(252, 98, 117, 0.2), 0 2px 5px rgba(0, 0, 0, 0.05);
-            /* Daha belirgin gölge */
-        }
-
-        /* Önemli satırlardaki hücrelerin metin rengini korumak için */
         .row-important td {
-            color: #c0392b;
-            /* Metin rengini koru */
+            color: #c92a2a;
+            font-weight: 600;
+        }
+
+        .row-important:hover {
+            background: linear-gradient(90deg, rgba(255, 107, 107, 0.25) 0%, rgba(255, 107, 107, 0.1) 100%) !important;
+        }
+
+        /* Aksiyon butonları */
+        .btn-action {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            margin: 0 0.25rem;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-action.btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-action.btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+        }
+
+        /* Pagination */
+        .pagination {
+            margin: 0;
+            gap: 0.5rem;
+        }
+
+        .page-item .page-link {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            color: #667eea;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+            margin: 0;
+        }
+
+        .page-item.active .page-link {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: white;
+        }
+
+        .page-item .page-link:hover {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .card-footer {
+            background: rgba(255, 255, 255, 0.5);
+            border-top: 1px solid rgba(0, 0, 0, 0.05) !important;
+            padding: 1.5rem 2rem !important;
+        }
+
+        /* Badge stilleri */
+        .badge-custom {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .badge-important {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+        }
+
+        /* Responsive iyileştirmeler */
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .btn-filter-toggle {
+                font-size: 0.9rem;
+                padding: 0.75rem 1rem;
+            }
+
+            .table {
+                font-size: 0.85rem;
+            }
+
+            .btn-action {
+                width: 35px;
+                height: 35px;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Smooth scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Loading animasyonu (isteğe bağlı) */
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
     </style>
 @endpush
 
-
 @section('content')
-    <div class="container-fluid">
+    <div class="container-fluid modern-container">
         <div class="row justify-content-center">
-            <div class="col-md-12">
+            <div class="col-12">
+
+                {{-- Sayfa Başlığı --}}
+                <div class="page-header">
+                    <h1><i class="fas fa-clipboard-list"></i> Üretim Planları</h1>
+                    <p>Haftalık üretim planlarınızı görüntüleyin, düzenleyin ve yönetin.</p>
+                </div>
 
                 {{-- Başarı/Hata Mesajları --}}
                 @if (session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        {{ session('success') }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 @endif
                 @if (session('error'))
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        {{ session('error') }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 @endif
 
-                {{-- === ÜRETİM PLANI FİLTRELEME BÖLÜMÜ === --}}
+                {{-- Filtre Bölümü --}}
                 <div class="mb-4">
                     <div class="d-grid">
                         <button class="btn btn-filter-toggle" type="button" data-bs-toggle="collapse"
                             data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
-                            <i class="fas fa-filter me-2"></i> Filtre Seçenekleri
-                            <i class="fas fa-chevron-down ms-2 small"></i>
+                            <i class="fas fa-sliders-h me-2"></i> Filtre Seçenekleri
+                            <i class="fas fa-chevron-down ms-2"></i>
                         </button>
                     </div>
 
                     <div class="collapse mt-3" id="filterCollapse">
                         <div class="card filter-card">
-                            {{-- Form action güncellendi --}}
                             <form method="GET" action="{{ route('production.plans.index') }}">
                                 <div class="row">
                                     @php
-                                        // Admin/Yönetici mi?
                                         $isAdminOrManager = in_array(Auth::user()->role, ['admin', 'yönetici']);
                                     @endphp
 
-                                    {{-- Plan Başlığı Filtresi --}}
-                                    <div class="{{ $isAdminOrManager ? 'col-md-3' : 'col-md-6' }}">
-                                        <label for="plan_title" class="form-label">Plan Başlığı (Ara)</label>
-                                        <input type="text" class="form-control form-control-sm" id="plan_title"
-                                            name="plan_title" value="{{ $filters['plan_title'] ?? '' }}"
-                                            placeholder="Plan başlığı girin...">
+                                    {{-- Plan Başlığı --}}
+                                    <div class="{{ $isAdminOrManager ? 'col-lg-3 col-md-6' : 'col-md-6' }}">
+                                        <label for="plan_title" class="form-label">
+                                            <i class="fas fa-search"></i>Plan Başlığı
+                                        </label>
+                                        <input type="text" class="form-control" id="plan_title" name="plan_title"
+                                            value="{{ $filters['plan_title'] ?? '' }}" placeholder="Plan başlığı girin...">
                                     </div>
 
-                                    {{-- Önem Durumu Filtresi (Sadece Admin/Yönetici) --}}
+                                    {{-- Önem Durumu --}}
                                     @if ($isAdminOrManager)
-                                        <div class="col-md-3">
-                                            <label for="is_important" class="form-label" style="color: #dc3545;">
-                                                <i class="fas fa-bell"></i> Önem Durumu
+                                        <div class="col-lg-3 col-md-6">
+                                            <label for="is_important" class="form-label">
+                                                <i class="fas fa-exclamation-triangle"></i>Önem Durumu
                                             </label>
-                                            <select class="form-select form-select-sm" id="is_important"
-                                                name="is_important">
+                                            <select class="form-select" id="is_important" name="is_important">
                                                 <option value="all"
                                                     {{ ($filters['is_important'] ?? 'all') == 'all' ? 'selected' : '' }}>
                                                     Tümü
@@ -265,52 +473,53 @@
                                         </div>
                                     @endif
 
-                                    {{-- Tarih Aralığı Filtresi --}}
-                                    <div class="col-md-3">
-                                        <label for="date_from" class="form-label">Başlangıç Tarihi</label>
-                                        <input type="date" class="form-control form-control-sm" id="date_from"
-                                            name="date_from" value="{{ $filters['date_from'] ?? '' }}">
+                                    {{-- Tarih Aralığı --}}
+                                    <div class="col-lg-3 col-md-6">
+                                        <label for="date_from" class="form-label">
+                                            <i class="fas fa-calendar-alt"></i>Başlangıç Tarihi
+                                        </label>
+                                        <input type="date" class="form-control" id="date_from" name="date_from"
+                                            value="{{ $filters['date_from'] ?? '' }}">
                                     </div>
-                                    <div class="col-md-3">
-                                        <label for="date_to" class="form-label">Bitiş Tarihi</label>
-                                        <input type="date" class="form-control form-control-sm" id="date_to"
-                                            name="date_to" value="{{ $filters['date_to'] ?? '' }}">
+                                    <div class="col-lg-3 col-md-6">
+                                        <label for="date_to" class="form-label">
+                                            <i class="fas fa-calendar-check"></i>Bitiş Tarihi
+                                        </label>
+                                        <input type="date" class="form-control" id="date_to" name="date_to"
+                                            value="{{ $filters['date_to'] ?? '' }}">
                                     </div>
+                                </div>
 
-                                    {{-- Butonlar --}}
-                                    <div class="col-md-12 d-flex align-items-end justify-content-end gap-2 mt-3">
-                                        <a href="{{ route('production.plans.index') }}"
-                                            class="btn btn-secondary btn-clear-filter btn-sm">
-                                            <i class="fas fa-times me-1"></i> Temizle
-                                        </a>
-                                        <button type="submit" class="btn btn-apply-filter btn-sm">
-                                            <i class="fas fa-check me-1"></i> Filtrele
-                                        </button>
-                                    </div>
+                                {{-- Butonlar --}}
+                                <div class="d-flex justify-content-end gap-2 mt-4">
+                                    <a href="{{ route('production.plans.index') }}" class="btn btn-clear-filter">
+                                        <i class="fas fa-times me-2"></i>Temizle
+                                    </a>
+                                    <button type="submit" class="btn btn-apply-filter">
+                                        <i class="fas fa-check me-2"></i>Filtrele
+                                    </button>
                                 </div>
                             </form>
                         </div>
                     </div>
                 </div>
-                {{-- === FİLTRELEME BÖLÜMÜ SONU === --}}
 
-
-                {{-- ÜRETİM PLANI LİSTESİ KARTI --}}
+                {{-- Ana Liste Kartı --}}
                 <div class="card list-card">
-                    {{-- Başlık güncellendi --}}
-                    <div class="card-header">Üretim Planı Listesi</div>
+                    <div class="card-header">
+                        <i class="fas fa-list"></i>
+                        <span>Plan Listesi</span>
+                    </div>
 
                     <div class="card-body p-0">
-                        {{-- Değişken ve mesaj güncellendi --}}
                         @if ($plans->isEmpty())
-                            <div class="alert alert-warning m-3" role="alert">
-                                <i class="fas fa-exclamation-triangle me-2"></i> Kayıtlı üretim planı bulunamadı.
+                            <div class="alert alert-warning m-4" role="alert">
+                                <i class="fas fa-info-circle me-2"></i>Kayıtlı üretim planı bulunamadı.
                             </div>
                         @else
                             <div class="table-responsive">
-                                <table class="table table-striped table-hover mb-0">
+                                <table class="table mb-0">
                                     <thead>
-                                        {{-- Tablo başlıkları güncellendi --}}
                                         <tr>
                                             <th scope="col" class="ps-3">Plan Başlığı</th>
                                             <th scope="col">Hafta Başlangıcı</th>
@@ -320,35 +529,43 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {{-- Döngü güncellendi: $plans as $plan --}}
                                         @foreach ($plans as $plan)
                                             <tr class="{{ $plan->is_important ? 'row-important' : '' }}">
-                                                {{-- Tablo verileri güncellendi --}}
-                                                <td class="ps-3">{{ $plan->plan_title }}</td>
-                                                <td>{{ $plan->week_start_date ? \Carbon\Carbon::parse($plan->week_start_date)->format('d.m.Y') : '-' }}
+                                                <td class="ps-3">
+                                                    <strong>{{ $plan->plan_title }}</strong>
+                                                    @if ($plan->is_important)
+                                                        <span class="badge badge-custom badge-important ms-2">
+                                                            <i class="fas fa-star"></i> Önemli
+                                                        </span>
+                                                    @endif
                                                 </td>
-                                                <td>{{ $plan->user->name ?? 'Bilinmiyor' }}</td>
-                                                <td>{{ $plan->created_at ? \Carbon\Carbon::parse($plan->created_at)->format('d.m.Y H:i') : '-' }}
+                                                <td>
+                                                    <i class="fas fa-calendar me-2"></i>
+                                                    {{ $plan->week_start_date ? \Carbon\Carbon::parse($plan->week_start_date)->format('d.m.Y') : '-' }}
                                                 </td>
-
-                                                {{-- İşlem butonları güncellendi --}}
+                                                <td>
+                                                    <i class="fas fa-user me-2"></i>
+                                                    {{ $plan->user->name ?? 'Bilinmiyor' }}
+                                                </td>
+                                                <td>
+                                                    <i class="fas fa-clock me-2"></i>
+                                                    {{ $plan->created_at ? \Carbon\Carbon::parse($plan->created_at)->format('d.m.Y H:i') : '-' }}
+                                                </td>
                                                 <td class="text-end pe-3">
-                                                    {{-- Sevkiyattaki 'izleyici' rol mantığınızı koruyoruz --}}
                                                     @if (!in_array(Auth::user()->role, ['izleyici']))
                                                         <a href="{{ route('production.plans.edit', $plan) }}"
-                                                            class="btn btn-sm btn-primary" title="Düzenle"><i
-                                                                class="fas fa-edit"></i></a>
-                                                    @endif
-
-                                                    {{--  silme butonu --}}
-                                                    @if (!in_array(Auth::user()->role, ['izleyici']))
+                                                            class="btn btn-action btn-primary" title="Düzenle">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
                                                         <form action="{{ route('production.plans.destroy', $plan) }}"
                                                             method="POST" class="d-inline"
                                                             onsubmit="return confirm('Bu planı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.');">
                                                             @csrf
                                                             @method('DELETE')
-                                                            <button type="submit" class="btn btn-sm btn-danger"
-                                                                title="Sil"><i class="fas fa-trash"></i></button>
+                                                            <button type="submit" class="btn btn-action btn-danger"
+                                                                title="Sil">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
                                                         </form>
                                                     @endif
                                                 </td>
@@ -356,16 +573,14 @@
                                         @endforeach
                                     </tbody>
                                 </table>
-
-                                {{-- Sayfalama linkleri (Controller'da paginate() kullandık) --}}
-                                @if ($plans->hasPages())
-                                    <div class="card-footer bg-transparent border-top-0 pt-3 pb-2 px-3">
-                                        {{-- Filtreleri sayfalama linklerine ekle --}}
-                                        {{ $plans->appends($filters ?? [])->links('pagination::bootstrap-5') }}
-                                    </div>
-                                @endif
-
                             </div>
+
+                            {{-- Sayfalama --}}
+                            @if ($plans->hasPages())
+                                <div class="card-footer">
+                                    {{ $plans->appends($filters ?? [])->links('pagination::bootstrap-5') }}
+                                </div>
+                            @endif
                         @endif
                     </div>
                 </div>
@@ -374,27 +589,44 @@
     </div>
 @endsection
 
-{{-- JavaScript (Sevkiyat listesiyle aynı) --}}
 @section('page_scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            var filterCollapse = document.getElementById('filterCollapse');
-            var filterButtonIcon = document.querySelector('.btn-filter-toggle .fa-chevron-down');
+            // Filtre toggle animasyonu
+            const filterCollapse = document.getElementById('filterCollapse');
+            const filterButton = document.querySelector('.btn-filter-toggle');
+            const chevronIcon = filterButton.querySelector('.fa-chevron-down');
 
-            if (filterCollapse && filterButtonIcon) {
+            if (filterCollapse) {
                 filterCollapse.addEventListener('show.bs.collapse', function() {
-                    filterButtonIcon.classList.remove('fa-chevron-down');
-                    filterButtonIcon.classList.add('fa-chevron-up');
+                    chevronIcon.style.transform = 'rotate(180deg)';
                 });
+
                 filterCollapse.addEventListener('hide.bs.collapse', function() {
-                    filterButtonIcon.classList.remove('fa-chevron-up');
-                    filterButtonIcon.classList.add('fa-chevron-down');
+                    chevronIcon.style.transform = 'rotate(0deg)';
                 });
+
+                // Sayfa yüklendiğinde filtre açıksa icon'u döndür
                 if (filterCollapse.classList.contains('show')) {
-                    filterButtonIcon.classList.remove('fa-chevron-down');
-                    filterButtonIcon.classList.add('fa-chevron-up');
+                    chevronIcon.style.transform = 'rotate(180deg)';
                 }
             }
+
+            // Alert otomatik kapanma
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
+
+            // Tablo satırı animasyonu
+            const tableRows = document.querySelectorAll('tbody tr');
+            tableRows.forEach((row, index) => {
+                row.style.animation = `slideDown 0.3s ease ${index * 0.05}s forwards`;
+                row.style.opacity = '0';
+            });
         });
     </script>
 @endsection

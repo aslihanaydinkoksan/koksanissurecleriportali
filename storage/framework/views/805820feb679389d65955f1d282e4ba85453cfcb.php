@@ -1,7 +1,7 @@
-@extends('layouts.app')
 
-@section('title', 'Profilimi Düzenle')
-@push('styles')
+
+<?php $__env->startSection('title', 'Profilimi Düzenle'); ?>
+<?php $__env->startPush('styles'); ?>
     <style>
         /* Ana içerik alanına animasyonlu arka planı uygula */
         #app>main.py-4 {
@@ -324,101 +324,149 @@
             }
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card profile-edit-card">
                     <div class="card-header border-0">
-                        {{ __('Profil Bilgilerini Düzenle') }}
+                        <?php echo e(__('Profil Bilgilerini Düzenle')); ?>
+
                     </div>
 
                     <div class="card-body">
-                        @if (session('success'))
+                        <?php if(session('success')): ?>
                             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                <strong>✓</strong> {{ session('success') }}
+                                <strong>✓</strong> <?php echo e(session('success')); ?>
+
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
-                        @endif
+                        <?php endif; ?>
 
-                        <form method="POST" action="{{ route('profile.update') }}">
-                            @csrf
-                            @method('PUT')
+                        <form method="POST" action="<?php echo e(route('profile.update')); ?>">
+                            <?php echo csrf_field(); ?>
+                            <?php echo method_field('PUT'); ?>
 
-                            {{-- Ad Soyad --}}
+                            
                             <div class="row mb-4">
                                 <label for="name" class="col-md-4 col-form-label text-md-end">
-                                    {{ __('Ad Soyad') }}
+                                    <?php echo e(__('Ad Soyad')); ?>
+
                                 </label>
                                 <div class="col-md-6">
                                     <div class="input-icon-wrapper">
                                         <input id="name" type="text"
-                                            class="form-control @error('name') is-invalid @enderror" name="name"
-                                            value="{{ old('name', Auth::user()->name) }}" required autocomplete="name"
+                                            class="form-control <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" name="name"
+                                            value="<?php echo e(old('name', Auth::user()->name)); ?>" required autocomplete="name"
                                             autofocus>
                                         <span class="input-icon">👤</span>
                                     </div>
-                                    @error('name')
+                                    <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
                                         <span class="invalid-feedback" role="alert">
-                                            <strong>{{ $message }}</strong>
+                                            <strong><?php echo e($message); ?></strong>
                                         </span>
-                                    @enderror
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </div>
                             </div>
 
-                            {{-- E-posta --}}
+                            
                             <div class="row mb-4">
                                 <label for="email" class="col-md-4 col-form-label text-md-end">
-                                    {{ __('E-posta Adresi') }}
+                                    <?php echo e(__('E-posta Adresi')); ?>
+
                                 </label>
                                 <div class="col-md-6">
                                     <div class="input-icon-wrapper">
                                         <input id="email" type="email"
-                                            class="form-control @error('email') is-invalid @enderror" name="email"
-                                            value="{{ old('email', Auth::user()->email) }}" required autocomplete="email">
+                                            class="form-control <?php $__errorArgs = ['email'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" name="email"
+                                            value="<?php echo e(old('email', Auth::user()->email)); ?>" required autocomplete="email">
                                         <span class="input-icon">✉️</span>
                                     </div>
-                                    @error('email')
+                                    <?php $__errorArgs = ['email'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
                                         <span class="invalid-feedback" role="alert">
-                                            <strong>{{ $message }}</strong>
+                                            <strong><?php echo e($message); ?></strong>
                                         </span>
-                                    @enderror
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </div>
                             </div>
 
-                            {{-- Password Section Divider --}}
+                            
                             <div class="password-divider">
                                 <p class="password-divider-text">
                                     Şifrenizi değiştirmek istemiyorsanız bu alanları boş bırakın
                                 </p>
                             </div>
 
-                            {{-- Yeni Şifre --}}
+                            
                             <div class="row mb-4">
                                 <label for="password" class="col-md-4 col-form-label text-md-end">
-                                    {{ __('Yeni Şifre') }}
+                                    <?php echo e(__('Yeni Şifre')); ?>
+
                                 </label>
                                 <div class="col-md-6">
                                     <div class="input-icon-wrapper">
                                         <input id="password" type="password"
-                                            class="form-control @error('password') is-invalid @enderror" name="password"
+                                            class="form-control <?php $__errorArgs = ['password'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" name="password"
                                             autocomplete="new-password">
                                         <span class="input-icon">🔑</span>
                                     </div>
-                                    @error('password')
+                                    <?php $__errorArgs = ['password'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
                                         <span class="invalid-feedback" role="alert">
-                                            <strong>{{ $message }}</strong>
+                                            <strong><?php echo e($message); ?></strong>
                                         </span>
-                                    @enderror
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </div>
                             </div>
 
-                            {{-- Şifre Tekrar --}}
+                            
                             <div class="row mb-4">
                                 <label for="password-confirm" class="col-md-4 col-form-label text-md-end">
-                                    {{ __('Yeni Şifreyi Onayla') }}
+                                    <?php echo e(__('Yeni Şifreyi Onayla')); ?>
+
                                 </label>
                                 <div class="col-md-6">
                                     <div class="input-icon-wrapper">
@@ -429,13 +477,13 @@
                                 </div>
                             </div>
 
-                            {{-- Action Buttons --}}
+                            
                             <div class="row mb-0 mt-5">
                                 <div class="col-md-6 offset-md-4 d-flex gap-2">
                                     <button type="submit" class="btn btn-animated-gradient">
                                         💾 Değişiklikleri Kaydet
                                     </button>
-                                    <a href="{{ route('home') }}" class="btn btn-outline-secondary">
+                                    <a href="<?php echo e(route('home')); ?>" class="btn btn-outline-secondary">
                                         ← İptal
                                     </a>
                                 </div>
@@ -446,4 +494,6 @@
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/profile/edit.blade.php ENDPATH**/ ?>

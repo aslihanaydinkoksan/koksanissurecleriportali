@@ -364,7 +364,7 @@ class VehicleAssignmentController extends Controller
 
         $assignment->update($validatedData);
 
-        return redirect()->route('service.assignments.index')
+        return redirect()->route('my-assignments.index')
             ->with('success', 'Görev başarıyla güncellendi.');
     }
 

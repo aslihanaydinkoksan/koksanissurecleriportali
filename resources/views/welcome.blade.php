@@ -468,7 +468,14 @@
                     <div class="card-body p-4">
                         <div class="row align-items-center mb-3">
                             <div class="col-md-7">
-                                <h2 class="card-title mb-0">Hoş Geldiniz, {{ Auth::user()->name }}!</h2>
+                                @if (Auth::user()->email === 'tv@koksan.com' || Auth::user()->name === 'İzleme Panosu')
+                                    <h2 class="card-title mb-0 fw-bold">KÖKSAN GENEL İŞ AKIŞI</h2>
+                                    <p class="mb-0 text-muted fs-5" style="color: #707D88  !important;">
+                                        Canlı Veri Yayını
+                                    </p>
+                                @else
+                                    <h2 class="card-title mb-0 fw-bold">Hoş Geldiniz, {{ Auth::user()->name }}!</h2>
+                                @endif
                                 {{-- TV kullanıcısı ise rolü veya departmanı göstermeye gerek yok, temiz kalsın --}}
                                 @if (Auth::user()->department && !$isTvUser)
                                     {{-- Normal departman gösterimi --}}
