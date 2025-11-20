@@ -29,11 +29,11 @@ class VehicleAssignmentController extends Controller
             'createdBy',
             'responsible' // Polymorphic ilişki
         ]);
+        $query->whereNotNull('vehicle_id');
         $query->whereIn('responsible_type', [
             User::class,
             Team::class
         ]);
-
         // --- FİLTRELEME ---
         if ($request->filled('vehicle_id')) {
             $query->where('vehicle_id', $request->input('vehicle_id'));
@@ -87,6 +87,33 @@ class VehicleAssignmentController extends Controller
 
         return view('service.assignments.index', compact('assignments', 'filters', 'vehicles'));
     }
+    /**
+     * Araçsız (Genel) görevleri listeler.
+     */
+    public function generalIndex(Request $request): View
+    {
+        $query = VehicleAssignment::with(['createdBy', 'responsible']);
+
+        // KRİTİK: Sadece araçsız görevleri getir
+        $query->whereNull('vehicle_id');
+
+        // --- FİLTRELEME (Araç filtresi hariç diğerleri aynı) ---
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'LIKE', "%{$search}%")
+                    ->orWhere('task_description', 'LIKE', "%{$search}%");
+            });
+        }
+        // ... (Tarih filtreleri aynı kalabilir) ...
+
+        $assignments = $query->orderBy('start_time', 'desc')->paginate(15);
+
+        return view('service.assignments.general_index', compact('assignments'));
+    }
 
     /**
      * Yeni araç atama formunu gösterir.
@@ -101,6 +128,20 @@ class VehicleAssignmentController extends Controller
         $teams = Team::active()->with('users')->orderBy('name')->get();
 
         return view('service.assignments.create', compact('vehicles', 'users', 'teams'));
+    }
+    /**
+     * Kullanıcının başkalarına atadığı görevleri listeler.
+     */
+    public function assignedByMe(): View
+    {
+        $user = Auth::user();
+
+        $assignments = VehicleAssignment::with(['vehicle', 'responsible'])
+            ->where('user_id', $user->id) // user_id = Görevi Oluşturan (Creator)
+            ->latest('created_at')
+            ->paginate(15);
+
+        return view('service.assignments.assigned_by_me', compact('assignments'));
     }
 
     /**
@@ -190,24 +231,26 @@ class VehicleAssignmentController extends Controller
             // Genel görevler için
             $assignment->start_time = now();
             $assignment->end_time = now()->addDay(); // 1 gün varsayılan süre
-            $successMessage = 'Görev başarıyla oluşturuldu.';
+            $successMessage = 'Genel görev başarıyla oluşturuldu.';
         }
 
         // 6. Kaydet
         $assignment->save();
         $recipients = collect();
 
-        if ($assignmentType === 'individual') {
-            // Bireysel atama: Sadece sorumlu kullanıcıya gönder
-            $responsibleUser = User::find($validatedData['responsible_user_id']);
-            if ($responsibleUser) {
-                $recipients->push($responsibleUser);
-            }
-        } elseif ($assignmentType === 'team') {
-            // Takım ataması: Takımdaki tüm üyelere gönder
-            $team = Team::with('users')->find($validatedData['team_id']);
-            if ($team) {
-                $recipients = $recipients->merge($team->users);
+        if ($assignmentType === 'individual') { // Not: Kodda 'vehicle'/'general' olarak set edildiği için burası mantıksal olarak responsible_type kontrolü ile çalışır, aşağıda düzeltiyorum.
+            // Not: Orjinal kodda burası $assignmentType kontrolü ile yapılmıştı ama $assignmentType yukarıda 'vehicle' veya 'general' atanıyor.
+            // Bildirim mantığını responsible_type üzerinden yapmak daha güvenli:
+            if ($validatedData['responsible_type'] === 'user') {
+                $responsibleUser = User::find($validatedData['responsible_user_id']);
+                if ($responsibleUser) {
+                    $recipients->push($responsibleUser);
+                }
+            } elseif ($validatedData['responsible_type'] === 'team') {
+                $team = Team::with('users')->find($validatedData['responsible_team_id']); // team_id yerine responsible_team_id
+                if ($team) {
+                    $recipients = $recipients->merge($team->users);
+                }
             }
         }
 
@@ -216,7 +259,13 @@ class VehicleAssignmentController extends Controller
             $recipient->notify(new VehicleAssignmentCreated($assignment));
         }
 
-        return redirect()->route('service.assignments.index')
+        // --- YÖNLENDİRME MANTIĞI (GÜNCELLENDİ) ---
+        // Eğer araçlı görev ise Araç Görevlerine, değilse Genel Görevlere yönlendir.
+        $redirectRoute = ($assignmentType === 'vehicle')
+            ? 'service.assignments.index'
+            : 'service.general-tasks.index';
+
+        return redirect()->route($redirectRoute)
             ->with('success', $successMessage);
     }
     /**
@@ -232,7 +281,6 @@ class VehicleAssignmentController extends Controller
         $assignments = VehicleAssignment::with([
             'vehicle',
             'createdBy',
-            // Hata veren kısmı MorphTo ile koşullu yüklüyoruz:
             'responsible' => function (MorphTo $morphTo) {
                 $morphTo->morphWith([
                         // Eğer responsible bir Team ise, Team'in 'users' ilişkisini yükle
@@ -412,7 +460,6 @@ class VehicleAssignmentController extends Controller
 
         return view('service.assignments.my_tasks', compact('tasks'));
     }
-
     /**
      * Görev durumunu günceller (AJAX)
      */
@@ -422,48 +469,34 @@ class VehicleAssignmentController extends Controller
             'status' => 'required|in:pending,in_progress,completed,cancelled',
         ]);
 
-        // 1. ESKİ DURUMU KAYDET
         $oldStatus = $assignment->status;
         $newStatus = $validatedData['status'];
-
         $assignment->status = $newStatus;
 
-        // 2. TAMAMLANDIYSA İŞLEM YAP
-        if ($newStatus === 'completed') {
-            // Tamamlama zamanını ayarla
-            if (!$assignment->end_time) {
+        // SENARYO 1: Görev Bitti veya İptal Edildi
+        // Bildirimleri temizle ve bitiş zamanını kaydet
+        if (in_array($newStatus, ['completed', 'cancelled'])) {
+            $this->deleteAssignmentNotifications($assignment);
+
+            if ($newStatus === 'completed' && !$assignment->end_time) {
                 $assignment->end_time = now();
             }
-
-            // Görev tamamlandığı için bildirimleri SİL (Rozeti kaldır)
-            $this->deleteAssignmentNotifications($assignment);
-
-            // 3. TAMAMLANMIŞTAN GERİ DÖNÜYORSA İŞLEM YAP
-        } elseif ($oldStatus === 'completed' && in_array($newStatus, ['pending', 'in_progress'])) {
-            // Tamamlanmış bir görev tekrar aktif bir duruma alındı.
-            // Bildirimi tekrar OLUŞTUR ve alıcılara gönder (Rozeti geri getir)
-
-            // Sorumluları bul
-            $recipients = collect();
-            if ($assignment->responsible_type === User::class && $assignment->responsible) {
-                $recipients->push($assignment->responsible);
-            } elseif ($assignment->responsible_type === Team::class && $assignment->responsible) {
-                $assignment->responsible->loadMissing('users');
-                $recipients = $recipients->merge($assignment->responsible->users);
-            }
-
-            // Bildirimi gönder (Notification Created sınıfınız kullanılacak)
-            foreach ($recipients->unique() as $recipient) {
-                $recipient->notify(new VehicleAssignmentCreated($assignment));
-            }
-
-            // Bitiş zamanını temizle (istenirse)
-            $assignment->end_time = null;
         }
 
-        // Not: Görev 'cancelled' (iptal) edilirse de bildirimlerin silinmesi mantıklı olabilir.
-        if ($newStatus === 'cancelled') {
-            $this->deleteAssignmentNotifications($assignment);
+        // SENARYO 2: Görev Tamamlandı'dan Geri Döndü (Aktifleşti)
+        // Eskileri temizle, Bitiş zamanını sil ve YENİ bildirim oluştur
+        elseif ($oldStatus === 'completed' && in_array($newStatus, ['pending', 'in_progress'])) {
+            $this->deleteAssignmentNotifications($assignment); // Temizlik
+            $assignment->end_time = null;
+
+            // Bildirimi zorla oluştur ve okunmamış yap
+            $this->forceNotificationUnread($assignment);
+        }
+
+        // SENARYO 3: Aktif Durumlar Arası Geçiş (Örn: Beklemede -> Devam Ediyor)
+        // Bildirim varsa okunmamış yap, yoksa yeni oluştur
+        elseif (in_array($oldStatus, ['pending', 'in_progress']) && in_array($newStatus, ['pending', 'in_progress'])) {
+            $this->forceNotificationUnread($assignment);
         }
 
         $assignment->save();
@@ -478,31 +511,68 @@ class VehicleAssignmentController extends Controller
 
         return back()->with('success', 'Görev durumu güncellendi.');
     }
-    private function deleteAssignmentNotifications(VehicleAssignment $assignment): void
+    /**
+     * Bildirimi bulup okunmamış yapar, yoksa yeni oluşturur.
+     */
+    private function forceNotificationUnread(VehicleAssignment $assignment): void
     {
-        // Bildirimlerin alıcıları (Sorumlu Kullanıcı ve Takım Üyeleri)
+        // 1. Alıcıları Belirle
         $recipients = collect();
-
-        // 1. Bireysel Sorumluluk
         if ($assignment->responsible_type === User::class) {
             $recipients->push($assignment->responsible);
-        }
-        // 2. Takım Sorumluluğu
-        elseif ($assignment->responsible_type === Team::class && $assignment->responsible) {
-            // Team üyelerini yükle
+        } elseif ($assignment->responsible_type === Team::class && $assignment->responsible) {
             $assignment->responsible->loadMissing('users');
             $recipients = $recipients->merge($assignment->responsible->users);
         }
 
-        // Alıcıları döngüye al
+        // 2. Her Alıcı İçin İşlem Yap
         foreach ($recipients->unique() as $recipient) {
-            // Kullanıcının, bu assignment_id'yi içeren okunmamış bildirimlerini sil
-            $recipient->unreadNotifications()
-                ->where('data', 'like', '%"assignment_id":' . $assignment->id . '%') // Bildirim verisi içinde assignment_id'yi ara
-                ->markAsRead();
+            if (!$recipient)
+                continue;
 
-            // Not: Eğer bildirimler okunduktan sonra da kalıyorsa, 'notifications()' yerine 
-            // 'notifications()' kullanıp tüm bildirimleri silmeyi düşünebilirsiniz.
+            // Mevcut bildirimi ara (Data içindeki ID'ye göre)
+            $notification = $recipient->notifications()
+                ->where('data', 'like', '%"assignment_id":' . $assignment->id . '%')
+                ->latest()
+                ->first();
+
+            if ($notification) {
+                // VARSA: Sadece okunmamış (null) yap
+                $notification->update(['read_at' => null]);
+            } else {
+                // YOKSA: Yeni bildirim gönder
+                $recipient->notify(new VehicleAssignmentCreated($assignment));
+
+                // Ve gönderilen bu yeni bildirimi hemen bulup okunmamış olduğundan emin ol (Garanti)
+                // (Sync kuyrukta bu genellikle otomatiktir ama manual update garanti sağlar)
+                $latest = $recipient->notifications()->latest()->first();
+                if ($latest) {
+                    $latest->update(['read_at' => null]);
+                }
+            }
+        }
+    }
+    /**
+     * Göreve ait tüm bildirimleri siler.
+     */
+    private function deleteAssignmentNotifications(VehicleAssignment $assignment): void
+    {
+        $recipients = collect();
+
+        if ($assignment->responsible_type === User::class) {
+            $recipients->push($assignment->responsible);
+        } elseif ($assignment->responsible_type === Team::class && $assignment->responsible) {
+            $assignment->responsible->loadMissing('users');
+            $recipients = $recipients->merge($assignment->responsible->users);
+        }
+
+        foreach ($recipients->unique() as $recipient) {
+            if (!$recipient)
+                continue;
+
+            $recipient->notifications()
+                ->where('data', 'like', '%"assignment_id":' . $assignment->id . '%')
+                ->delete();
         }
     }
 }

@@ -341,17 +341,29 @@
                                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownVehicles"
                                     role="button" data-bs-toggle="dropdown">
                                     <i class="fa-solid fa-car-side" style="color: #FBD38D;"></i>
-                                    <span>Araç Görevleri</span>
+                                    <span>Görevler & Atamalar</span>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><a class="dropdown-item" href="<?php echo e(route('service.assignments.create')); ?>">
-                                            <i class="fa-solid fa-plus" style="color: #A78BFA;"></i> Araç Görevi Ekle
+                                            <i class="fa-solid fa-plus" style="color: #A78BFA;"></i> Yeni Görev Ekle
                                         </a></li>
                                     <li><a class="dropdown-item" href="<?php echo e(route('service.assignments.index')); ?>">
-                                            <i class="fa-solid fa-list" style="color: #667EEA;"></i> Görev Listesi
+                                            <i class="fa-solid fa-list" style="color: #667EEA;"></i> Araç Görev Listesi
                                         </a></li>
+                                    
+                                    <li><a class="dropdown-item" href="<?php echo e(route('service.general-tasks.index')); ?>">
+                                            <i class="fa-solid fa-bars-progress" style="color: #435fdb;"></i> Araçsız Görev
+                                            Listesi</a></li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    
+                                    <li><a class="dropdown-item" href="<?php echo e(route('service.assignments.created_by_me')); ?>">
+                                            <i class="fa-solid fa-share-from-square" style="color: #4258bb;"></i> Atadığım
+                                            Görevler</a>
+                                    </li>
                                     <li><a class="dropdown-item" href="<?php echo e(route('teams.index')); ?>">
-                                            <i class="fa-solid fa-people-group" style="color: #7a5ed1;"></i> Takımlar
+                                            <i class="fa-solid fa-people-group" style="color: #7a5ed1;"></i> Takım Yönetimi
                                         </a></li>
                                 </ul>
                             </li>

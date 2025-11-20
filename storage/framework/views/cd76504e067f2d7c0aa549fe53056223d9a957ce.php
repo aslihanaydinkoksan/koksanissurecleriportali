@@ -1,9 +1,9 @@
 resources\views\service\assignments\index.blade.php:
 
-@extends('layouts.app')
-@section('title', 'Araç Görev Listesi')
 
-@push('styles')
+<?php $__env->startSection('title', 'Araç Görev Listesi'); ?>
+
+<?php $__env->startPush('styles'); ?>
     <style>
         /* Vehicle Tasks Header - Mavi/Turkuaz Tema */
         .vehicle-tasks-header {
@@ -476,9 +476,9 @@ resources\views\service\assignments\index.blade.php:
             }
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container-fluid px-4 py-4">
         <div class="vehicle-tasks-header fade-in">
             <div class="header-content">
@@ -496,28 +496,30 @@ resources\views\service\assignments\index.blade.php:
                 </h4>
                 <div class="stats">
                     <div class="stat-item">
-                        <strong>{{ $assignments->total() }}</strong>
+                        <strong><?php echo e($assignments->total()); ?></strong>
                         Toplam Görev
                     </div>
                 </div>
             </div>
         </div>
 
-        @if (session('success'))
+        <?php if(session('success')): ?>
             <div class="alert alert-success alert-dismissible fade show fade-in" role="alert">
-                <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                <i class="fas fa-check-circle me-2"></i><?php echo e(session('success')); ?>
+
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-        @endif
-        @if (session('error'))
+        <?php endif; ?>
+        <?php if(session('error')): ?>
             <div class="alert alert-danger alert-dismissible fade show fade-in" role="alert">
-                <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+                <i class="fas fa-exclamation-circle me-2"></i><?php echo e(session('error')); ?>
+
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-        @endif
+        <?php endif; ?>
 
         <div class="filters-bar fade-in" style="animation-delay: 0.1s;">
-            <a href="{{ route('service.assignments.create') }}" class="modern-btn modern-btn-primary">
+            <a href="<?php echo e(route('service.assignments.create')); ?>" class="modern-btn modern-btn-primary">
                 <i class="fas fa-plus"></i>
                 Yeni Görev Oluştur
             </a>
@@ -531,7 +533,7 @@ resources\views\service\assignments\index.blade.php:
 
         <div class="collapse" id="filterCollapse">
             <div class="filter-collapse fade-in">
-                <form method="GET" action="{{ route('service.assignments.index') }}">
+                <form method="GET" action="<?php echo e(route('service.assignments.index')); ?>">
                     <div class="row g-3">
                         <div class="col-md-3">
                             <label for="vehicle_id" class="form-label">
@@ -539,12 +541,12 @@ resources\views\service\assignments\index.blade.php:
                             </label>
                             <select class="form-select" id="vehicle_id" name="vehicle_id">
                                 <option value="">Tümü</option>
-                                @foreach ($vehicles as $vehicle)
-                                    <option value="{{ $vehicle->id }}"
-                                        {{ ($filters['vehicle_id'] ?? '') == $vehicle->id ? 'selected' : '' }}>
-                                        {{ $vehicle->plate_number }} ({{ $vehicle->type }})
+                                <?php $__currentLoopData = $vehicles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $vehicle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($vehicle->id); ?>"
+                                        <?php echo e(($filters['vehicle_id'] ?? '') == $vehicle->id ? 'selected' : ''); ?>>
+                                        <?php echo e($vehicle->plate_number); ?> (<?php echo e($vehicle->type); ?>)
                                     </option>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
 
@@ -553,7 +555,7 @@ resources\views\service\assignments\index.blade.php:
                                 <i class="fas fa-search me-1"></i> Görev Açıklaması
                             </label>
                             <input type="text" class="form-control" id="task_description" name="task_description"
-                                value="{{ $filters['task_description'] ?? '' }}" placeholder="Görev açıklaması girin...">
+                                value="<?php echo e($filters['task_description'] ?? ''); ?>" placeholder="Görev açıklaması girin...">
                         </div>
 
                         <div class="col-md-2">
@@ -561,7 +563,7 @@ resources\views\service\assignments\index.blade.php:
                                 <i class="fas fa-calendar-alt me-1"></i> Başlangıç
                             </label>
                             <input type="date" class="form-control" id="date_from" name="date_from"
-                                value="{{ $filters['date_from'] ?? '' }}">
+                                value="<?php echo e($filters['date_from'] ?? ''); ?>">
                         </div>
 
                         <div class="col-md-2">
@@ -569,11 +571,11 @@ resources\views\service\assignments\index.blade.php:
                                 <i class="fas fa-calendar-check me-1"></i> Bitiş
                             </label>
                             <input type="date" class="form-control" id="date_to" name="date_to"
-                                value="{{ $filters['date_to'] ?? '' }}">
+                                value="<?php echo e($filters['date_to'] ?? ''); ?>">
                         </div>
 
                         <div class="col-md-1 d-flex align-items-end justify-content-end gap-2">
-                            <a href="{{ route('service.assignments.index') }}" class="modern-btn modern-btn-clear"
+                            <a href="<?php echo e(route('service.assignments.index')); ?>" class="modern-btn modern-btn-clear"
                                 title="Temizle">
                                 <i class="fas fa-times"></i>
                             </a>
@@ -587,31 +589,32 @@ resources\views\service\assignments\index.blade.php:
         </div>
 
         <div class="modern-card fade-in" style="animation-delay: 0.2s;">
-            @forelse($assignments as $index => $assignment)
-                <div class="task-card" style="animation-delay: {{ 0.3 + $index * 0.05 }}s;">
+            <?php $__empty_1 = true; $__currentLoopData = $assignments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $assignment): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                <div class="task-card" style="animation-delay: <?php echo e(0.3 + $index * 0.05); ?>s;">
                     <div class="task-header">
                         <h5 class="task-title">
                             <i class="fas fa-clipboard-list"></i>
-                            {{ $assignment->task_description }}
+                            <?php echo e($assignment->task_description); ?>
+
                         </h5>
                         <div class="action-buttons">
-                            @if (!in_array(Auth::user()->role, ['izleyici']))
-                                <a href="{{ route('service.assignments.edit', $assignment) }}"
+                            <?php if(!in_array(Auth::user()->role, ['izleyici'])): ?>
+                                <a href="<?php echo e(route('service.assignments.edit', $assignment)); ?>"
                                     class="modern-btn modern-btn-edit">
                                     <i class="fas fa-edit"></i>
                                     Düzenle
                                 </a>
-                                <form action="{{ route('service.assignments.destroy', $assignment) }}" method="POST"
+                                <form action="<?php echo e(route('service.assignments.destroy', $assignment)); ?>" method="POST"
                                     class="d-inline"
                                     onsubmit="return confirm('Bu araç görevini silmek istediğinizden emin misiniz?');">
-                                    @csrf
-                                    @method('DELETE')
+                                    <?php echo csrf_field(); ?>
+                                    <?php echo method_field('DELETE'); ?>
                                     <button type="submit" class="modern-btn modern-btn-delete">
                                         <i class="fas fa-trash"></i>
                                         Sil
                                     </button>
                                 </form>
-                            @endif
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -623,11 +626,11 @@ resources\views\service\assignments\index.blade.php:
                             <div class="meta-content">
                                 <div class="meta-label">Sorumlu Kişi</div>
                                 <div class="meta-value">
-                                    @if ($assignment->responsible)
-                                        <span style="color: #2d3748;">{{ $assignment->responsible->name }}</span>
-                                    @else
+                                    <?php if($assignment->responsible): ?>
+                                        <span style="color: #2d3748;"><?php echo e($assignment->responsible->name); ?></span>
+                                    <?php else: ?>
                                         <span style="color: #a0aec0; font-style: italic;">Atanmamış</span>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -638,7 +641,7 @@ resources\views\service\assignments\index.blade.php:
                             </div>
                             <div class="meta-content">
                                 <div class="meta-label">Atayan Kişi</div>
-                                <div class="meta-value">{{ $assignment->createdBy->name ?? '-' }}</div>
+                                <div class="meta-value"><?php echo e($assignment->createdBy->name ?? '-'); ?></div>
                             </div>
                         </div>
 
@@ -649,7 +652,8 @@ resources\views\service\assignments\index.blade.php:
                             <div class="meta-content">
                                 <div class="meta-label">Araç</div>
                                 <div class="meta-value">
-                                    {{ $assignment->vehicle->plate_number ?? 'Silinmiş Araç' }}
+                                    <?php echo e($assignment->vehicle->plate_number ?? 'Silinmiş Araç'); ?>
+
                                 </div>
                             </div>
                         </div>
@@ -660,7 +664,7 @@ resources\views\service\assignments\index.blade.php:
                             </div>
                             <div class="meta-content">
                                 <div class="meta-label">Hedef</div>
-                                <div class="meta-value">{{ $assignment->destination ?? '-' }}</div>
+                                <div class="meta-value"><?php echo e($assignment->destination ?? '-'); ?></div>
                             </div>
                         </div>
 
@@ -670,34 +674,35 @@ resources\views\service\assignments\index.blade.php:
                             </div>
                             <div class="meta-content">
                                 <div class="meta-label">Sefer Zamanı</div>
-                                <div class="meta-value">{{ $assignment->start_time->format('d.m.Y H:i') }}</div>
+                                <div class="meta-value"><?php echo e($assignment->start_time->format('d.m.Y H:i')); ?></div>
                             </div>
                         </div>
                     </div>
                 </div>
-            @empty
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                 <div class="empty-state">
                     <div class="empty-state-icon">
                         <i class="fas fa-car"></i>
                     </div>
                     <h5>Henüz Araç Görevi Bulunmuyor</h5>
                     <p>Yeni bir araç görevi oluşturarak başlayabilirsiniz.</p>
-                    <a href="{{ route('service.assignments.create') }}" class="modern-btn modern-btn-primary">
+                    <a href="<?php echo e(route('service.assignments.create')); ?>" class="modern-btn modern-btn-primary">
                         <i class="fas fa-plus"></i>
                         İlk Görevi Oluştur
                     </a>
                 </div>
-            @endforelse
+            <?php endif; ?>
 
-            @if ($assignments->isNotEmpty() && $assignments->hasPages())
+            <?php if($assignments->isNotEmpty() && $assignments->hasPages()): ?>
                 <div class="pagination-wrapper">
-                    {{ $assignments->appends($filters ?? [])->links() }}
+                    <?php echo e($assignments->appends($filters ?? [])->links()); ?>
+
                 </div>
-            @endif
+            <?php endif; ?>
         </div>
     </div>
 
-    @push('scripts')
+    <?php $__env->startPush('scripts'); ?>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 var filterCollapse = document.getElementById('filterCollapse');
@@ -716,5 +721,7 @@ resources\views\service\assignments\index.blade.php:
                 }
             });
         </script>
-    @endpush
-@endsection
+    <?php $__env->stopPush(); ?>
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/service/assignments/index.blade.php ENDPATH**/ ?>

@@ -1,6 +1,6 @@
-@extends('layouts.app')
 
-@push('styles')
+
+<?php $__env->startPush('styles'); ?>
     <style>
         /* Ana içerik alanına animasyonlu arka plan */
         #app>main.py-4 {
@@ -274,36 +274,36 @@
             }
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('title', 'Atanmış Görevlerim')
+<?php $__env->startSection('title', 'Atanmış Görevlerim'); ?>
 
-@section('content')
-    {{-- Arka plan animasyonu için container-fluid kullanıyoruz --}}
+<?php $__env->startSection('content'); ?>
+    
     <div class="container-fluid">
         <div class="row justify-content-center">
             <div class="col-md-12">
 
-                {{-- Modern 'list-card' yapısını burada kullanıyoruz --}}
+                
                 <div class="card list-card">
                     <div class="card-header">
-                        {{-- Başlık ve ikon --}}
-                        <i class="fas fa-user-check me-2"></i> @yield('title')
+                        
+                        <i class="fas fa-user-check me-2"></i> <?php echo $__env->yieldContent('title'); ?>
                     </div>
 
                     <div class="card-body p-0">
-                        @if ($assignments->isEmpty())
-                            {{-- Modern alert stilini uyguluyoruz --}}
+                        <?php if($assignments->isEmpty()): ?>
+                            
                             <div class="alert alert-warning m-3" role="alert">
                                 <i class="fas fa-exclamation-triangle me-2"></i> Size atanmış aktif görev bulunmamaktadır.
                             </div>
-                        @else
-                            {{-- Modern tablo stilini uyguluyoruz --}}
+                        <?php else: ?>
+                            
                             <div class="table-responsive">
                                 <table class="table table-hover mb-0">
                                     <thead>
                                         <tr>
-                                            {{-- Başlıklara ikonlar ve modern stil için gerekli class'lar eklendi --}}
+                                            
                                             <th scope="col" class="ps-3">
                                                 <i class="fas fa-tasks me-2"></i>Görev Başlığı
                                             </th>
@@ -328,95 +328,101 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($assignments as $assignment)
+                                        <?php $__currentLoopData = $assignments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $assignment): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                             <tr>
-                                                {{-- İlk hücreye padding eklendi --}}
-                                                <td class="ps-3 fw-bold">{{ $assignment->title }}</td>
+                                                
+                                                <td class="ps-3 fw-bold"><?php echo e($assignment->title); ?></td>
                                                 <td>
                                                     <div class="d-flex align-items-center">
                                                         <div class="avatar-circle me-2 bg-light text-primary small fw-bold d-flex align-items-center justify-content-center"
                                                             style="width: 30px; height: 30px; border-radius: 50%;">
-                                                            {{-- İsim Baş harfleri --}}
-                                                            {{ strtoupper(substr($assignment->createdBy->name ?? 'B', 0, 1)) }}
+                                                            
+                                                            <?php echo e(strtoupper(substr($assignment->createdBy->name ?? 'B', 0, 1))); ?>
+
                                                         </div>
-                                                        <span>{{ $assignment->createdBy->name ?? 'Bilinmiyor' }}</span>
+                                                        <span><?php echo e($assignment->createdBy->name ?? 'Bilinmiyor'); ?></span>
                                                     </div>
                                                 </td>
-                                                <td>{{ $assignment->vehicle->plate_number ?? 'Yok' }}</td>
+                                                <td><?php echo e($assignment->vehicle->plate_number ?? 'Yok'); ?></td>
                                                 <td>
-                                                    @if ($assignment->responsible_type === App\Models\Team::class)
-                                                        @php
+                                                    <?php if($assignment->responsible_type === App\Models\Team::class): ?>
+                                                        <?php
                                                             // Takım üyelerinin isimlerini virgülle ayırarak göster
                                                             $members = $assignment->responsible->users
                                                                 ->pluck('name')
                                                                 ->implode(', ');
-                                                        @endphp
-                                                        {{ $members }}
-                                                    @else
+                                                        ?>
+                                                        <?php echo e($members); ?>
+
+                                                    <?php else: ?>
                                                         —
-                                                    @endif
+                                                    <?php endif; ?>
                                                 </td>
-                                                <td>{{ $assignment->start_time->format('d.m.Y H:i') }}</td>
+                                                <td><?php echo e($assignment->start_time->format('d.m.Y H:i')); ?></td>
                                                 <td>
-                                                    @switch($assignment->status)
-                                                        @case('completed')
+                                                    <?php switch($assignment->status):
+                                                        case ('completed'): ?>
                                                             Tamamlandı
-                                                        @break
+                                                        <?php break; ?>
 
-                                                        @case('pending')
+                                                        <?php case ('pending'): ?>
                                                             Beklemede
-                                                        @break
+                                                        <?php break; ?>
 
-                                                        @case('in_progress')
+                                                        <?php case ('in_progress'): ?>
                                                             Devam Ediyor
-                                                        @break
+                                                        <?php break; ?>
 
-                                                        @case('cancelled')
+                                                        <?php case ('cancelled'): ?>
                                                             İptal Edildi
-                                                        @break
+                                                        <?php break; ?>
 
-                                                        {{-- İhtiyacınız olan diğer durumları buraya ekleyebilirsiniz --}}
+                                                        
 
-                                                        @default
-                                                            {{-- Bilinmeyen bir durum gelirse orijinalini bassın --}}
-                                                            {{ ucfirst($assignment->status) }}
-                                                    @endswitch
+                                                        <?php default: ?>
+                                                            
+                                                            <?php echo e(ucfirst($assignment->status)); ?>
+
+                                                    <?php endswitch; ?>
                                                 </td>
                                                 <td class="text-end pe-3">
-                                                    @php
+                                                    <?php
                                                         $isPendingOrInProgress = in_array($assignment->status, [
                                                             'pending',
                                                             'in_progress',
                                                         ]);
-                                                    @endphp
-                                                    <a href="{{ route('service.assignments.show', $assignment) }}"
+                                                    ?>
+                                                    <a href="<?php echo e(route('service.assignments.show', $assignment)); ?>"
                                                         class="btn btn-sm btn-primary" title="Detay">Görev Detayı
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    @if ($isPendingOrInProgress)
-                                                        <a href="{{ route('service.assignments.edit', $assignment) }}"
+                                                    <?php if($isPendingOrInProgress): ?>
+                                                        <a href="<?php echo e(route('service.assignments.edit', $assignment)); ?>"
                                                             class="btn btn-sm btn-primary" title="Görevi Yönet">
                                                             <i class="fas fa-check-circle me-1"></i> Görevi Yönet / Tamamla
                                                         </a>
-                                                    @endif
+                                                    <?php endif; ?>
                                                 </td>
                                             </tr>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </tbody>
                                 </table>
 
-                                {{-- Modern sayfalama stilini uyguluyoruz --}}
-                                @if ($assignments->hasPages())
+                                
+                                <?php if($assignments->hasPages()): ?>
                                     <div class="card-footer bg-transparent border-top-0 pt-3 pb-2 px-3">
-                                        {{ $assignments->links('pagination::bootstrap-5') }}
+                                        <?php echo e($assignments->links('pagination::bootstrap-5')); ?>
+
                                     </div>
-                                @endif
+                                <?php endif; ?>
 
                             </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/service/assignments/my_assignments.blade.php ENDPATH**/ ?>

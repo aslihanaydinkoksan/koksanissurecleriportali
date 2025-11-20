@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', 'Sistem Aktivite Logları')
 
-@section('content')
+<?php $__env->startSection('title', 'Sistem Aktivite Logları'); ?>
+
+<?php $__env->startSection('content'); ?>
     <div class="container py-4">
         <div class="row justify-content-center">
             <div class="col-lg-12">
@@ -23,111 +23,114 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse ($activities as $activity)
+                                    <?php $__empty_1 = true; $__currentLoopData = $activities; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $activity): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                         <tr>
                                             <td>
                                                 <span class="badge bg-primary">
-                                                    {{ $activity->causer->name ?? 'Sistem/Silinmiş Kullanıcı' }}
+                                                    <?php echo e($activity->causer->name ?? 'Sistem/Silinmiş Kullanıcı'); ?>
+
                                                 </span>
                                             </td>
                                             <td>
-                                                {{ $activity->description }}
+                                                <?php echo e($activity->description); ?>
+
                                             </td>
                                             <td>
-                                                @if ($activity->subject)
+                                                <?php if($activity->subject): ?>
                                                     <code class="text-dark">
-                                                        {{ class_basename($activity->subject_type) }} (ID:
-                                                        {{ $activity->subject_id }})
+                                                        <?php echo e(class_basename($activity->subject_type)); ?> (ID:
+                                                        <?php echo e($activity->subject_id); ?>)
                                                     </code>
-                                                @else
+                                                <?php else: ?>
                                                     <span class="text-muted">-</span>
-                                                @endif
+                                                <?php endif; ?>
                                             </td>
                                             <td>
                                                 <small class="text-muted">
-                                                    {{ $activity->created_at->tz('Europe/Istanbul')->format('d/m/Y H:i:s') }}
+                                                    <?php echo e($activity->created_at->tz('Europe/Istanbul')->format('d/m/Y H:i:s')); ?>
+
                                                 </small>
                                             </td>
                                         </tr>
-                                    @empty
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                         <tr>
                                             <td colspan="4" class="text-center text-muted py-5">
                                                 <i class="bi bi-inbox fs-1"></i>
                                                 <p class="mb-0 mt-2">Görüntülenecek hiç log bulunamadı.</p>
                                             </td>
                                         </tr>
-                                    @endforelse
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>
 
-                        {{-- Geliştirilmiş Sayfalama --}}
-                        @if ($activities->hasPages())
+                        
+                        <?php if($activities->hasPages()): ?>
                             <div class="mt-4">
                                 <nav aria-label="Sayfa navigasyonu">
                                     <ul class="pagination pagination-rounded justify-content-center mb-0">
-                                        {{-- Önceki Sayfa --}}
-                                        @if ($activities->onFirstPage())
+                                        
+                                        <?php if($activities->onFirstPage()): ?>
                                             <li class="page-item disabled">
                                                 <span class="page-link">
                                                     <i class="bi bi-chevron-left"></i> Önceki
                                                 </span>
                                             </li>
-                                        @else
+                                        <?php else: ?>
                                             <li class="page-item">
-                                                <a class="page-link" href="{{ $activities->previousPageUrl() }}">
+                                                <a class="page-link" href="<?php echo e($activities->previousPageUrl()); ?>">
                                                     <i class="bi bi-chevron-left"></i> Önceki
                                                 </a>
                                             </li>
-                                        @endif
+                                        <?php endif; ?>
 
-                                        {{-- Sayfa Numaraları --}}
-                                        @foreach ($activities->getUrlRange(1, $activities->lastPage()) as $page => $url)
-                                            @if ($page == $activities->currentPage())
+                                        
+                                        <?php $__currentLoopData = $activities->getUrlRange(1, $activities->lastPage()); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $page => $url): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <?php if($page == $activities->currentPage()): ?>
                                                 <li class="page-item active">
-                                                    <span class="page-link">{{ $page }}</span>
+                                                    <span class="page-link"><?php echo e($page); ?></span>
                                                 </li>
-                                            @else
+                                            <?php else: ?>
                                                 <li class="page-item">
-                                                    <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                                                    <a class="page-link" href="<?php echo e($url); ?>"><?php echo e($page); ?></a>
                                                 </li>
-                                            @endif
-                                        @endforeach
+                                            <?php endif; ?>
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-                                        {{-- Sonraki Sayfa --}}
-                                        @if ($activities->hasMorePages())
+                                        
+                                        <?php if($activities->hasMorePages()): ?>
                                             <li class="page-item">
-                                                <a class="page-link" href="{{ $activities->nextPageUrl() }}">
+                                                <a class="page-link" href="<?php echo e($activities->nextPageUrl()); ?>">
                                                     Sonraki <i class="bi bi-chevron-right"></i>
                                                 </a>
                                             </li>
-                                        @else
+                                        <?php else: ?>
                                             <li class="page-item disabled">
                                                 <span class="page-link">
                                                     Sonraki <i class="bi bi-chevron-right"></i>
                                                 </span>
                                             </li>
-                                        @endif
+                                        <?php endif; ?>
                                     </ul>
                                 </nav>
 
-                                {{-- Sayfa Bilgisi --}}
+                                
                                 <div class="text-center mt-3">
                                     <small class="text-muted">
-                                        Toplam {{ $activities->total() }} kayıttan
-                                        {{ $activities->firstItem() }}-{{ $activities->lastItem() }} arası gösteriliyor
+                                        Toplam <?php echo e($activities->total()); ?> kayıttan
+                                        <?php echo e($activities->firstItem()); ?>-<?php echo e($activities->lastItem()); ?> arası gösteriliyor
                                     </small>
                                 </div>
                             </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@push('styles')
+<?php $__env->startPush('styles'); ?>
     <style>
         .pagination-rounded .page-link {
             border-radius: 0.375rem;
@@ -166,4 +169,6 @@
             padding: 0.35rem 0.65rem;
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/logs/index.blade.php ENDPATH**/ ?>

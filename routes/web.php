@@ -110,7 +110,7 @@ Route::middleware(['auth'])->prefix('service')->name('service.')->group(function
     // Araç Yönetimi
     Route::resource('vehicles', VehicleController::class);
 
-    // Araç Atama Yönetimi (GÜNCELLENDİ)
+    // --- ARAÇ ATAMA YÖNETİMİ (Vehicle Assignments) ---
     Route::get('/assignments', [VehicleAssignmentController::class, 'index'])->name('assignments.index');
     Route::get('/assignments/create', [VehicleAssignmentController::class, 'create'])->name('assignments.create');
     Route::post('/assignments', [VehicleAssignmentController::class, 'store'])->name('assignments.store');
@@ -119,9 +119,25 @@ Route::middleware(['auth'])->prefix('service')->name('service.')->group(function
     Route::put('/assignments/{assignment}', [VehicleAssignmentController::class, 'update'])->name('assignments.update');
     Route::delete('/assignments/{assignment}', [VehicleAssignmentController::class, 'destroy'])->name('assignments.destroy');
 
-    // YENİ: Görev durumu güncelleme (AJAX)
+    // Görev durumu güncelleme (AJAX)
     Route::patch('/assignments/{assignment}/status', [VehicleAssignmentController::class, 'updateStatus'])
         ->name('assignments.update-status');
+
+    // --- GENEL GÖREVLER (General Tasks - Araçsız) ---
+    // Controller'daki "redirect->route('service.general-tasks.index')" kodu için gerekli grup:
+    Route::prefix('general-tasks')->name('general-tasks.')->group(function () {
+        Route::get('/', [VehicleAssignmentController::class, 'generalIndex'])->name('index');
+        // Create, Edit, Update ve Destroy işlemleri aynı controller'ı kullansa da
+        // View'larda "route('service.general-tasks.destroy')" gibi kullanıldığı için bu rotaları tanımlıyoruz:
+        Route::get('/create', [VehicleAssignmentController::class, 'create'])->name('create');
+        Route::post('/', [VehicleAssignmentController::class, 'store'])->name('store');
+        Route::get('/{assignment}/edit', [VehicleAssignmentController::class, 'edit'])->name('edit');
+        Route::put('/{assignment}', [VehicleAssignmentController::class, 'update'])->name('update');
+        Route::delete('/{assignment}', [VehicleAssignmentController::class, 'destroy'])->name('destroy');
+    });
+
+    // Atadığım Görevler
+    Route::get('/assigned-by-me', [VehicleAssignmentController::class, 'assignedByMe'])->name('assignments.created_by_me');
 
     // Sefer Zamanları Yönetimi
     Route::resource('schedules', ServiceScheduleController::class);
