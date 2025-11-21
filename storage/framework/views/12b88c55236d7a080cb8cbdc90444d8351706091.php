@@ -13,6 +13,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
         integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    
+    <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css" rel="stylesheet">
+
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -37,7 +41,7 @@
             overflow-x: hidden;
         }
 
-        /* Modern Navbar Styles */
+        /* Navbar */
         nav.navbar {
             position: fixed !important;
             top: 0 !important;
@@ -83,7 +87,6 @@
             transform: rotate(5deg) scale(1.05);
         }
 
-        /* Nav Items */
         .nav-link {
             font-weight: 600;
             font-size: 0.875rem;
@@ -104,16 +107,11 @@
             transform: translateY(-2px);
         }
 
-        .nav-link i {
-            font-size: 0.95rem;
-            transition: var(--transition);
-        }
-
         .nav-link:hover i {
             transform: scale(1.05);
         }
 
-        /* Dropdown Menu */
+        /* Dropdown */
         .dropdown-menu {
             border: none;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
@@ -150,12 +148,7 @@
             transform: translateX(-2px);
         }
 
-        .dropdown-divider {
-            margin: 0.4rem 0;
-            opacity: 0.2;
-        }
-
-        /* Badge Styling */
+        /* User Badge */
         .badge {
             font-size: 0.65rem;
             padding: 0.2rem 0.45rem;
@@ -175,7 +168,6 @@
             }
         }
 
-        /* User Dropdown */
         #navbarDropdown {
             background: var(--primary-gradient);
             color: white !important;
@@ -194,61 +186,6 @@
 
         #navbarDropdown i {
             color: white;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 991px) {
-            .navbar-collapse {
-                background: white;
-                padding: 1rem;
-                border-radius: 12px;
-                margin-top: 1rem;
-                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            }
-
-            .navbar-brand {
-                font-size: 0.9rem;
-            }
-
-            .navbar-brand img {
-                height: 26px;
-            }
-
-            #navbarDropdown {
-                max-width: 100%;
-                border-radius: 8px;
-                justify-content: space-between;
-            }
-
-            .nav-link {
-                margin: 0.2rem 0;
-            }
-
-            .dropdown-menu {
-                border: none;
-                box-shadow: none;
-                padding-left: 1rem;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .navbar-brand strong {
-                font-size: 0.75rem;
-            }
-
-            .navbar-brand img {
-                height: 24px;
-            }
-
-            .nav-link {
-                font-size: 0.8rem;
-                padding: 0.35rem 0.7rem !important;
-            }
-
-            #navbarDropdown {
-                font-size: 0.75rem;
-                padding: 0.35rem 0.9rem !important;
-            }
         }
 
         /* Main Content */
@@ -272,24 +209,18 @@
             }
         }
 
-        .card {
-            background-color: transparent !important;
-            border: none !important;
+        /* SweetAlert Custom */
+        .swal2-popup {
+            font-family: 'Nunito', sans-serif !important;
+            border-radius: 1rem !important;
         }
 
-        /* Navbar Toggler */
-        .navbar-toggler {
-            border: 2px solid #667eea;
-            border-radius: 8px;
-            padding: 0.35rem 0.55rem;
+        .swal2-title {
+            font-size: 1.25rem !important;
         }
 
-        .navbar-toggler:focus {
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-
-        .navbar-toggler-icon {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(102, 126, 234, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        .swal2-content {
+            font-size: 0.9rem !important;
         }
     </style>
     <?php echo $__env->yieldPushContent('styles'); ?>
@@ -303,158 +234,126 @@
                     <img src="<?php echo e(asset('koksan-logo.png')); ?>" alt="Köksan Logo" class="me-2">
                     <strong>Köksan İş Süreçleri Portalı</strong>
                 </a>
-
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                     data-bs-target="#navbarSupportedContent">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav ms-auto align-items-lg-center">
                         <?php if(auth()->guard()->guest()): ?>
                             <?php if(Route::has('login')): ?>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="<?php echo e(route('login')); ?>">
-                                        <i class="fa-solid fa-right-to-bracket"></i>
-                                        <span>Giriş Yap</span>
-                                    </a>
-                                </li>
+                                <li class="nav-item"><a class="nav-link" href="<?php echo e(route('login')); ?>"><i
+                                            class="fa-solid fa-right-to-bracket"></i><span>Giriş Yap</span></a></li>
                             <?php endif; ?>
                         <?php else: ?>
-                            <li class="nav-item">
-                                <a class="nav-link" href="<?php echo e(route('general.calendar')); ?>">
-                                    <i class="fa-solid fa-calendar-days" style="color: #667EEA;"></i>
-                                    <span>Genel Takvim</span>
-                                </a>
-                            </li>
-
-                            <?php if(auth()->guard()->check()): ?>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="<?php echo e(route('home')); ?>">
-                                        <i class="fa-solid fa-calendar-check" style="color: #4FD1C5;"></i>
-                                        <span>Takvimim</span>
-                                    </a>
-                                </li>
-                            <?php endif; ?>
+                            <li class="nav-item"><a class="nav-link" href="<?php echo e(route('general.calendar')); ?>"><i
+                                        class="fa-solid fa-calendar-days" style="color: #667EEA;"></i><span>Genel
+                                        Takvim</span></a></li>
+                            <?php if(auth()->guard()->check()): ?> <li class="nav-item"><a class="nav-link" href="<?php echo e(route('home')); ?>"><i
+                                            class="fa-solid fa-calendar-check"
+                                        style="color: #4FD1C5;"></i><span>Takvimim</span></a></li> <?php endif; ?>
 
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownVehicles"
-                                    role="button" data-bs-toggle="dropdown">
-                                    <i class="fa-solid fa-car-side" style="color: #FBD38D;"></i>
-                                    <span>Görevler & Atamalar</span>
-                                </a>
+                                <a class="nav-link dropdown-toggle" href="#" role="button"
+                                    data-bs-toggle="dropdown"><i class="fa-solid fa-car-side"
+                                        style="color: #FBD38D;"></i><span>Görevler & Atamalar</span></a>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item" href="<?php echo e(route('service.assignments.create')); ?>">
-                                            <i class="fa-solid fa-plus" style="color: #A78BFA;"></i> Yeni Görev Ekle
-                                        </a></li>
-                                    <li><a class="dropdown-item" href="<?php echo e(route('service.assignments.index')); ?>">
-                                            <i class="fa-solid fa-list" style="color: #667EEA;"></i> Araç Görev Listesi
-                                        </a></li>
-                                    
-                                    <li><a class="dropdown-item" href="<?php echo e(route('service.general-tasks.index')); ?>">
-                                            <i class="fa-solid fa-bars-progress" style="color: #435fdb;"></i> Araçsız Görev
+                                    <li><a class="dropdown-item" href="<?php echo e(route('service.assignments.create')); ?>"><i
+                                                class="fa-solid fa-plus" style="color: #A78BFA;"></i> Yeni Görev Ekle</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="<?php echo e(route('service.assignments.index')); ?>"><i
+                                                class="fa-solid fa-list" style="color: #667EEA;"></i> Araç Görev Listesi</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="<?php echo e(route('service.general-tasks.index')); ?>"><i
+                                                class="fa-solid fa-bars-progress" style="color: #435fdb;"></i> Araçsız Görev
                                             Listesi</a></li>
                                     <li>
                                         <hr class="dropdown-divider">
                                     </li>
-                                    
-                                    <li><a class="dropdown-item" href="<?php echo e(route('service.assignments.created_by_me')); ?>">
-                                            <i class="fa-solid fa-share-from-square" style="color: #4258bb;"></i> Atadığım
-                                            Görevler</a>
-                                    </li>
-                                    <li><a class="dropdown-item" href="<?php echo e(route('teams.index')); ?>">
-                                            <i class="fa-solid fa-people-group" style="color: #7a5ed1;"></i> Takım Yönetimi
-                                        </a></li>
+                                    <li><a class="dropdown-item" href="<?php echo e(route('service.assignments.created_by_me')); ?>"><i
+                                                class="fa-solid fa-share-from-square" style="color: #4258bb;"></i> Atadığım
+                                            Görevler</a></li>
+                                    <li><a class="dropdown-item" href="<?php echo e(route('teams.index')); ?>"><i
+                                                class="fa-solid fa-people-group" style="color: #7a5ed1;"></i> Takım
+                                            Yönetimi</a></li>
                                 </ul>
                             </li>
 
                             <li class="nav-item">
                                 <a class="nav-link" href="<?php echo e(route('my-assignments.index')); ?>">
-                                    <i class="fas fa-tasks" style="color: #df6060;"></i>
-                                    <span>Görevlerim</span>
+                                    <i class="fas fa-tasks" style="color: #df6060;"></i><span>Görevlerim</span>
                                     <?php if(Auth::user()->pending_assignments_count > 0): ?>
-                                        <span class="badge bg-danger rounded-pill">
-                                            <?php echo e(Auth::user()->pending_assignments_count); ?>
-
-                                        </span>
+                                        <span
+                                            class="badge bg-danger rounded-pill"><?php echo e(Auth::user()->pending_assignments_count); ?></span>
                                     <?php endif; ?>
                                 </a>
                             </li>
 
                             <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('access-department', 'lojistik')): ?>
                                 <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownShipments"
-                                        role="button" data-bs-toggle="dropdown">
-                                        <i class="fa-solid fa-route" style="color: #A78BFA;"></i>
-                                        <span>Sevkiyatlar</span>
-                                    </a>
+                                    <a class="nav-link dropdown-toggle" href="#" role="button"
+                                        data-bs-toggle="dropdown"><i class="fa-solid fa-route"
+                                            style="color: #A78BFA;"></i><span>Sevkiyatlar</span></a>
                                     <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><a class="dropdown-item" href="<?php echo e(route('shipments.create')); ?>">
-                                                <i class="fa-solid fa-truck-fast" style="color: #FBD38D;"></i> Yeni Sevkiyat
-                                            </a></li>
-                                        <li><a class="dropdown-item" href="<?php echo e(route('products.list')); ?>">
-                                                <i class="fa-solid fa-truck-ramp-box" style="color: #4FD1C5;"></i> Sevkiyat
-                                                Listesi
-                                            </a></li>
+                                        <li><a class="dropdown-item" href="<?php echo e(route('shipments.create')); ?>"><i
+                                                    class="fa-solid fa-truck-fast" style="color: #FBD38D;"></i> Yeni
+                                                Sevkiyat</a></li>
+                                        <li><a class="dropdown-item" href="<?php echo e(route('products.list')); ?>"><i
+                                                    class="fa-solid fa-truck-ramp-box" style="color: #4FD1C5;"></i> Sevkiyat
+                                                Listesi</a></li>
                                     </ul>
                                 </li>
                             <?php endif; ?>
 
                             <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('access-department', 'uretim')): ?>
                                 <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownProduction"
-                                        role="button" data-bs-toggle="dropdown">
-                                        <i class="fa-solid fa-industry" style="color: #4FD1C5;"></i>
-                                        <span>Üretim</span>
-                                    </a>
+                                    <a class="nav-link dropdown-toggle" href="#" role="button"
+                                        data-bs-toggle="dropdown"><i class="fa-solid fa-industry"
+                                            style="color: #4FD1C5;"></i><span>Üretim</span></a>
                                     <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><a class="dropdown-item" href="<?php echo e(route('production.plans.create')); ?>">
-                                                <i class="fa-solid fa-plus-circle" style="color: #F093FB;"></i> Yeni Plan
-                                            </a></li>
-                                        <li><a class="dropdown-item" href="<?php echo e(route('production.plans.index')); ?>">
-                                                <i class="fa-solid fa-list-check" style="color: #A78BFA;"></i> Plan Listesi
-                                            </a></li>
+                                        <li><a class="dropdown-item" href="<?php echo e(route('production.plans.create')); ?>"><i
+                                                    class="fa-solid fa-plus-circle" style="color: #F093FB;"></i> Yeni Plan</a>
+                                        </li>
+                                        <li><a class="dropdown-item" href="<?php echo e(route('production.plans.index')); ?>"><i
+                                                    class="fa-solid fa-list-check" style="color: #A78BFA;"></i> Plan
+                                                Listesi</a></li>
                                     </ul>
                                 </li>
                             <?php endif; ?>
 
                             <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('access-department', 'hizmet')): ?>
                                 <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownService"
-                                        role="button" data-bs-toggle="dropdown">
-                                        <i class="fa-solid fa-concierge-bell" style="color: #F093FB;"></i>
-                                        <span>İdari İşler</span>
-                                    </a>
+                                    <a class="nav-link dropdown-toggle" href="#" role="button"
+                                        data-bs-toggle="dropdown"><i class="fa-solid fa-concierge-bell"
+                                            style="color: #F093FB;"></i><span>İdari İşler</span></a>
                                     <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><a class="dropdown-item" href="<?php echo e(route('service.events.create')); ?>">
-                                                <i class="fa-solid fa-calendar-plus" style="color: #667EEA;"></i> Yeni
-                                                Etkinlik
-                                            </a></li>
-                                        <li><a class="dropdown-item" href="<?php echo e(route('service.events.index')); ?>">
-                                                <i class="fa-solid fa-calendar-days" style="color: #4FD1C5;"></i> Etkinlik
-                                                Listesi
-                                            </a></li>
+                                        <li><a class="dropdown-item" href="<?php echo e(route('service.events.create')); ?>"><i
+                                                    class="fa-solid fa-calendar-plus" style="color: #667EEA;"></i> Yeni
+                                                Etkinlik</a></li>
+                                        <li><a class="dropdown-item" href="<?php echo e(route('service.events.index')); ?>"><i
+                                                    class="fa-solid fa-calendar-days" style="color: #4FD1C5;"></i> Etkinlik
+                                                Listesi</a></li>
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
-                                        <li><a class="dropdown-item" href="<?php echo e(route('service.vehicles.index')); ?>">
-                                                <i class="fa-solid fa-car" style="color: #FBD38D;"></i> Araç Tanımları
-                                            </a></li>
+                                        <li><a class="dropdown-item" href="<?php echo e(route('service.vehicles.index')); ?>"><i
+                                                    class="fa-solid fa-car" style="color: #FBD38D;"></i> Araç Tanımları</a>
+                                        </li>
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
-                                        <li><a class="dropdown-item" href="<?php echo e(route('travels.create')); ?>">
-                                                <i class="fa-solid fa-route" style="color: #A78BFA;"></i> Yeni Seyahat
-                                            </a></li>
-                                        <li><a class="dropdown-item" href="<?php echo e(route('travels.index')); ?>">
-                                                <i class="fa-solid fa-list-check" style="color: #A78BFA;"></i> Seyahat Listesi
-                                            </a></li>
+                                        <li><a class="dropdown-item" href="<?php echo e(route('travels.create')); ?>"><i
+                                                    class="fa-solid fa-route" style="color: #A78BFA;"></i> Yeni Seyahat</a>
+                                        </li>
+                                        <li><a class="dropdown-item" href="<?php echo e(route('travels.index')); ?>"><i
+                                                    class="fa-solid fa-list-check" style="color: #A78BFA;"></i> Seyahat
+                                                Listesi</a></li>
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
-                                        <li><a class="dropdown-item" href="<?php echo e(route('customers.index')); ?>">
-                                                <i class="fa-solid fa-users" style="color: #A78BFA;"></i> Müşteri Yönetimi
-                                            </a></li>
+                                        <li><a class="dropdown-item" href="<?php echo e(route('customers.index')); ?>"><i
+                                                    class="fa-solid fa-users" style="color: #A78BFA;"></i> Müşteri
+                                                Yönetimi</a></li>
                                     </ul>
                                 </li>
                             <?php endif; ?>
@@ -462,49 +361,39 @@
                             <li class="nav-item dropdown">
                                 <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button"
                                     data-bs-toggle="dropdown">
-                                    <i class="fa-solid fa-user-gear me-1"></i>
-                                    <span class="d-inline-block text-truncate" style="max-width: 100px;"
-                                        title="<?php echo e(Auth::user()->name); ?>">
-                                        <?php echo e(Auth::user()->name); ?>
-
-                                    </span>
+                                    <i class="fa-solid fa-user-gear me-1"></i><span class="d-inline-block text-truncate"
+                                        style="max-width: 100px;"
+                                        title="<?php echo e(Auth::user()->name); ?>"><?php echo e(Auth::user()->name); ?></span>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item" href="<?php echo e(route('profile.edit')); ?>">
-                                            <i class="fa-solid fa-user-pen" style="color: #4FD1C5;"></i> Profilimi Düzenle
-                                        </a></li>
-
+                                    <li><a class="dropdown-item" href="<?php echo e(route('profile.edit')); ?>"><i
+                                                class="fa-solid fa-user-pen" style="color: #4FD1C5;"></i> Profilimi
+                                            Düzenle</a></li>
                                     <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('is-global-manager')): ?>
-                                        <li><a class="dropdown-item" href="<?php echo e(route('users.create')); ?>">
-                                                <i class="fa-solid fa-user-plus" style="color: #667EEA;"></i> Kullanıcı Ekle
-                                            </a></li>
+                                        <li><a class="dropdown-item" href="<?php echo e(route('users.create')); ?>"><i
+                                                    class="fa-solid fa-user-plus" style="color: #667EEA;"></i> Kullanıcı
+                                                Ekle</a></li>
                                     <?php endif; ?>
-
                                     <?php if(Auth::user()->role === 'admin'): ?>
-                                        <li><a class="dropdown-item" href="<?php echo e(route('birimler.index')); ?>">
-                                                <i class="fa-solid fa-tags" style="color: #FBD38D;"></i> Birimleri Yönet
-                                            </a></li>
-                                        <li><a class="dropdown-item" href="<?php echo e(route('departments.index')); ?>">
-                                                <i class="fa-solid fa-building-user" style="color: #667EEA;"></i>
-                                                Departmanlar
-                                            </a></li>
-                                        <li><a class="dropdown-item" href="<?php echo e(route('logs.index')); ?>">
-                                                <i class="fa-solid fa-file-lines" style="color: #f78dfb;"></i> Loglar
-                                            </a></li>
+                                        <li><a class="dropdown-item" href="<?php echo e(route('birimler.index')); ?>"><i
+                                                    class="fa-solid fa-tags" style="color: #FBD38D;"></i> Birimleri
+                                                Yönet</a></li>
+                                        <li><a class="dropdown-item" href="<?php echo e(route('departments.index')); ?>"><i
+                                                    class="fa-solid fa-building-user" style="color: #667EEA;"></i>
+                                                Departmanlar</a></li>
+                                        <li><a class="dropdown-item" href="<?php echo e(route('logs.index')); ?>"><i
+                                                    class="fa-solid fa-file-lines" style="color: #f78dfb;"></i> Loglar</a>
+                                        </li>
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
                                     <?php endif; ?>
-
                                     <li><a class="dropdown-item" href="<?php echo e(route('logout')); ?>"
-                                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                            <i class="fa-solid fa-right-from-bracket" style="color: #FC8181;"></i> Çıkış
-                                            Yap
-                                        </a></li>
+                                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><i
+                                                class="fa-solid fa-right-from-bracket" style="color: #FC8181;"></i> Çıkış
+                                            Yap</a></li>
                                     <form id="logout-form" action="<?php echo e(route('logout')); ?>" method="POST"
-                                        class="d-none">
-                                        <?php echo csrf_field(); ?>
-                                    </form>
+                                        class="d-none"><?php echo csrf_field(); ?></form>
                                 </ul>
                             </li>
                         <?php endif; ?>
@@ -520,8 +409,10 @@
 
     <?php echo $__env->yieldContent('page_scripts'); ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
-        // Scroll effect for navbar
+        // 1. Scroll Efekti
         window.addEventListener('scroll', function() {
             const navbar = document.querySelector('.navbar');
             if (window.scrollY > 50) {
@@ -531,7 +422,7 @@
             }
         });
 
-        // Auto close navbar on mobile after click
+        // 2. Mobil Menü
         document.querySelectorAll('.navbar-nav .nav-link:not(.dropdown-toggle)').forEach(link => {
             link.addEventListener('click', function() {
                 if (window.innerWidth < 992) {
@@ -540,6 +431,154 @@
                         toggle: false
                     });
                     bsCollapse.hide();
+                }
+            });
+        });
+
+        // 3. GLOBAL TOAST
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        // PHP Session Mesajları
+        <?php if(session('success')): ?>
+            Toast.fire({
+                icon: 'success',
+                title: '<?php echo e(session('success')); ?>'
+            });
+        <?php endif; ?>
+        <?php if(session('error')): ?>
+            Toast.fire({
+                icon: 'error',
+                title: '<?php echo e(session('error')); ?>'
+            });
+        <?php endif; ?>
+        <?php if(session('warning')): ?>
+            Toast.fire({
+                icon: 'warning',
+                title: '<?php echo e(session('warning')); ?>'
+            });
+        <?php endif; ?>
+
+        // JS İçinden Çağırmak İçin
+        window.showToast = function(message, type = 'success') {
+            Toast.fire({
+                icon: type,
+                title: message
+            });
+        }
+
+        // 4. AKILLI SİLME (MESAJ AYIKLAYICI)
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // Tarayıcının kendi confirm kutusunu iptal et
+            document.querySelectorAll('form').forEach(form => {
+                if (form.getAttribute('onsubmit') && form.getAttribute('onsubmit').includes('confirm')) {
+                    form.removeAttribute('onsubmit');
+                }
+            });
+
+            document.addEventListener('submit', function(e) {
+                const form = e.target;
+                const methodInput = form.querySelector('input[name="_method"]');
+
+                // Sadece DELETE işlemleri
+                if (form.tagName === 'FORM' && methodInput && methodInput.value.toUpperCase() ===
+                    'DELETE') {
+                    e.preventDefault();
+
+                    Swal.fire({
+                        title: 'Emin misiniz?',
+                        text: "Bu kaydı silmek istediğinize emin misiniz?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Evet, Sil!',
+                        cancelButtonText: 'İptal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            const btn = form.querySelector('button[type="submit"]');
+                            if (btn) btn.disabled = true;
+
+                            fetch(form.action, {
+                                    method: 'POST',
+                                    body: new FormData(form),
+                                    headers: {
+                                        'X-Requested-With': 'XMLHttpRequest',
+                                        'Accept': 'application/json'
+                                    }
+                                })
+                                .then(async response => {
+                                    // 1. Eğer sunucu direkt 403 dönerse (Handler.php JSON dönerse)
+                                    if (response.status === 403) {
+                                        showToast(
+                                            '⛔ Bu işlemi yapmaya yetkiniz bulunmamaktadır!',
+                                            'error');
+                                        return;
+                                    }
+
+                                    // 2. Eğer sunucu 200 OK dönerse (Redirect back yaptıysa)
+                                    if (response.ok) {
+                                        const contentType = response.headers.get(
+                                            "content-type");
+
+                                        if (contentType && contentType.indexOf(
+                                                "application/json") !== -1) {
+                                            // JSON geldiyse (Başarılı API cevabı gibi)
+                                            await Swal.fire('Silindi!',
+                                                'Kayıt başarıyla silindi.', 'success');
+                                            window.location.reload();
+                                        } else {
+                                            // HTML geldiyse (Sayfa redirect oldu demektir)
+                                            // Gelen HTML'in içindeki HATA mesajını okuyalım
+                                            const htmlText = await response.text();
+                                            const parser = new DOMParser();
+                                            const doc = parser.parseFromString(htmlText,
+                                                'text/html');
+
+                                            // Gelen sayfada kırmızı alert var mı?
+                                            const errorAlert = doc.querySelector(
+                                                '.alert-danger');
+
+                                            if (errorAlert) {
+                                                // HATA VAR!
+                                                // Mesajı al, temizle ve Toast olarak bas
+                                                let errorMsg = errorAlert.innerText.trim();
+                                                // Simge veya kapatma butonu yazılarını temizle (isteğe bağlı)
+                                                errorMsg = errorMsg.replace('×', '').trim();
+
+                                                showToast(errorMsg, 'error');
+
+                                                // Sayfayı yenilemiyoruz! Kullanıcı listede kalsın.
+                                            } else {
+                                                // Hata yok, demek ki başarılı silinmiş
+                                                await Swal.fire('Silindi!',
+                                                    'Kayıt başarıyla silindi.',
+                                                    'success');
+                                                window.location.reload();
+                                            }
+                                        }
+                                    } else {
+                                        showToast('Bir hata oluştu.', 'error');
+                                    }
+                                })
+                                .catch(error => {
+                                    showToast('Sunucu hatası.', 'error');
+                                })
+                                .finally(() => {
+                                    if (btn) btn.disabled = false;
+                                });
+                        }
+                    });
                 }
             });
         });

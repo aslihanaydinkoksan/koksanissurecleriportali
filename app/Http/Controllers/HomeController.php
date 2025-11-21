@@ -132,11 +132,21 @@ class HomeController extends Controller
                 ->merge($hizmetWelcomeData[2])
                 ->sortBy(fn($item) => $item->start_datetime ?? $item->start_time ?? $item->start_date ?? $item->week_start_date);
             $kpiData = [
+                // 1. Sevkiyatlar (Lojistik)
                 'sevkiyat_sayisi' => \App\Models\Shipment::whereDate('tahmini_varis_tarihi', Carbon::today())->count(),
+
+                // 2. Üretim Planları (Üretim)
                 'plan_sayisi' => \App\Models\ProductionPlan::whereDate('week_start_date', Carbon::today())->count(),
-                'gorev_sayisi' => \App\Models\Event::whereDate('start_datetime', Carbon::today())->count() +
-                    \App\Models\VehicleAssignment::whereDate('start_time', Carbon::today())->count() +
-                    \App\Models\Travel::whereDate('start_date', Carbon::today())->count(),
+
+                // 3. Etkinlikler (Hizmet) - SADECE ETKİNLİKLER
+                'etkinlik_sayisi' => \App\Models\Event::whereDate('start_datetime', Carbon::today())->count(),
+
+                // 4. Araç Görevleri (Hizmet) - YENİ: SADECE ARAÇ GÖREVLERİ
+                'arac_gorevi_sayisi' => \App\Models\VehicleAssignment::whereDate('start_time', Carbon::today())
+                    ->whereIn('status', ['pending', 'in_progress']) // Sadece aktif olanlar
+                    ->count(),
+
+                // 5. Toplam Kullanıcı (Sistem)
                 'kullanici_sayisi' => \App\Models\User::count()
             ];
 
@@ -153,9 +163,9 @@ class HomeController extends Controller
             if ($uretimCount > 0)
                 $chartData[] = ['Üretim', 'Planlar', $uretimCount];
             if ($etkinlikCount > 0)
-                $chartData[] = ['Hizmet', 'Etkinlikler', $etkinlikCount];
+                $chartData[] = ['İdari İşler', 'Etkinlikler', $etkinlikCount];
             if ($aracCount > 0)
-                $chartData[] = ['Hizmet', 'Araç Görevleri', $aracCount];
+                $chartData[] = ['İdari İşler', 'Araç Görevleri', $aracCount]; // Bu zaten doğruydu
 
             if (empty($chartData)) {
                 $chartData[] = ['Sistem', 'Henüz Kayıt Yok', 1];
@@ -1003,6 +1013,28 @@ class HomeController extends Controller
                 })
             );
         }
+        $overdueQuery = VehicleAssignment::where('start_time', '<', Carbon::today())
+            ->whereIn('status', ['pending', 'in_progress']);
+
+        // Admin değilse sadece kendi departmanının/kendisinin gecikenlerini görsün
+        if ($isUserFiltered) {
+            $overdueQuery->whereHas('createdBy', fn($q) => $q->where('department_id', $deptFilter));
+        }
+
+        $overdueItems = $overdueQuery->get()->map(function ($item) {
+            return (object) [
+                // Başlığa dikkat çekici bir ikon ekliyoruz
+                'title' => '⚠️ TAMAMLANMAYAN/GECİKEN GÖREV: ' . Str::limit($item->task_description, 40),
+                'date' => $item->start_time,
+                'model_id' => $item->id,
+                'model_type' => 'vehicle_assignment',
+                // İsterseniz view tarafında ayırt etmek için bir flag ekleyebilirsiniz
+                'is_overdue' => true
+            ];
+        });
+
+        // Mevcut önemli öğeler listesine gecikenleri de ekle
+        $allMappedItems = $allMappedItems->merge($overdueItems);
 
         return $allMappedItems->sortByDesc('date');
     }

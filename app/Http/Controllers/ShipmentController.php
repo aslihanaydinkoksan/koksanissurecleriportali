@@ -140,15 +140,15 @@ class ShipmentController extends Controller
     public function export(Shipment $shipment)
     {
         // YENİ EKLENDİ: Kullanıcının 'lojistik' birimine erişimi var mı?
-        $this->authorize('access-department', 'lojistik');
+        //$this->authorize('access-department', 'lojistik');
         $fileName = 'sevkiyat_detay_' . $shipment->id . '.csv';
 
         $headers = [
-            'Content-type'        => 'text/csv; charset=utf-8',
+            'Content-type' => 'text/csv; charset=utf-8',
             'Content-Disposition' => "attachment; filename=\"$fileName\"",
-            'Pragma'              => 'no-cache',
-            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires'             => '0'
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0'
         ];
         $sevkiyatTuruTurkce = match ($shipment->shipment_type) {
             'export' => 'İhracat',

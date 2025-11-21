@@ -662,28 +662,46 @@
                             <h4 class="mt-4"><i class="fa-solid fa-chart-line me-1" style="color: #667EEA;"></i> Sistem
                                 Geneli (Bugün)</h4>
                             <div class="row g-4 mt-2 mb-3">
-                                <div class="col-lg-3 col-md-6">
+                                
+                                <div class="col-lg-2 col-md-4 col-6"> 
                                     <div class="kpi-card kpi-lojistik">
                                         <div class="kpi-icon"><i class="fa-solid fa-truck-fast"></i></div>
                                         <div class="kpi-value"><?php echo e($kpiData['sevkiyat_sayisi']); ?></div>
                                         <div class="kpi-label">Yaklaşan Sevkiyat</div>
                                     </div>
                                 </div>
-                                <div class="col-lg-3 col-md-6">
+
+                                
+                                <div class="col-lg-2 col-md-4 col-6">
                                     <div class="kpi-card kpi-uretim">
                                         <div class="kpi-icon"><i class="fa-solid fa-industry"></i></div>
                                         <div class="kpi-value"><?php echo e($kpiData['plan_sayisi']); ?></div>
                                         <div class="kpi-label">Başlayan Plan</div>
                                     </div>
                                 </div>
-                                <div class="col-lg-3 col-md-6">
+
+                                
+                                <div class="col-lg-2 col-md-4 col-6">
                                     <div class="kpi-card kpi-hizmet">
-                                        <div class="kpi-icon"><i class="fa-solid fa-car-side"></i></div>
-                                        <div class="kpi-value"><?php echo e($kpiData['gorev_sayisi']); ?></div>
-                                        <div class="kpi-label">Görev & Etkinlik</div>
+                                        <div class="kpi-icon"><i class="fa-solid fa-calendar-star"></i></div>
+                                        
+                                        <div class="kpi-value"><?php echo e($kpiData['etkinlik_sayisi']); ?></div>
+                                        
+                                        <div class="kpi-label">Bugünkü Etkinlik</div>
                                     </div>
                                 </div>
-                                <div class="col-lg-3 col-md-6">
+
+                                
+                                <div class="col-lg-3 col-md-4 col-6">
+                                    <div class="kpi-card kpi-hizmet"> 
+                                        <div class="kpi-icon"><i class="fa-solid fa-car-side"></i></div>
+                                        <div class="kpi-value"><?php echo e($kpiData['arac_gorevi_sayisi']); ?></div>
+                                        <div class="kpi-label">Aktif Araç Görevi</div>
+                                    </div>
+                                </div>
+
+                                
+                                <div class="col-lg-3 col-md-6 col-12">
                                     <div class="kpi-card kpi-sistem">
                                         <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
                                         <div class="kpi-value"><?php echo e($kpiData['kullanici_sayisi']); ?></div>

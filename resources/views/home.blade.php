@@ -4,7 +4,6 @@
 
 @push('styles')
     <style>
-        /* ... (Tüm CSS stiliniz burada, değişiklik yok) ... */
         #app>main.py-4 {
             padding: 2.5rem 0 !important;
             min-height: calc(100vh - 72px);
@@ -134,7 +133,6 @@
 
         #calendar {
             background: transparent;
-            /* Şeffaf arka plan */
             border-radius: 0;
             padding: 0;
         }
@@ -433,17 +431,11 @@
         }
 
         .event-important-pulse {
-            /* "Kutucuk" görünümü için bir kenarlık veya gölge */
             border: 2px solid #ff4136 !important;
-            /* !important, fc-event'i ezmek için */
             box-shadow: 0 0 0 rgba(255, 65, 54, 0.4);
-            /* Gölgenin başlangıç durumu */
-
-            /* Animasyon tanımı */
             animation: pulse-animation 2s infinite;
         }
 
-        /* Animasyon Keyframes */
         @keyframes pulse-animation {
             0% {
                 box-shadow: 0 0 0 0 rgba(255, 65, 54, 0.7);
@@ -466,16 +458,12 @@
             border-radius: 4px;
             position: relative;
             overflow: hidden;
-
-            /* Taşmayı önle */
             padding: 3px 6px;
             font-size: 11px;
             white-space: nowrap;
             text-overflow: ellipsis;
             max-width: 100%;
             display: block;
-
-            /* Hover efekti */
             transition: all 0.3s ease;
             cursor: pointer;
         }
@@ -490,10 +478,8 @@
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
             animation: shine 3s infinite;
             pointer-events: none;
-            /* Hover'ı engellemez */
         }
 
-        /* Hover'da tam metin göster */
         .fc-event-holiday:hover {
             transform: scale(1.05);
             z-index: 1000;
@@ -509,7 +495,6 @@
             }
         }
 
-        /* Mobil için optimizasyon */
         @media (max-width: 768px) {
             .fc-event-holiday {
                 font-size: 9px;
@@ -519,11 +504,8 @@
 
         .wide-container {
             max-width: 1600px;
-            /* Ekran ne kadar büyük olursa olsun, içerik en fazla 1600px olsun */
             margin-left: auto;
-            /* Ortalanmasını sağlar */
             margin-right: auto;
-            /* Ortalanmasını sağlar */
         }
 
         /* Event'leri dengeli göster */
@@ -533,13 +515,8 @@
             line-height: 1.3 !important;
             border-radius: 5px !important;
             font-weight: 600 !important;
-
-            /* Minimum yükseklik - okunaklı */
             min-height: 30px !important;
-
-            /* MAKSIMUM yükseklik - ~2 saat (event çok uzun olsa bile max bu kadar) */
             max-height: 65px !important;
-
             overflow: hidden !important;
             transition: all 0.2s ease !important;
         }
@@ -550,12 +527,10 @@
             overflow: hidden !important;
             display: -webkit-box !important;
             -webkit-line-clamp: 2 !important;
-            /* Maksimum 2 satır başlık */
             -webkit-box-orient: vertical !important;
             line-height: 1.3 !important;
         }
 
-        /* Event zamanı */
         .fc-event-time {
             font-size: 0.85em !important;
             font-weight: 700 !important;
@@ -564,23 +539,19 @@
             margin-bottom: 2px !important;
         }
 
-        /* Event container */
         .fc-timegrid-event-harness {
             margin-bottom: 2px !important;
         }
 
         .fc-timegrid-event-harness-inset {
-            /* Event'in maksimum yüksekliğini sınırla */
             max-height: 65px !important;
             overflow: hidden !important;
         }
 
-        /* Slot yüksekliği - rahat görünsün */
         .fc-timegrid-slot {
             height: 2em !important;
         }
 
-        /* Hover durumunda tam detayı göster */
         .fc-timegrid-event:hover {
             max-height: none !important;
             z-index: 1000 !important;
@@ -590,7 +561,6 @@
             cursor: pointer !important;
         }
 
-        /* "+X more" linki */
         .fc-more-link {
             font-size: 0.8em !important;
             font-weight: 600 !important;
@@ -607,7 +577,6 @@
             transform: translateY(-1px) !important;
         }
 
-        /* Mobil optimizasyon */
         @media (max-width: 768px) {
             .fc-timegrid-event {
                 font-size: 0.75em !important;
@@ -628,7 +597,6 @@
             -webkit-backdrop-filter: blur(8px);
         }
 
-        /* Modern Modal Container */
         #detailModal .modal-dialog {
             max-width: 700px;
         }
@@ -656,7 +624,6 @@
             }
         }
 
-        /* Modal Header - Gradient ve Modern */
         #detailModal .modal-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -683,7 +650,6 @@
             font-size: 1.75rem;
             margin: 0;
             text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-            position: relative;
             z-index: 1;
             display: flex;
             align-items: center;
@@ -710,7 +676,6 @@
             transform: rotate(90deg) scale(1.1);
         }
 
-        /* Modal Body - Modern Kartlar */
         #detailModal .modal-body {
             padding: 2.5rem;
             color: #2d3748;
@@ -735,7 +700,6 @@
             font-size: 0.9rem;
         }
 
-        /* İnfo Kartları */
         .modal-info-card {
             background: white;
             border-radius: 16px;
@@ -751,7 +715,6 @@
             transform: translateY(-2px);
         }
 
-        /* Onay Badge - Modern */
         #modalOnayBadge {
             background: linear-gradient(135deg, #48bb78, #38a169);
             color: white;
@@ -779,7 +742,6 @@
             font-size: 1rem;
         }
 
-        /* Önemli Checkbox Container */
         #modalImportantCheckboxContainer {
             background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(255, 107, 107, 0.1));
             border-radius: 12px;
@@ -805,7 +767,6 @@
             accent-color: #dc3545;
         }
 
-        /* HR Ayırıcı */
         #detailModal .modal-body hr {
             border: none;
             height: 2px;
@@ -813,7 +774,6 @@
             margin: 2rem 0;
         }
 
-        /* Tablo Stilleri */
         #detailModal .table {
             background: white;
             border-radius: 12px;
@@ -850,7 +810,6 @@
             background: rgba(102, 126, 234, 0.05);
         }
 
-        /* Notlar Bölümü */
         .modal-notes-box {
             background: linear-gradient(135deg, rgba(67, 233, 123, 0.08), rgba(56, 249, 215, 0.08));
             border-left: 4px solid #43e97b;
@@ -870,7 +829,6 @@
             gap: 0.5rem;
         }
 
-        /* Modal Footer - Modern Butonlar */
         #detailModal .modal-footer {
             background: white;
             border: none;
@@ -879,7 +837,6 @@
             flex-wrap: wrap;
         }
 
-        /* Buton Stilleri */
         #detailModal .btn {
             border-radius: 12px;
             font-weight: 700;
@@ -917,7 +874,6 @@
             transform: translateY(0);
         }
 
-        /* Düzenle Butonu */
         #modalEditButton {
             background: linear-gradient(135deg, #ffa726, #fb8c00);
             color: white;
@@ -928,7 +884,6 @@
             box-shadow: 0 8px 25px rgba(255, 167, 38, 0.5);
         }
 
-        /* Export Butonu */
         #modalExportButton {
             background: linear-gradient(135deg, #4fd1c5, #38b2ac);
             color: white;
@@ -939,7 +894,6 @@
             box-shadow: 0 8px 25px rgba(79, 209, 197, 0.5);
         }
 
-        /* Onay Butonları */
         #modalOnayForm .btn-success {
             background: linear-gradient(135deg, #48bb78, #38a169);
             color: white;
@@ -960,7 +914,6 @@
             box-shadow: 0 8px 25px rgba(246, 173, 85, 0.5);
         }
 
-        /* Sil Butonu */
         #modalDeleteForm .btn-danger {
             background: linear-gradient(135deg, #fc8181, #f56565);
             color: white;
@@ -971,7 +924,6 @@
             box-shadow: 0 8px 25px rgba(245, 101, 101, 0.5);
         }
 
-        /* Kapat Butonu */
         .btn-secondary {
             background: linear-gradient(135deg, #718096, #4a5568);
             color: white;
@@ -982,7 +934,6 @@
             box-shadow: 0 8px 25px rgba(113, 128, 150, 0.5);
         }
 
-        /* Dosya Görüntüle Butonu */
         .btn-outline-primary {
             border: 2px solid #667eea;
             color: #667eea;
@@ -996,43 +947,6 @@
             color: white;
         }
 
-        /* Responsive Optimizasyon */
-        @media (max-width: 768px) {
-            #detailModal .modal-dialog {
-                margin: 1rem;
-            }
-
-            #detailModal .modal-content {
-                border-radius: 16px;
-            }
-
-            #detailModal .modal-header {
-                padding: 1.5rem;
-            }
-
-            #detailModal .modal-title {
-                font-size: 1.35rem;
-            }
-
-            #detailModal .modal-body {
-                padding: 1.5rem;
-            }
-
-            #detailModal .modal-footer {
-                padding: 1rem 1.5rem;
-            }
-
-            #detailModal .btn {
-                padding: 0.625rem 1.25rem;
-                font-size: 0.8rem;
-            }
-
-            .modal-info-card {
-                padding: 1.25rem;
-            }
-        }
-
-        /* Loading Spinner için */
         .modal-loading {
             display: flex;
             justify-content: center;
@@ -1112,7 +1026,7 @@
                                         Önemliler</strong></label>
                             </div>
                         </div>
-                        {{-- === DÜZELTME: SADECE BİR TANE CALENDAR DIV'İ KALDI === --}}
+
                         <div id="calendar" data-events='@json($events)'
                             data-is-authorized="{{ in_array(Auth::user()->role, ['admin', 'yönetici']) ? 'true' : 'false' }}"
                             data-current-user-id="{{ Auth::id() }}">
@@ -1254,7 +1168,6 @@
     <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
-                <!-- Header -->
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalTitle">
                         <i class="fas fa-info-circle"></i>
@@ -1264,9 +1177,7 @@
                         aria-label="Close"></button>
                 </div>
 
-                <!-- Body -->
                 <div class="modal-body">
-                    <!-- Onay Badge (Sevkiyat için) -->
                     <div id="modalOnayBadge" style="display: none;">
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
@@ -1284,7 +1195,6 @@
                         </div>
                     </div>
 
-                    <!-- Önemli Checkbox (Yönetici için) -->
                     <div id="modalImportantCheckboxContainer" style="display: none;">
                         <input type="checkbox" id="modalImportantCheckbox" class="form-check-input">
                         <label for="modalImportantCheckbox" class="form-check-label">
@@ -1293,28 +1203,22 @@
                         </label>
                     </div>
 
-                    <!-- Dinamik İçerik -->
                     <div id="modalDynamicBody">
-                        <!-- JavaScript ile doldurulacak -->
                         <div class="modal-loading">
                             <div class="modal-spinner"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Footer -->
                 <div class="modal-footer">
-                    <!-- Düzenle Butonu -->
                     <a href="#" id="modalEditButton" class="btn" style="display: none;">
                         <i class="fas fa-edit me-2"></i> Düzenle
                     </a>
 
-                    <!-- Excel Export Butonu -->
                     <a href="#" id="modalExportButton" class="btn" style="display: none;">
                         <i class="fas fa-file-excel me-2"></i> Excel İndir
                     </a>
 
-                    <!-- Onay Formu -->
                     <form method="POST" id="modalOnayForm" style="display: none;" class="d-inline">
                         @csrf
                         <button type="submit" class="btn btn-success">
@@ -1322,7 +1226,6 @@
                         </button>
                     </form>
 
-                    <!-- Onay Kaldırma Formu -->
                     <form method="POST" id="modalOnayKaldirForm" style="display: none;" class="d-inline">
                         @csrf
                         @method('DELETE')
@@ -1331,7 +1234,6 @@
                         </button>
                     </form>
 
-                    <!-- Silme Formu -->
                     <form method="POST" id="modalDeleteForm" style="display: none;" class="d-inline"
                         onsubmit="return confirm('Bu kaydı silmek istediğinizden emin misiniz?');">
                         @csrf
@@ -1341,7 +1243,6 @@
                         </button>
                     </form>
 
-                    <!-- Kapat Butonu -->
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="fas fa-times me-2"></i> Kapat
                     </button>
@@ -1381,50 +1282,83 @@
             const modalImportantContainer = document.getElementById('modalImportantCheckboxContainer');
             const modalImportantCheckbox = document.getElementById('modalImportantCheckbox');
 
-            // === YARDIMCI FONKSİYON: Tarih/Saat Ayırıcı (Blade Hatası Düzeltilmiş) ===
-            /**
-             * Bir tarih-saat dizesini (örn: "19.05.2025 11:30")
-             * tarih ve saat olarak ayırır.
-             * @@param {string} dateTimeString - Ayırılacak dize.
-             * @@returns @{{ date: string, time: string }}
-             */
+            // === YARDIMCI FONKSİYON: Tarih/Saat Ayırıcı ===
             function splitDateTime(dateTimeString) {
                 const dt = String(dateTimeString || '');
                 const parts = dt.split(' ');
                 const date = parts[0] || '-';
                 let time = parts[1] || '-';
-
-
                 if (date === '-' || time === '') {
                     time = '-';
                 }
-
                 return {
                     date: date,
                     time: time
                 };
             }
 
-            // openUniversalModal fonksiyonunu şu şekilde güncelleyin:
+            // === YENİ: MODAL UI SIFIRLAMA (HARD RESET) ===
+            function hardResetModalUI() {
+                const idsToHide = [
+                    'modalEditButton',
+                    'modalExportButton',
+                    'modalOnayForm',
+                    'modalOnayKaldirForm',
+                    'modalDeleteForm',
+                    'modalOnayBadge',
+                    'modalImportantCheckboxContainer'
+                ];
 
+                idsToHide.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.style.display = 'none';
+                        el.classList.remove('d-inline', 'd-block');
+                    }
+                });
+
+                document.getElementById('modalTitle').innerHTML = '';
+                document.getElementById('modalDynamicBody').innerHTML =
+                    '<div class="modal-loading"><div class="modal-spinner"></div></div>';
+
+                // Export butonu ikonunu varsayılana (Excel) döndür
+                const exportBtn = document.getElementById('modalExportButton');
+                if (exportBtn) exportBtn.innerHTML = '<i class="fas fa-file-excel me-2"></i> Excel İndir';
+            }
+
+            // === MODAL AÇMA FONKSİYONU ===
             function openUniversalModal(props) {
-                console.log('--- MODAL PROPS GELDİ ---', props);
+                console.log('--- MODAL AÇILIYOR (HOME) ---', props.eventType);
+
+                // 1. Temizlik
+                hardResetModalUI();
+
                 if (!props || !props.eventType) {
                     console.error("Modal için geçersiz veri:", props);
                     return;
                 }
 
-                // Önemli checkbox ayarları
+                // Elementleri Tazele
+                const modalTitle = document.getElementById('modalTitle');
+                const modalBody = document.getElementById('modalDynamicBody');
+                const modalEditButton = document.getElementById('modalEditButton');
+                const modalExportButton = document.getElementById('modalExportButton');
+                const modalDeleteForm = document.getElementById('modalDeleteForm');
+                const modalOnayForm = document.getElementById('modalOnayForm');
+                const modalOnayKaldirForm = document.getElementById('modalOnayKaldirForm');
+                const modalOnayBadge = document.getElementById('modalOnayBadge');
+                const modalImportantContainer = document.getElementById('modalImportantCheckboxContainer');
+                const modalImportantCheckbox = document.getElementById('modalImportantCheckbox');
+
+                // Önemli Checkbox
                 if (isAuthorized) {
                     modalImportantContainer.style.display = 'block';
                     modalImportantCheckbox.checked = props.is_important || false;
                     modalImportantCheckbox.dataset.modelType = props.model_type;
                     modalImportantCheckbox.dataset.modelId = props.id;
-                } else {
-                    modalImportantContainer.style.display = 'none';
                 }
 
-                // Başlık ikonları
+                // İkon ve Başlık
                 const iconMap = {
                     'shipment': 'fa-truck',
                     'production': 'fa-industry',
@@ -1432,310 +1366,126 @@
                     'vehicle_assignment': 'fa-car',
                     'travel': 'fa-plane-departure'
                 };
-
                 const icon = iconMap[props.eventType] || 'fa-info-circle';
                 modalTitle.innerHTML = `<i class="fas ${icon}"></i> <span>${props.title || 'Detaylar'}</span>`;
 
-                // Buton görünürlük kontrolü
-                let showButtons = false;
-                if (props.eventType === 'production' || props.eventType === 'service_event' || props.eventType ===
-                    'vehicle_assignment') {
-                    if (isAuthorized) {
-                        showButtons = true;
-                    } else if (props.user_id) {
-                        showButtons = (props.user_id === currentUserId);
-                    } else {
-                        showButtons = false;
-                    }
-                } else {
-                    showButtons = true;
+                // Yetki Kontrolü
+                let canModify = false;
+                if (isAuthorized) {
+                    canModify = true;
+                } else if (props.user_id && props.user_id === currentUserId) {
+                    canModify = true;
                 }
 
-                // Düzenle Butonu
-                if (showButtons && props.editUrl && props.editUrl !== '#') {
+                if (canModify && props.editUrl && props.editUrl !== '#') {
                     modalEditButton.href = props.editUrl;
                     modalEditButton.style.display = 'inline-block';
-                } else {
-                    modalEditButton.style.display = 'none';
                 }
-
-                // Silme Butonu
-                if (modalDeleteForm) {
-                    if (showButtons && props.deleteUrl) {
-                        modalDeleteForm.action = props.deleteUrl;
-                        modalDeleteForm.style.display = 'inline-block';
-                    } else {
-                        modalDeleteForm.style.display = 'none';
-                    }
+                if (canModify && props.deleteUrl && modalDeleteForm) {
+                    modalDeleteForm.action = props.deleteUrl;
+                    modalDeleteForm.style.display = 'inline-block';
                 }
 
                 let html = '';
 
-                // === SEVKİYAT (SHIPMENT) ===
+                // --- 1. SHIPMENT ---
                 if (props.eventType === 'shipment') {
                     modalExportButton.href = props.exportUrl || '#';
                     modalExportButton.style.display = 'inline-block';
 
-                    // Onay durumu
                     if (props.details['Onay Durumu']) {
-                        modalOnayForm.style.display = 'none';
-                        if (modalOnayKaldirForm) {
-                            modalOnayKaldirForm.action = props.onayKaldirUrl;
-                            modalOnayKaldirForm.style.display = 'inline-block';
-                        }
                         modalOnayBadge.style.display = 'block';
                         document.getElementById('modalOnayBadgeTarih').textContent = props.details['Onay Durumu'];
                         document.getElementById('modalOnayBadgeKullanici').textContent = props.details[
                             'Onaylayan'] || '';
+                        if (modalOnayKaldirForm) {
+                            modalOnayKaldirForm.action = props.onayKaldirUrl;
+                            modalOnayKaldirForm.style.display = 'inline-block';
+                        }
                     } else {
                         modalOnayForm.action = props.onayUrl;
                         modalOnayForm.style.display = 'inline-block';
-                        if (modalOnayKaldirForm) modalOnayKaldirForm.style.display = 'none';
-                        modalOnayBadge.style.display = 'none';
                     }
 
                     const isGemi = (props.details['Araç Tipi'] || '').toLowerCase().includes('gemi');
 
-                    // Araç Bilgileri Kartı
-                    html += '<div class="modal-info-card">';
                     html +=
-                        '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-truck me-2"></i>Araç Bilgileri</h6>';
-                    html += '<div class="row">';
+                        `<div class="modal-info-card"><h6 class="text-primary fw-bold mb-3"><i class="fas fa-truck me-2"></i>Araç Bilgileri</h6><div class="row">`;
                     html +=
                         `<div class="col-md-6"><p><strong>🚛 Araç Tipi:</strong> ${props.details['Araç Tipi'] || '-'}</p></div>`;
-
                     if (!isGemi) {
                         html +=
                             `<div class="col-md-6"><p><strong>🔢 Plaka:</strong> ${props.details['Plaka'] || '-'}</p></div>`;
-                        html +=
-                            `<div class="col-md-6"><p><strong>🔢 Dorse Plakası:</strong> ${props.details['Dorse Plakası'] || '-'}</p></div>`;
-                        html +=
-                            `<div class="col-md-6"><p><strong>👨‍✈️ Şoför Adı:</strong> ${props.details['Şoför Adı'] || '-'}</p></div>`;
                     } else {
-                        html +=
-                            `<div class="col-md-6"><p><strong>⚓ IMO Numarası:</strong> ${props.details['IMO Numarası'] || '-'}</p></div>`;
                         html +=
                             `<div class="col-md-6"><p><strong>🚢 Gemi Adı:</strong> ${props.details['Gemi Adı'] || '-'}</p></div>`;
                     }
-                    html += '</div></div>';
+                    html += `</div></div>`;
 
-                    // Rota Bilgileri Kartı
-                    html += '<div class="modal-info-card">';
                     html +=
-                        '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-route me-2"></i>Rota Bilgileri</h6>';
-                    html += '<div class="row">';
+                        `<div class="modal-info-card"><h6 class="text-primary fw-bold mb-3"><i class="fas fa-route me-2"></i>Rota Bilgileri</h6><div class="row">`;
+                    html +=
+                        `<div class="col-md-6"><p><strong>📍 Kalkış:</strong> ${props.details['Kalkış Noktası'] || props.details['Kalkış Limanı'] || '-'}</p></div>`;
+                    html +=
+                        `<div class="col-md-6"><p><strong>📍 Varış:</strong> ${props.details['Varış Noktası'] || props.details['Varış Limanı'] || '-'}</p></div>`;
+                    html += `</div></div>`;
 
-                    if (!isGemi) {
+                    if (props.details['Dosya Yolu']) {
                         html +=
-                            `<div class="col-md-6"><p><strong>📍 Kalkış Noktası:</strong> ${props.details['Kalkış Noktası'] || '-'}</p></div>`;
-                        html +=
-                            `<div class="col-md-6"><p><strong>📍 Varış Noktası:</strong> ${props.details['Varış Noktası'] || '-'}</p></div>`;
-                    } else {
-                        html +=
-                            `<div class="col-md-6"><p><strong>🏁 Kalkış Limanı:</strong> ${props.details['Kalkış Limanı'] || '-'}</p></div>`;
-                        html +=
-                            `<div class="col-md-6"><p><strong>🎯 Varış Limanı:</strong> ${props.details['Varış Limanı'] || '-'}</p></div>`;
-                    }
-
-                    html +=
-                        `<div class="col-md-12"><p><strong>🔄 Sevkiyat Türü:</strong> ${props.details['Sevkiyat Türü'] || '-'}</p></div>`;
-                    html += '</div></div>';
-
-                    // Kargo Bilgileri Kartı
-                    html += '<div class="modal-info-card">';
-                    html +=
-                        '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-box me-2"></i>Kargo Bilgileri</h6>';
-                    html += `<p><strong>📦 Kargo Yükü:</strong> ${props.details['Kargo Yükü'] || '-'}</p>`;
-                    html += '<div class="row">';
-                    html +=
-                        `<div class="col-md-6"><p><strong>🏷️ Kargo Tipi:</strong> ${props.details['Kargo Tipi'] || '-'}</p></div>`;
-                    html +=
-                        `<div class="col-md-6"><p><strong>⚖️ Kargo Miktarı:</strong> ${props.details['Kargo Miktarı'] || '-'}</p></div>`;
-                    html += '</div></div>';
-
-                    // Zaman Bilgileri Kartı
-                    const cikis = splitDateTime(props.details['Çıkış Tarihi']);
-                    const varis = splitDateTime(props.details['Tahmini Varış']);
-
-                    html += '<div class="modal-info-card">';
-                    html +=
-                        '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-clock me-2"></i>Zaman Bilgileri</h6>';
-                    html += '<div class="row">';
-                    html += '<div class="col-md-6">';
-                    html += `<p><strong>📅 Çıkış Tarihi:</strong> ${cikis.date}</p>`;
-                    if (cikis.time !== '-') {
-                        html += `<p><strong>🕒 Çıkış Saati:</strong> ${cikis.time}</p>`;
-                    }
-                    html += '</div>';
-                    html += '<div class="col-md-6">';
-                    html += `<p><strong>📅 Tahmini Varış:</strong> ${varis.date}</p>`;
-                    if (varis.time !== '-') {
-                        html += `<p><strong>🕒 Varış Saati:</strong> ${varis.time}</p>`;
-                    }
-                    html += '</div>';
-                    html += '</div></div>';
-                }
-                // === ÜRETİM (PRODUCTION) ===
-                else if (props.eventType === 'production') {
-                    modalExportButton.style.display = 'none';
-                    modalOnayForm.style.display = 'none';
-                    if (modalOnayKaldirForm) modalOnayKaldirForm.style.display = 'none';
-                    modalOnayBadge.style.display = 'none';
-
-                    html += '<div class="modal-info-card">';
-                    html +=
-                        '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-industry me-2"></i>Üretim Planı Bilgileri</h6>';
-                    html += `<p><strong>📝 Plan Başlığı:</strong> ${props.details['Plan Başlığı'] || '-'}</p>`;
-                    html +=
-                        `<p><strong>📅 Hafta Başlangıcı:</strong> ${props.details['Hafta Başlangıcı'] || '-'}</p>`;
-                    html += `<p><strong>👤 Oluşturan:</strong> ${props.details['Oluşturan'] || '-'}</p>`;
-                    html += '</div>';
-
-                    if (props.details['Plan Detayları'] && props.details['Plan Detayları'].length > 0) {
-                        html += '<div class="modal-info-card">';
-                        html +=
-                            '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-list-check me-2"></i>Plan Detayları</h6>';
-                        html += '<table class="table table-sm mb-0">';
-                        html += '<thead><tr><th>⚙️ Makine</th><th>📦 Ürün</th><th>🧮 Adet</th></tr></thead><tbody>';
-                        props.details['Plan Detayları'].forEach(item => {
-                            html +=
-                                `<tr><td>${item.machine || '-'}</td><td>${item.product || '-'}</td><td>${item.quantity || '-'}</td></tr>`;
-                        });
-                        html += '</tbody></table></div>';
+                            `<div class="text-center mt-3"><a href="${props.details['Dosya Yolu']}" target="_blank" class="btn btn-outline-primary"><i class="fas fa-paperclip me-2"></i> Dosyayı Görüntüle</a></div>`;
                     }
                 }
-                // === HİZMET ETKİNLİĞİ (SERVICE EVENT) ===
-                else if (props.eventType === 'service_event') {
-                    modalExportButton.style.display = 'none';
-                    modalOnayForm.style.display = 'none';
-                    if (modalOnayKaldirForm) modalOnayKaldirForm.style.display = 'none';
-                    modalOnayBadge.style.display = 'none';
 
-                    html += '<div class="modal-info-card">';
-                    html +=
-                        '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-calendar-star me-2"></i>Etkinlik Bilgileri</h6>';
-                    html += `<p><strong>🎯 Etkinlik Tipi:</strong> ${props.details['Etkinlik Tipi'] || '-'}</p>`;
-                    html += `<p><strong>📍 Konum:</strong> ${props.details['Konum'] || '-'}</p>`;
-                    html += '</div>';
-
-                    const baslangic = splitDateTime(props.details['Başlangıç']);
-                    const bitis = splitDateTime(props.details['Bitiş']);
-
-                    html += '<div class="modal-info-card">';
-                    html +=
-                        '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-clock me-2"></i>Zaman Bilgileri</h6>';
-                    html += '<div class="row">';
-                    html += '<div class="col-md-6">';
-                    html += `<p><strong>📅 Başlangıç Tarihi:</strong> ${baslangic.date}</p>`;
-                    if (baslangic.time !== '-') {
-                        html += `<p><strong>🕒 Başlangıç Saati:</strong> ${baslangic.time}</p>`;
-                    }
-                    html += '</div>';
-                    html += '<div class="col-md-6">';
-                    html += `<p><strong>📅 Bitiş Tarihi:</strong> ${bitis.date}</p>`;
-                    if (bitis.time !== '-') {
-                        html += `<p><strong>🕒 Bitiş Saati:</strong> ${bitis.time}</p>`;
-                    }
-                    html += '</div>';
-                    html += '</div>';
-                    html +=
-                        `<p class="mt-2"><strong>👩‍💻 Kayıt Yapan:</strong> ${props.details['Kayıt Yapan'] || '-'}</p>`;
-                    html += '</div>';
-                }
-                // === ARAÇ ATAMA (VEHICLE ASSIGNMENT) ===
-                else if (props.eventType === 'vehicle_assignment') {
-                    modalExportButton.style.display = 'none';
-                    modalOnayForm.style.display = 'none';
-                    if (modalOnayKaldirForm) modalOnayKaldirForm.style.display = 'none';
-                    modalOnayBadge.style.display = 'none';
-
-                    html += '<div class="modal-info-card">';
-                    html +=
-                        '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-car me-2"></i>Görev Bilgileri</h6>';
-                    html += `<p><strong>🚘 Araç:</strong> ${props.details['Araç'] || '-'}</p>`;
-                    html += `<p><strong>📋 Görev:</strong> ${props.details['Görev'] || '-'}</p>`;
-                    html += `<p><strong>📍 Yer:</strong> ${props.details['Yer'] || '-'}</p>`;
-                    html += `<p><strong>👤 Talep Eden:</strong> ${props.details['Talep Eden'] || '-'}</p>`;
-                    html += '</div>';
-
-                    const baslangic = splitDateTime(props.details['Başlangıç']);
-                    const bitis = splitDateTime(props.details['Bitiş']);
-
-                    html += '<div class="modal-info-card">';
-                    html +=
-                        '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-clock me-2"></i>Zaman Bilgileri</h6>';
-                    html += '<div class="row">';
-                    html += '<div class="col-md-6">';
-                    html += `<p><strong>📅 Başlangıç Tarihi:</strong> ${baslangic.date}</p>`;
-                    if (baslangic.time !== '-') {
-                        html += `<p><strong>🕒 Başlangıç Saati:</strong> ${baslangic.time}</p>`;
-                    }
-                    html += '</div>';
-                    html += '<div class="col-md-6">';
-                    html += `<p><strong>📅 Bitiş Tarihi:</strong> ${bitis.date}</p>`;
-                    if (bitis.time !== '-') {
-                        html += `<p><strong>🕒 Bitiş Saati:</strong> ${bitis.time}</p>`;
-                    }
-                    html += '</div>';
-                    html += '</div>';
-                    html +=
-                        `<p class="mt-2"><strong>👩‍💻 Kayıt Yapan:</strong> ${props.details['Kayıt Yapan'] || '-'}</p>`;
-                    html += '</div>';
-                }
-                // === SEYAHAT (TRAVEL) ===
+                // --- 2. TRAVEL ---
                 else if (props.eventType === 'travel') {
-                    modalExportButton.style.display = 'none';
-                    modalOnayForm.style.display = 'none';
-                    if (modalOnayKaldirForm) modalOnayKaldirForm.style.display = 'none';
-                    modalOnayBadge.style.display = 'none';
+                    // Güvenlik: Butonları gizle
+                    if (modalOnayForm) modalOnayForm.style.display = 'none';
 
                     html += '<div class="modal-info-card">';
                     html +=
                         '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-plane-departure me-2"></i>Seyahat Bilgileri</h6>';
-                    html += `<p><strong>✈️ Plan Adı:</strong> ${props.details['Plan Adı'] || '-'}</p>`;
-                    html += `<p><strong>👤 Oluşturan:</strong> ${props.details['Oluşturan'] || '-'}</p>`;
-                    html += `<p><strong>📅 Başlangıç:</strong> ${props.details['Başlangıç'] || '-'}</p>`;
-                    html += `<p><strong>📅 Bitiş:</strong> ${props.details['Bitiş'] || '-'}</p>`;
-                    html += `<p><strong>📊 Durum:</strong> ${props.details['Durum'] || '-'}</p>`;
+                    html += `<p><strong>✈️ Plan:</strong> ${props.details['Plan Adı'] || '-'}</p>`;
+                    html +=
+                        `<p><strong>📅 Tarih:</strong> ${props.details['Başlangıç'] || '-'} - ${props.details['Bitiş'] || '-'}</p>`;
+                    html += `<p><strong>Durum:</strong> ${props.details['Durum'] || '-'}</p>`;
                     html += '</div>';
 
                     if (props.url) {
                         modalExportButton.href = props.url;
                         modalExportButton.target = "_blank";
-                        modalExportButton.innerHTML =
-                            '<i class="fas fa-plane-departure me-2"></i> Seyahat Detayına Git';
+                        modalExportButton.innerHTML = '<i class="fas fa-plane-departure me-2"></i> Detaya Git';
                         modalExportButton.style.display = 'inline-block';
                     }
                 }
 
-                // Notlar / Açıklamalar
+                // --- 3. DİĞER TİPLER ---
+                else {
+                    // Standart Basit Gösterim (Home için yeterli olabilir, isterseniz general-calendar'daki detaylı hali kopyalayabilirsiniz)
+                    if (props.eventType === 'service_event') {
+                        html +=
+                            `<div class="modal-info-card"><h6 class="text-primary fw-bold mb-3">Etkinlik</h6><p>${props.title}</p></div>`;
+                    } else if (props.eventType === 'production') {
+                        html +=
+                            `<div class="modal-info-card"><h6 class="text-primary fw-bold mb-3">Üretim Planı</h6><p>${props.details['Plan Başlığı'] || '-'}</p></div>`;
+                    } else if (props.eventType === 'vehicle_assignment') {
+                        html +=
+                            `<div class="modal-info-card"><h6 class="text-primary fw-bold mb-3">Araç Görevi</h6><p>${props.details['Araç'] || '-'} - ${props.details['Görev'] || '-'}</p></div>`;
+                    }
+                }
+
+                // Notlar
                 const aciklama = props.details['Açıklamalar'] || props.details['Notlar'] || props.details[
                     'Açıklama'];
                 if (aciklama) {
-                    html += '<div class="modal-notes-box">';
                     html +=
-                        '<div class="modal-notes-title"><i class="fas fa-sticky-note"></i> Notlar / Açıklamalar</div>';
-                    html += `<p class="mb-0">${aciklama}</p>`;
-                    html += '</div>';
-                }
-
-                // Ek Dosya (Sevkiyat için)
-                if (props.eventType === 'shipment' && props.details['Dosya Yolu']) {
-                    html += '<div class="text-center mt-3">';
-                    html +=
-                        `<a href="${props.details['Dosya Yolu']}" target="_blank" class="btn btn-outline-primary">`;
-                    html += '<i class="fas fa-paperclip me-2"></i> Ek Dosyayı Görüntüle / İndir';
-                    html += '</a></div>';
+                        `<div class="modal-notes-box"><div class="modal-notes-title"><i class="fas fa-sticky-note"></i> Notlar</div><p class="mb-0">${aciklama}</p></div>`;
                 }
 
                 modalBody.innerHTML = html;
                 detailModal.show();
             }
-            const editButton = document.getElementById('editShipmentButton');
-            const exportButton = document.getElementById('exportExcelButton');
-            const onayForm = document.getElementById('onayForm');
-            const onayKaldirForm = document.getElementById('onayKaldirForm');
-            const deleteForm = document.getElementById('deleteShipmentForm');
+
+            // === FULLCALENDAR INIT ===
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 locale: 'tr',
@@ -1751,26 +1501,26 @@
                     timeGridDay: 'Gün',
                     listWeek: 'Liste'
                 },
-                slotEventOverlap: false, // Olayları üst üste bindirme
-                dayMaxEvents: 4, // Bir günde max 4 olay göster
-                eventMaxStack: 3, // Hafta/Gün görünümünde max 3 event yanyana
-                slotDuration: '00:30:00', // 30 dakikalık slotlar
+                // Orijinal CSS'e uygun ayarlar (text-wrapping için)
+                slotEventOverlap: false,
+                dayMaxEvents: 4,
+                eventMaxStack: 3,
+                slotDuration: '00:30:00',
                 height: 'auto',
-                slotMinTime: '06:00:00', // Sabah 6'dan başlat
-                slotMaxTime: '22:00:00', // Akşam 10'a kadar göster
-                scrollTime: '08:00:00', // Sayfa açılınca saat 8'i göster
-                nowIndicator: true, // Şu anki zamanı göster (kırmızı çizgi)
+                slotMinTime: '06:00:00',
+                slotMaxTime: '22:00:00',
+                scrollTime: '08:00:00',
+                nowIndicator: true,
+
                 eventSources: [{
                         id: 'databaseEvents',
                         events: eventsData
                     },
-
-                    // 2. Kaynak: Türkiye Resmi Tatilleri (Google Takvim)
                     {
                         googleCalendarId: 'tr.turkish#holiday@group.v.calendar.google.com',
-                        color: '#dc3545', // Kırmızı (Bootstrap danger rengi)
+                        color: '#dc3545',
                         textColor: 'white',
-                        className: 'fc-event-holiday', // Özel stil için
+                        className: 'fc-event-holiday',
                         googleCalendarApiKey: 'AIzaSyAQmEWGR-krGzcCk1r8R69ER-NyZM2BeWM'
                     }
                 ],
@@ -1785,7 +1535,8 @@
                     minute: '2-digit',
                     hour12: false
                 },
-                eventDisplay: 'list-item',
+                eventDisplay: 'list-item', // Bu önemli: text-wrapping için list-item stili
+
                 eventClick: function(info) {
                     info.jsEvent.preventDefault();
                     if (info.event.extendedProps && info.event.extendedProps.eventType) {
@@ -1799,6 +1550,10 @@
                 }
             });
             calendar.render();
+            setInterval(function() {
+                console.log('Veriler arkaplanda güncelleniyor...');
+                calendar.refetchEvents(); // FullCalendar'ın sihirli fonksiyonu
+            }, 30000);
 
             function applyCalendarFilters() {
                 const showLojistik = document.getElementById('filterLojistik').checked;
@@ -1835,9 +1590,8 @@
                     return true;
                 });
 
-                // 5. Filtrelenmiş veriyi takvime geri ekle
                 calendar.addEventSource({
-                    id: 'databaseEvents', // Aynı ID'yi ver
+                    id: 'databaseEvents',
                     events: filteredDbEvents
                 });
             }
@@ -1845,16 +1599,15 @@
             const filters = document.querySelectorAll('.calendar-filters .form-check-input');
             filters.forEach(filter => filter.addEventListener('change', applyCalendarFilters));
 
+            // === LISTENERLAR ===
             if (modalOnayForm) {
                 modalOnayForm.addEventListener('submit', function(e) {
-
                     if (!confirm('Sevkiyatın tesise ulaştığını onaylıyorsunuz?')) e.preventDefault();
                     else this.querySelector('button[type=submit]').disabled = true;
                 });
             }
             if (modalOnayKaldirForm) {
                 modalOnayKaldirForm.addEventListener('submit', function(e) {
-
                     if (!confirm('Bu sevkiyatın onayını geri almak istediğinizden emin misiniz?')) e
                         .preventDefault();
                     else this.querySelector('button[type=submit]').disabled = true;
@@ -1862,12 +1615,11 @@
             }
             if (modalDeleteForm) {
                 modalDeleteForm.addEventListener('submit', function(e) {
-
                     this.querySelector('button[type=submit]').disabled = true;
                 });
             }
 
-
+            // URL'den Modal Açma
             const urlParams = new URLSearchParams(window.location.search);
             const modalIdToOpen = urlParams.get('open_modal_id');
             const modalTypeToOpen = urlParams.get('open_modal_type');
@@ -1884,9 +1636,6 @@
                 if (eventToOpen) {
                     console.log('URL\'den modal tetikleniyor:', eventToOpen.extendedProps);
                     openUniversalModal(eventToOpen.extendedProps);
-                } else {
-                    console.warn('Modal açılmak istendi ancak ' + modalTypeToOpen + ' (ID:' +
-                        modalIdNum + ') takvimde bulunamadı.');
                 }
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
@@ -1930,15 +1679,9 @@
                         .then(response => response.json())
                         .then(data => {
                             if (!data.success) throw new Error(data.message || 'Güncelleme başarısız.');
-
                             console.log('Güncelleme başarılı:', data.message);
-
-                            // KRİTİK FARK: Bu takvim veriyi AJAX ile çekmiyor,
-                            // @json($events) ile sayfaya gömüyor.
-                            // 'refetchEvents()' burada çalışmaz.
-                            // En basit ve güvenilir yol, değişikliğin
-                            // görünmesi için sayfayı yeniden yüklemektir.
-                            location.reload();
+                            location
+                                .reload(); // Home sayfasında veri JS object içinde olduğu için reload gerekli
                         })
                         .catch(error => {
                             console.error('Hata:', error);
@@ -1953,7 +1696,6 @@
             const chartData = @json($chartData ?? []);
             const departmentSlug = '{{ $departmentSlug }}';
 
-
             const commonChartOptions = {
                 chart: {
                     type: 'bar',
@@ -1962,7 +1704,7 @@
                         show: false
                     }
                 },
-                colors: ['#A78BFA', '#60D9A0', '#FDB4C8', '#FFB84D', '#9DECF9'], // Renk paleti
+                colors: ['#A78BFA', '#60D9A0', '#FDB4C8', '#FFB84D', '#9DECF9'],
                 plotOptions: {
                     bar: {
                         distributed: true,
@@ -1985,11 +1727,12 @@
                 }
             };
 
+            // (Grafik kodları aynen devam ediyor...)
             // Lojistik Grafikleri
             if (departmentSlug === 'lojistik' && chartData.hourly && chartData.daily) {
                 if (chartData.hourly.labels.length > 0 && document.querySelector("#hourly-chart-lojistik")) {
                     let hourlyOptions = {
-                        ...commonChartOptions, // Ortak ayarları kopyala
+                        ...commonChartOptions,
                         series: [{
                             name: 'Sevkiyat Sayısı',
                             data: chartData.hourly.data
@@ -2023,7 +1766,7 @@
                     new ApexCharts(document.querySelector("#daily-chart-lojistik"), dailyOptions).render();
                 }
             }
-            // Üretim Grafikleri
+            // Üretim
             else if (departmentSlug === 'uretim' && chartData.weekly_plans) {
                 if (chartData.weekly_plans.labels.length > 0 && document.querySelector("#weekly-plans-chart")) {
                     let weeklyOptions = {
@@ -2040,80 +1783,74 @@
                             categories: chartData.weekly_plans.labels
                         }
                     };
-                    // Çizgi grafiği daha uygun olabilir? type: 'line'
-                    // weeklyOptions.chart.type = 'line';
-                    // weeklyOptions.stroke = { curve: 'smooth' }; // Yumuşak çizgi
                     new ApexCharts(document.querySelector("#weekly-plans-chart"), weeklyOptions).render();
                 }
-                // Başka üretim grafiği varsa buraya eklenebilir
             }
-            // Hizmet Grafikleri
+            // Hizmet
             else if (departmentSlug === 'hizmet' && chartData.daily_events && chartData.daily_assignments) {
-
-                // Etkinlik Grafiği Ayarları
                 if (chartData.daily_events.labels.length > 0 && document.querySelector("#daily-events-chart")) {
                     let eventOptions = {
-                        ...commonChartOptions, // Ortak ayarları alalım ama bazılarını değiştireceğiz
+                        ...commonChartOptions,
                         series: [{
                             name: 'Etkinlik Sayısı',
                             data: chartData.daily_events.data
                         }],
-                        chart: { // Chart ayarlarını override edelim
-                            type: 'area', // Alan grafiği yapalım
+                        chart: {
+                            type: 'area',
                             height: 250,
                             toolbar: {
                                 show: false
                             },
                             zoom: {
                                 enabled: false
-                            } // Yakınlaştırmayı kapatalım
+                            }
                         },
-                        colors: [commonChartOptions.colors[1]], // Farklı bir renk seçelim (örn: yeşil)
+                        colors: [commonChartOptions.colors[1]],
                         title: {
                             ...commonChartOptions.title,
                             text: chartData.daily_events.title || 'Günlük Etkinlik Sayısı'
                         },
                         xaxis: {
                             categories: chartData.daily_events.labels,
-                            tickAmount: 6, // Daha az etiket gösterelim
+                            tickAmount: 6,
                             labels: {
-                                rotate: -45, // Etiketleri 45 derece döndürelim
+                                rotate: -45,
                                 rotateAlways: true,
                                 style: {
                                     fontSize: '10px'
                                 }
                             }
                         },
-                        yaxis: { // Y ekseninde sadece tam sayıları gösterelim
+                        yaxis: {
                             labels: {
                                 formatter: function(val) {
                                     return val.toFixed(0);
                                 }
                             },
-                            min: 0 // Minimum değer 0 olsun
+                            min: 0
                         },
                         stroke: {
                             curve: 'smooth',
                             width: 2
-                        }, // Yumuşak çizgi
+                        },
                         fill: {
                             type: 'gradient',
                             gradient: {
                                 opacityFrom: 0.6,
                                 opacityTo: 0.1
                             }
-                        }, // Alan dolgusu
-                        tooltip: { // Üzerine gelince gösterilecek bilgi
+                        },
+                        tooltip: {
                             x: {
                                 format: 'dd MMM'
-                            }, // Tarih formatı
+                            },
                             y: {
                                 formatter: function(val) {
                                     return val.toFixed(0) + " etkinlik"
                                 }
                             }
                         },
-                        grid: { // Arka plan çizgileri (isteğe bağlı)
+                        grid: {
                             borderColor: '#e7e7e7',
                             row: {
                                 colors: ['#f3f3f3', 'transparent'],
@@ -2124,17 +1861,16 @@
                     new ApexCharts(document.querySelector("#daily-events-chart"), eventOptions).render();
                 }
 
-                // Araç Atama Grafiği Ayarları
                 if (chartData.daily_assignments.labels.length > 0 && document.querySelector(
                         "#daily-assignments-chart")) {
                     let assignmentOptions = {
-                        ...commonChartOptions, // Ortak ayarları al
+                        ...commonChartOptions,
                         series: [{
                             name: 'Atama Sayısı',
                             data: chartData.daily_assignments.data
                         }],
-                        chart: { // Chart ayarlarını override edelim
-                            type: 'area', // Alan grafiği yapalım
+                        chart: {
+                            type: 'area',
                             height: 250,
                             toolbar: {
                                 show: false
@@ -2143,13 +1879,13 @@
                                 enabled: false
                             }
                         },
-                        colors: [commonChartOptions.colors[3]], // Farklı bir renk seçelim (örn: sarı)
+                        colors: [commonChartOptions.colors[3]],
                         title: {
                             ...commonChartOptions.title,
                             text: chartData.daily_assignments.title || 'Günlük Araç Atama Sayısı'
                         },
                         xaxis: {
-                            categories: chartData.daily_assignments.labels, // Aynı etiketler
+                            categories: chartData.daily_assignments.labels,
                             tickAmount: 6,
                             labels: {
                                 rotate: -45,
@@ -2199,6 +1935,6 @@
                     new ApexCharts(document.querySelector("#daily-assignments-chart"), assignmentOptions).render();
                 }
             }
-        }); // DOMContentLoaded sonu
+        });
     </script>
 @endsection
