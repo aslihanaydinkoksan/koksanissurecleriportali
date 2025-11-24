@@ -276,13 +276,13 @@
         <div class="row justify-content-center">
             <div class="col-lg-9">
                 <div class="card edit-assignment-card" x-data="{
-                    vehicleType: '<?php echo e(old('vehicle_type', $assignment->vehicle->type ?? '')); ?>',
+                    vehicleType: '<?php echo e(old('vehicle_type', $assignment->isLogistics() ? 'logistics' : 'company')); ?>',
                     responsibleType: '<?php echo e(old('responsible_type', $assignment->responsible_type === App\Models\User::class ? 'user' : ($assignment->responsible_type === App\Models\Team::class ? 'team' : 'user'))); ?>',
                     status: '<?php echo e(old('status', $assignment->status)); ?>',
                     isLogistics() {
                         return this.vehicleType === 'logistics';
                     }
-                }" x-cloak>
+                }"x-cloak>
 
                     <div class="card-header bg-transparent border-0 pt-4 pb-3">
                         <div class="d-flex justify-content-between align-items-center">
@@ -318,6 +318,7 @@
                         <form method="POST" action="<?php echo e(route('service.assignments.update', $assignment->id)); ?>">
                             <?php echo csrf_field(); ?>
                             <?php echo method_field('PUT'); ?>
+                            <input type="hidden" name="vehicle_type" :value="vehicleType">
                             <input type="hidden" name="responsible_type" value="<?php echo e($assignment->responsible_type); ?>">
                             <input type="hidden" name="responsible_id" value="<?php echo e($assignment->responsible_id); ?>">
 
@@ -402,38 +403,52 @@ unset($__errorArgs, $__bag); ?>
                                 <div class="icon">🚗</div>
                                 <h5>Araç Bilgileri</h5>
                             </div>
-                            <?php if($assignment->requiresVehicle()): ?>
+                            <?php if($assignment->vehicle_id): ?> 
                                 <div class="mb-4">
                                     <label for="vehicle_id" class="form-label">
                                         <span x-show="vehicleType === 'company'">🚙</span>
                                         <span x-show="vehicleType === 'logistics'">🚚</span>
                                         Araç Seçimi *
                                     </label>
-                                    <select name="vehicle_id" id="vehicle_id"
-                                        class="form-select <?php $__errorArgs = ['vehicle_id'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>" required>
-                                        <option value="">Araç Seçiniz...</option>
-                                        <?php $__currentLoopData = $vehicles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $vehicle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                            <option value="<?php echo e($vehicle->id); ?>"
-                                                <?php echo e(old('vehicle_id', $assignment->vehicle_id) == $vehicle->id ? 'selected' : ''); ?>>
-                                                <?php echo e($vehicle->plate_number); ?> - <?php echo e($vehicle->model); ?>
 
-                                                (<?php echo e($vehicle->type === 'company' ? '🚙 Şirket' : '🚚 Nakliye'); ?>)
-                                            </option>
-                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                    </select>
+                                    
+                                    <div x-show="vehicleType === 'company'">
+                                        <select name="vehicle_id" class="form-select"
+                                            :disabled="vehicleType !== 'company'">
+                                            <option value="">Araç Seçiniz...</option>
+                                            <?php $__currentLoopData = $companyVehicles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $vehicle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <option value="<?php echo e($vehicle->id); ?>"
+                                                    <?php echo e($assignment->vehicle_id == $vehicle->id && !$assignment->isLogistics() ? 'selected' : ''); ?>>
+                                                    <?php echo e($vehicle->plate_number); ?> -
+                                                    <?php echo e($vehicle->brand_model ?? $vehicle->model); ?>
+
+                                                </option>
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                        </select>
+                                    </div>
+
+                                    
+                                    <div x-show="vehicleType === 'logistics'">
+                                        <select name="vehicle_id" class="form-select"
+                                            :disabled="vehicleType !== 'logistics'">
+                                            <option value="">Nakliye Aracı Seçiniz...</option>
+                                            <?php $__currentLoopData = $logisticsVehicles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $vehicle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <option value="<?php echo e($vehicle->id); ?>"
+                                                    <?php echo e($assignment->vehicle_id == $vehicle->id && $assignment->isLogistics() ? 'selected' : ''); ?>>
+                                                    <?php echo e($vehicle->plate_number); ?> - <?php echo e($vehicle->brand); ?>
+
+                                                    <?php echo e($vehicle->model); ?>
+
+                                                </option>
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                        </select>
+                                    </div>
                                     <?php $__errorArgs = ['vehicle_id'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?>
-                                        <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                        <div class="text-danger small mt-1"><?php echo e($message); ?></div>
                                     <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
@@ -441,7 +456,9 @@ unset($__errorArgs, $__bag); ?>
                                 </div>
                             <?php else: ?>
                                 <input type="hidden" name="vehicle_id" value="">
-                                <div class="alert alert-info">Bu görev için araç ataması gerekmemektedir.</div>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i> Bu görev için araç ataması gerekmemektedir.
+                                </div>
                             <?php endif; ?>
                             
                             <div x-show="isLogistics()" class="fade-in">

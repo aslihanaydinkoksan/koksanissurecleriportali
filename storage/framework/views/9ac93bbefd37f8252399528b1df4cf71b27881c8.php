@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', 'Araç Listesi')
 
-@push('styles')
+<?php $__env->startSection('title', 'Araç Listesi'); ?>
+
+<?php $__env->startPush('styles'); ?>
     <style>
         .page-header-gradient {
             background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
@@ -173,39 +173,41 @@
             box-shadow: 0 4px 12px rgba(240, 147, 251, 0.3);
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container-fluid px-4">
 
-        {{-- Hero Section --}}
+        
         <div class="page-header-gradient">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h2 class="mb-1"><i class="fas fa-car me-2"></i>Araç Listesi</h2>
                     <p class="mb-0 opacity-75">Tüm araçların yönetimi ve takibi</p>
                 </div>
-                <a href="{{ route('service.vehicles.create') }}" class="btn btn-create">
+                <a href="<?php echo e(route('service.vehicles.create')); ?>" class="btn btn-create">
                     <i class="fas fa-plus me-1"></i> Yeni Araç Ekle
                 </a>
             </div>
         </div>
 
-        {{-- Alerts --}}
-        @if (session('success'))
+        
+        <?php if(session('success')): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-        @if (session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
+                <i class="fas fa-check-circle me-2"></i><?php echo e(session('success')); ?>
 
-        {{-- Filter Card --}}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+        <?php if(session('error')): ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i><?php echo e(session('error')); ?>
+
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+
+        
         <div class="filter-card">
             <div class="filter-header">
                 <button class="btn btn-link text-decoration-none p-0 w-100 text-start" type="button"
@@ -223,46 +225,46 @@
 
             <div class="collapse" id="filterCollapse">
                 <div class="filter-body">
-                    <form method="GET" action="{{ route('service.vehicles.index') }}" autocomplete="off">
+                    <form method="GET" action="<?php echo e(route('service.vehicles.index')); ?>" autocomplete="off">
                         <div class="row g-3">
-                            {{-- Plaka Filtresi --}}
+                            
                             <div class="col-md-4">
                                 <label for="plate_number" class="form-label">
                                     <i class="fas fa-hashtag me-1"></i> Plaka
                                 </label>
                                 <input type="text" class="form-control" id="plate_number" name="plate_number"
-                                    value="{{ $filters['plate_number'] ?? '' }}" placeholder="Plaka girin...">
+                                    value="<?php echo e($filters['plate_number'] ?? ''); ?>" placeholder="Plaka girin...">
                             </div>
 
-                            {{-- Araç Tipi Filtresi --}}
+                            
                             <div class="col-md-4">
                                 <label for="type" class="form-label">
                                     <i class="fas fa-car-side me-1"></i> Araç Tipi
                                 </label>
                                 <input type="text" class="form-control" id="type" name="type"
-                                    value="{{ $filters['type'] ?? '' }}" placeholder="Örn: Kamyonet, Otomobil...">
+                                    value="<?php echo e($filters['type'] ?? ''); ?>" placeholder="Örn: Kamyonet, Otomobil...">
                             </div>
 
-                            {{-- Durum Filtresi --}}
+                            
                             <div class="col-md-4">
                                 <label for="status" class="form-label">
                                     <i class="fas fa-toggle-on me-1"></i> Durum
                                 </label>
                                 <select class="form-select" id="status" name="status">
-                                    <option value="all" {{ ($filters['status'] ?? 'all') == 'all' ? 'selected' : '' }}>
+                                    <option value="all" <?php echo e(($filters['status'] ?? 'all') == 'all' ? 'selected' : ''); ?>>
                                         Tümü</option>
                                     <option value="active"
-                                        {{ ($filters['status'] ?? 'all') == 'active' ? 'selected' : '' }}>Aktif</option>
+                                        <?php echo e(($filters['status'] ?? 'all') == 'active' ? 'selected' : ''); ?>>Aktif</option>
                                     <option value="inactive"
-                                        {{ ($filters['status'] ?? 'all') == 'inactive' ? 'selected' : '' }}>Pasif</option>
+                                        <?php echo e(($filters['status'] ?? 'all') == 'inactive' ? 'selected' : ''); ?>>Pasif</option>
                                 </select>
                             </div>
                         </div>
 
-                        {{-- Butonlar --}}
+                        
                         <div class="row mt-4">
                             <div class="col-12 d-flex justify-content-end gap-2">
-                                <a href="{{ route('service.vehicles.index') }}" class="btn btn-outline-secondary">
+                                <a href="<?php echo e(route('service.vehicles.index')); ?>" class="btn btn-outline-secondary">
                                     <i class="fas fa-times me-1"></i> Temizle
                                 </a>
                                 <button type="submit" class="btn btn-primary">
@@ -275,16 +277,16 @@
             </div>
         </div>
 
-        {{-- Vehicle List Card --}}
+        
         <div class="vehicle-card">
             <div class="card-body p-0">
-                @if ($vehicles->isEmpty())
+                <?php if($vehicles->isEmpty()): ?>
                     <div class="empty-state">
                         <i class="fas fa-car fa-3x text-secondary"></i>
                         <h5 class="text-muted mt-3">Henüz Araç Yok</h5>
                         <p class="text-muted mb-0">Filtrelere uygun araç bulunamadı.</p>
                     </div>
-                @else
+                <?php else: ?>
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
                             <thead>
@@ -297,65 +299,66 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($vehicles as $vehicle)
+                                <?php $__currentLoopData = $vehicles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $vehicle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <tr>
-                                        <td class="ps-4 fw-bold text-primary">{{ $vehicle->plate_number }}</td>
-                                        <td>{{ $vehicle->type }}</td>
+                                        <td class="ps-4 fw-bold text-primary"><?php echo e($vehicle->plate_number); ?></td>
+                                        <td><?php echo e($vehicle->type); ?></td>
                                         <td>
                                             <div class="d-flex flex-column">
-                                                <span class="fw-semibold">{{ $vehicle->brand_model ?? '-' }}</span>
+                                                <span class="fw-semibold"><?php echo e($vehicle->brand_model ?? '-'); ?></span>
                                             </div>
                                         </td>
                                         <td>
-                                            @if ($vehicle->is_active)
+                                            <?php if($vehicle->is_active): ?>
                                                 <span class="status-badge status-active">Aktif</span>
-                                            @else
+                                            <?php else: ?>
                                                 <span class="status-badge status-inactive">Pasif</span>
-                                            @endif
+                                            <?php endif; ?>
                                         </td>
                                         <td class="text-end pe-4">
                                             <div class="action-btn-group">
-                                                @if (!in_array(Auth::user()->role, ['izleyici']))
-                                                    <a href="{{ route('service.vehicles.edit', $vehicle) }}"
+                                                <?php if(!in_array(Auth::user()->role, ['izleyici'])): ?>
+                                                    <a href="<?php echo e(route('service.vehicles.edit', $vehicle)); ?>"
                                                         class="btn btn-action btn-action-edit" title="Düzenle">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
-                                                @endif
+                                                <?php endif; ?>
 
-                                                @can('access-department', 'hizmet')
-                                                    <form action="{{ route('service.vehicles.destroy', $vehicle) }}"
+                                                <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('access-department', 'hizmet')): ?>
+                                                    <form action="<?php echo e(route('service.vehicles.destroy', $vehicle)); ?>"
                                                         method="POST" class="d-inline"
                                                         onsubmit="return confirm('Bu aracı silmek istediğinizden emin misiniz? Araca ait tüm geçmiş atamalar da silinebilir!');">
-                                                        @csrf
-                                                        @method('DELETE')
+                                                        <?php echo csrf_field(); ?>
+                                                        <?php echo method_field('DELETE'); ?>
                                                         <button type="submit" class="btn btn-action btn-action-delete"
                                                             title="Sil">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
                                                     </form>
-                                                @endcan
+                                                <?php endif; ?>
                                             </div>
                                         </td>
                                     </tr>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </tbody>
                         </table>
                     </div>
 
-                    {{-- Pagination --}}
-                    @if ($vehicles->hasPages())
+                    
+                    <?php if($vehicles->hasPages()): ?>
                         <div class="card-footer bg-white border-0 py-3">
-                            {{ $vehicles->appends($filters ?? [])->links('pagination::bootstrap-5') }}
+                            <?php echo e($vehicles->appends($filters ?? [])->links('pagination::bootstrap-5')); ?>
+
                         </div>
-                    @endif
-                @endif
+                    <?php endif; ?>
+                <?php endif; ?>
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-{{-- JavaScript --}}
-@section('page_scripts')
+
+<?php $__env->startSection('page_scripts'); ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var filterCollapse = document.getElementById('filterCollapse');
@@ -374,4 +377,6 @@
             }
         });
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/service/vehicles/index.blade.php ENDPATH**/ ?>

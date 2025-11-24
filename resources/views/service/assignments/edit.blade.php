@@ -276,13 +276,13 @@
         <div class="row justify-content-center">
             <div class="col-lg-9">
                 <div class="card edit-assignment-card" x-data="{
-                    vehicleType: '{{ old('vehicle_type', $assignment->vehicle->type ?? '') }}',
+                    vehicleType: '{{ old('vehicle_type', $assignment->isLogistics() ? 'logistics' : 'company') }}',
                     responsibleType: '{{ old('responsible_type', $assignment->responsible_type === App\Models\User::class ? 'user' : ($assignment->responsible_type === App\Models\Team::class ? 'team' : 'user')) }}',
                     status: '{{ old('status', $assignment->status) }}',
                     isLogistics() {
                         return this.vehicleType === 'logistics';
                     }
-                }" x-cloak>
+                }"x-cloak>
 
                     <div class="card-header bg-transparent border-0 pt-4 pb-3">
                         <div class="d-flex justify-content-between align-items-center">
@@ -318,6 +318,7 @@
                         <form method="POST" action="{{ route('service.assignments.update', $assignment->id) }}">
                             @csrf
                             @method('PUT')
+                            <input type="hidden" name="vehicle_type" :value="vehicleType">
                             <input type="hidden" name="responsible_type" value="{{ $assignment->responsible_type }}">
                             <input type="hidden" name="responsible_id" value="{{ $assignment->responsible_id }}">
 
@@ -373,31 +374,52 @@
                                 <div class="icon">🚗</div>
                                 <h5>Araç Bilgileri</h5>
                             </div>
-                            @if ($assignment->requiresVehicle())
+                            @if ($assignment->vehicle_id) {{-- Kesin çözüm: ID varsa araç vardır --}}
                                 <div class="mb-4">
                                     <label for="vehicle_id" class="form-label">
                                         <span x-show="vehicleType === 'company'">🚙</span>
                                         <span x-show="vehicleType === 'logistics'">🚚</span>
                                         Araç Seçimi *
                                     </label>
-                                    <select name="vehicle_id" id="vehicle_id"
-                                        class="form-select @error('vehicle_id') is-invalid @enderror" required>
-                                        <option value="">Araç Seçiniz...</option>
-                                        @foreach ($vehicles as $vehicle)
-                                            <option value="{{ $vehicle->id }}"
-                                                {{ old('vehicle_id', $assignment->vehicle_id) == $vehicle->id ? 'selected' : '' }}>
-                                                {{ $vehicle->plate_number }} - {{ $vehicle->model }}
-                                                ({{ $vehicle->type === 'company' ? '🚙 Şirket' : '🚚 Nakliye' }})
-                                            </option>
-                                        @endforeach
-                                    </select>
+
+                                    {{-- ŞİRKET ARAÇLARI LİSTESİ (Alpine ile kontrol edilir) --}}
+                                    <div x-show="vehicleType === 'company'">
+                                        <select name="vehicle_id" class="form-select"
+                                            :disabled="vehicleType !== 'company'">
+                                            <option value="">Araç Seçiniz...</option>
+                                            @foreach ($companyVehicles as $vehicle)
+                                                <option value="{{ $vehicle->id }}"
+                                                    {{ $assignment->vehicle_id == $vehicle->id && !$assignment->isLogistics() ? 'selected' : '' }}>
+                                                    {{ $vehicle->plate_number }} -
+                                                    {{ $vehicle->brand_model ?? $vehicle->model }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    {{-- NAKLİYE ARAÇLARI LİSTESİ --}}
+                                    <div x-show="vehicleType === 'logistics'">
+                                        <select name="vehicle_id" class="form-select"
+                                            :disabled="vehicleType !== 'logistics'">
+                                            <option value="">Nakliye Aracı Seçiniz...</option>
+                                            @foreach ($logisticsVehicles as $vehicle)
+                                                <option value="{{ $vehicle->id }}"
+                                                    {{ $assignment->vehicle_id == $vehicle->id && $assignment->isLogistics() ? 'selected' : '' }}>
+                                                    {{ $vehicle->plate_number }} - {{ $vehicle->brand }}
+                                                    {{ $vehicle->model }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
                                     @error('vehicle_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
                                     @enderror
                                 </div>
                             @else
                                 <input type="hidden" name="vehicle_id" value="">
-                                <div class="alert alert-info">Bu görev için araç ataması gerekmemektedir.</div>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i> Bu görev için araç ataması gerekmemektedir.
+                                </div>
                             @endif
                             {{-- NAKLİYE DETAYLARI --}}
                             <div x-show="isLogistics()" class="fade-in">

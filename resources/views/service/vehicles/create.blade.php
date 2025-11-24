@@ -55,14 +55,40 @@
         .create-vehicle-card .form-control,
         .create-vehicle-card .form-select,
         .create-vehicle-card .form-check-input {
-            /* Checkbox eklendi */
             border-radius: 0.5rem;
             background-color: rgba(255, 255, 255, 0.8);
         }
 
         .create-vehicle-card .form-check-input {
             border: 1px solid rgba(0, 0, 0, .25);
-            /* Checkbox kenarlığı */
+            /* Kenarlık */
+            cursor: pointer;
+            /* Mouse ile üzerine gelince el işareti çıksın */
+            position: relative;
+            /* Pozisyonu belirginleştir */
+            z-index: 10;
+            /* Diğer elementlerin üzerinde kalmasını sağla */
+        }
+
+        /* Label'a da tıklayınca çalışması için bunu ekleyin */
+        .create-vehicle-card .form-check-label {
+            cursor: pointer;
+            position: relative;
+            z-index: 10;
+            user-select: none;
+            /* Yazının seçilmesini engelle, tıklamayı kolaylaştır */
+        }
+
+        .create-vehicle-card .form-check-input:checked {
+            /* Arka planı temanıza uygun mor/mavi yap */
+            background-color: #667EEA !important;
+            border-color: #667EEA !important;
+
+            /* Tik işaretini (SVG) zorla göster ve beyaz yap */
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e") !important;
+
+            /* Gölge efekti ekle ki seçildiği belli olsun */
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
         }
 
         /* Animasyonlu buton (Değişiklik yok) */
@@ -154,10 +180,10 @@
                                     id="kvkk_onay" name="kvkk_onay" value="1" {{ old('kvkk_onay') ? 'checked' : '' }}>
                                 <label class="form-check-label" for="kvkk_onay">
                                     <!--
-                                                    !!! DİKKAT !!!
-                                                    Aşağıdaki 'href' adresini kendi KVKK metninizin
-                                                    bulunduğu sayfanın URL'si ile değiştirin.
-                                                -->
+                                                                    !!! DİKKAT !!!
+                                                                    Aşağıdaki 'href' adresini kendi KVKK metninizin
+                                                                    bulunduğu sayfanın URL'si ile değiştirin.
+                                                                -->
                                     <a href="{{ url('/kvkk-aydinlatma-metni') }}" target="_blank"
                                         class="text-decoration-underline" style="color: #0d6efd;">
                                         KVKK Aydınlatma Metni'ni

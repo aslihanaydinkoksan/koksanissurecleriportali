@@ -4,16 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany; // [YENİ] HasMany yerine MorphMany
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Loggable;
 
 /**
- * App\Models\Vehicle
+ * * Bu model  SADECE "Şirket Araçlarını" (Company Vehicles) temsil eder.
+ * Nakliye araçları için "LogisticsVehicle" modeli kullanılır.
  *
  * @property int $id
  * @property string $plate_number
- * @property string $type (company, logistics)
+ * @property string $type (sedan, hatchback, suv) -> Artık 'logistics' buraya gelmeyecek.
  * @property string|null $brand_model
  * @property string|null $description
  * @property bool $is_active
@@ -27,7 +28,7 @@ class Vehicle extends Model
 
     protected $fillable = [
         'plate_number',
-        'type',
+        'type',        // Bunu tutabiliriz ama artık 'logistics' değeri almayacak. (Örn: Sedan, SUV)
         'brand_model',
         'description',
         'is_active',
@@ -40,11 +41,12 @@ class Vehicle extends Model
     ];
 
     /**
-     * Bu araca ait görevler
+     * Bu araca ait görevler (Polymorphic İlişki)
+     * VehicleAssignment tablosundaki 'vehicle_type' ve 'vehicle_id' ile eşleşir.
      */
-    public function assignments(): HasMany
+    public function assignments(): MorphMany
     {
-        return $this->hasMany(VehicleAssignment::class);
+        return $this->morphMany(VehicleAssignment::class, 'vehicle');
     }
 
     /**
@@ -56,34 +58,6 @@ class Vehicle extends Model
     }
 
     /**
-     * Scope: Şirket araçları
-     */
-    public function scopeCompany($query)
-    {
-        return $query->where('type', 'company');
-    }
-
-    /**
-     * Scope: Nakliye araçları
-     */
-    public function scopeLogistics($query)
-    {
-        return $query->where('type', 'logistics');
-    }
-
-    /**
-     * Accessor: Araç tipi ismi
-     */
-    public function getTypeNameAttribute(): string
-    {
-        return match ($this->type) {
-            'company' => 'Şirket Aracı',
-            'logistics' => 'Nakliye Aracı',
-            default => 'Bilinmeyen'
-        };
-    }
-
-    /**
      * Accessor: Tam araç bilgisi
      */
     public function getFullNameAttribute(): string
@@ -92,7 +66,8 @@ class Vehicle extends Model
     }
 
     /**
-     * Check: Müsait mi? (Şu anda kullanımda değil)
+     * Check: Müsait mi?
+     * Araç aktifse ve şu anda devam eden bir görevi yoksa.
      */
     public function isAvailable(): bool
     {
@@ -104,6 +79,7 @@ class Vehicle extends Model
      */
     public function hasActiveAssignment(): bool
     {
+        // Polymorphic ilişkide de sorgu mantığı aynıdır
         return $this->assignments()
             ->whereIn('status', ['pending', 'in_progress'])
             ->exists();

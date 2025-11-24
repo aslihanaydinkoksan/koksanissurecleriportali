@@ -657,23 +657,47 @@
         }
 
         #detailModal .btn-close {
-            background: rgba(255, 255, 255, 0.25);
+            /* Bootstrap'in kendi X resmini iptal ediyoruz */
+            background-image: none !important;
+
+            /* Senin arka planın */
+            background-color: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+
+            /* İkon Rengi ve Boyutu */
+            color: #ffffff;
+            /* İkonu beyaz yapar */
+            font-size: 1.2rem;
+            /* İkon boyutu */
+
+            /* Şekil ve Hizalama */
             opacity: 1;
             border-radius: 50%;
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            /* 50px çok büyük olabilir, 40-45 idealdir */
+            height: 40px;
             padding: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             z-index: 1;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
         }
 
         #detailModal .btn-close:hover {
-            background: rgba(255, 255, 255, 0.35);
+            background-color: rgba(255, 255, 255, 0.3);
+            /* Hover rengini biraz açtık */
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.5);
             transform: rotate(90deg) scale(1.1);
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.4), 0 4px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        #detailModal .btn-close:active {
+            transform: rotate(90deg) scale(0.95);
         }
 
         #detailModal .modal-body {
@@ -1066,8 +1090,6 @@
                             <?php elseif($departmentSlug === 'uretim'): ?>
                                 <div id="weekly-plans-chart"></div>
                                 <hr>
-                                <p class="text-muted text-center small mt-3">Yakında daha fazla üretim istatistiği
-                                    eklenecektir.</p>
                             <?php elseif($departmentSlug === 'hizmet'): ?>
                                 <div id="daily-events-chart"></div>
                                 <hr>
@@ -1178,8 +1200,9 @@
                         <i class="fas fa-info-circle"></i>
                         <span>Detaylar</span>
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
                 </div>
 
                 <div class="modal-body">
@@ -1200,12 +1223,11 @@
                         </div>
                     </div>
 
-                    <div id="modalImportantCheckboxContainer" style="display: none;">
+                    <div id="modalImportantCheckboxContainer" class="d-flex align-items-center justify-content-between"
+                        style="display: none;">
+                        <label for="modalImportantCheckbox" class="form-check-label"><i
+                                class="fas fa-exclamation-circle me-1"></i> Bu Etkinliği Önemli Olarak İşaretle</label>
                         <input type="checkbox" id="modalImportantCheckbox" class="form-check-input">
-                        <label for="modalImportantCheckbox" class="form-check-label">
-                            <i class="fas fa-exclamation-circle me-1"></i>
-                            Bu Etkinliği Önemli Olarak İşaretle
-                        </label>
                     </div>
 
                     <div id="modalDynamicBody">
@@ -1363,16 +1385,7 @@
                     modalImportantCheckbox.dataset.modelId = props.id;
                 }
 
-                // İkon ve Başlık
-                const iconMap = {
-                    'shipment': 'fa-truck',
-                    'production': 'fa-industry',
-                    'service_event': 'fa-calendar-star',
-                    'vehicle_assignment': 'fa-car',
-                    'travel': 'fa-plane-departure'
-                };
-                const icon = iconMap[props.eventType] || 'fa-info-circle';
-                modalTitle.innerHTML = `<i class="fas ${icon}"></i> <span>${props.title || 'Detaylar'}</span>`;
+                modalTitle.innerHTML = `<span>${props.title || 'Detaylar'}</span>`;
 
                 // Yetki Kontrolü
                 let canModify = false;

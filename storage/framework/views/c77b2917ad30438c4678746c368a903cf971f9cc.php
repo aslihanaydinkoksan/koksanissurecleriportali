@@ -1,7 +1,7 @@
-@extends('layouts.app')
-@section('title', 'Genel KÖKSAN Takvimi')
 
-@push('styles')
+<?php $__env->startSection('title', 'Genel KÖKSAN Takvimi'); ?>
+
+<?php $__env->startPush('styles'); ?>
     <style>
         #app>main.py-4 {
             padding: 2.5rem 0 !important;
@@ -996,17 +996,17 @@
             }
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-11">
                 <div class="card create-shipment-card">
                     <div class="card-header">📅 Genel KÖKSAN Takvimi</div>
                     <div class="card-body">
-                        <div id='calendar' data-current-user-id="{{ Auth::id() }}"
-                            data-is-authorized="{{ in_array(Auth::user()->role, ['admin', 'yönetici']) ? 'true' : 'false' }}">
+                        <div id='calendar' data-current-user-id="<?php echo e(Auth::id()); ?>"
+                            data-is-authorized="<?php echo e(in_array(Auth::user()->role, ['admin', 'yönetici']) ? 'true' : 'false'); ?>">
                         </div>
                     </div>
                 </div>
@@ -1053,14 +1053,14 @@
                     <a href="#" id="modalExportButton" class="btn" style="display: none;"><i
                             class="fas fa-file-excel me-2"></i> Excel İndir</a>
 
-                    <form method="POST" id="modalOnayForm" style="display: none;" class="d-inline">@csrf<button
+                    <form method="POST" id="modalOnayForm" style="display: none;" class="d-inline"><?php echo csrf_field(); ?><button
                             type="submit" class="btn btn-success"><i class="fas fa-check me-2"></i> Tesise Ulaştı</button>
                     </form>
-                    <form method="POST" id="modalOnayKaldirForm" style="display: none;" class="d-inline">@csrf
-                        @method('DELETE')<button type="submit" class="btn btn-warning"><i class="fas fa-undo me-2"></i>
+                    <form method="POST" id="modalOnayKaldirForm" style="display: none;" class="d-inline"><?php echo csrf_field(); ?>
+                        <?php echo method_field('DELETE'); ?><button type="submit" class="btn btn-warning"><i class="fas fa-undo me-2"></i>
                             Onayı Kaldır</button></form>
                     <form method="POST" id="modalDeleteForm" style="display: none;" class="d-inline"
-                        onsubmit="return confirm('Silmek istediğinize emin misiniz?');">@csrf @method('DELETE')<button
+                        onsubmit="return confirm('Silmek istediğinize emin misiniz?');"><?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?><button
                             type="submit" class="btn btn-danger"><i class="fas fa-trash me-2"></i> Sil</button></form>
 
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i
@@ -1069,10 +1069,10 @@
             </div>
         </div>
     </div>
-    @include('partials.calendar-modal')
-@endsection
+    <?php echo $__env->make('partials.calendar-modal', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+<?php $__env->stopSection(); ?>
 
-@section('page_scripts')
+<?php $__env->startSection('page_scripts'); ?>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.13/index.global.min.js'></script>
     <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/google-calendar@6.1.13/index.global.min.js'></script>
     <script>
@@ -1086,8 +1086,8 @@
             const dateFromUrl = urlParams.get('date');
 
             // === KULLANICI BİLGİLERİ (Yetki İçin) ===
-            const currentUserDepartment = "{{ Auth::user()->department?->slug }}";
-            const currentUserRole = "{{ Auth::user()->role }}";
+            const currentUserDepartment = "<?php echo e(Auth::user()->department?->slug); ?>";
+            const currentUserRole = "<?php echo e(Auth::user()->role); ?>";
             const isSuperAdmin = (currentUserRole === 'admin' || currentUserRole === 'yönetici');
 
             var detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
@@ -1313,7 +1313,7 @@
                 eventDisplay: 'list-item', // UI Düzeltmesi için (noktalı liste görünümü)
 
                 eventSources: [{
-                        url: '{{ route('web.calendar.events') }}',
+                        url: '<?php echo e(route('web.calendar.events')); ?>',
                         failure: () => alert('Veri hatası!')
                     },
                     {
@@ -1371,7 +1371,7 @@
                 chkImportant.addEventListener('change', function() {
                     const isChecked = this.checked;
                     this.disabled = true;
-                    fetch('{{ route('calendar.toggleImportant') }}', {
+                    fetch('<?php echo e(route('calendar.toggleImportant')); ?>', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -1395,4 +1395,6 @@
             }
         });
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/general-calendar.blade.php ENDPATH**/ ?>

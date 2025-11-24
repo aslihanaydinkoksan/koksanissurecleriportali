@@ -541,12 +541,27 @@ resources\views\service\assignments\index.blade.php:
                             </label>
                             <select class="form-select" id="vehicle_id" name="vehicle_id">
                                 <option value="">Tümü</option>
-                                <?php $__currentLoopData = $vehicles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $vehicle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                    <option value="<?php echo e($vehicle->id); ?>"
-                                        <?php echo e(($filters['vehicle_id'] ?? '') == $vehicle->id ? 'selected' : ''); ?>>
-                                        <?php echo e($vehicle->plate_number); ?> (<?php echo e($vehicle->type); ?>)
-                                    </option>
-                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                
+                                <optgroup label="Şirket Araçları">
+                                    <?php $__currentLoopData = $vehicles->where('type', '!=', 'logistics')->whereInstanceOf(\App\Models\Vehicle::class); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $vehicle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($vehicle->filter_key); ?>"
+                                            <?php echo e(request('vehicle_id') == $vehicle->filter_key ? 'selected' : ''); ?>>
+                                            <?php echo e($vehicle->display_name); ?>
+
+                                        </option>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                </optgroup>
+
+                                
+                                <optgroup label="Nakliye Araçları">
+                                    <?php $__currentLoopData = $vehicles->whereInstanceOf(\App\Models\LogisticsVehicle::class); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $vehicle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($vehicle->filter_key); ?>"
+                                            <?php echo e(request('vehicle_id') == $vehicle->filter_key ? 'selected' : ''); ?>>
+                                            <?php echo e($vehicle->display_name); ?>
+
+                                        </option>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                </optgroup>
                             </select>
                         </div>
 
@@ -652,8 +667,18 @@ resources\views\service\assignments\index.blade.php:
                             <div class="meta-content">
                                 <div class="meta-label">Araç</div>
                                 <div class="meta-value">
-                                    <?php echo e($assignment->vehicle->plate_number ?? 'Silinmiş Araç'); ?>
+                                    <?php if($assignment->vehicle): ?>
+                                        
+                                        <?php if($assignment->vehicle instanceof \App\Models\LogisticsVehicle): ?>
+                                            🚚 <?php echo e($assignment->vehicle->plate_number); ?> <small
+                                                class="text-muted">(<?php echo e($assignment->vehicle->brand); ?>)</small>
+                                        <?php else: ?>
+                                            🚙 <?php echo e($assignment->vehicle->plate_number); ?>
 
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <span class="text-danger">Silinmiş Araç</span>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>

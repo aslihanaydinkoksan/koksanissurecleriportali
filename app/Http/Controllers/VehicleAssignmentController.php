@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\VehicleAssignment;
 use App\Models\Vehicle;
+use App\Models\LogisticsVehicle;
 use App\Models\ServiceSchedule;
 use App\Models\User;
 use App\Models\Team;
@@ -36,7 +37,15 @@ class VehicleAssignmentController extends Controller
         ]);
         // --- FİLTRELEME ---
         if ($request->filled('vehicle_id')) {
-            $query->where('vehicle_id', $request->input('vehicle_id'));
+            $parts = explode('|', $request->input('vehicle_id'));
+
+            if (count($parts) === 2) {
+                $type = $parts[0];
+                $id = $parts[1];
+
+                $query->where('vehicle_type', $type)
+                    ->where('vehicle_id', $id);
+            }
         }
 
         if ($request->filled('assignment_type')) {
@@ -83,7 +92,29 @@ class VehicleAssignmentController extends Controller
             'date_to'
         ]);
 
-        $vehicles = Vehicle::active()->orderBy('plate_number')->get();
+        // 1. Şirket Araçlarını Çek ve Etiketle
+        $companyVehicles = Vehicle::active()
+            ->orderBy('plate_number')
+            ->get()
+            ->map(function ($vehicle) {
+                // Dropdown için özel format
+                $vehicle->filter_key = get_class($vehicle) . '|' . $vehicle->id; // Örn: App\Models\Vehicle|1
+                $vehicle->display_name = '🚙 ' . $vehicle->plate_number . ' - ' . $vehicle->brand_model;
+                return $vehicle;
+            });
+
+        // 2. Nakliye Araçlarını Çek ve Etiketle
+        $logisticsVehicles = LogisticsVehicle::active() // scopeActive varsayalım veya where('status', 'active')
+            ->orderBy('plate_number')
+            ->get()
+            ->map(function ($vehicle) {
+                $vehicle->filter_key = get_class($vehicle) . '|' . $vehicle->id; // Örn: App\Models\LogisticsVehicle|1
+                $vehicle->display_name = '🚚 ' . $vehicle->plate_number . ' - ' . $vehicle->brand . ' ' . $vehicle->model;
+                return $vehicle;
+            });
+
+        // 3. İkisini Birleştir
+        $vehicles = $companyVehicles->merge($logisticsVehicles);
 
         return view('service.assignments.index', compact('assignments', 'filters', 'vehicles'));
     }
@@ -120,14 +151,15 @@ class VehicleAssignmentController extends Controller
      */
     public function create(): View|RedirectResponse
     {
-        // Aktif araçları al
-        $vehicles = Vehicle::active()->orderBy('plate_number')->get();
+        //  Şirket araçları ve Nakliye araçlarını ayrı ayrı çek
+        $companyVehicles = Vehicle::active()->orderBy('plate_number')->get();
+        $logisticsVehicles = LogisticsVehicle::where('status', 'active')->orderBy('plate_number')->get();
 
         // Kullanıcıları ve Takımları al
         $users = User::orderBy('name')->get();
         $teams = Team::active()->with('users')->orderBy('name')->get();
 
-        return view('service.assignments.create', compact('vehicles', 'users', 'teams'));
+        return view('service.assignments.create', compact('companyVehicles', 'logisticsVehicles', 'users', 'teams'));
     }
     /**
      * Kullanıcının başkalarına atadığı görevleri listeler.
@@ -149,11 +181,27 @@ class VehicleAssignmentController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $vehicleTypeInput = $request->input('vehicle_type'); // formdan gelen 'company' veya 'logistics'
         // 1. DİNAMİK VALİDASYON
         $validatedData = $request->validate([
             // Temel Alanlar
             'needs_vehicle' => 'required|in:yes,no',
-            'vehicle_id' => 'nullable|required_if:needs_vehicle,yes|exists:vehicles,id',
+            'vehicle_type' => 'nullable|required_if:needs_vehicle,yes|in:company,logistics',
+            'vehicle_id' => [
+                'nullable',
+                Rule::requiredIf($request->needs_vehicle === 'yes'),
+                function ($attribute, $value, $fail) use ($vehicleTypeInput) {
+                    if ($vehicleTypeInput === 'company') {
+                        if (!Vehicle::where('id', $value)->exists()) {
+                            $fail('Seçilen şirket aracı bulunamadı.');
+                        }
+                    } elseif ($vehicleTypeInput === 'logistics') {
+                        if (!LogisticsVehicle::where('id', $value)->exists()) {
+                            $fail('Seçilen nakliye aracı bulunamadı.');
+                        }
+                    }
+                },
+            ],
 
             // Sorumlu Bilgisi
             'responsible_type' => 'required|in:user,team',
@@ -168,8 +216,8 @@ class VehicleAssignmentController extends Controller
             'notes' => 'nullable|string',
 
             // Nakliye Özel Alanları
-            'initial_km' => 'nullable|required_if:vehicle_type,logistics|numeric|min:0',
-            'initial_fuel' => 'nullable|required_if:vehicle_type,logistics|numeric|min:0',
+            'start_km' => 'nullable|required_if:vehicle_type,logistics|numeric|min:0',
+            'start_fuel_level' => 'nullable|required_if:vehicle_type,logistics|string|min:0',
         ], [
             // Özel Hata Mesajları
             'needs_vehicle.required' => 'Araç gerekliliği seçmelisiniz.',
@@ -177,8 +225,8 @@ class VehicleAssignmentController extends Controller
             'responsible_user_id.required_if' => 'Lütfen sorumlu kişiyi seçin.',
             'responsible_team_id.required_if' => 'Lütfen sorumlu takımı seçin.',
             'title.required' => 'Görev başlığı zorunludur.',
-            'initial_km.required_if' => 'Nakliye görevi için başlangıç KM zorunludur.',
-            'initial_fuel.required_if' => 'Nakliye görevi için yakıt miktarı zorunludur.',
+            'start_km.required_if' => 'Nakliye görevi için başlangıç KM zorunludur.',
+            'start_fuel_level.required_if' => 'Nakliye görevi için yakıt miktarı zorunludur.',
         ]);
 
         // 2. Görev Tipini Belirle
@@ -208,29 +256,43 @@ class VehicleAssignmentController extends Controller
         if ($assignmentType === 'vehicle') {
             $assignment->vehicle_id = $validatedData['vehicle_id'];
 
-            // Sefer zamanını bul
-            $targetDepartureTime = $this->findNextDeparture();
-            if (!$targetDepartureTime) {
-                return back()->withInput()->withErrors([
-                    'vehicle_id' => 'Sistemde tanımlı aktif bir sefer saati bulunamadı.'
-                ]);
+            // [KRİTİK] Polymorphic Tip Ataması
+            if ($vehicleTypeInput === 'logistics') {
+                $assignment->vehicle_type = LogisticsVehicle::class; // Model Sınıf Adı
+
+                // Nakliye araçları için sefer saati (findNextDeparture) aranmaz, "şimdi" veya manuel girilen saat baz alınır.
+                // Nakliye esnek saatlidir.
+                $assignment->start_time = now();
+                $assignment->end_time = now()->addHours(4); // Tahmini süre, nakliyede open-ended olabilir.
+
+                // Nakliye özel verileri
+                $assignment->start_km = $request->input('start_km');
+                $assignment->start_fuel_level = $request->input('start_fuel_level');
+
+                $successMessage = 'Nakliye görevi oluşturuldu.';
+
+            } else {
+                // Şirket Aracı (Company)
+                $assignment->vehicle_type = Vehicle::class; // Model Sınıf Adı
+
+                // Şirket aracı ise Sefer Tarifesi (Schedule) kurallarına uyulur
+                $targetDepartureTime = $this->findNextDeparture();
+                if (!$targetDepartureTime) {
+                    return back()->withInput()->withErrors([
+                        'vehicle_id' => 'Sistemde tanımlı aktif bir sefer saati bulunamadı.'
+                    ]);
+                }
+                $assignment->start_time = $targetDepartureTime;
+                $assignment->end_time = $targetDepartureTime->copy()->addHour();
+
+                $successMessage = 'Görev başarıyla oluşturuldu (' .
+                    $targetDepartureTime->translatedFormat('d M H:i') . ' seferine eklendi).';
             }
 
-            $assignment->start_time = $targetDepartureTime;
-            $assignment->end_time = $targetDepartureTime->copy()->addHour();
-
-            // Nakliye özel alanları
-            if ($validatedData['vehicle_id'] === 'logistics') {
-                $assignment->initial_km = $validatedData['initial_km'];
-                $assignment->initial_fuel = $validatedData['initial_fuel'];
-            }
-
-            $successMessage = 'Görev başarıyla oluşturuldu (' .
-                $targetDepartureTime->translatedFormat('d M H:i') . ' seferine eklendi).';
         } else {
-            // Genel görevler için
+            // Genel görevler
             $assignment->start_time = now();
-            $assignment->end_time = now()->addDay(); // 1 gün varsayılan süre
+            $assignment->end_time = now()->addDay();
             $successMessage = 'Genel görev başarıyla oluşturuldu.';
         }
 
@@ -238,9 +300,7 @@ class VehicleAssignmentController extends Controller
         $assignment->save();
         $recipients = collect();
 
-        if ($assignmentType === 'individual') { // Not: Kodda 'vehicle'/'general' olarak set edildiği için burası mantıksal olarak responsible_type kontrolü ile çalışır, aşağıda düzeltiyorum.
-            // Not: Orjinal kodda burası $assignmentType kontrolü ile yapılmıştı ama $assignmentType yukarıda 'vehicle' veya 'general' atanıyor.
-            // Bildirim mantığını responsible_type üzerinden yapmak daha güvenli:
+        if ($assignmentType === 'individual') {
             if ($validatedData['responsible_type'] === 'user') {
                 $responsibleUser = User::find($validatedData['responsible_user_id']);
                 if ($responsibleUser) {
@@ -358,13 +418,15 @@ class VehicleAssignmentController extends Controller
     {
         $this->authorize('manage-assignment', $assignment);
 
-        $vehicles = Vehicle::active()->orderBy('plate_number')->get();
+        $companyVehicles = Vehicle::active()->orderBy('plate_number')->get();
+        $logisticsVehicles = LogisticsVehicle::where('status', 'active')->orderBy('plate_number')->get();
         $users = User::orderBy('name')->get();
         $teams = Team::active()->with('users')->orderBy('name')->get();
 
         return view('service.assignments.edit', compact(
             'assignment',
-            'vehicles',
+            'companyVehicles',
+            'logisticsVehicles',
             'users',
             'teams'
         ));
@@ -377,6 +439,12 @@ class VehicleAssignmentController extends Controller
     {
         $this->authorize('manage-assignment', $assignment);
         $needsVehicle = $assignment->requiresVehicle() ? 'yes' : 'no';
+        // Formdan gelen araç tipi (company veya logistics)
+        $vehicleTypeInput = $request->input('vehicle_type');
+        // Eğer formdan gelmezse mevcut olandan türet
+        if (!$vehicleTypeInput) {
+            $vehicleTypeInput = $assignment->isLogistics() ? 'logistics' : 'company';
+        }
 
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
@@ -384,10 +452,25 @@ class VehicleAssignmentController extends Controller
             'destination' => 'nullable|string|max:255',
             'status' => 'required|in:pending,in_progress,completed,cancelled',
             'notes' => 'nullable|string',
+            'vehicle_type' => 'nullable|in:company,logistics',
             'vehicle_id' => [
                 'nullable',
-                Rule::requiredIf($needsVehicle === 'yes'),
-                'exists:vehicles,id',
+                // Eğer araç gerekli ise zorunlu
+                Rule::requiredIf($request->has('vehicle_id')),
+                function ($attribute, $value, $fail) use ($vehicleTypeInput) {
+                    if (!$value)
+                        return; // Boşsa geç
+        
+                    if ($vehicleTypeInput === 'company') {
+                        if (!Vehicle::where('id', $value)->exists()) {
+                            $fail('Seçilen şirket aracı sistemde bulunamadı.');
+                        }
+                    } elseif ($vehicleTypeInput === 'logistics') {
+                        if (!LogisticsVehicle::where('id', $value)->exists()) {
+                            $fail('Seçilen nakliye aracı sistemde bulunamadı.');
+                        }
+                    }
+                },
             ],
 
             // Nakliye tamamlama alanları
@@ -410,9 +493,40 @@ class VehicleAssignmentController extends Controller
             ],
         ]);
 
-        $assignment->update($validatedData);
+        // --- VERİ GÜNCELLEME ---
+        $assignment->title = $validatedData['title'];
+        $assignment->task_description = $validatedData['task_description'];
+        $assignment->destination = $validatedData['destination'];
+        $assignment->status = $validatedData['status'];
+        $assignment->notes = $validatedData['notes'];
 
-        return redirect()->route('my-assignments.index')
+        // Araç Değişikliği Yapıldıysa Türünü de Güncelle
+        if ($request->filled('vehicle_id')) {
+            $assignment->vehicle_id = $validatedData['vehicle_id'];
+
+            if ($vehicleTypeInput === 'logistics') {
+                $assignment->vehicle_type = LogisticsVehicle::class;
+            } else {
+                $assignment->vehicle_type = Vehicle::class;
+            }
+        }
+
+        // Nakliye bitiş verileri
+        if ($request->filled('final_km'))
+            $assignment->end_km = $validatedData['final_km'];
+        if ($request->filled('final_fuel'))
+            $assignment->end_fuel_level = $validatedData['final_fuel'];
+        if ($request->filled('fuel_cost'))
+            $assignment->fuel_cost = $validatedData['fuel_cost'];
+
+        // Görev tamamlandıysa bitiş zamanı ata
+        if ($assignment->status === 'completed' && !$assignment->end_time) {
+            $assignment->end_time = now();
+        }
+
+        $assignment->update();
+
+        return redirect()->route('service.assignments.index')
             ->with('success', 'Görev başarıyla güncellendi.');
     }
 

@@ -262,7 +262,8 @@
                                                 class="fa-solid fa-plus" style="color: #A78BFA;"></i> Yeni Görev Ekle</a>
                                     </li>
                                     <li><a class="dropdown-item" href="{{ route('service.assignments.index') }}"><i
-                                                class="fa-solid fa-list" style="color: #667EEA;"></i> Araç Görev Listesi</a>
+                                                class="fa-solid fa-list" style="color: #667EEA;"></i> Araçlı Görev
+                                            Listesi</a>
                                     </li>
                                     <li><a class="dropdown-item" href="{{ route('service.general-tasks.index') }}"><i
                                                 class="fa-solid fa-bars-progress" style="color: #435fdb;"></i> Araçsız Görev
@@ -337,7 +338,12 @@
                                             <hr class="dropdown-divider">
                                         </li>
                                         <li><a class="dropdown-item" href="{{ route('service.vehicles.index') }}"><i
-                                                    class="fa-solid fa-car" style="color: #FBD38D;"></i> Araç Tanımları</a>
+                                                    class="fa-solid fa-car" style="color: #FBD38D;"></i> Şirket Araçları </a>
+                                        </li>
+                                        <li><a class="dropdown-item"
+                                                href="{{ route('service.logistics-vehicles.index') }}"><i
+                                                    class="fa-solid fa-truck" style="color: #f1b09e;"></i> Nakliye Araçları
+                                            </a>
                                         </li>
                                         <li>
                                             <hr class="dropdown-divider">

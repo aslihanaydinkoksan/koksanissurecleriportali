@@ -61,6 +61,26 @@
 
         .edit-vehicle-card .form-check-input {
             border: 1px solid rgba(0, 0, 0, .25);
+            cursor: pointer;
+            position: relative;
+            /* Tıklanabilirlik için */
+            z-index: 10;
+            /* Katman sorunu için */
+        }
+
+        .edit-vehicle-card .form-check-label {
+            cursor: pointer;
+            position: relative;
+            z-index: 10;
+            user-select: none;
+        }
+
+        /* CHECKBOX SEÇİLİ (CHECKED) DURUMU */
+        .edit-vehicle-card .form-check-input:checked {
+            background-color: #667EEA !important;
+            border-color: #667EEA !important;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e") !important;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
         }
 
         /* Animasyonlu buton (Değişiklik yok) */

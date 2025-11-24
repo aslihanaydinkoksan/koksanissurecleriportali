@@ -39,6 +39,7 @@ class VehicleAssignment extends Model
         'assignment_type',
         'responsible_type',
         'responsible_id',
+        'vehicle_type',
         'vehicle_id',
         'task_description',
         'destination',
@@ -49,6 +50,8 @@ class VehicleAssignment extends Model
         'fuel_cost',
         'notes',
         'status',
+        'start_time',
+        'end_time',
         'created_by_user_id',
     ];
 
@@ -75,10 +78,11 @@ class VehicleAssignment extends Model
     /**
      * Kullanılan araç (eğer araç gerekliyse)
      */
-    public function vehicle(): BelongsTo
+    public function vehicle(): MorphTo
     {
-        return $this->belongsTo(Vehicle::class);
+        return $this->MorphTo();
     }
+
 
     /**
      * Görevi oluşturan kullanıcı
@@ -172,7 +176,9 @@ class VehicleAssignment extends Model
      */
     public function isLogistics(): bool
     {
-        return $this->assignment_type === 'logistics';
+        return $this->vehicle_type === \App\Models\LogisticsVehicle::class
+            || $this->assignment_type === 'logistics';
+
     }
 
     /**

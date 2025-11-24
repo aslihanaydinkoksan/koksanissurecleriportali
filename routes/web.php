@@ -21,6 +21,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\LogisticsVehicleController;
 
 // Ana sayfa yönlendirmesi
 Route::get('/', function () {
@@ -109,6 +110,7 @@ Route::middleware(['auth'])->prefix('service')->name('service.')->group(function
 
     // Araç Yönetimi
     Route::resource('vehicles', VehicleController::class);
+    Route::resource('logistics-vehicles', LogisticsVehicleController::class);
 
     // --- ARAÇ ATAMA YÖNETİMİ (Vehicle Assignments) ---
     Route::get('/assignments', [VehicleAssignmentController::class, 'index'])->name('assignments.index');

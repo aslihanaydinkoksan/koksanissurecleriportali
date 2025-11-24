@@ -539,12 +539,25 @@ resources\views\service\assignments\index.blade.php:
                             </label>
                             <select class="form-select" id="vehicle_id" name="vehicle_id">
                                 <option value="">Tümü</option>
-                                @foreach ($vehicles as $vehicle)
-                                    <option value="{{ $vehicle->id }}"
-                                        {{ ($filters['vehicle_id'] ?? '') == $vehicle->id ? 'selected' : '' }}>
-                                        {{ $vehicle->plate_number }} ({{ $vehicle->type }})
-                                    </option>
-                                @endforeach
+                                {{-- Şirket Araçları Grubu (Opsiyonel: optgroup ile ayırabilirsin) --}}
+                                <optgroup label="Şirket Araçları">
+                                    @foreach ($vehicles->where('type', '!=', 'logistics')->whereInstanceOf(\App\Models\Vehicle::class) as $vehicle)
+                                        <option value="{{ $vehicle->filter_key }}"
+                                            {{ request('vehicle_id') == $vehicle->filter_key ? 'selected' : '' }}>
+                                            {{ $vehicle->display_name }}
+                                        </option>
+                                    @endforeach
+                                </optgroup>
+
+                                {{-- Nakliye Araçları Grubu --}}
+                                <optgroup label="Nakliye Araçları">
+                                    @foreach ($vehicles->whereInstanceOf(\App\Models\LogisticsVehicle::class) as $vehicle)
+                                        <option value="{{ $vehicle->filter_key }}"
+                                            {{ request('vehicle_id') == $vehicle->filter_key ? 'selected' : '' }}>
+                                            {{ $vehicle->display_name }}
+                                        </option>
+                                    @endforeach
+                                </optgroup>
                             </select>
                         </div>
 
@@ -649,7 +662,17 @@ resources\views\service\assignments\index.blade.php:
                             <div class="meta-content">
                                 <div class="meta-label">Araç</div>
                                 <div class="meta-value">
-                                    {{ $assignment->vehicle->plate_number ?? 'Silinmiş Araç' }}
+                                    @if ($assignment->vehicle)
+                                        {{-- Araç Tipine Göre Gösterim --}}
+                                        @if ($assignment->vehicle instanceof \App\Models\LogisticsVehicle)
+                                            🚚 {{ $assignment->vehicle->plate_number }} <small
+                                                class="text-muted">({{ $assignment->vehicle->brand }})</small>
+                                        @else
+                                            🚙 {{ $assignment->vehicle->plate_number }}
+                                        @endif
+                                    @else
+                                        <span class="text-danger">Silinmiş Araç</span>
+                                    @endif
                                 </div>
                             </div>
                         </div>

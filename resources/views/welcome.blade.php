@@ -247,6 +247,10 @@
             color: #F093FB;
         }
 
+        .kpi-hizmet-etkinlik .kpi-icon {
+            color: #F56565;
+        }
+
         .kpi-sistem .kpi-icon {
             color: #FBD38D;
         }
@@ -628,17 +632,32 @@
                                                 $params['open_modal_type'] = $item->model_type;
                                                 $url = route('general.calendar', $params);
                                             @endphp
+
                                             <a href="{{ $url }}"
-                                                class="list-group-item list-group-item-action event-important-pulse-welcome"
+                                                class="list-group-item list-group-item-action event-important-pulse-welcome d-flex align-items-center justify-content-between"
                                                 style="background: transparent; border: none; padding: 0.75rem 0.5rem;"
                                                 title="Takvimde görmek ve detayı açmak için tıklayın...">
-                                                <strong>{{ $item->title }}</strong>
+
+                                                {{-- SOL TARA (BAŞLIK) --}}
+                                                <div class="d-flex align-items-center overflow-hidden">
+                                                    <i
+                                                        class="fas fa-exclamation-triangle text-danger me-2 flex-shrink-0"></i>
+                                                    <strong class="text-truncate"
+                                                        style="max-width: 100%;">{{ $item->title }}</strong>
+                                                </div>
+
+                                                {{-- SAĞ TARAF (SAAT VE TARİH DETAYI) --}}
                                                 @if ($item->date)
-                                                    <span class="badge bg-danger rounded-pill float-end">
-                                                        {{ $item->date->format('d.m.Y') }}
-                                                        <span class="ms-2">| Saat:
-                                                            {{ $item->date->format('H:i') }}</span>
-                                                    </span>
+                                                    <div class="d-flex flex-column align-items-end ms-3 flex-shrink-0">
+                                                        {{-- Saat: Kırmızı ve Kalın --}}
+                                                        <span class="fw-bold text-danger fs-6">
+                                                            {{ $item->date->format('H:i') }}
+                                                        </span>
+                                                        {{-- Tarih: Küçük ve Gri --}}
+                                                        <span class="text-muted small" style="font-size: 0.7rem;">
+                                                            {{ $item->date->format('d.m.Y') }}
+                                                        </span>
+                                                    </div>
                                                 @endif
                                             </a>
                                         @endforeach
@@ -661,8 +680,8 @@
                                 Geneli (Bugün)</h4>
                             <div class="row g-4 mt-2 mb-3">
                                 {{-- 1. SEVKİYAT KARTI --}}
-                                <div class="col-lg-2 col-md-4 col-6"> {{-- Sütun genişliği 2 veya 3 yapılabilir --}}
-                                    <div class="kpi-card kpi-lojistik">
+                                <div class="col-lg col-md-4 col-6"> {{-- Sütun genişliği 2 veya 3 yapılabilir --}}
+                                    <div class="kpi-card kpi-lojistik h-100">
                                         <div class="kpi-icon"><i class="fa-solid fa-truck-fast"></i></div>
                                         <div class="kpi-value">{{ $kpiData['sevkiyat_sayisi'] }}</div>
                                         <div class="kpi-label">Yaklaşan Sevkiyat</div>
@@ -670,28 +689,26 @@
                                 </div>
 
                                 {{-- 2. PLAN KARTI --}}
-                                <div class="col-lg-2 col-md-4 col-6">
-                                    <div class="kpi-card kpi-uretim">
+                                <div class="col-lg col-md-4 col-6">
+                                    <div class="kpi-card kpi-uretim h-100">
                                         <div class="kpi-icon"><i class="fa-solid fa-industry"></i></div>
                                         <div class="kpi-value">{{ $kpiData['plan_sayisi'] }}</div>
                                         <div class="kpi-label">Başlayan Plan</div>
                                     </div>
                                 </div>
 
-                                {{-- 3. ETKİNLİK KARTI (YENİDEN ADLANDIRILDI) --}}
-                                <div class="col-lg-2 col-md-4 col-6">
-                                    <div class="kpi-card kpi-hizmet">
-                                        <div class="kpi-icon"><i class="fa-solid fa-calendar-star"></i></div>
-                                        {{-- İkon Değişti --}}
+                                {{-- 3. ETKİNLİK KARTI --}}
+                                <div class="col-lg col-md-4 col-6">
+                                    <div class="kpi-card kpi-hizmet-etkinlik h-100">
+                                        <div class="kpi-icon"><i class="fa-solid fa-calendar-day"></i></div>
                                         <div class="kpi-value">{{ $kpiData['etkinlik_sayisi'] }}</div>
-                                        {{-- Veri Değişti --}}
                                         <div class="kpi-label">Bugünkü Etkinlik</div>
                                     </div>
                                 </div>
 
                                 {{-- 4. ARAÇ GÖREVİ KARTI (YENİ EKLENDİ) --}}
-                                <div class="col-lg-3 col-md-4 col-6">
-                                    <div class="kpi-card kpi-hizmet"> {{-- Aynı renk sınıfı kullanılabilir veya yeni renk --}}
+                                <div class="col-lg col-md-4 col-6">
+                                    <div class="kpi-card kpi-hizmet h-100"> {{-- Aynı renk sınıfı kullanılabilir veya yeni renk --}}
                                         <div class="kpi-icon"><i class="fa-solid fa-car-side"></i></div>
                                         <div class="kpi-value">{{ $kpiData['arac_gorevi_sayisi'] }}</div>
                                         <div class="kpi-label">Aktif Araç Görevi</div>
@@ -699,8 +716,8 @@
                                 </div>
 
                                 {{-- 5. KULLANICI KARTI --}}
-                                <div class="col-lg-3 col-md-6 col-12">
-                                    <div class="kpi-card kpi-sistem">
+                                <div class="col-lg col-md-6 col-12">
+                                    <div class="kpi-card kpi-sistem h-100">
                                         <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
                                         <div class="kpi-value">{{ $kpiData['kullanici_sayisi'] }}</div>
                                         <div class="kpi-label">Toplam Kullanıcı</div>
@@ -738,13 +755,13 @@
 
                             <div class="list-group mt-3">
                                 @forelse($todayItems as $item)
-                                    {{-- PHP LOJİĞİ --}}
                                     @php
                                         $icon = 'fa-calendar-day';
                                         $iconClass = 'text-muted';
                                         $baslik = 'Kayıt';
                                         $detay = '';
-                                        $saat = '';
+                                        $gosterimSaat = '-';
+                                        $gosterimTarih = '';
                                         $modalId = $item->id;
                                         $modalType = 'unknown';
 
@@ -752,7 +769,8 @@
                                             $icon = 'fa-industry';
                                             $iconClass = 'icon-uretim';
                                             $baslik = $item->plan_title;
-                                            $saat = $item->week_start_date->format('d.m.Y');
+                                            $gosterimSaat = 'Haftalık Plan';
+                                            $gosterimTarih = $item->week_start_date->format('d.m.Y');
                                             $detay = 'Üretim Planı';
                                             $modalType = 'production_plan';
                                         } elseif ($item instanceof \App\Models\Shipment) {
@@ -761,9 +779,10 @@
                                             $icon = $iconData['icon'];
                                             $iconClass = $iconData['class'];
                                             $baslik = 'Sevkiyat: ' . $item->kargo_icerigi;
-                                            $saat = $item->tahmini_varis_tarihi
-                                                ? $item->tahmini_varis_tarihi->format('H:i')
-                                                : '-';
+                                            if ($item->tahmini_varis_tarihi) {
+                                                $gosterimSaat = $item->tahmini_varis_tarihi->format('H:i');
+                                                $gosterimTarih = $item->tahmini_varis_tarihi->format('d.m.Y');
+                                            }
                                             $detay = 'Araç: ' . ($item->arac_tipi ?? '-');
                                             $modalType = 'shipment';
                                         } elseif ($item instanceof \App\Models\Event) {
@@ -772,21 +791,30 @@
                                             $icon = $iconData['icon'];
                                             $iconClass = $iconData['class'];
                                             $baslik = $item->title;
-                                            $saat = $item->start_datetime->format('H:i');
+                                            if ($item->start_datetime) {
+                                                $gosterimSaat = $item->start_datetime->format('H:i');
+                                                $gosterimTarih = $item->start_datetime->format('d.m.Y');
+                                            }
                                             $detay = $item->location;
                                             $modalType = 'event';
                                         } elseif ($item instanceof \App\Models\VehicleAssignment) {
                                             $icon = 'fa-car-side';
                                             $iconClass = 'icon-aracgorevi';
                                             $baslik = $item->task_description;
-                                            $saat = $item->start_time->format('H:i');
+                                            if ($item->start_time) {
+                                                $gosterimSaat = $item->start_time->format('H:i');
+                                                $gosterimTarih = $item->start_time->format('d.m.Y');
+                                            }
                                             $detay = $item->vehicle->plate_number ?? '-';
                                             $modalType = 'vehicle_assignment';
                                         } elseif ($item instanceof \App\Models\Travel) {
                                             $icon = 'fa-route';
                                             $iconClass = 'icon-seyahat';
                                             $baslik = $item->name;
-                                            $saat = $item->start_date->format('d.m');
+                                            if ($item->start_date) {
+                                                $gosterimSaat = 'Seyahat'; // Saat yerine bilgi
+                                                $gosterimTarih = $item->start_date->format('d.m.Y');
+                                            }
                                             $detay = $item->status == 'planned' ? 'Planlı' : 'Tamamlandı';
                                             $modalType = 'travel';
                                         }
@@ -802,7 +830,11 @@
                                             <h5 class="mb-1 fw-bold">{{ $baslik }}</h5>
                                             <p class="mb-0 text-muted">{{ $detay }}</p>
                                         </div>
-                                        <span class="fw-bold text-dark ms-3">{{ $saat }}</span>
+                                        <div class="d-flex flex-column align-items-end ms-3" style="min-width: 80px;">
+                                            <span class="fw-bold text-dark fs-5">{{ $gosterimSaat }}</span>
+                                            <span class="text-muted small"
+                                                style="font-size: 0.75rem;">{{ $gosterimTarih }}</span>
+                                        </div>
                                         <a href="{{ route('home') }}?open_modal_id={{ $modalId }}&open_modal_type={{ $modalType }}"
                                             class="btn btn-outline-secondary btn-sm ms-3">
                                             <i class="fa-solid fa-arrow-right-long"></i>
