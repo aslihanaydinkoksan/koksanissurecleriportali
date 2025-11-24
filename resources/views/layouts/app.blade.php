@@ -294,7 +294,7 @@
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown"><i class="fa-solid fa-route"
-                                            style="color: #A78BFA;"></i><span>Sevkiyatlar</span></a>
+                                            style="color: #A78BFA;"></i><span>Lojistik</span></a>
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         <li><a class="dropdown-item" href="{{ route('shipments.create') }}"><i
                                                     class="fa-solid fa-truck-fast" style="color: #FBD38D;"></i> Yeni

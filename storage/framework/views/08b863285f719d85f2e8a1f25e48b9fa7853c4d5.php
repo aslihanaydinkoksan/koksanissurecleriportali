@@ -4,6 +4,7 @@
 
 <?php $__env->startPush('styles'); ?>
     <style>
+        /* === 1. SAYFA VE LAYOUT === */
         #app>main.py-4 {
             padding: 2.5rem 0 !important;
             min-height: calc(100vh - 72px);
@@ -26,13 +27,19 @@
             }
         }
 
+        .wide-container {
+            max-width: 1600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* === 2. KART TASARIMLARI === */
         .create-shipment-card {
             border-radius: 1.25rem;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.4);
             background-color: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
@@ -53,30 +60,62 @@
 
         .create-shipment-card .card-body {
             padding: 1.5rem;
-            color: #2d3748;
         }
 
-        .create-shipment-card .form-label {
-            color: #2d3748;
+        /* === 3. FULLCALENDAR İYİLEŞTİRMELERİ === */
+        #calendar {
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 1rem;
+            padding: 10px;
+        }
+
+        /* Hücreleri Sabitle */
+        .fc .fc-daygrid-day-frame {
+            min-height: 100px;
+        }
+
+        .fc .fc-daygrid-day.fc-day-today {
+            background-color: rgba(102, 126, 234, 0.08) !important;
+        }
+
+        /* Etkinlikler */
+        .fc-event {
+            border: none !important;
+            margin: 1px 2px !important;
+            padding: 3px 6px;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .fc-event:hover {
+            transform: scale(1.03);
+            z-index: 50;
+        }
+
+        .fc-event-main {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block !important;
+        }
+
+        .fc-daygrid-more-link {
+            color: #667EEA !important;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-decoration: none;
+        }
+
+        .fc .fc-button-primary {
+            background: linear-gradient(135deg, #667EEA, #764BA2);
+            border: none;
             font-weight: 600;
-            font-size: 0.95rem;
         }
 
-        .create-shipment-card .form-control,
-        .create-shipment-card .form-select {
-            border-radius: 0.75rem;
-            background-color: rgba(255, 255, 255, 0.95);
-            border: 2px solid #e2e8f0;
-            transition: all 0.2s ease;
-        }
-
-        .create-shipment-card .form-control:focus,
-        .create-shipment-card .form-select:focus {
-            border-color: #667EEA;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-
+        /* === 4. BUTON VE ALERT STİLLERİ (ÖZEL) === */
         .btn-animated-gradient {
             background: linear-gradient(-45deg, #667EEA, #F093FB, #4FD1C5, #FBD38D);
             background-size: 400% 400%;
@@ -84,12 +123,11 @@
             border: none;
             color: white;
             font-weight: 700;
-            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
             border-radius: 0.75rem;
             padding: 0.75rem 1.5rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            font-size: 0.9rem;
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
         }
 
         .btn-animated-gradient:hover {
@@ -98,24 +136,38 @@
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
         }
 
+        .btn-info {
+            background: linear-gradient(135deg, #4FD1C5, #38B2AC);
+            color: white !important;
+            border: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #718096, #4a5568);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667EEA, #764BA2);
+            border: none;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #FC8181, #F56565);
+            color: white;
+            border: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
         .alert {
             border-radius: 1rem;
             border: none;
-            padding: 1rem 1.25rem;
             backdrop-filter: blur(10px);
-            animation: slideInDown 0.4s ease;
-        }
-
-        @keyframes slideInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
 
         .alert-success {
@@ -130,504 +182,22 @@
             border-left: 4px solid #f56565;
         }
 
-
-        #calendar {
-            background: transparent;
-            border-radius: 0;
-            padding: 0;
-        }
-
-        .fc .fc-button-primary {
-            background: linear-gradient(135deg, #667EEA, #764BA2);
-            border: none;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 0.5px;
-            transition: all 0.2s ease;
-        }
-
-        .fc .fc-button-primary:hover {
-            background: linear-gradient(135deg, #764BA2, #667EEA);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-
-        .fc .fc-button-primary:not(:disabled).fc-button-active,
-        .fc .fc-button-primary:not(:disabled):active {
-            background: linear-gradient(135deg, #764BA2, #667EEA);
-        }
-
-        .fc-event {
-            border-radius: 0.5rem;
-            border: none;
-            padding: 2px 6px;
-            font-weight: 600;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .fc-event:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .fc .fc-daygrid-day-number {
-            font-weight: 600;
-            color: #4a5568;
-        }
-
-        .fc .fc-col-header-cell-cushion {
-            font-weight: 700;
-            color: #2d3748;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 0.5px;
-        }
-
-        .fc .fc-daygrid-day.fc-day-today {
-            background: rgba(102, 126, 234, 0.1) !important;
-        }
-
-
-        .table {
-            border-collapse: separate;
-            border-spacing: 0 0.5rem;
-        }
-
-        .table thead th {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
-            color: #2d3748;
-            font-weight: 700;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 0.5px;
-            border: none;
-            padding: 1rem;
-            border-radius: 0.5rem;
-        }
-
-        .table tbody tr {
-            background: rgba(255, 255, 255, 0.7);
-            transition: all 0.2s ease;
-        }
-
-        .table tbody tr:hover {
-            background: rgba(255, 255, 255, 0.95);
-            transform: scale(1.01);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .table tbody td {
-            border: none;
-            padding: 1rem;
-            vertical-align: middle;
-        }
-
-        .table tbody tr td:first-child {
-            border-radius: 0.5rem 0 0 0.5rem;
-        }
-
-        .table tbody tr td:last-child {
-            border-radius: 0 0.5rem 0.5rem 0;
-        }
-
-
-        .badge {
-            padding: 0.5rem 1rem;
-            border-radius: 2rem;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            font-size: 0.8rem;
-        }
-
-        .bg-primary {
-            background: linear-gradient(135deg, #667EEA, #764BA2) !important;
-        }
-
-        .bg-info {
-            background: linear-gradient(135deg, #4FD1C5, #38B2AC) !important;
-        }
-
-        .bg-secondary {
-            background: linear-gradient(135deg, #718096, #4a5568) !important;
-        }
-
-        .bg-success {
-            background: linear-gradient(135deg, #48BB78, #38A169) !important;
-        }
-
-        .btn {
-            border-radius: 0.75rem;
-            font-weight: 600;
-            padding: 0.625rem 1.25rem;
-            transition: all 0.2s ease;
-            border: none;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-        }
-
-        .btn-info {
-            background: linear-gradient(135deg, #4FD1C5, #38B2AC);
-            color: white !important;
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #718096, #4a5568);
-            color: white;
-        }
-
-        .btn-warning {
-            background: linear-gradient(135deg, #F6AD55, #ED8936);
-            color: white;
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, #48BB78, #38A169);
-            color: white;
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, #FC8181, #F56565);
-            color: white;
-        }
-
-        .btn-outline-primary {
-            border: 2px solid #667EEA;
-            color: #667EEA;
-            background: transparent;
-        }
-
-        .btn-outline-primary:hover {
-            background: linear-gradient(135deg, #667EEA, #764BA2);
-            border-color: #667EEA;
-            color: white;
-        }
-
-
-        .modal-content {
-            border-radius: 1.25rem;
-            border: none;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.95);
-        }
-
-        .modal-header {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
-            border-radius: 1.25rem 1.25rem 0 0;
-            padding: 1.5rem;
-        }
-
-        .modal-title {
-            font-weight: 700;
-            color: #2d3748;
-            font-size: 1.5rem;
-        }
-
-        .modal-body {
-            padding: 2rem;
-            color: #2d3748;
-        }
-
-        .modal-body p {
-            margin-bottom: 0.75rem;
-            line-height: 1.8;
-        }
-
-        .modal-body strong {
-            color: #667EEA;
-            font-weight: 700;
-            display: inline-block;
-            min-width: 180px;
-        }
-
-        .modal-body hr {
-            border: none;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.3), transparent);
-            margin: 1.5rem 0;
-        }
-
-        .modal-footer {
-            border-top: 2px solid rgba(102, 126, 234, 0.1);
-            padding: 1.5rem;
-            background: rgba(249, 250, 251, 0.5);
-            border-radius: 0 0 1.25rem 1.25rem;
-        }
-
-
-        #stats-card-body {
-            padding: 1.5rem;
-        }
-
-        #stats-card-body a {
-            color: #667EEA;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        #stats-card-body a:hover {
-            color: #764BA2;
-            transform: translateX(5px);
-        }
-
-        #stats-card-body a::after {
-            content: '→';
-            font-size: 1.2rem;
-            transition: transform 0.2s ease;
-        }
-
-        #stats-card-body a:hover::after {
-            transform: translateX(3px);
-        }
-
-
-        @media (max-width: 768px) {
-            .create-shipment-card .card-header {
-                font-size: 1rem;
-                padding: 1rem;
-            }
-
-            .modal-body strong {
-                min-width: 120px;
-                font-size: 0.9rem;
-            }
-
-            .btn {
-                padding: 0.5rem 1rem;
-                font-size: 0.9rem;
-            }
-        }
-
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        .spinner-border {
-            animation: spin 0.75s linear infinite;
-        }
-
-        .event-important-pulse {
-            border: 2px solid #ff4136 !important;
-            box-shadow: 0 0 0 rgba(255, 65, 54, 0.4);
-            animation: pulse-animation 2s infinite;
-        }
-
-        @keyframes pulse-animation {
-            0% {
-                box-shadow: 0 0 0 0 rgba(255, 65, 54, 0.7);
-            }
-
-            70% {
-                box-shadow: 0 0 0 10px rgba(255, 65, 54, 0);
-            }
-
-            100% {
-                box-shadow: 0 0 0 0 rgba(255, 65, 54, 0);
-            }
-        }
-
-        .fc-event-holiday {
-            font-weight: 600;
-            border: none !important;
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%) !important;
-            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
-            border-radius: 4px;
-            position: relative;
-            overflow: hidden;
-            padding: 3px 6px;
-            font-size: 11px;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            max-width: 100%;
-            display: block;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .fc-event-holiday::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            animation: shine 3s infinite;
-            pointer-events: none;
-        }
-
-        .fc-event-holiday:hover {
-            transform: scale(1.05);
-            z-index: 1000;
-            white-space: normal;
-            min-width: max-content;
-            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.5);
-            overflow: visible;
-        }
-
-        @keyframes shine {
-            to {
-                left: 100%;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .fc-event-holiday {
-                font-size: 9px;
-                padding: 2px 4px;
-            }
-        }
-
-        .wide-container {
-            max-width: 1600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        /* Event'leri dengeli göster */
-        .fc-timegrid-event {
-            font-size: 0.85em !important;
-            padding: 5px 8px !important;
-            line-height: 1.3 !important;
-            border-radius: 5px !important;
-            font-weight: 600 !important;
-            min-height: 30px !important;
-            max-height: 65px !important;
-            overflow: hidden !important;
-            transition: all 0.2s ease !important;
-        }
-
-        /* Event başlığı - 2-3 satır göster */
-        .fc-event-title {
-            white-space: normal !important;
-            overflow: hidden !important;
-            display: -webkit-box !important;
-            -webkit-line-clamp: 2 !important;
-            -webkit-box-orient: vertical !important;
-            line-height: 1.3 !important;
-        }
-
-        .fc-event-time {
-            font-size: 0.85em !important;
-            font-weight: 700 !important;
-            opacity: 0.95 !important;
-            display: block !important;
-            margin-bottom: 2px !important;
-        }
-
-        .fc-timegrid-event-harness {
-            margin-bottom: 2px !important;
-        }
-
-        .fc-timegrid-event-harness-inset {
-            max-height: 65px !important;
-            overflow: hidden !important;
-        }
-
-        .fc-timegrid-slot {
-            height: 2em !important;
-        }
-
-        .fc-timegrid-event:hover {
-            max-height: none !important;
-            z-index: 1000 !important;
-            transform: scale(1.05) !important;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25) !important;
-            -webkit-line-clamp: unset !important;
-            cursor: pointer !important;
-        }
-
-        .fc-more-link {
-            font-size: 0.8em !important;
-            font-weight: 600 !important;
-            color: #667EEA !important;
-            background: rgba(102, 126, 234, 0.15) !important;
-            padding: 4px 8px !important;
-            border-radius: 4px !important;
-            margin-top: 2px !important;
-            display: inline-block !important;
-        }
-
-        .fc-more-link:hover {
-            background: rgba(102, 126, 234, 0.25) !important;
-            transform: translateY(-1px) !important;
-        }
-
-        @media (max-width: 768px) {
-            .fc-timegrid-event {
-                font-size: 0.75em !important;
-                padding: 4px 6px !important;
-                min-height: 26px !important;
-                max-height: 55px !important;
-            }
-
-            .fc-timegrid-slot {
-                height: 1.75em !important;
-            }
-        }
-
-        /* Modern Modal Overlay */
+        /* === 5. MODAL STİLLERİ (General Calendar ile aynı, butonlar dahil) === */
         .modal-backdrop.show {
             background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-        }
-
-        #detailModal .modal-dialog {
-            max-width: 700px;
         }
 
         #detailModal .modal-content {
             border: none;
             border-radius: 24px;
-            overflow: hidden;
             box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
             background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        @keyframes modalSlideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-40px) scale(0.9);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
         }
 
         #detailModal .modal-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border: none;
             padding: 2rem 2.5rem;
             position: relative;
             overflow: hidden;
@@ -645,83 +215,21 @@
             pointer-events: none;
         }
 
-        #detailModal .modal-title {
-            font-weight: 700;
-            font-size: 1.75rem;
-            margin: 0;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-            z-index: 1;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
         #detailModal .btn-close {
-            /* Bootstrap'in kendi X resmini iptal ediyoruz */
-            background-image: none !important;
-
-            /* Senin arka planın */
-            background-color: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-
-            /* İkon Rengi ve Boyutu */
-            color: #ffffff;
-            /* İkonu beyaz yapar */
-            font-size: 1.2rem;
-            /* İkon boyutu */
-
-            /* Şekil ve Hizalama */
-            opacity: 1;
+            background-color: rgba(255, 255, 255, 0.2);
             border-radius: 50%;
             width: 40px;
-            /* 50px çok büyük olabilir, 40-45 idealdir */
             height: 40px;
-            padding: 0;
+            color: white;
+            opacity: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            z-index: 1;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
         }
 
         #detailModal .btn-close:hover {
-            background-color: rgba(255, 255, 255, 0.3);
-            /* Hover rengini biraz açtık */
-            color: #fff;
-            border-color: rgba(255, 255, 255, 0.5);
-            transform: rotate(90deg) scale(1.1);
-            box-shadow: 0 0 25px rgba(255, 255, 255, 0.4), 0 4px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        #detailModal .btn-close:active {
-            transform: rotate(90deg) scale(0.95);
-        }
-
-        #detailModal .modal-body {
-            padding: 2.5rem;
-            color: #2d3748;
-            background: #fafbfc;
-        }
-
-        #detailModal .modal-body .row {
-            margin-bottom: 1rem;
-        }
-
-        #detailModal .modal-body p {
-            margin-bottom: 1rem;
-            line-height: 1.7;
-            font-size: 0.95rem;
-        }
-
-        #detailModal .modal-body strong {
-            color: #667eea;
-            font-weight: 700;
-            display: inline-block;
-            margin-right: 0.5rem;
-            font-size: 0.9rem;
+            background-color: rgba(255, 255, 255, 0.4);
+            transform: rotate(90deg);
         }
 
         .modal-info-card {
@@ -729,183 +237,21 @@
             border-radius: 16px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
             border: 1px solid rgba(102, 126, 234, 0.15);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
             transition: all 0.3s ease;
         }
 
         .modal-info-card:hover {
+            transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
-            transform: translateY(-2px);
         }
 
-        #modalOnayBadge {
-            background: linear-gradient(135deg, #48bb78, #38a169);
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
-            animation: badgeSlideIn 0.5s ease;
-        }
-
-        @keyframes badgeSlideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        #modalOnayBadge strong {
-            color: white;
-            font-size: 1rem;
-        }
-
-        #modalImportantCheckboxContainer {
-            background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(255, 107, 107, 0.1));
-            border-radius: 12px;
-            padding: 1rem 1.5rem;
-            margin-bottom: 1.5rem;
-            border: 2px solid rgba(220, 53, 69, 0.3);
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        #modalImportantCheckboxContainer label {
-            margin: 0;
-            font-weight: 600;
-            color: #dc3545;
-            cursor: pointer;
-        }
-
-        #modalImportantCheckbox {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            accent-color: #dc3545;
-        }
-
-        #detailModal .modal-body hr {
-            border: none;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.3), transparent);
-            margin: 2rem 0;
-        }
-
-        #detailModal .table {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
-            margin-top: 1rem;
-        }
-
-        #detailModal .table thead {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
-        }
-
-        #detailModal .table thead th {
-            border: none;
-            padding: 1rem;
-            font-weight: 700;
-            color: #667eea;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 0.5px;
-        }
-
-        #detailModal .table tbody td {
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            padding: 1rem;
-            vertical-align: middle;
-        }
-
-        #detailModal .table tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        #detailModal .table tbody tr:hover {
-            background: rgba(102, 126, 234, 0.05);
-        }
-
-        .modal-notes-box {
-            background: linear-gradient(135deg, rgba(67, 233, 123, 0.08), rgba(56, 249, 215, 0.08));
-            border-left: 4px solid #43e97b;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-top: 1rem;
-            color: #2d3748;
-            line-height: 1.7;
-        }
-
-        .modal-notes-title {
-            font-weight: 700;
-            color: #43e97b;
-            margin-bottom: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        #detailModal .modal-footer {
-            background: white;
-            border: none;
-            padding: 1.5rem 2.5rem;
-            gap: 0.75rem;
-            flex-wrap: wrap;
-        }
-
-        #detailModal .btn {
-            border-radius: 12px;
-            font-weight: 700;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            text-transform: uppercase;
-            font-size: 0.875rem;
-            letter-spacing: 0.5px;
-        }
-
-        #detailModal .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transition: left 0.5s;
-        }
-
-        #detailModal .btn:hover::before {
-            left: 100%;
-        }
-
-        #detailModal .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        #detailModal .btn:active {
-            transform: translateY(0);
-        }
-
+        /* Modal Özel Butonları */
         #modalEditButton {
             background: linear-gradient(135deg, #ffa726, #fb8c00);
             color: white;
             box-shadow: 0 4px 15px rgba(255, 167, 38, 0.4);
-        }
-
-        #modalEditButton:hover {
-            box-shadow: 0 8px 25px rgba(255, 167, 38, 0.5);
         }
 
         #modalExportButton {
@@ -914,18 +260,10 @@
             box-shadow: 0 4px 15px rgba(79, 209, 197, 0.4);
         }
 
-        #modalExportButton:hover {
-            box-shadow: 0 8px 25px rgba(79, 209, 197, 0.5);
-        }
-
         #modalOnayForm .btn-success {
             background: linear-gradient(135deg, #48bb78, #38a169);
             color: white;
             box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4);
-        }
-
-        #modalOnayForm .btn-success:hover {
-            box-shadow: 0 8px 25px rgba(72, 187, 120, 0.5);
         }
 
         #modalOnayKaldirForm .btn-warning {
@@ -934,43 +272,13 @@
             box-shadow: 0 4px 15px rgba(246, 173, 85, 0.4);
         }
 
-        #modalOnayKaldirForm .btn-warning:hover {
-            box-shadow: 0 8px 25px rgba(246, 173, 85, 0.5);
-        }
-
         #modalDeleteForm .btn-danger {
             background: linear-gradient(135deg, #fc8181, #f56565);
             color: white;
             box-shadow: 0 4px 15px rgba(245, 101, 101, 0.4);
         }
 
-        #modalDeleteForm .btn-danger:hover {
-            box-shadow: 0 8px 25px rgba(245, 101, 101, 0.5);
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #718096, #4a5568);
-            color: white;
-            box-shadow: 0 4px 15px rgba(113, 128, 150, 0.4);
-        }
-
-        .btn-secondary:hover {
-            box-shadow: 0 8px 25px rgba(113, 128, 150, 0.5);
-        }
-
-        .btn-outline-primary {
-            border: 2px solid #667eea;
-            color: #667eea;
-            background: transparent;
-            font-weight: 700;
-        }
-
-        .btn-outline-primary:hover {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border-color: transparent;
-            color: white;
-        }
-
+        /* Diğer Helperlar */
         .modal-loading {
             display: flex;
             justify-content: center;
@@ -987,6 +295,92 @@
             animation: spin 1s linear infinite;
         }
 
+        .fc-event-holiday {
+
+            font-weight: 600;
+
+            border: none !important;
+
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%) !important;
+
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+
+            border-radius: 4px;
+
+            position: relative;
+
+            overflow: hidden;
+
+            padding: 3px 6px;
+
+            font-size: 11px;
+
+            white-space: nowrap;
+
+            text-overflow: ellipsis;
+
+            max-width: 100%;
+
+            display: block;
+
+            transition: all 0.3s ease;
+
+            cursor: pointer;
+
+        }
+
+
+
+        .fc-event-holiday::before {
+
+            content: '';
+
+            position: absolute;
+
+            top: 0;
+
+            left: -100%;
+
+            width: 100%;
+
+            height: 100%;
+
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+
+            animation: shine 3s infinite;
+
+            pointer-events: none;
+
+        }
+
+
+
+        .fc-event-holiday:hover {
+
+            transform: scale(1.05);
+
+            z-index: 1000;
+
+            white-space: normal;
+
+            min-width: max-content;
+
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.5);
+
+            overflow: visible;
+
+        }
+
+        @keyframes shine {
+
+            to {
+
+                left: 100%;
+
+            }
+
+        }
+
         @keyframes spin {
             0% {
                 transform: rotate(0deg);
@@ -995,6 +389,72 @@
             100% {
                 transform: rotate(360deg);
             }
+        }
+
+        .event-important-pulse {
+            border: 2px solid #ff4136 !important;
+            animation: pulse-animation 2s infinite;
+        }
+
+        @keyframes pulse-animation {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 65, 54, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 65, 54, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 65, 54, 0);
+            }
+        }
+
+        .custom-calendar-tooltip .tooltip-inner {
+            background-color: #ffffff !important;
+            /* Beyaz Arkaplan */
+            color: #2d3748 !important;
+            /* Koyu Gri Yazı */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+            /* Yumuşak Gölge */
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            /* İnce Mor Çerçeve */
+            border-radius: 12px !important;
+            /* Yuvarlak Köşeler */
+            padding: 12px 16px !important;
+            font-size: 0.9rem;
+            max-width: 300px;
+            /* Genişlik Sınırı */
+            text-align: left;
+            font-family: system-ui, -apple-system, sans-serif;
+            z-index: 10000;
+        }
+
+        /* Tooltip Ok İşareti (Arrow) Rengini Beyaza Çevirme */
+        .custom-calendar-tooltip .tooltip-arrow::before {
+            border-top-color: #ffffff !important;
+            /* Ok rengi beyaz olsun */
+            border-bottom-color: #ffffff !important;
+            border-left-color: #ffffff !important;
+            border-right-color: #ffffff !important;
+        }
+
+        /* Tooltip İçindeki Başlık */
+        .tooltip-title-styled {
+            font-weight: 700;
+            color: #667EEA;
+            /* Senin tema rengin (Mor/Mavi) */
+            margin-bottom: 4px;
+            display: block;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 4px;
+        }
+
+        /* Tooltip İçindeki Açıklama */
+        .tooltip-desc-styled {
+            font-size: 0.8rem;
+            color: #718096;
+            line-height: 1.4;
         }
     </style>
 <?php $__env->stopPush(); ?>
@@ -1521,7 +981,7 @@
                 },
                 // Orijinal CSS'e uygun ayarlar (text-wrapping için)
                 slotEventOverlap: false,
-                dayMaxEvents: 4,
+                dayMaxEvents: 3,
                 eventMaxStack: 3,
                 slotDuration: '00:30:00',
                 height: 'auto',
@@ -1543,7 +1003,6 @@
                     }
                 ],
                 timeZone: appTimezone,
-                dayMaxEvents: false,
                 moreLinkText: function(num) {
                     return '+ ' + num + ' tane daha';
                 },
@@ -1562,10 +1021,61 @@
                     }
                 },
                 eventDidMount: function(info) {
-                    if (info.event.extendedProps.is_important) {
+                    // 1. Önemli Etkinlik Çerçevesi
+                    if (info.event.extendedProps && info.event.extendedProps.is_important) {
                         info.el.classList.add('event-important-pulse');
                     }
-                }
+
+                    // 2. Modern Tooltip Oluşturma
+                    try {
+                        // İçerik Hazırlama
+                        let title = info.event.title;
+                        let desc = '';
+
+                        // Açıklama varsa al
+                        if (info.event.extendedProps && info.event.extendedProps.details && info.event
+                            .extendedProps.details['Açıklama']) {
+                            desc = info.event.extendedProps.details['Açıklama'];
+                        }
+                        // Yoksa ve tarih aralığı varsa tarihleri göster (Opsiyonel)
+                        else if (info.event.start) {
+                            let start = info.event.start.toLocaleTimeString('tr-TR', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                            if (start !== '00:00') desc = `Saat: ${start}`;
+                        }
+
+                        // HTML İçeriği Oluşturma (Modern Görünüm İçin)
+                        let tooltipContent = `
+            <div class="text-start">
+                <span class="tooltip-title-styled">${title}</span>
+                ${desc ? `<span class="tooltip-desc-styled">${desc}</span>` : ''}
+            </div>
+        `;
+
+                        if (typeof bootstrap !== 'undefined') {
+                            new bootstrap.Tooltip(info.el, {
+                                title: tooltipContent,
+                                html: true, // HTML kullanımını açtık
+                                placement: 'top', // Üstte göster
+                                trigger: 'hover', // Üzerine gelince
+                                container: 'body',
+                                customClass: 'custom-calendar-tooltip', // CSS sınıfımızı bağladık
+                                delay: {
+                                    "show": 100,
+                                    "hide": 100
+                                } // Hafif gecikme daha doğal hissettirir
+                            });
+                        } else {
+                            // Yedek (Bootstrap yoksa)
+                            info.el.setAttribute('title', title + (desc ? ' - ' + desc : ''));
+                        }
+
+                    } catch (error) {
+                        console.warn('Tooltip hatası:', error);
+                    }
+                },
             });
             calendar.render();
             setInterval(function() {
