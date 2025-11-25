@@ -315,12 +315,14 @@
                                 <button class="nav-link" id="activities-tab" data-bs-toggle="tab"
                                     data-bs-target="#activities" type="button" role="tab">
                                     <i class="fas fa-history me-1"></i> İletişim Geçmişi
+                                    ({{ $customer->activities->count() }})
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="logistics-tab" data-bs-toggle="tab" data-bs-target="#logistics"
                                     type="button" role="tab">
                                     <i class="fas fa-truck me-1"></i> Lojistik Hareketleri
+                                    ({{ $customer->vehicleAssignments->count() }})
                                 </button>
                             </li>
                         </ul>
