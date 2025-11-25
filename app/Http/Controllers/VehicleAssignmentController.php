@@ -8,6 +8,7 @@ use App\Models\LogisticsVehicle;
 use App\Models\ServiceSchedule;
 use App\Models\User;
 use App\Models\Team;
+use App\Models\Customer;
 use App\Notifications\VehicleAssignmentCreated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -158,8 +159,9 @@ class VehicleAssignmentController extends Controller
         // Kullanıcıları ve Takımları al
         $users = User::orderBy('name')->get();
         $teams = Team::active()->with('users')->orderBy('name')->get();
+        $customers = Customer::orderBy('name')->get();
 
-        return view('service.assignments.create', compact('companyVehicles', 'logisticsVehicles', 'users', 'teams'));
+        return view('service.assignments.create', compact('companyVehicles', 'logisticsVehicles', 'users', 'teams', 'customers'));
     }
     /**
      * Kullanıcının başkalarına atadığı görevleri listeler.
@@ -212,6 +214,7 @@ class VehicleAssignmentController extends Controller
             'title' => 'required|string|max:255',
             'task_description' => 'required|string',
             'destination' => 'nullable|string|max:255',
+            'customer_id' => 'nullable|exists:customers,id',
             //'requester_name' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
 
@@ -242,6 +245,7 @@ class VehicleAssignmentController extends Controller
         $assignment->notes = $validatedData['notes'] ?? null;
         $assignment->status = 'pending';
         $assignment->user_id = auth()->id();
+        $assignment->customer_id = $request->input('customer_id');
 
         // 4. Sorumluyu Ata (Polymorphic)
         if ($validatedData['responsible_type'] === 'user') {
@@ -422,13 +426,15 @@ class VehicleAssignmentController extends Controller
         $logisticsVehicles = LogisticsVehicle::where('status', 'active')->orderBy('plate_number')->get();
         $users = User::orderBy('name')->get();
         $teams = Team::active()->with('users')->orderBy('name')->get();
+        $customers = Customer::orderBy('name')->get();
 
         return view('service.assignments.edit', compact(
             'assignment',
             'companyVehicles',
             'logisticsVehicles',
             'users',
-            'teams'
+            'teams',
+            'customers',
         ));
     }
 
@@ -450,6 +456,7 @@ class VehicleAssignmentController extends Controller
             'title' => 'required|string|max:255',
             'task_description' => 'required|string',
             'destination' => 'nullable|string|max:255',
+            'customer_id' => 'nullable|exists:customers,id',
             'status' => 'required|in:pending,in_progress,completed,cancelled',
             'notes' => 'nullable|string',
             'vehicle_type' => 'nullable|in:company,logistics',
@@ -497,6 +504,7 @@ class VehicleAssignmentController extends Controller
         $assignment->title = $validatedData['title'];
         $assignment->task_description = $validatedData['task_description'];
         $assignment->destination = $validatedData['destination'];
+        $assignment->customer_id = $request->input('customer_id');
         $assignment->status = $validatedData['status'];
         $assignment->notes = $validatedData['notes'];
 

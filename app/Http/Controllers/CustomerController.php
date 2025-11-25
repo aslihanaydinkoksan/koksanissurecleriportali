@@ -9,6 +9,8 @@ use App\Models\CustomerMachine;
 use App\Models\Complaint;
 use App\Models\TestResult;
 use App\Models\CustomerVisit;
+use App\Models\CustomerActivity;
+use Illuminate\Support\Facades\Auth;
 
 class CustomerController extends Controller
 {
@@ -166,5 +168,23 @@ class CustomerController extends Controller
 
         // JSON olarak döndür
         return response()->json($machines);
+    }
+    public function storeActivity(Request $request, $customerId)
+    {
+        $request->validate([
+            'type' => 'required|string',
+            'description' => 'required|string',
+            'activity_date' => 'required|date',
+        ]);
+
+        CustomerActivity::create([
+            'customer_id' => $customerId,
+            'user_id' => Auth::id(),
+            'type' => $request->type,
+            'description' => $request->description,
+            'activity_date' => $request->activity_date,
+        ]);
+
+        return back()->with('success', 'Aktivite başarıyla kaydedildi.');
     }
 }

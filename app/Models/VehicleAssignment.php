@@ -53,6 +53,7 @@ class VehicleAssignment extends Model
         'start_time',
         'end_time',
         'created_by_user_id',
+        'customer_id',
     ];
 
     protected $casts = [
@@ -198,5 +199,10 @@ class VehicleAssignment extends Model
             return !is_null($this->end_km) && !is_null($this->fuel_cost);
         }
         return true; // Diğer görevler direkt tamamlanabilir
+    }
+    // Yeni İlişki: Bu görev hangi müşteriye gidiyor?
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
     }
 }

@@ -312,6 +312,18 @@
                                     <i class="fa-solid fa-calendar-days"></i>Ziyaretler (<?php echo e($customer->visits->count()); ?>)
                                 </button>
                             </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="activities-tab" data-bs-toggle="tab"
+                                    data-bs-target="#activities" type="button" role="tab">
+                                    <i class="fas fa-history me-1"></i> İletişim Geçmişi
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="logistics-tab" data-bs-toggle="tab" data-bs-target="#logistics"
+                                    type="button" role="tab">
+                                    <i class="fas fa-truck me-1"></i> Lojistik Hareketleri
+                                </button>
+                            </li>
                         </ul>
 
                         <!-- Sekme İçerikleri -->
@@ -320,7 +332,8 @@
                             <div class="tab-pane fade show active" id="details" role="tabpanel">
                                 <h5><i class="fa-solid fa-address-card me-2"></i>Müşteri İletişim Bilgileri</h5>
                                 <dl class="row detail-list mt-3">
-                                    <dt class="col-sm-3"><i class="fa-solid fa-user me-2 text-primary"></i>İlgili Kişi</dt>
+                                    <dt class="col-sm-3"><i class="fa-solid fa-user me-2 text-primary"></i>İlgili Kişi
+                                    </dt>
                                     <dd class="col-sm-9"><?php echo e($customer->contact_person ?? '-'); ?></dd>
 
                                     <dt class="col-sm-3"><i class="fa-solid fa-envelope me-2 text-primary"></i>Email</dt>
@@ -569,6 +582,182 @@
                                             <?php endif; ?>
                                         </tbody>
                                     </table>
+                                </div>
+                            </div>
+                            
+                            <div class="tab-pane fade" id="activities" role="tabpanel">
+                                <div class="row mt-4">
+                                    
+                                    <div class="col-md-4">
+                                        <div class="card border-0 shadow-sm" style="background: #f8f9fa;">
+                                            <div class="card-body">
+                                                <h6 class="fw-bold mb-3 text-primary"><i
+                                                        class="fas fa-plus-circle me-1"></i> Yeni İşlem Gir</h6>
+                                                <form action="<?php echo e(route('customers.activities.store', $customer->id)); ?>"
+                                                    method="POST">
+                                                    <?php echo csrf_field(); ?>
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-bold text-muted">İşlem
+                                                            Tipi</label>
+                                                        <select name="type" class="form-select">
+                                                            <option value="phone">📞 Telefon Görüşmesi</option>
+                                                            <option value="meeting">🤝 Yüz Yüze Toplantı</option>
+                                                            <option value="email">✉️ E-Posta</option>
+                                                            <option value="visit">🏢 Müşteri Ziyareti</option>
+                                                            <option value="note">📝 Genel Not</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-bold text-muted">Tarih &
+                                                            Saat</label>
+                                                        <input type="datetime-local" name="activity_date"
+                                                            class="form-control"
+                                                            value="<?php echo e(now()->format('Y-m-d\TH:i')); ?>">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-bold text-muted">Detaylar</label>
+                                                        <textarea name="description" class="form-control" rows="4" placeholder="Neler konuşuldu? Sonuç ne?" required></textarea>
+                                                    </div>
+                                                    <div class="d-grid">
+                                                        <button type="submit" class="btn btn-primary text-white"
+                                                            style="background: linear-gradient(135deg, #667EEA, #764BA2); border:none;">
+                                                            Kaydet
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    
+                                    <div class="col-md-8">
+                                        <h6 class="fw-bold mb-3 text-secondary">Geçmiş Hareketler</h6>
+                                        <div class="timeline">
+                                            <?php $__empty_1 = true; $__currentLoopData = $customer->activities; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $activity): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                                                <div class="card mb-3 border-0 shadow-sm">
+                                                    <div class="card-body position-relative">
+                                                        
+                                                        <div class="position-absolute top-0 start-0 bottom-0 rounded-start"
+                                                            style="width: 5px; background: 
+                                 <?php echo e($activity->type == 'phone'
+                                     ? '#3b82f6'
+                                     : ($activity->type == 'meeting'
+                                         ? '#10b981'
+                                         : ($activity->type == 'email'
+                                             ? '#f59e0b'
+                                             : '#6b7280'))); ?>;">
+                                                        </div>
+
+                                                        <div
+                                                            class="d-flex justify-content-between align-items-center mb-2 ps-2">
+                                                            <div>
+                                                                <span class="badge bg-light text-dark border me-2">
+                                                                    <?php if($activity->type == 'phone'): ?>
+                                                                        <i class="fas fa-phone text-primary"></i> Telefon
+                                                                    <?php elseif($activity->type == 'meeting'): ?>
+                                                                        <i class="fas fa-handshake text-success"></i>
+                                                                        Toplantı
+                                                                    <?php elseif($activity->type == 'email'): ?>
+                                                                        <i class="fas fa-envelope text-warning"></i>
+                                                                        E-Posta
+                                                                    <?php elseif($activity->type == 'visit'): ?>
+                                                                        <i class="fas fa-building text-info"></i> Ziyaret
+                                                                    <?php else: ?>
+                                                                        <i class="fas fa-sticky-note text-secondary"></i>
+                                                                        Not
+                                                                    <?php endif; ?>
+                                                                </span>
+                                                                <span
+                                                                    class="text-muted small"><?php echo e($activity->activity_date->format('d.m.Y H:i')); ?></span>
+                                                            </div>
+                                                            <small class="text-muted fst-italic">
+                                                                <i class="fas fa-user-circle me-1"></i>
+                                                                <?php echo e($activity->user->name); ?>
+
+                                                            </small>
+                                                        </div>
+                                                        <div class="ps-2 text-dark" style="white-space: pre-line;">
+                                                            <?php echo e($activity->description); ?>
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                                                <div class="alert alert-light text-center border border-dashed p-4">
+                                                    <i class="fas fa-history fa-2x text-muted mb-2"></i>
+                                                    <p class="mb-0 text-muted">Henüz bu müşteriyle ilgili kaydedilmiş bir
+                                                        aktivite yok.</p>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            
+                            <div class="tab-pane fade" id="logistics" role="tabpanel">
+                                <div class="card border-0 shadow-sm mt-4">
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover align-middle mb-0">
+                                                <thead class="bg-light">
+                                                    <tr>
+                                                        <th class="ps-4 py-3">Tarih</th>
+                                                        <th>Görev Tanımı</th>
+                                                        <th>Araç</th>
+                                                        <th>Sorumlu</th>
+                                                        <th>Durum</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php $__empty_1 = true; $__currentLoopData = $customer->vehicleAssignments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $assignment): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                                                        <tr>
+                                                            <td class="ps-4">
+                                                                <?php echo e($assignment->start_time->format('d.m.Y H:i')); ?></td>
+                                                            <td class="fw-semibold"><?php echo e($assignment->title); ?></td>
+                                                            <td>
+                                                                <?php if($assignment->vehicle): ?>
+                                                                    <?php if($assignment->isLogistics()): ?>
+                                                                        <i class="fas fa-truck text-primary me-1"></i>
+                                                                    <?php else: ?>
+                                                                        <i class="fas fa-car text-info me-1"></i>
+                                                                    <?php endif; ?>
+                                                                    <?php echo e($assignment->vehicle->plate_number); ?>
+
+                                                                <?php else: ?>
+                                                                    <span class="text-muted">-</span>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                            <td>
+                                                                <?php echo e($assignment->responsible->name ?? $assignment->responsible->users_count . ' Kişilik Takım'); ?>
+
+                                                            </td>
+                                                            <td>
+                                                                <?php if($assignment->status == 'completed'): ?>
+                                                                    <span
+                                                                        class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill">Tamamlandı</span>
+                                                                <?php elseif($assignment->status == 'cancelled'): ?>
+                                                                    <span
+                                                                        class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill">İptal</span>
+                                                                <?php else: ?>
+                                                                    <span
+                                                                        class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill">Süreçte</span>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                                                        <tr>
+                                                            <td colspan="5" class="text-center py-5 text-muted">
+                                                                <i class="fas fa-truck-loading fa-2x mb-3 opacity-50"></i>
+                                                                <p class="mb-0">Bu müşteriye yapılmış bir araç
+                                                                    görevi/sevkiyat bulunamadı.</p>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endif; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

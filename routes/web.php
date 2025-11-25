@@ -172,6 +172,9 @@ Route::middleware('auth')->group(function () {
         ->except(['index', 'show']);
     Route::get('/my-assignments', [VehicleAssignmentController::class, 'myAssignments'])
         ->name('my-assignments.index');
+    Route::post('/customers/{customer}/activities', [CustomerController::class, 'storeActivity'])
+        ->name('customers.activities.store')
+        ->middleware('auth');
 });
 
 // --- TAKIM YÖNETİMİ ROTALARI  ---

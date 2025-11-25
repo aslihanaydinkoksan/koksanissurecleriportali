@@ -73,4 +73,15 @@ class Customer extends Model
     {
         return $this->hasMany(CustomerVisit::class);
     }
+    // Müşterinin geçmiş aktiviteleri (En yeniden eskiye)
+    public function activities()
+    {
+        return $this->hasMany(CustomerActivity::class)->orderBy('activity_date', 'desc');
+    }
+
+    // Müşteriye yapılan araç görevleri
+    public function vehicleAssignments()
+    {
+        return $this->hasMany(VehicleAssignment::class)->orderBy('start_time', 'desc');
+    }
 }
