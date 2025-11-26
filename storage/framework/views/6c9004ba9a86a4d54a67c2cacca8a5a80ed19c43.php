@@ -1,6 +1,6 @@
-@extends('layouts.app')
 
-@section('title', $pageTitle)
+
+<?php $__env->startSection('title', $pageTitle); ?>
 
 <style>
     /* Modern Gradient Background */
@@ -300,7 +300,7 @@
     }
 
     /* TV Mode Adjustments */
-    @if (isset($isTvUser) && $isTvUser)
+    <?php if(isset($isTvUser) && $isTvUser): ?>
         body {
             cursor: auto !important;
         }
@@ -309,44 +309,46 @@
             pointer-events: auto !important;
             cursor: pointer !important;
         }
-    @endif
+    <?php endif; ?>
 </style>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-spinner"></div>
     </div>
 
     <div class="container-fluid">
-        {{-- Page Header --}}
+        
         <div class="page-header">
             <div class="row align-items-center">
                 <div class="col-md-6">
                     <h1 class="page-title">
                         <i class="fa-solid fa-chart-line me-2"></i>
-                        {{ $pageTitle }}
+                        <?php echo e($pageTitle); ?>
+
                     </h1>
-                    @if ($departmentSlug !== 'genel')
+                    <?php if($departmentSlug !== 'genel'): ?>
                         <div class="mt-2">
                             <span class="dept-badge">
                                 <i class="fa-solid fa-building"></i>
-                                {{ $departmentName ?? $pageTitle }}
+                                <?php echo e($departmentName ?? $pageTitle); ?>
+
                             </span>
                         </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
                 <div class="col-md-6 text-md-end mt-3 mt-md-0">
-                    <a href="{{ route('home') }}" class="btn btn-modern btn-modern-secondary">
+                    <a href="<?php echo e(route('home')); ?>" class="btn btn-modern btn-modern-secondary">
                         <i class="fa-solid fa-arrow-left me-2"></i> Takvime Dön
                     </a>
                 </div>
             </div>
         </div>
 
-        {{-- ================================================================================= --}}
-        {{-- SENARYO A: YÖNETİCİ (SUPER USER) İÇİN FİLTRE PANELİ --}}
-        {{-- ================================================================================= --}}
-        @if (isset($isSuperUser) && $isSuperUser)
+        
+        
+        
+        <?php if(isset($isSuperUser) && $isSuperUser): ?>
             <div class="admin-filter-panel">
                 <div class="filter-section-title">
                     <div class="d-flex align-items-center gap-2">
@@ -358,47 +360,48 @@
                     </small>
                 </div>
 
-                <form method="GET" action="{{ route('statistics.index') }}" id="adminFilterForm">
+                <form method="GET" action="<?php echo e(route('statistics.index')); ?>" id="adminFilterForm">
                     <div class="row g-3 align-items-end">
-                        {{-- 1. Departman Seçimi --}}
+                        
                         <div class="col-md-3">
                             <label class="modern-label">
                                 <i class="fa-solid fa-building me-2"></i> Departman
                             </label>
                             <select name="target_dept" id="deptSelect" class="form-select modern-select">
-                                <option value="genel" {{ $departmentSlug == 'genel' ? 'selected' : '' }}>
+                                <option value="genel" <?php echo e($departmentSlug == 'genel' ? 'selected' : ''); ?>>
                                     📊 Genel Bakış
                                 </option>
-                                @foreach ($allDepartments as $dept)
-                                    <option value="{{ $dept->slug }}"
-                                        {{ $departmentSlug == $dept->slug ? 'selected' : '' }}>
-                                        {{ $dept->name }}
+                                <?php $__currentLoopData = $allDepartments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dept): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($dept->slug); ?>"
+                                        <?php echo e($departmentSlug == $dept->slug ? 'selected' : ''); ?>>
+                                        <?php echo e($dept->name); ?>
+
                                     </option>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
 
-                        {{-- 2. Başlangıç Tarihi --}}
+                        
                         <div class="col-md-3">
                             <label class="modern-label">
                                 <i class="fa-solid fa-calendar-day me-2"></i> Başlangıç
                             </label>
                             <input type="date" name="date_from" id="adminDateFrom" class="form-control modern-input"
-                                value="{{ $filters['date_from'] }}">
+                                value="<?php echo e($filters['date_from']); ?>">
                         </div>
 
-                        {{-- 3. Bitiş Tarihi --}}
+                        
                         <div class="col-md-3">
                             <label class="modern-label">
                                 <i class="fa-solid fa-calendar-check me-2"></i> Bitiş
                             </label>
                             <input type="date" name="date_to" id="adminDateTo" class="form-control modern-input"
-                                value="{{ $filters['date_to'] }}">
+                                value="<?php echo e($filters['date_to']); ?>">
                         </div>
 
-                        {{-- 4. İşlem Butonları (Sıfırla vb.) --}}
+                        
                         <div class="col-md-3">
-                            <a href="{{ route('statistics.index', ['target_dept' => 'genel']) }}"
+                            <a href="<?php echo e(route('statistics.index', ['target_dept' => 'genel'])); ?>"
                                 class="btn btn-modern btn-modern-secondary w-100 d-flex align-items-center justify-content-center gap-2">
                                 <i class="fa-solid fa-rotate-right"></i> Filtreleri Sıfırla
                             </a>
@@ -431,34 +434,34 @@
                     });
                 });
             </script>
-        @endif
+        <?php endif; ?>
 
 
-        {{-- ================================================================================= --}}
-        {{--  DÜZELTİLEN KISIM: Hidden Data Container --}}
-        {{-- ================================================================================= --}}
-        <div id="stats-data-container" style="display: none;" data-chart-data='@json($chartData ?? [])'
-            data-department-slug="{{ $departmentSlug ?? '' }}"
-            @if ($departmentSlug === 'lojistik') data-shipments='@json($shipmentsForFiltering ?? [])'
-            @elseif ($departmentSlug === 'uretim')
-                data-production-plans='@json($productionPlansForFiltering ?? [])'
-            @elseif ($departmentSlug === 'hizmet')
-                data-events='@json($eventsForFiltering ?? [])'
-                data-assignments='@json($assignmentsForFiltering ?? [])'
-                data-vehicles='@json($vehiclesForFiltering ?? [])'
-                data-monthly-labels='@json($monthlyLabels ?? [])' 
-            @elseif ($departmentSlug === 'bakim')
-                data-maintenance-plans='@json($maintenancePlansForFiltering ?? [])'
-                data-maintenance-types='@json($maintenanceTypes ?? [])'
-                data-assets='@json($assets ?? [])' @endif>
+        
+        
+        
+        <div id="stats-data-container" style="display: none;" data-chart-data='<?php echo json_encode($chartData ?? [], 15, 512) ?>'
+            data-department-slug="<?php echo e($departmentSlug ?? ''); ?>"
+            <?php if($departmentSlug === 'lojistik'): ?> data-shipments='<?php echo json_encode($shipmentsForFiltering ?? [], 15, 512) ?>'
+            <?php elseif($departmentSlug === 'uretim'): ?>
+                data-production-plans='<?php echo json_encode($productionPlansForFiltering ?? [], 15, 512) ?>'
+            <?php elseif($departmentSlug === 'hizmet'): ?>
+                data-events='<?php echo json_encode($eventsForFiltering ?? [], 15, 512) ?>'
+                data-assignments='<?php echo json_encode($assignmentsForFiltering ?? [], 15, 512) ?>'
+                data-vehicles='<?php echo json_encode($vehiclesForFiltering ?? [], 15, 512) ?>'
+                data-monthly-labels='<?php echo json_encode($monthlyLabels ?? [], 15, 512) ?>' 
+            <?php elseif($departmentSlug === 'bakim'): ?>
+                data-maintenance-plans='<?php echo json_encode($maintenancePlansForFiltering ?? [], 15, 512) ?>'
+                data-maintenance-types='<?php echo json_encode($maintenanceTypes ?? [], 15, 512) ?>'
+                data-assets='<?php echo json_encode($assets ?? [], 15, 512) ?>' <?php endif; ?>>
         </div>
 
 
-        {{-- ================================================================================= --}}
-        {{-- SENARYO B: STANDART KULLANICI İÇİN FİLTRE PANELİ --}}
-        {{-- (Yönetici değilse burayı gösterir) --}}
-        {{-- ================================================================================= --}}
-        @if (!isset($isSuperUser) || !$isSuperUser)
+        
+        
+        
+        
+        <?php if(!isset($isSuperUser) || !$isSuperUser): ?>
             <div class="modern-card mb-4">
                 <div class="card-body p-4">
                     <div class="filter-section-title mb-4 d-flex align-items-center justify-content-between">
@@ -470,33 +473,33 @@
                         </small>
                     </div>
 
-                    {{-- Form ID eklendi: standardFilterForm --}}
-                    <form method="GET" action="{{ route('statistics.index') }}" id="standardFilterForm">
-                        {{-- Standart kullanıcı kendi departmanında kalmalı --}}
-                        @if (request()->has('target_dept'))
-                            <input type="hidden" name="target_dept" value="{{ $departmentSlug }}">
-                        @endif
+                    
+                    <form method="GET" action="<?php echo e(route('statistics.index')); ?>" id="standardFilterForm">
+                        
+                        <?php if(request()->has('target_dept')): ?>
+                            <input type="hidden" name="target_dept" value="<?php echo e($departmentSlug); ?>">
+                        <?php endif; ?>
 
                         <div class="row g-3 align-items-end">
-                            {{-- Başlangıç Tarihi --}}
+                            
                             <div class="col-md-4">
                                 <label class="modern-label">Başlangıç Tarihi</label>
-                                {{-- ID eklendi: std_date_from --}}
+                                
                                 <input type="date" name="date_from" id="std_date_from" class="form-control modern-input"
-                                    value="{{ $filters['date_from'] ?? '' }}">
+                                    value="<?php echo e($filters['date_from'] ?? ''); ?>">
                             </div>
 
-                            {{-- Bitiş Tarihi --}}
+                            
                             <div class="col-md-4">
                                 <label class="modern-label">Bitiş Tarihi</label>
-                                {{-- ID eklendi: std_date_to --}}
+                                
                                 <input type="date" name="date_to" id="std_date_to" class="form-control modern-input"
-                                    value="{{ $filters['date_to'] ?? '' }}">
+                                    value="<?php echo e($filters['date_to'] ?? ''); ?>">
                             </div>
 
-                            {{-- Sadece Sıfırla Butonu Kaldı --}}
+                            
                             <div class="col-md-4">
-                                <a href="{{ route('statistics.index') }}"
+                                <a href="<?php echo e(route('statistics.index')); ?>"
                                     class="btn btn-modern btn-modern-secondary w-100 d-flex align-items-center justify-content-center">
                                     <i class="fa-solid fa-rotate-right me-2"></i> Filtreleri Sıfırla
                                 </a>
@@ -505,16 +508,16 @@
                     </form>
                 </div>
             </div>
-        @endif
+        <?php endif; ?>
 
-        {{-- ================================================================================= --}}
-        {{-- DEPARTMANA ÖZEL HIZLI FİLTRELER (HERKES GÖRÜR) --}}
-        {{-- ================================================================================= --}}
-        @if ($departmentSlug !== 'genel')
-            {{-- Hızlı filtreler sadece genel bakış dışındaki sayfalarda anlamlı --}}
+        
+        
+        
+        <?php if($departmentSlug !== 'genel'): ?>
+            
             <div class="modern-card mb-4">
                 <div class="card-body p-4">
-                    @if ($departmentSlug === 'lojistik')
+                    <?php if($departmentSlug === 'lojistik'): ?>
                         <h6 class="modern-label mb-3">
                             <i class="fa-solid fa-truck-fast me-2"></i> Lojistik Hızlı Filtreleri (Anlık)
                         </h6>
@@ -538,7 +541,7 @@
                                 </select>
                             </div>
                         </div>
-                    @elseif ($departmentSlug === 'uretim')
+                    <?php elseif($departmentSlug === 'uretim'): ?>
                         <h6 class="modern-label mb-3">
                             <i class="fa-solid fa-gears me-2"></i> Üretim Hızlı Filtreleri (Anlık)
                         </h6>
@@ -556,7 +559,7 @@
                                 </select>
                             </div>
                         </div>
-                    @elseif ($departmentSlug === 'hizmet')
+                    <?php elseif($departmentSlug === 'hizmet'): ?>
                         <h6 class="modern-label mb-3">
                             <i class="fa-solid fa-briefcase me-2"></i> İdari İşler Hızlı Filtreleri (Anlık)
                         </h6>
@@ -574,8 +577,8 @@
                                 </select>
                             </div>
                         </div>
-                        {{-- YENİ: BAKIM DEPARTMANI FİLTRELERİ --}}
-                    @elseif ($departmentSlug === 'bakim')
+                        
+                    <?php elseif($departmentSlug === 'bakim'): ?>
                         <h6 class="modern-label mb-3">
                             <i class="fa-solid fa-screwdriver-wrench me-2"></i> Bakım Hızlı Filtreleri
                         </h6>
@@ -602,14 +605,14 @@
                                 </select>
                             </div>
                         </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
-        @endif
+        <?php endif; ?>
 
-        {{-- CHART SECTIONS --}}
-        @if ($departmentSlug === 'genel')
-            {{-- General Overview --}}
+        
+        <?php if($departmentSlug === 'genel'): ?>
+            
             <div class="modern-alert modern-alert-info mb-4">
                 <div class="d-flex align-items-center">
                     <i class="fa-solid fa-circle-info me-3" style="font-size: 1.5rem;"></i>
@@ -632,21 +635,22 @@
                     <div class="stat-card mb-3">
                         <div class="stat-label">Toplam Aktivite</div>
                         <div class="stat-value">
-                            {{ isset($chartData['departmentSummary']['data']) ? array_sum($chartData['departmentSummary']['data']) : 0 }}
+                            <?php echo e(isset($chartData['departmentSummary']['data']) ? array_sum($chartData['departmentSummary']['data']) : 0); ?>
+
                         </div>
                     </div>
                     <div class="stat-card mb-3" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
                         <div class="stat-label">Başlangıç</div>
-                        <div class="stat-value" style="font-size: 1.25rem;">{{ $filters['date_from'] }}</div>
+                        <div class="stat-value" style="font-size: 1.25rem;"><?php echo e($filters['date_from']); ?></div>
                     </div>
                     <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
                         <div class="stat-label">Bitiş</div>
-                        <div class="stat-value" style="font-size: 1.25rem;">{{ $filters['date_to'] }}</div>
+                        <div class="stat-value" style="font-size: 1.25rem;"><?php echo e($filters['date_to']); ?></div>
                     </div>
                 </div>
             </div>
-        @elseif ($departmentSlug === 'lojistik')
-            {{-- Logistics Charts --}}
+        <?php elseif($departmentSlug === 'lojistik'): ?>
+            
             <div class="row g-4 mb-4">
                 <div class="col-lg-6">
                     <div class="chart-container">
@@ -666,7 +670,7 @@
 
             <h4 class="mb-4" style="color: white; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                 <i class="fa-solid fa-chart-column me-2"></i>
-                Detaylı İstatistikler ({{ $filters['date_from'] }} - {{ $filters['date_to'] }})
+                Detaylı İstatistikler (<?php echo e($filters['date_from']); ?> - <?php echo e($filters['date_to']); ?>)
             </h4>
 
             <div class="row g-4 mb-4">
@@ -702,8 +706,8 @@
                     </div>
                 </div>
             </div>
-        @elseif($departmentSlug === 'uretim')
-            {{-- Production Charts --}}
+        <?php elseif($departmentSlug === 'uretim'): ?>
+            
             <div class="row g-4 mb-4">
                 <div class="col-lg-6">
                     <div class="chart-container">
@@ -723,7 +727,7 @@
 
             <h4 class="mb-4" style="color: white; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                 <i class="fa-solid fa-chart-column me-2"></i>
-                Detaylı İstatistikler ({{ $filters['date_from'] }} - {{ $filters['date_to'] }})
+                Detaylı İstatistikler (<?php echo e($filters['date_from']); ?> - <?php echo e($filters['date_to']); ?>)
             </h4>
 
             <div class="row g-4">
@@ -738,8 +742,8 @@
                     </div>
                 </div>
             </div>
-        @elseif($departmentSlug === 'hizmet')
-            {{-- Service Charts --}}
+        <?php elseif($departmentSlug === 'hizmet'): ?>
+            
             <div class="row g-4">
                 <div class="col-lg-6">
                     <div class="chart-container">
@@ -754,8 +758,8 @@
                     </div>
                 </div>
             </div>
-            {{-- YENİ: BAKIM GRAFİKLERİ --}}
-        @elseif($departmentSlug === 'bakim')
+            
+        <?php elseif($departmentSlug === 'bakim'): ?>
             <div class="row g-4 mb-4">
                 <div class="col-lg-6">
                     <div class="chart-container">
@@ -781,7 +785,7 @@
                     </div>
                 </div>
             </div>
-        @else
+        <?php else: ?>
             <div class="modern-alert modern-alert-info">
                 <div class="d-flex align-items-center">
                     <i class="fa-solid fa-info-circle me-3" style="font-size: 1.5rem;"></i>
@@ -791,12 +795,12 @@
                     </div>
                 </div>
             </div>
-        @endif
+        <?php endif; ?>
 
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('page_scripts')
+<?php $__env->startSection('page_scripts'); ?>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -1557,4 +1561,6 @@
             }
         });
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/statistics/index.blade.php ENDPATH**/ ?>

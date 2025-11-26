@@ -14,7 +14,10 @@ class StatisticsData implements Arrayable
         public array $eventsForFiltering = [],
         public array $assignmentsForFiltering = [],
         public array $vehiclesForFiltering = [],
-        public array $monthlyLabels = []
+        public array $monthlyLabels = [],
+        public array $maintenancePlansForFiltering = [],
+        public array $maintenanceTypes = [],
+        public array $assets = []
     ) {
     }
 
@@ -31,6 +34,9 @@ class StatisticsData implements Arrayable
             'assignmentsForFiltering' => $this->assignmentsForFiltering,
             'vehiclesForFiltering' => $this->vehiclesForFiltering,
             'monthlyLabels' => $this->monthlyLabels,
+            'maintenancePlansForFiltering' => $this->maintenancePlansForFiltering,
+            'maintenanceTypes' => $this->maintenanceTypes,
+            'assets' => $this->assets,
         ];
     }
 }

@@ -322,6 +322,41 @@
                                 </li>
                             @endcan
 
+                            {{-- BAKIM DEPARTMANI MENÜSÜ --}}
+                            @can('access-department', 'bakim')
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" role="button"
+                                        data-bs-toggle="dropdown">
+                                        {{-- Turuncu tonlarında bir tamir ikonu --}}
+                                        <i class="fa-solid fa-screwdriver-wrench" style="color: #ED8936;"></i>
+                                        <span>Bakım</span>
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item" href="{{ route('maintenance.create') }}">
+                                                <i class="fa-solid fa-plus-circle" style="color: #48BB78;"></i>
+                                                Yeni Bakım Planı
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{{ route('maintenance.index') }}">
+                                                <i class="fa-solid fa-clipboard-list" style="color: #4299E1;"></i>
+                                                Planlanan Bakımlar Listesi
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <hr class="dropdown-divider">
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{{ route('maintenance.assets.index') }}">
+                                                <i class="fa-solid fa-industry" style="color: #805AD5;"></i>
+                                                Makineler & Varlıklar
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                            @endcan
+
                             @can('access-department', 'hizmet')
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"

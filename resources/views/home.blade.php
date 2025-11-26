@@ -69,7 +69,6 @@
             padding: 10px;
         }
 
-        /* Hücreleri Sabitle */
         .fc .fc-daygrid-day-frame {
             min-height: 100px;
         }
@@ -78,7 +77,6 @@
             background-color: rgba(102, 126, 234, 0.08) !important;
         }
 
-        /* Etkinlikler */
         .fc-event {
             border: none !important;
             margin: 1px 2px !important;
@@ -115,7 +113,7 @@
             font-weight: 600;
         }
 
-        /* === 4. BUTON VE ALERT STİLLERİ (ÖZEL) === */
+        /* === 4. BUTON VE ALERT STİLLERİ === */
         .btn-animated-gradient {
             background: linear-gradient(-45deg, #667EEA, #F093FB, #4FD1C5, #FBD38D);
             background-size: 400% 400%;
@@ -182,7 +180,7 @@
             border-left: 4px solid #f56565;
         }
 
-        /* === 5. MODAL STİLLERİ (General Calendar ile aynı, butonlar dahil) === */
+        /* === 5. MODAL STİLLERİ === */
         .modal-backdrop.show {
             background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(8px);
@@ -247,7 +245,6 @@
             box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
         }
 
-        /* Modal Özel Butonları */
         #modalEditButton {
             background: linear-gradient(135deg, #ffa726, #fb8c00);
             color: white;
@@ -278,7 +275,6 @@
             box-shadow: 0 4px 15px rgba(245, 101, 101, 0.4);
         }
 
-        /* Diğer Helperlar */
         .modal-loading {
             display: flex;
             justify-content: center;
@@ -296,89 +292,48 @@
         }
 
         .fc-event-holiday {
-
             font-weight: 600;
-
             border: none !important;
-
             background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%) !important;
-
             box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
-
             border-radius: 4px;
-
             position: relative;
-
             overflow: hidden;
-
             padding: 3px 6px;
-
             font-size: 11px;
-
             white-space: nowrap;
-
             text-overflow: ellipsis;
-
             max-width: 100%;
-
             display: block;
-
             transition: all 0.3s ease;
-
             cursor: pointer;
-
         }
-
-
 
         .fc-event-holiday::before {
-
             content: '';
-
             position: absolute;
-
             top: 0;
-
             left: -100%;
-
             width: 100%;
-
             height: 100%;
-
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-
             animation: shine 3s infinite;
-
             pointer-events: none;
-
         }
 
-
-
         .fc-event-holiday:hover {
-
             transform: scale(1.05);
-
             z-index: 1000;
-
             white-space: normal;
-
             min-width: max-content;
-
             box-shadow: 0 4px 12px rgba(220, 53, 69, 0.5);
-
             overflow: visible;
-
         }
 
         @keyframes shine {
-
             to {
-
                 left: 100%;
-
             }
-
         }
 
         @keyframes spin {
@@ -412,45 +367,34 @@
 
         .custom-calendar-tooltip .tooltip-inner {
             background-color: #ffffff !important;
-            /* Beyaz Arkaplan */
             color: #2d3748 !important;
-            /* Koyu Gri Yazı */
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
-            /* Yumuşak Gölge */
             border: 1px solid rgba(102, 126, 234, 0.2);
-            /* İnce Mor Çerçeve */
             border-radius: 12px !important;
-            /* Yuvarlak Köşeler */
             padding: 12px 16px !important;
             font-size: 0.9rem;
             max-width: 300px;
-            /* Genişlik Sınırı */
             text-align: left;
             font-family: system-ui, -apple-system, sans-serif;
             z-index: 10000;
         }
 
-        /* Tooltip Ok İşareti (Arrow) Rengini Beyaza Çevirme */
         .custom-calendar-tooltip .tooltip-arrow::before {
             border-top-color: #ffffff !important;
-            /* Ok rengi beyaz olsun */
             border-bottom-color: #ffffff !important;
             border-left-color: #ffffff !important;
             border-right-color: #ffffff !important;
         }
 
-        /* Tooltip İçindeki Başlık */
         .tooltip-title-styled {
             font-weight: 700;
             color: #667EEA;
-            /* Senin tema rengin (Mor/Mavi) */
             margin-bottom: 4px;
             display: block;
             border-bottom: 1px solid #f0f0f0;
             padding-bottom: 4px;
         }
 
-        /* Tooltip İçindeki Açıklama */
         .tooltip-desc-styled {
             font-size: 0.8rem;
             color: #718096;
@@ -482,34 +426,54 @@
                         📅 {{ $departmentName }} Takvimi
                     </div>
                     <div class="card-body">
-                        <div class="calendar-filters p-3 mb-3"
-                            style="background: rgba(102, 126, 234, 0.05); border-radius: 0.75rem;">
-                            <strong class="me-3"><i class="fa-solid fa-filter"></i> Filtrele:</strong>
+                        {{-- FİLTRELEME ALANI --}}
+                        {{-- Sadece Admin veya Departmanı Olmayan Yönetici Görebilir --}}
+                        @php
+                            $canFilter =
+                                Auth::user()->role === 'admin' ||
+                                (Auth::user()->role === 'yönetici' && is_null(Auth::user()->department_id));
+                        @endphp
 
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="checkbox" value="lojistik" id="filterLojistik"
-                                    checked>
-                                <label class="form-check-label" for="filterLojistik"
-                                    style="color: #667EEA;">Lojistik</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="checkbox" value="uretim" id="filterUretim" checked>
-                                <label class="form-check-label" for="filterUretim" style="color: #4FD1C5;">Üretim</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="checkbox" value="hizmet" id="filterHizmet" checked>
-                                <label class="form-check-label" for="filterHizmet" style="color: #F093FB;">İdari
-                                    İşler</label>
-                            </div>
+                        @if ($canFilter)
+                            <div class="calendar-filters p-3 mb-3"
+                                style="background: rgba(102, 126, 234, 0.05); border-radius: 0.75rem;">
+                                <strong class="me-3"><i class="fa-solid fa-filter"></i> Filtrele:</strong>
 
-                            <span class="mx-2">|</span>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" value="lojistik" id="filterLojistik"
+                                        checked>
+                                    <label class="form-check-label" for="filterLojistik"
+                                        style="color: #667EEA;">Lojistik</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" value="uretim" id="filterUretim"
+                                        checked>
+                                    <label class="form-check-label" for="filterUretim"
+                                        style="color: #4FD1C5;">Üretim</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" value="hizmet" id="filterHizmet"
+                                        checked>
+                                    <label class="form-check-label" for="filterHizmet" style="color: #F093FB;">İdari
+                                        İşler</label>
+                                </div>
+                                {{-- YENİ: BAKIM FİLTRESİ --}}
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" value="bakim" id="filterBakim" checked>
+                                    <label class="form-check-label" for="filterBakim" style="color: #ED8936;">Bakım</label>
+                                </div>
 
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="checkbox" value="important" id="filterImportant">
-                                <label class="form-check-label" for="filterImportant" style="color: #dc3545;"><strong>Sadece
-                                        Önemliler</strong></label>
+                                <span class="mx-2">|</span>
+
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" value="important" id="filterImportant">
+                                    <label class="form-check-label" for="filterImportant"
+                                        style="color: #dc3545;"><strong>Sadece
+                                            Önemliler</strong></label>
+                                </div>
                             </div>
-                        </div>
+                        @endif
+                        {{-- FİLTRELEME ALANI SONU --}}
 
                         <div id="calendar" data-events='@json($events)'
                             data-is-authorized="{{ in_array(Auth::user()->role, ['admin', 'yönetici']) ? 'true' : 'false' }}"
@@ -534,6 +498,7 @@
                         </div>
                     </div>
                 @endcan
+
                 @if (!empty($chartData))
                     <div class="card create-shipment-card">
                         <div class="card-header">
@@ -551,6 +516,9 @@
                                 <div id="daily-events-chart"></div>
                                 <hr>
                                 <div id="daily-assignments-chart"></div>
+                                {{-- YENİ: BAKIM GRAFİĞİ ALANI --}}
+                            @elseif($departmentSlug === 'bakim')
+                                <div id="maintenance-plans-chart"></div>
                             @else
                                 <p class="text-center">Bu departman için özel istatistikler henüz tanımlanmamıştır.</p>
                             @endif
@@ -580,7 +548,6 @@
                                 <table class="table">
                                     <thead>
                                         <tr>
-                                            <th scope="col">#</th>
                                             <th scope="col">Ad Soyad</th>
                                             <th scope="col">E-posta</th>
                                             <th scope="col">Rol</th>
@@ -592,7 +559,6 @@
                                     <tbody>
                                         @forelse ($users as $user)
                                             <tr>
-                                                <th scope="row">{{ $user->id }}</th>
                                                 <td>{{ $user->name }}</td>
                                                 <td>{{ $user->email }}</td>
                                                 @php
@@ -607,10 +573,7 @@
                                                 <td><span
                                                         class="badge {{ $roleClass }}">{{ ucfirst($user->role) }}</span>
                                                 </td>
-                                                <td>
-                                                    {{-- Departman adı gösterimi --}}
-                                                    {{ $user->department?->name ?? '-' }}
-                                                </td>
+                                                <td>{{ $user->department?->name ?? '-' }}</td>
                                                 <td>{{ $user->created_at->format('d/m/Y H:i') }}</td>
                                                 <td>
                                                     <div class="d-flex flex-column gap-1">
@@ -622,8 +585,7 @@
                                                             <form action="{{ route('users.destroy', $user->id) }}"
                                                                 method="POST"
                                                                 onsubmit="return confirm('{{ $user->name }} adlı kullanıcıyı silmek istediğinizden emin misiniz?');">
-                                                                @csrf
-                                                                @method('DELETE')
+                                                                @csrf @method('DELETE')
                                                                 <button type="submit" class="btn btn-sm btn-danger">🗑️
                                                                     Sil</button>
                                                             </form>
@@ -647,17 +609,15 @@
             </div>
         @endif
     </div>
+
+    {{-- MODAL YAPISI --}}
     <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">
-                        <i class="fas fa-info-circle"></i>
-                        <span>Detaylar</span>
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
+                    <h5 class="modal-title" id="modalTitle"><i class="fas fa-info-circle"></i> <span>Detaylar</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"><i
+                            class="fa-solid fa-xmark"></i></button>
                 </div>
 
                 <div class="modal-body">
@@ -665,14 +625,10 @@
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
                                 <strong>✓ Onaylandı</strong>
-                                <div class="small mt-1">
-                                    <i class="fas fa-calendar-check me-1"></i>
-                                    <span id="modalOnayBadgeTarih"></span>
-                                </div>
-                                <div class="small">
-                                    <i class="fas fa-user me-1"></i>
-                                    <span id="modalOnayBadgeKullanici"></span>
-                                </div>
+                                <div class="small mt-1"><i class="fas fa-calendar-check me-1"></i> <span
+                                        id="modalOnayBadgeTarih"></span></div>
+                                <div class="small"><i class="fas fa-user me-1"></i> <span
+                                        id="modalOnayBadgeKullanici"></span></div>
                             </div>
                             <i class="fas fa-check-circle fa-3x" style="opacity: 0.5;"></i>
                         </div>
@@ -681,7 +637,7 @@
                     <div id="modalImportantCheckboxContainer" class="d-flex align-items-center justify-content-between"
                         style="display: none;">
                         <label for="modalImportantCheckbox" class="form-check-label"><i
-                                class="fas fa-exclamation-circle me-1"></i> Bu Etkinliği Önemli Olarak İşaretle</label>
+                                class="fas fa-exclamation-circle me-1"></i> Bu Veriyi Önemli Olarak İşaretle</label>
                         <input type="checkbox" id="modalImportantCheckbox" class="form-check-input">
                     </div>
 
@@ -693,41 +649,31 @@
                 </div>
 
                 <div class="modal-footer">
-                    <a href="#" id="modalEditButton" class="btn" style="display: none;">
-                        <i class="fas fa-edit me-2"></i> Düzenle
-                    </a>
-
-                    <a href="#" id="modalExportButton" class="btn" style="display: none;">
-                        <i class="fas fa-file-excel me-2"></i> Excel İndir
-                    </a>
+                    <a href="#" id="modalEditButton" class="btn" style="display: none;"><i
+                            class="fas fa-edit me-2"></i> Düzenle</a>
+                    <a href="#" id="modalExportButton" class="btn" style="display: none;"><i
+                            class="fas fa-file-excel me-2"></i> Excel İndir</a>
 
                     <form method="POST" id="modalOnayForm" style="display: none;" class="d-inline">
                         @csrf
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-check me-2"></i> Tesise Ulaştı
-                        </button>
+                        <button type="submit" class="btn btn-success"><i class="fas fa-check me-2"></i> Tesise
+                            Ulaştı</button>
                     </form>
 
                     <form method="POST" id="modalOnayKaldirForm" style="display: none;" class="d-inline">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-warning">
-                            <i class="fas fa-undo me-2"></i> Onayı Kaldır
-                        </button>
+                        @csrf @method('DELETE')
+                        <button type="submit" class="btn btn-warning"><i class="fas fa-undo me-2"></i> Onayı
+                            Kaldır</button>
                     </form>
 
                     <form method="POST" id="modalDeleteForm" style="display: none;" class="d-inline"
                         onsubmit="return confirm('Bu kaydı silmek istediğinizden emin misiniz?');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash me-2"></i> Sil
-                        </button>
+                        @csrf @method('DELETE')
+                        <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-2"></i> Sil</button>
                     </form>
 
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-2"></i> Kapat
-                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i
+                            class="fas fa-times me-2"></i> Kapat</button>
                 </div>
             </div>
         </div>
@@ -764,7 +710,6 @@
             const modalImportantContainer = document.getElementById('modalImportantCheckboxContainer');
             const modalImportantCheckbox = document.getElementById('modalImportantCheckbox');
 
-            // === YARDIMCI FONKSİYON: Tarih/Saat Ayırıcı ===
             function splitDateTime(dateTimeString) {
                 const dt = String(dateTimeString || '');
                 const parts = dt.split(' ');
@@ -779,18 +724,10 @@
                 };
             }
 
-            // === YENİ: MODAL UI SIFIRLAMA (HARD RESET) ===
             function hardResetModalUI() {
-                const idsToHide = [
-                    'modalEditButton',
-                    'modalExportButton',
-                    'modalOnayForm',
-                    'modalOnayKaldirForm',
-                    'modalDeleteForm',
-                    'modalOnayBadge',
-                    'modalImportantCheckboxContainer'
+                const idsToHide = ['modalEditButton', 'modalExportButton', 'modalOnayForm', 'modalOnayKaldirForm',
+                    'modalDeleteForm', 'modalOnayBadge', 'modalImportantCheckboxContainer'
                 ];
-
                 idsToHide.forEach(id => {
                     const el = document.getElementById(id);
                     if (el) {
@@ -798,21 +735,15 @@
                         el.classList.remove('d-inline', 'd-block');
                     }
                 });
-
                 document.getElementById('modalTitle').innerHTML = '';
                 document.getElementById('modalDynamicBody').innerHTML =
                     '<div class="modal-loading"><div class="modal-spinner"></div></div>';
-
-                // Export butonu ikonunu varsayılana (Excel) döndür
                 const exportBtn = document.getElementById('modalExportButton');
                 if (exportBtn) exportBtn.innerHTML = '<i class="fas fa-file-excel me-2"></i> Excel İndir';
             }
 
-            // === MODAL AÇMA FONKSİYONU ===
             function openUniversalModal(props) {
                 console.log('--- MODAL AÇILIYOR (HOME) ---', props.eventType);
-
-                // 1. Temizlik
                 hardResetModalUI();
 
                 if (!props || !props.eventType) {
@@ -820,19 +751,7 @@
                     return;
                 }
 
-                // Elementleri Tazele
-                const modalTitle = document.getElementById('modalTitle');
-                const modalBody = document.getElementById('modalDynamicBody');
-                const modalEditButton = document.getElementById('modalEditButton');
-                const modalExportButton = document.getElementById('modalExportButton');
-                const modalDeleteForm = document.getElementById('modalDeleteForm');
-                const modalOnayForm = document.getElementById('modalOnayForm');
-                const modalOnayKaldirForm = document.getElementById('modalOnayKaldirForm');
-                const modalOnayBadge = document.getElementById('modalOnayBadge');
-                const modalImportantContainer = document.getElementById('modalImportantCheckboxContainer');
-                const modalImportantCheckbox = document.getElementById('modalImportantCheckbox');
-
-                // Önemli Checkbox
+                // Yetki ve Checkbox işlemleri
                 if (isAuthorized) {
                     modalImportantContainer.style.display = 'block';
                     modalImportantCheckbox.checked = props.is_important || false;
@@ -840,9 +759,10 @@
                     modalImportantCheckbox.dataset.modelId = props.id;
                 }
 
+                // Başlık Ayarı
                 modalTitle.innerHTML = `<span>${props.title || 'Detaylar'}</span>`;
 
-                // Yetki Kontrolü
+                // Düzenle/Sil Butonları
                 let canModify = false;
                 if (isAuthorized) {
                     canModify = true;
@@ -859,9 +779,110 @@
                     modalDeleteForm.style.display = 'inline-block';
                 }
 
+                // === DİNAMİK İÇERİK OLUŞTURMA ===
                 let html = '';
 
-                // --- 1. SHIPMENT ---
+                // 1. Üst Kısım: Simge ve Başlık
+                let icon = 'fa-info-circle';
+                let typeTitle = 'Etkinlik Detayları';
+
+                if (props.eventType === 'shipment') {
+                    icon = 'fa-truck';
+                    typeTitle = 'Sevkiyat Bilgileri';
+                } else if (props.eventType === 'travel') {
+                    icon = 'fa-plane';
+                    typeTitle = 'Seyahat Bilgileri';
+                } else if (props.eventType === 'maintenance') {
+                    icon = 'fa-screwdriver-wrench';
+                    typeTitle = 'Bakım Bilgileri';
+                } else if (props.eventType === 'production') {
+                    icon = 'fa-industry';
+                    typeTitle = 'Üretim Bilgileri';
+                }
+
+                html += `<div class="modal-info-card">
+                            <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">
+                                <i class="fas ${icon} me-2"></i>${typeTitle}
+                            </h6>
+                            <div class="table-responsive">
+                                <table class="table table-borderless table-sm m-0 align-middle">
+                                    <tbody>`;
+
+                // 2. DÖNGÜ VE TARİH FORMATLAMA
+                const excludeKeys = ['Açıklama', 'Notlar', 'Açıklamalar', 'Dosya Yolu'];
+
+                if (props.details && typeof props.details === 'object') {
+                    Object.entries(props.details).forEach(([key, value]) => {
+                        if (excludeKeys.includes(key)) return;
+                        if (value === null || value === undefined || value === '' || value === '-') {
+                            return;
+                        }
+
+                        let displayValue = '-';
+
+                        // SENARYO 1: Backend'den özel Badge Objesi geldiyse (Modelden gelen yapı)
+                        if (value && typeof value === 'object' && value.is_badge) {
+                            displayValue = `<span class="badge ${value.class} px-3 py-2 rounded-pill fw-normal">
+                                                ${value.text}
+                                            </span>`;
+                        }
+                        // SENARYO 2: Normal Metin veya Tarih geldiyse
+                        else if (value !== null && value !== undefined && value !== '') {
+                            const strValue = String(value).trim();
+
+                            // Tarih Kontrolü (GG.AA.YYYY SS:DD)
+                            const dateRegex = /^(\d{1,2}\.\d{1,2}\.\d{4})\s(\d{1,2}:\d{2})$/;
+                            const match = strValue.match(dateRegex);
+
+                            if (match) {
+                                displayValue = `
+                                    <div class="d-flex gap-2">
+                                        <span class="badge bg-light text-dark border border-secondary fw-normal">
+                                            <i class="fas fa-calendar-alt text-primary me-1"></i> ${match[1]}
+                                        </span>
+                                        <span class="badge bg-light text-dark border fw-normal">
+                                            <i class="fas fa-clock text-warning me-1"></i> ${match[2]}
+                                        </span>
+                                    </div>`;
+                            } else {
+                                displayValue = strValue;
+                            }
+                        }
+
+                        html += `<tr>
+                                    <td class="text-dark fw-bolder" style="width: 35%;">${key}:</td>
+                                    <td class="text-dark">${displayValue}</td>
+                                 </tr>`;
+                    });
+                }
+
+                html += `       </tbody>
+                                </table>
+                            </div>
+                         </div>`;
+
+                // 3. Dosya Varsa
+                if (props.details && props.details['Dosya Yolu']) {
+                    html += `<div class="text-center mt-3 mb-3">
+                                <a href="${props.details['Dosya Yolu']}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-paperclip me-2"></i> Dosyayı Görüntüle
+                                </a>
+                             </div>`;
+                }
+
+                // 4. Açıklama / Notlar
+                const aciklama = props.details['Açıklamalar'] || props.details['Notlar'] || props.details[
+                    'Açıklama'];
+                if (aciklama) {
+                    html += `<div class="modal-notes-box mt-3 p-3 bg-light rounded border">
+                                <div class="modal-notes-title fw-bold mb-2 text-primary">
+                                    <i class="fas fa-sticky-note me-1"></i> Açıklama / Notlar
+                                </div>
+                                <p class="mb-0 text-secondary" style="white-space: pre-wrap;">${aciklama}</p>
+                             </div>`;
+                }
+
+                // === BUTONLAR (Mevcut mantık) ===
                 if (props.eventType === 'shipment') {
                     modalExportButton.href = props.exportUrl || '#';
                     modalExportButton.style.display = 'inline-block';
@@ -871,94 +892,37 @@
                         document.getElementById('modalOnayBadgeTarih').textContent = props.details['Onay Durumu'];
                         document.getElementById('modalOnayBadgeKullanici').textContent = props.details[
                             'Onaylayan'] || '';
+
                         if (modalOnayKaldirForm) {
                             modalOnayKaldirForm.action = props.onayKaldirUrl;
                             modalOnayKaldirForm.style.display = 'inline-block';
                         }
                     } else {
-                        modalOnayForm.action = props.onayUrl;
-                        modalOnayForm.style.display = 'inline-block';
+                        if (modalOnayForm) {
+                            modalOnayForm.action = props.onayUrl;
+                            modalOnayForm.style.display = 'inline-block';
+                        }
                     }
-
-                    const isGemi = (props.details['Araç Tipi'] || '').toLowerCase().includes('gemi');
-
-                    html +=
-                        `<div class="modal-info-card"><h6 class="text-primary fw-bold mb-3"><i class="fas fa-truck me-2"></i>Araç Bilgileri</h6><div class="row">`;
-                    html +=
-                        `<div class="col-md-6"><p><strong>🚛 Araç Tipi:</strong> ${props.details['Araç Tipi'] || '-'}</p></div>`;
-                    if (!isGemi) {
-                        html +=
-                            `<div class="col-md-6"><p><strong>🔢 Plaka:</strong> ${props.details['Plaka'] || '-'}</p></div>`;
-                    } else {
-                        html +=
-                            `<div class="col-md-6"><p><strong>🚢 Gemi Adı:</strong> ${props.details['Gemi Adı'] || '-'}</p></div>`;
-                    }
-                    html += `</div></div>`;
-
-                    html +=
-                        `<div class="modal-info-card"><h6 class="text-primary fw-bold mb-3"><i class="fas fa-route me-2"></i>Rota Bilgileri</h6><div class="row">`;
-                    html +=
-                        `<div class="col-md-6"><p><strong>📍 Kalkış:</strong> ${props.details['Kalkış Noktası'] || props.details['Kalkış Limanı'] || '-'}</p></div>`;
-                    html +=
-                        `<div class="col-md-6"><p><strong>📍 Varış:</strong> ${props.details['Varış Noktası'] || props.details['Varış Limanı'] || '-'}</p></div>`;
-                    html += `</div></div>`;
-
-                    if (props.details['Dosya Yolu']) {
-                        html +=
-                            `<div class="text-center mt-3"><a href="${props.details['Dosya Yolu']}" target="_blank" class="btn btn-outline-primary"><i class="fas fa-paperclip me-2"></i> Dosyayı Görüntüle</a></div>`;
-                    }
-                }
-
-                // --- 2. TRAVEL ---
-                else if (props.eventType === 'travel') {
-                    // Güvenlik: Butonları gizle
+                } else if (props.eventType === 'travel') {
                     if (modalOnayForm) modalOnayForm.style.display = 'none';
-
-                    html += '<div class="modal-info-card">';
-                    html +=
-                        '<h6 class="text-primary fw-bold mb-3"><i class="fas fa-plane-departure me-2"></i>Seyahat Bilgileri</h6>';
-                    html += `<p><strong>✈️ Plan:</strong> ${props.details['Plan Adı'] || '-'}</p>`;
-                    html +=
-                        `<p><strong>📅 Tarih:</strong> ${props.details['Başlangıç'] || '-'} - ${props.details['Bitiş'] || '-'}</p>`;
-                    html += `<p><strong>Durum:</strong> ${props.details['Durum'] || '-'}</p>`;
-                    html += '</div>';
-
-                    if (props.url) {
+                    if (canModify && props.url) {
                         modalExportButton.href = props.url;
                         modalExportButton.target = "_blank";
                         modalExportButton.innerHTML = '<i class="fas fa-plane-departure me-2"></i> Detaya Git';
                         modalExportButton.style.display = 'inline-block';
                     }
-                }
-
-                // --- 3. DİĞER TİPLER ---
-                else {
-                    // Standart Basit Gösterim (Home için yeterli olabilir, isterseniz general-calendar'daki detaylı hali kopyalayabilirsiniz)
-                    if (props.eventType === 'service_event') {
-                        html +=
-                            `<div class="modal-info-card"><h6 class="text-primary fw-bold mb-3">Etkinlik</h6><p>${props.title}</p></div>`;
-                    } else if (props.eventType === 'production') {
-                        html +=
-                            `<div class="modal-info-card"><h6 class="text-primary fw-bold mb-3">Üretim Planı</h6><p>${props.details['Plan Başlığı'] || '-'}</p></div>`;
-                    } else if (props.eventType === 'vehicle_assignment') {
-                        html +=
-                            `<div class="modal-info-card"><h6 class="text-primary fw-bold mb-3">Araç Görevi</h6><p>${props.details['Araç'] || '-'} - ${props.details['Görev'] || '-'}</p></div>`;
+                } else if (props.eventType === 'maintenance') {
+                    if (canModify && props.url) {
+                        modalExportButton.href = props.url;
+                        modalExportButton.innerHTML = '<i class="fas fa-eye me-2"></i> Detaya Git';
+                        modalExportButton.style.display = 'inline-block';
                     }
-                }
-
-                // Notlar
-                const aciklama = props.details['Açıklamalar'] || props.details['Notlar'] || props.details[
-                    'Açıklama'];
-                if (aciklama) {
-                    html +=
-                        `<div class="modal-notes-box"><div class="modal-notes-title"><i class="fas fa-sticky-note"></i> Notlar</div><p class="mb-0">${aciklama}</p></div>`;
                 }
 
                 modalBody.innerHTML = html;
                 detailModal.show();
             }
 
-            // === FULLCALENDAR INIT ===
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 locale: 'tr',
@@ -974,7 +938,6 @@
                     timeGridDay: 'Gün',
                     listWeek: 'Liste'
                 },
-                // Orijinal CSS'e uygun ayarlar (text-wrapping için)
                 slotEventOverlap: false,
                 dayMaxEvents: 3,
                 eventMaxStack: 3,
@@ -984,19 +947,16 @@
                 slotMaxTime: '22:00:00',
                 scrollTime: '08:00:00',
                 nowIndicator: true,
-
                 eventSources: [{
-                        id: 'databaseEvents',
-                        events: eventsData
-                    },
-                    {
-                        googleCalendarId: 'tr.turkish#holiday@group.v.calendar.google.com',
-                        color: '#dc3545',
-                        textColor: 'white',
-                        className: 'fc-event-holiday',
-                        googleCalendarApiKey: 'AIzaSyAQmEWGR-krGzcCk1r8R69ER-NyZM2BeWM'
-                    }
-                ],
+                    id: 'databaseEvents',
+                    events: eventsData
+                }, {
+                    googleCalendarId: 'tr.turkish#holiday@group.v.calendar.google.com',
+                    color: '#dc3545',
+                    textColor: 'white',
+                    className: 'fc-event-holiday',
+                    googleCalendarApiKey: 'AIzaSyAQmEWGR-krGzcCk1r8R69ER-NyZM2BeWM'
+                }],
                 timeZone: appTimezone,
                 moreLinkText: function(num) {
                     return '+ ' + num + ' tane daha';
@@ -1007,8 +967,7 @@
                     minute: '2-digit',
                     hour12: false
                 },
-                eventDisplay: 'list-item', // Bu önemli: text-wrapping için list-item stili
-
+                eventDisplay: 'list-item',
                 eventClick: function(info) {
                     info.jsEvent.preventDefault();
                     if (info.event.extendedProps && info.event.extendedProps.eventType) {
@@ -1016,57 +975,40 @@
                     }
                 },
                 eventDidMount: function(info) {
-                    // 1. Önemli Etkinlik Çerçevesi
                     if (info.event.extendedProps && info.event.extendedProps.is_important) {
                         info.el.classList.add('event-important-pulse');
                     }
-
-                    // 2. Modern Tooltip Oluşturma
                     try {
-                        // İçerik Hazırlama
                         let title = info.event.title;
                         let desc = '';
-
-                        // Açıklama varsa al
                         if (info.event.extendedProps && info.event.extendedProps.details && info.event
                             .extendedProps.details['Açıklama']) {
                             desc = info.event.extendedProps.details['Açıklama'];
-                        }
-                        // Yoksa ve tarih aralığı varsa tarihleri göster (Opsiyonel)
-                        else if (info.event.start) {
+                        } else if (info.event.start) {
                             let start = info.event.start.toLocaleTimeString('tr-TR', {
                                 hour: '2-digit',
                                 minute: '2-digit'
                             });
                             if (start !== '00:00') desc = `Saat: ${start}`;
                         }
-
-                        // HTML İçeriği Oluşturma (Modern Görünüm İçin)
-                        let tooltipContent = `
-            <div class="text-start">
-                <span class="tooltip-title-styled">${title}</span>
-                ${desc ? `<span class="tooltip-desc-styled">${desc}</span>` : ''}
-            </div>
-        `;
-
+                        let tooltipContent =
+                            `<div class="text-start"><span class="tooltip-title-styled">${title}</span>${desc ? `<span class="tooltip-desc-styled">${desc}</span>` : ''}</div>`;
                         if (typeof bootstrap !== 'undefined') {
                             new bootstrap.Tooltip(info.el, {
                                 title: tooltipContent,
-                                html: true, // HTML kullanımını açtık
-                                placement: 'top', // Üstte göster
-                                trigger: 'hover', // Üzerine gelince
+                                html: true,
+                                placement: 'top',
+                                trigger: 'hover',
                                 container: 'body',
-                                customClass: 'custom-calendar-tooltip', // CSS sınıfımızı bağladık
+                                customClass: 'custom-calendar-tooltip',
                                 delay: {
                                     "show": 100,
                                     "hide": 100
-                                } // Hafif gecikme daha doğal hissettirir
+                                }
                             });
                         } else {
-                            // Yedek (Bootstrap yoksa)
                             info.el.setAttribute('title', title + (desc ? ' - ' + desc : ''));
                         }
-
                     } catch (error) {
                         console.warn('Tooltip hatası:', error);
                     }
@@ -1075,44 +1017,47 @@
             calendar.render();
             setInterval(function() {
                 console.log('Veriler arkaplanda güncelleniyor...');
-                calendar.refetchEvents(); // FullCalendar'ın sihirli fonksiyonu
+                calendar.refetchEvents();
             }, 30000);
 
             function applyCalendarFilters() {
+                const isChecked = (id) => {
+                    const el = document.getElementById(id);
+                    return el ? el.checked : true;
+                };
+                const isImportantChecked = (id) => {
+                    const el = document.getElementById(id);
+                    return el ? el.checked : false;
+                };
                 const showLojistik = document.getElementById('filterLojistik').checked;
                 const showUretim = document.getElementById('filterUretim').checked;
                 const showHizmet = document.getElementById('filterHizmet').checked;
-                const showImportant = document.getElementById('filterImportant').checked;
+                const showBakim = document.getElementById('filterBakim').checked; // YENİ
+                const showImportant = isImportantChecked('filterImportant');
 
                 let dbSource = calendar.getEventSourceById('databaseEvents');
                 if (dbSource) {
                     dbSource.remove();
                 }
+
                 const filteredDbEvents = eventsData.filter(event => {
                     const props = event.extendedProps;
                     if (!props) return true;
                     if (showImportant && !props.is_important) {
                         return false;
                     }
-                    const eventType = props.eventType;
-                    if (eventType === 'shipment') {
-                        return showLojistik;
-                    }
 
-                    if (eventType === 'production') {
-                        return showUretim;
-                    }
-                    const isHizmet = (
-                        eventType === 'service_event' ||
-                        eventType === 'vehicle_assignment' ||
-                        eventType === 'travel'
-                    );
-                    if (isHizmet) {
-                        return showHizmet;
-                    }
+                    const eventType = props.eventType;
+                    if (eventType === 'shipment') return showLojistik;
+                    if (eventType === 'production') return showUretim;
+                    if (eventType === 'maintenance') return showBakim; // YENİ MANTIK
+
+                    const isHizmet = (eventType === 'service_event' || eventType === 'vehicle_assignment' ||
+                        eventType === 'travel');
+                    if (isHizmet) return showHizmet;
+
                     return true;
                 });
-
                 calendar.addEventSource({
                     id: 'databaseEvents',
                     events: filteredDbEvents
@@ -1122,7 +1067,7 @@
             const filters = document.querySelectorAll('.calendar-filters .form-check-input');
             filters.forEach(filter => filter.addEventListener('change', applyCalendarFilters));
 
-            // === LISTENERLAR ===
+            // ... Listenerlar ...
             if (modalOnayForm) {
                 modalOnayForm.addEventListener('submit', function(e) {
                     if (!confirm('Sevkiyatın tesise ulaştığını onaylıyorsunuz?')) e.preventDefault();
@@ -1146,16 +1091,11 @@
             const urlParams = new URLSearchParams(window.location.search);
             const modalIdToOpen = urlParams.get('open_modal_id');
             const modalTypeToOpen = urlParams.get('open_modal_type');
-
             if (modalIdToOpen && modalTypeToOpen) {
                 const allEvents = calendar.getEvents();
                 const modalIdNum = parseInt(modalIdToOpen, 10);
-
-                const eventToOpen = allEvents.find(event =>
-                    event.extendedProps.id === modalIdNum &&
-                    event.extendedProps.model_type === modalTypeToOpen
-                );
-
+                const eventToOpen = allEvents.find(event => event.extendedProps.id === modalIdNum && event
+                    .extendedProps.model_type === modalTypeToOpen);
                 if (eventToOpen) {
                     console.log('URL\'den modal tetikleniyor:', eventToOpen.extendedProps);
                     openUniversalModal(eventToOpen.extendedProps);
@@ -1183,35 +1123,29 @@
                     const modelId = this.dataset.modelId;
                     const modelType = this.dataset.modelType;
                     const isChecked = this.checked;
-
                     this.disabled = true;
-
                     fetch('{{ route('calendar.toggleImportant') }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': getCsrfToken(),
-                                'Accept': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                model_id: modelId,
-                                model_type: modelType,
-                                is_important: isChecked
-                            })
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': getCsrfToken(),
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            model_id: modelId,
+                            model_type: modelType,
+                            is_important: isChecked
                         })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (!data.success) throw new Error(data.message || 'Güncelleme başarısız.');
-                            console.log('Güncelleme başarılı:', data.message);
-                            location
-                                .reload(); // Home sayfasında veri JS object içinde olduğu için reload gerekli
-                        })
-                        .catch(error => {
-                            console.error('Hata:', error);
-                            alert('Bir hata oluştu, değişiklik geri alınıyor.');
-                            this.checked = !isChecked;
-                            this.disabled = false;
-                        });
+                    }).then(response => response.json()).then(data => {
+                        if (!data.success) throw new Error(data.message || 'Güncelleme başarısız.');
+                        console.log('Güncelleme başarılı:', data.message);
+                        location.reload();
+                    }).catch(error => {
+                        console.error('Hata:', error);
+                        alert('Bir hata oluştu, değişiklik geri alınıyor.');
+                        this.checked = !isChecked;
+                        this.disabled = false;
+                    });
                 });
             }
 
@@ -1250,9 +1184,8 @@
                 }
             };
 
-            // (Grafik kodları aynen devam ediyor...)
-            // Lojistik Grafikleri
             if (departmentSlug === 'lojistik' && chartData.hourly && chartData.daily) {
+                // ... Lojistik grafikleri (değişmedi) ...
                 if (chartData.hourly.labels.length > 0 && document.querySelector("#hourly-chart-lojistik")) {
                     let hourlyOptions = {
                         ...commonChartOptions,
@@ -1288,9 +1221,8 @@
                     };
                     new ApexCharts(document.querySelector("#daily-chart-lojistik"), dailyOptions).render();
                 }
-            }
-            // Üretim
-            else if (departmentSlug === 'uretim' && chartData.weekly_plans) {
+            } else if (departmentSlug === 'uretim' && chartData.weekly_plans) {
+                // ... Üretim (değişmedi) ...
                 if (chartData.weekly_plans.labels.length > 0 && document.querySelector("#weekly-plans-chart")) {
                     let weeklyOptions = {
                         ...commonChartOptions,
@@ -1308,9 +1240,8 @@
                     };
                     new ApexCharts(document.querySelector("#weekly-plans-chart"), weeklyOptions).render();
                 }
-            }
-            // Hizmet
-            else if (departmentSlug === 'hizmet' && chartData.daily_events && chartData.daily_assignments) {
+            } else if (departmentSlug === 'hizmet' && chartData.daily_events && chartData.daily_assignments) {
+                // ... Hizmet (değişmedi) ...
                 if (chartData.daily_events.labels.length > 0 && document.querySelector("#daily-events-chart")) {
                     let eventOptions = {
                         ...commonChartOptions,
@@ -1383,7 +1314,6 @@
                     };
                     new ApexCharts(document.querySelector("#daily-events-chart"), eventOptions).render();
                 }
-
                 if (chartData.daily_assignments.labels.length > 0 && document.querySelector(
                         "#daily-assignments-chart")) {
                     let assignmentOptions = {
@@ -1456,6 +1386,28 @@
                         },
                     };
                     new ApexCharts(document.querySelector("#daily-assignments-chart"), assignmentOptions).render();
+                }
+            }
+            // === YENİ EKLENEN: BAKIM GRAFİĞİ ===
+            else if (departmentSlug === 'bakim' && chartData.maintenance_plans) {
+                if (chartData.maintenance_plans.labels.length > 0 && document.querySelector(
+                        "#maintenance-plans-chart")) {
+                    let maintenanceOptions = {
+                        ...commonChartOptions,
+                        series: [{
+                            name: 'Bakım Sayısı',
+                            data: chartData.maintenance_plans.data
+                        }],
+                        title: {
+                            ...commonChartOptions.title,
+                            text: chartData.maintenance_plans.title || 'Haftalık Bakım Yoğunluğu'
+                        },
+                        xaxis: {
+                            categories: chartData.maintenance_plans.labels
+                        },
+                        colors: ['#ED8936', '#F6AD55', '#DD6B20', '#C05621', '#9C4221'] // Turuncu Tonları
+                    };
+                    new ApexCharts(document.querySelector("#maintenance-plans-chart"), maintenanceOptions).render();
                 }
             }
         });

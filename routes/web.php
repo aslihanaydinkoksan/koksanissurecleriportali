@@ -22,6 +22,7 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\LogisticsVehicleController;
+use App\Http\Controllers\MaintenanceController;
 
 // Ana sayfa yönlendirmesi
 Route::get('/', function () {
@@ -143,6 +144,30 @@ Route::middleware(['auth'])->prefix('service')->name('service.')->group(function
 
     // Sefer Zamanları Yönetimi
     Route::resource('schedules', ServiceScheduleController::class);
+});
+// --- BAKIM BİRİMİ ROTALARI (YENİ) ---
+Route::middleware(['auth'])->prefix('maintenance')->name('maintenance.')->group(function () {
+
+    // MAKİNE VE VARLIK YÖNETİMİ
+    Route::resource('assets', \App\Http\Controllers\MaintenanceAssetController::class);
+
+    // 1. Standart CRUD İşlemleri
+    Route::get('/', [MaintenanceController::class, 'index'])->name('index');
+    Route::get('/create', [MaintenanceController::class, 'create'])->name('create');
+    Route::post('/', [MaintenanceController::class, 'store'])->name('store');
+    Route::get('/{maintenance_plan}', [MaintenanceController::class, 'show'])->name('show');
+    Route::get('/{maintenance_plan}/edit', [MaintenanceController::class, 'edit'])->name('edit');
+    Route::put('/{maintenance_plan}', [MaintenanceController::class, 'update'])->name('update');
+    Route::delete('/{maintenance_plan}', [MaintenanceController::class, 'destroy'])->name('destroy');
+
+    // 2. Özel Sayaç İşlemleri (Timer)
+    Route::post('/{id}/start-timer', [MaintenanceController::class, 'startTimer'])->name('start-timer');
+    Route::post('/{id}/stop-timer', [MaintenanceController::class, 'stopTimer'])->name('stop-timer');
+
+    // 3. Dosya İşlemleri
+    Route::post('/{id}/upload-file', [MaintenanceController::class, 'uploadFile'])->name('upload-file');
+    Route::delete('/file/{file_id}', [MaintenanceController::class, 'deleteFile'])->name('delete-file');
+
 });
 
 // --- Genel KÖKSAN Takvimi Rotası ---

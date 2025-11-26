@@ -251,6 +251,15 @@
             color: #F56565;
         }
 
+        .kpi-bakim .kpi-icon {
+            color: #ED8936;
+            /* Turuncu */
+        }
+
+        .icon-bakim {
+            color: #ED8936 !important;
+        }
+
         .kpi-sistem .kpi-icon {
             color: #FBD38D;
         }
@@ -445,6 +454,15 @@
                             <a href="<?php echo e(route('service.assignments.create')); ?>"
                                 class="btn btn-lg btn-outline-info d-flex align-items-center justify-content-between p-3">
                                 <span><i class="fa-solid fa-car-side me-2"></i> Yeni Araç Görevi</span>
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </a>
+                        <?php endif; ?>
+                        
+                        <?php if(Route::has('maintenance.create') && ($isAdmin || $userDept === 'bakim')): ?>
+                            <a href="<?php echo e(route('maintenance.create')); ?>"
+                                class="btn btn-lg btn-outline-secondary d-flex align-items-center justify-content-between p-3"
+                                style="border-color: #ED8936; color: #C05621; background-color: rgba(237, 137, 54, 0.05);">
+                                <span><i class="fa-solid fa-screwdriver-wrench me-2"></i> Yeni Bakım Planı</span>
                                 <i class="fa-solid fa-chevron-right"></i>
                             </a>
                         <?php endif; ?>
@@ -717,6 +735,15 @@
                                         <div class="kpi-label">Aktif Araç Görevi</div>
                                     </div>
                                 </div>
+                                
+                                <div class="col-lg col-md-4 col-6">
+                                    <div class="kpi-card kpi-bakim h-100">
+                                        <div class="kpi-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+                                        
+                                        <div class="kpi-value"><?php echo e($kpiData['bakim_sayisi'] ?? 0); ?></div>
+                                        <div class="kpi-label">Planlanan Bakım</div>
+                                    </div>
+                                </div>
 
                                 
                                 <div class="col-lg col-md-6 col-12">
@@ -728,150 +755,451 @@
                                 </div>
                             </div>
                         <?php endif; ?>
-
                         
-                        <?php if($todayItems->isNotEmpty()): ?>
-                            <h4 class="mt-4">
-                                <i class="fa-solid fa-clock me-1" style="color: #A78BFA;"></i>
-                                <?php echo e($welcomeTitle); ?>
+                        <div class="row">
+                            <div class="col-12">
 
-                            </h4>
+                                <?php
+                                    // İkon Tanımlamaları
+                                    $iconMap = [
+                                        'gemi' => ['icon' => 'fa-ship', 'class' => 'icon-gemi'],
+                                        'tır' => ['icon' => 'fa-truck-moving', 'class' => 'icon-tir'],
+                                        'tir' => ['icon' => 'fa-truck-moving', 'class' => 'icon-tir'],
+                                        'kamyon' => ['icon' => 'fa-truck', 'class' => 'icon-kamyon'],
+                                        'uretim' => ['icon' => 'fa-industry', 'class' => 'icon-uretim'],
+                                        'aracgorevi' => ['icon' => 'fa-car-side', 'class' => 'icon-aracgorevi'],
+                                        'etkinlik' => ['icon' => 'fa-calendar-star', 'class' => 'icon-etkinlik-genel'],
+                                        'egitim' => ['icon' => 'fa-chalkboard-user', 'class' => 'icon-egitim'],
+                                        'toplanti' => ['icon' => 'fa-users', 'class' => 'icon-toplanti'],
+                                        'misafir_karsilama' => [
+                                            'icon' => 'fa-people-arrows',
+                                            'class' => 'icon-misafir',
+                                        ],
+                                        'musteri_ziyareti' => ['icon' => 'fa-hands-helping', 'class' => 'icon-musteri'],
+                                        'fuar' => ['icon' => 'fa-store', 'class' => 'icon-fuar'],
+                                        'gezi' => ['icon' => 'fa-map-signs', 'class' => 'icon-gezi'],
+                                        'seyahat' => ['icon' => 'fa-route', 'class' => 'icon-seyahat'],
+                                        'maintenance_plan' => [
+                                            'icon' => 'fa-screwdriver-wrench',
+                                            'class' => 'icon-bakim',
+                                        ],
+                                        'diger' => ['icon' => 'fa-calendar-star', 'class' => 'icon-etkinlik-genel'],
+                                    ];
 
-                            <?php
-                                $iconMap = [
-                                    'gemi' => ['icon' => 'fa-ship', 'class' => 'icon-gemi'],
-                                    'tır' => ['icon' => 'fa-truck-moving', 'class' => 'icon-tir'],
-                                    'tir' => ['icon' => 'fa-truck-moving', 'class' => 'icon-tir'],
-                                    'kamyon' => ['icon' => 'fa-truck', 'class' => 'icon-kamyon'],
-                                    'uretim' => ['icon' => 'fa-industry', 'class' => 'icon-uretim'],
-                                    'aracgorevi' => ['icon' => 'fa-car-side', 'class' => 'icon-aracgorevi'],
-                                    'etkinlik' => ['icon' => 'fa-calendar-star', 'class' => 'icon-etkinlik-genel'],
-                                    'egitim' => ['icon' => 'fa-chalkboard-user', 'class' => 'icon-egitim'],
-                                    'toplanti' => ['icon' => 'fa-users', 'class' => 'icon-toplanti'],
-                                    'misafir_karsilama' => ['icon' => 'fa-people-arrows', 'class' => 'icon-misafir'],
-                                    'musteri_ziyareti' => ['icon' => 'fa-hands-helping', 'class' => 'icon-musteri'],
-                                    'fuar' => ['icon' => 'fa-store', 'class' => 'icon-fuar'],
-                                    'gezi' => ['icon' => 'fa-map-signs', 'class' => 'icon-gezi'],
-                                    'seyahat' => ['icon' => 'fa-route', 'class' => 'icon-seyahat'],
-                                    'diger' => ['icon' => 'fa-calendar-star', 'class' => 'icon-etkinlik-genel'],
-                                ];
-                            ?>
+                                    // 3 Grubu Tanımlıyoruz
+                                    $groups = [
+                                        'today' => [
+                                            'title' => 'Bugünün Planı',
+                                            'data' => $todayItems ?? collect([]),
+                                            'icon' => 'fa-calendar-check',
+                                            'color' => '#4FD1C5',
+                                        ],
+                                        'week' => [
+                                            'title' => 'Bu Haftanın Planı',
+                                            'data' => $weeklyItems ?? collect([]),
+                                            'icon' => 'fa-calendar-week',
+                                            'color' => '#A78BFA',
+                                        ],
+                                        'month' => [
+                                            'title' => 'Bu Ayın Planı',
+                                            'data' => $monthlyItems ?? collect([]),
+                                            'icon' => 'fa-calendar-days',
+                                            'color' => '#F093FB',
+                                        ],
+                                    ];
+                                ?>
 
-                            <div class="list-group mt-3">
-                                <?php $__empty_1 = true; $__currentLoopData = $todayItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                                    <?php
-                                        $icon = 'fa-calendar-day';
-                                        $iconClass = 'text-muted';
-                                        $baslik = 'Kayıt';
-                                        $detay = '';
-                                        $gosterimSaat = '-';
-                                        $gosterimTarih = '';
-                                        $modalId = $item->id;
-                                        $modalType = 'unknown';
+                                
+                                <div class="card shadow-sm border-0"
+                                    style="background-color: rgba(255, 255, 255, 0.6); backdrop-filter: blur(5px);">
+                                    <div class="card-body p-0">
 
-                                        if ($item instanceof \App\Models\ProductionPlan) {
-                                            $icon = 'fa-industry';
-                                            $iconClass = 'icon-uretim';
-                                            $baslik = $item->plan_title;
-                                            $gosterimSaat = 'Haftalık Plan';
-                                            $gosterimTarih = $item->week_start_date->format('d.m.Y');
-                                            $detay = 'Üretim Planı';
-                                            $modalType = 'production_plan';
-                                        } elseif ($item instanceof \App\Models\Shipment) {
-                                            $type = strtolower($item->arac_tipi ?? 'tir');
-                                            $iconData = $iconMap[$type] ?? $iconMap['tir'];
-                                            $icon = $iconData['icon'];
-                                            $iconClass = $iconData['class'];
-                                            $baslik = 'Sevkiyat: ' . $item->kargo_icerigi;
-                                            if ($item->tahmini_varis_tarihi) {
-                                                $gosterimSaat = $item->tahmini_varis_tarihi->format('H:i');
-                                                $gosterimTarih = $item->tahmini_varis_tarihi->format('d.m.Y');
-                                            }
-                                            $detay = 'Araç: ' . ($item->arac_tipi ?? '-');
-                                            $modalType = 'shipment';
-                                        } elseif ($item instanceof \App\Models\Event) {
-                                            $type = $item->event_type ?? 'diger';
-                                            $iconData = $iconMap[$type] ?? $iconMap['etkinlik'];
-                                            $icon = $iconData['icon'];
-                                            $iconClass = $iconData['class'];
-                                            $baslik = $item->title;
-                                            if ($item->start_datetime) {
-                                                $gosterimSaat = $item->start_datetime->format('H:i');
-                                                $gosterimTarih = $item->start_datetime->format('d.m.Y');
-                                            }
-                                            $detay = $item->location;
-                                            $modalType = 'event';
-                                        } elseif ($item instanceof \App\Models\VehicleAssignment) {
-                                            $icon = 'fa-car-side';
-                                            $iconClass = 'icon-aracgorevi';
-                                            $baslik = $item->task_description;
-                                            if ($item->start_time) {
-                                                $gosterimSaat = $item->start_time->format('H:i');
-                                                $gosterimTarih = $item->start_time->format('d.m.Y');
-                                            }
-                                            $detay = $item->vehicle->plate_number ?? '-';
-                                            $modalType = 'vehicle_assignment';
-                                        } elseif ($item instanceof \App\Models\Travel) {
-                                            $icon = 'fa-route';
-                                            $iconClass = 'icon-seyahat';
-                                            $baslik = $item->name;
-                                            if ($item->start_date) {
-                                                $gosterimSaat = 'Seyahat'; // Saat yerine bilgi
-                                                $gosterimTarih = $item->start_date->format('d.m.Y');
-                                            }
-                                            $detay = $item->status == 'planned' ? 'Planlı' : 'Tamamlandı';
-                                            $modalType = 'travel';
-                                        }
-                                    ?>
+                                        <?php $__currentLoopData = $groups; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $group): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            
+                                            <?php if($key === 'month'): ?>
+                                                <div id="monthly-plan-wrapper" class="d-none border-top">
+                                            <?php endif; ?>
 
-                                    <div class="list-group-item d-flex align-items-center py-3"
-                                        style="background-color: transparent;">
-                                        <div class="me-3">
-                                            <i
-                                                class="fa-solid <?php echo e($icon); ?> fa-2x vehicle-icon <?php echo e($iconClass); ?>"></i>
-                                        </div>
-                                        <div class="d-flex flex-column flex-grow-1">
-                                            <h5 class="mb-1 fw-bold"><?php echo e($baslik); ?></h5>
-                                            <p class="mb-0 text-muted"><?php echo e($detay); ?></p>
-                                        </div>
-                                        <div class="d-flex flex-column align-items-end ms-3" style="min-width: 80px;">
-                                            <span class="fw-bold text-dark fs-5"><?php echo e($gosterimSaat); ?></span>
-                                            <span class="text-muted small"
-                                                style="font-size: 0.75rem;"><?php echo e($gosterimTarih); ?></span>
-                                        </div>
-                                        <a href="<?php echo e(route('home')); ?>?open_modal_id=<?php echo e($modalId); ?>&open_modal_type=<?php echo e($modalType); ?>"
-                                            class="btn btn-outline-secondary btn-sm ms-3">
-                                            <i class="fa-solid fa-arrow-right-long"></i>
-                                        </a>
+                                            
+                                            <div class="p-3 bg-light bg-opacity-50 d-flex align-items-center">
+                                                <i class="fa-solid <?php echo e($group['icon']); ?> me-2"
+                                                    style="color: <?php echo e($group['color']); ?>;"></i>
+                                                <h6 class="mb-0 fw-bold text-uppercase" style="color: #555;">
+                                                    <?php echo e($group['title']); ?></h6>
+                                                <span
+                                                    class="badge bg-secondary ms-2 rounded-pill"><?php echo e(count($group['data'])); ?></span>
+                                            </div>
+
+                                            
+                                            <div class="list-group list-group-flush mb-2">
+                                                <?php $__empty_1 = true; $__currentLoopData = $group['data']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                                                    <?php
+                                                        // --- POLİMORFİK VERİ İŞLEME ---
+                                                        $icon = 'fa-calendar-day';
+                                                        $iconClass = 'text-muted';
+                                                        $baslik = 'Kayıt';
+                                                        $detay = '';
+                                                        $gosterimSaat = '-';
+                                                        $gosterimTarih = '';
+                                                        $modalId = $item->id;
+                                                        $modalType = 'unknown';
+
+                                                        if ($item instanceof \App\Models\ProductionPlan) {
+                                                            $icon = 'fa-industry';
+                                                            $iconClass = 'icon-uretim';
+                                                            $baslik = $item->plan_title;
+                                                            $gosterimSaat = 'Haftalık';
+                                                            $gosterimTarih = $item->week_start_date->format('d.m.Y');
+                                                            $detay = 'Üretim Planı';
+                                                            $modalType = 'production_plan';
+                                                        } elseif ($item instanceof \App\Models\Shipment) {
+                                                            $type = strtolower($item->arac_tipi ?? 'tir');
+                                                            $iconData = $iconMap[$type] ?? $iconMap['tir'];
+                                                            $icon = $iconData['icon'];
+                                                            $iconClass = $iconData['class'];
+                                                            $baslik = 'Sevkiyat: ' . $item->kargo_icerigi;
+                                                            if ($item->tahmini_varis_tarihi) {
+                                                                $gosterimSaat = $item->tahmini_varis_tarihi->format(
+                                                                    'H:i',
+                                                                );
+                                                                $gosterimTarih = $item->tahmini_varis_tarihi->format(
+                                                                    'd.m.Y',
+                                                                );
+                                                            }
+                                                            $detay = 'Araç: ' . ($item->arac_tipi ?? '-');
+                                                            $modalType = 'shipment';
+                                                        } elseif ($item instanceof \App\Models\MaintenancePlan) {
+                                                            $icon = 'fa-screwdriver-wrench';
+                                                            $iconClass = 'icon-bakim';
+                                                            $baslik = 'Bakım: ' . $item->title;
+                                                            $gosterimSaat = $item->planned_start_date->format('H:i');
+                                                            $gosterimTarih = $item->planned_start_date->format('d.m.Y');
+                                                            $detay = $item->asset->name ?? 'Bilinmeyen Varlık';
+                                                            $modalType = 'maintenance_plan';
+                                                        } elseif ($item instanceof \App\Models\Event) {
+                                                            $type = $item->event_type ?? 'diger';
+                                                            $iconData = $iconMap[$type] ?? $iconMap['etkinlik'];
+                                                            $icon = $iconData['icon'];
+                                                            $iconClass = $iconData['class'];
+                                                            $baslik = $item->title;
+                                                            if ($item->start_datetime) {
+                                                                $gosterimSaat = $item->start_datetime->format('H:i');
+                                                                $gosterimTarih = $item->start_datetime->format('d.m.Y');
+                                                            }
+                                                            $detay = $item->location;
+                                                            $modalType = 'event';
+                                                        } elseif ($item instanceof \App\Models\VehicleAssignment) {
+                                                            $icon = 'fa-car-side';
+                                                            $iconClass = 'icon-aracgorevi';
+                                                            $baslik = $item->task_description;
+                                                            if ($item->start_time) {
+                                                                $gosterimSaat = $item->start_time->format('H:i');
+                                                                $gosterimTarih = $item->start_time->format('d.m.Y');
+                                                            }
+                                                            $detay = $item->vehicle->plate_number ?? '-';
+                                                            $modalType = 'vehicle_assignment';
+                                                        } elseif ($item instanceof \App\Models\Travel) {
+                                                            $icon = 'fa-route';
+                                                            $iconClass = 'icon-seyahat';
+                                                            $baslik = $item->name;
+                                                            if ($item->start_date) {
+                                                                $gosterimSaat = 'Seyahat';
+                                                                $gosterimTarih = $item->start_date->format('d.m.Y');
+                                                            }
+                                                            $detay =
+                                                                $item->status == 'planned' ? 'Planlı' : 'Tamamlandı';
+                                                            $modalType = 'travel';
+                                                        }
+                                                    ?>
+
+                                                    <div
+                                                        class="list-group-item d-flex align-items-center py-2 border-0 border-bottom">
+                                                        <div class="me-3">
+                                                            <div class="d-flex align-items-center justify-content-center rounded-circle"
+                                                                style="width: 40px; height: 40px; background-color: rgba(255,255,255,0.8);">
+                                                                <i
+                                                                    class="fa-solid <?php echo e($icon); ?> <?php echo e($iconClass); ?>"></i>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            <h6 class="mb-0 text-dark fw-bold"
+                                                                style="font-size: 0.95rem;"><?php echo e($baslik); ?></h6>
+                                                            <small class="text-muted"><?php echo e($detay); ?></small>
+                                                        </div>
+                                                        <div class="text-end ms-3">
+                                                            <span
+                                                                class="d-block fw-bold text-dark small"><?php echo e($gosterimSaat); ?></span>
+                                                            <span class="text-muted"
+                                                                style="font-size: 0.65rem;"><?php echo e($gosterimTarih); ?></span>
+                                                        </div>
+                                                        <a href="<?php echo e(route('home')); ?>?open_modal_id=<?php echo e($modalId); ?>&open_modal_type=<?php echo e($modalType); ?>"
+                                                            class="btn btn-sm ms-2 text-muted">
+                                                            <i class="fa-solid fa-chevron-right"></i>
+                                                        </a>
+                                                    </div>
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                                                    <div class="p-3 text-center text-muted small fst-italic">
+                                                        Bu dönem için kayıt bulunamadı.
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+
+                                            
+                                            <?php if($key === 'month'): ?>
                                     </div>
-                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                                    <div class="alert alert-info">Kayıt bulunamadı.</div>
-                                <?php endif; ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
+                                    <?php endif; ?>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-                
-                <?php if(isset($chartData) && !empty($chartData)): ?>
-                    <div class="card create-shipment-card">
-                        <div class="card-header">
-                            📊 <?php echo e($chartTitle ?? 'Genel Veri Akışı'); ?>
+                                </div>
 
-                        </div>
-                        <div class="card-body">
-                            <div class="sankey-container-wrapper">
-                                <div id="sankey-chart" data-sankey='<?php echo json_encode($chartData, 15, 512) ?>'
-                                    style="width: 100%; height: 500px;">
-                                    <p class="text-center text-muted p-5">Grafik
-                                        yükleniyor...</p>
+                                
+                                <div class="card-footer bg-transparent border-0 text-center py-3">
+                                    <button id="toggle-month-btn"
+                                        class="btn btn-outline-secondary btn-sm rounded-pill px-4">
+                                        <i class="fa-solid fa-chevron-down me-2"></i>
+                                        <span>Aylık Planı Göster</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                <?php endif; ?>
+
+                    
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const btn = document.getElementById('toggle-month-btn');
+                            const wrapper = document.getElementById('monthly-plan-wrapper');
+                            const span = btn.querySelector('span');
+                            const icon = btn.querySelector('i');
+
+                            let isOpen = false;
+
+                            btn.addEventListener('click', function() {
+                                if (!isOpen) {
+                                    // Aç
+                                    wrapper.classList.remove('d-none');
+                                    span.textContent = "Aylık Planı Gizle";
+                                    icon.classList.remove('fa-chevron-down');
+                                    icon.classList.add('fa-chevron-up');
+
+                                    // Kaydır (Opsiyonel)
+                                    wrapper.scrollIntoView({
+                                        behavior: 'smooth',
+                                        block: 'start'
+                                    });
+                                } else {
+                                    // Kapat
+                                    wrapper.classList.add('d-none');
+                                    span.textContent = "Aylık Planı Göster";
+                                    icon.classList.remove('fa-chevron-up');
+                                    icon.classList.add('fa-chevron-down');
+                                }
+                                isOpen = !isOpen;
+                            });
+                        });
+                    </script>
+
+                    
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const titleSpan = document.getElementById('dynamic-title');
+
+                            // Views
+                            const views = {
+                                today: document.getElementById('view-today'),
+                                week: document.getElementById('view-week'),
+                                month: document.getElementById('view-month')
+                            };
+
+                            // Buttons
+                            const btnToday = document.getElementById('btn-toggle-today');
+                            const btnMonth = document.getElementById('btn-toggle-month');
+
+                            // State (Hangi görünüm aktif?)
+                            let currentView = 'week';
+
+                            // Yardımcı Fonksiyon: Görünüm Değiştir
+                            function switchView(target) {
+                                // 1. Tüm listeleri gizle
+                                Object.values(views).forEach(el => el.classList.add('d-none'));
+
+                                // 2. Hedef listeyi göster
+                                views[target].classList.remove('d-none');
+                                // Animasyon
+                                views[target].style.opacity = 0;
+                                setTimeout(() => {
+                                    views[target].style.transition = 'opacity 0.3s ease';
+                                    views[target].style.opacity = 1;
+                                }, 10);
+
+                                // 3. Başlığı ve Butonları Güncelle
+                                if (target === 'week') {
+                                    titleSpan.textContent = "Bu Haftanın Planı";
+
+                                    // Butonları resetle
+                                    resetButton(btnToday, 'Bugünü Göster', 'btn-outline-primary', 'fa-calendar-check');
+                                    resetButton(btnMonth, 'Bu Ayı Göster', 'btn-outline-secondary', 'fa-calendar-days');
+                                } else if (target === 'today') {
+                                    titleSpan.textContent = "Bugünün Planı";
+
+                                    // Bugün butonu "Geri Dön" olur, Ay butonu standart kalır
+                                    setBackButton(btnToday);
+                                    resetButton(btnMonth, 'Bu Ayı Göster', 'btn-outline-secondary', 'fa-calendar-days');
+                                } else if (target === 'month') {
+                                    titleSpan.textContent = "Bu Ayın Planı";
+
+                                    // Ay butonu "Geri Dön" olur, Bugün butonu standart kalır
+                                    resetButton(btnToday, 'Bugünü Göster', 'btn-outline-primary', 'fa-calendar-check');
+                                    setBackButton(btnMonth);
+                                }
+
+                                currentView = target;
+                            }
+
+                            // Buton Yardımcıları
+                            function resetButton(btn, text, colorClass, iconClass) {
+                                btn.querySelector('.text').textContent = text;
+                                btn.querySelector('i').className = `fa-regular ${iconClass} me-2`;
+                                btn.className = `btn ${colorClass} rounded-pill px-4 py-2 fw-bold shadow-sm`;
+                            }
+
+                            function setBackButton(btn) {
+                                btn.querySelector('.text').textContent = "Haftalık Plana Dön";
+                                btn.querySelector('i').className = "fa-solid fa-arrow-left me-2";
+                                btn.className =
+                                    "btn btn-dark rounded-pill px-4 py-2 fw-bold shadow-sm"; // Geri dön butonu belirgin olsun
+                            }
+
+                            // --- CLICK EVENTS ---
+
+                            // 1. BUGÜN BUTONU
+                            btnToday.addEventListener('click', function() {
+                                if (currentView === 'today') {
+                                    switchView('week'); // Zaten bugündeysek haftaya dön
+                                } else {
+                                    switchView('today');
+                                }
+                            });
+
+                            // 2. AY BUTONU
+                            btnMonth.addEventListener('click', function() {
+                                if (currentView === 'month') {
+                                    switchView('week'); // Zaten aydayısak haftaya dön
+                                } else {
+                                    switchView('month');
+                                }
+                            });
+                        });
+                    </script>
+
+                    
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const toggleBtn = document.getElementById('toggle-view-btn');
+                            const btnText = document.getElementById('btn-text');
+                            const titleSpan = document.getElementById('dynamic-title');
+
+                            const weekView = document.getElementById('view-week');
+                            const monthView = document.getElementById('view-month');
+
+                            let isWeekly = true; // Varsayılan durum: Haftalık
+
+                            toggleBtn.addEventListener('click', function() {
+                                if (isWeekly) {
+                                    // Haftalıktan -> Aylığa Geç
+                                    weekView.classList.add('d-none');
+                                    monthView.classList.remove('d-none');
+
+                                    // Animasyon
+                                    monthView.style.opacity = 0;
+                                    setTimeout(() => {
+                                        monthView.style.transition = 'opacity 0.3s ease';
+                                        monthView.style.opacity = 1;
+                                    }, 10);
+
+                                    titleSpan.textContent = "Bu Ayın Planı";
+                                    btnText.textContent = "Haftalık Plana Dön";
+                                    this.classList.replace('btn-outline-primary',
+                                        'btn-outline-secondary'); // Buton rengini biraz değiştir
+                                } else {
+                                    // Aylıktan -> Haftalığa Geç
+                                    monthView.classList.add('d-none');
+                                    weekView.classList.remove('d-none');
+
+                                    titleSpan.textContent = "Bu Haftanın Planı";
+                                    btnText.textContent = "Bu Ayın Planını Gör";
+                                    this.classList.replace('btn-outline-secondary', 'btn-outline-primary');
+                                }
+
+                                isWeekly = !isWeekly; // Durumu tersine çevir
+                            });
+                        });
+                    </script>
+
+                    
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const filterSelect = document.getElementById('timeFilter');
+                            const titleSpan = document.getElementById('dynamic-title');
+
+                            // Başlık haritası
+                            const titles = {
+                                'today': 'Bugünün Planı',
+                                'week': 'Bu Haftanın Planı',
+                                'month': 'Bu Ayın Planı'
+                            };
+
+                            filterSelect.addEventListener('change', function() {
+                                const selectedValue = this.value;
+
+                                // 1. Tüm listeleri gizle
+                                document.querySelectorAll('.task-list-view').forEach(el => {
+                                    el.classList.add('d-none');
+                                });
+
+                                // 2. Seçili olanı göster (Fade efekti için basit bir mantık)
+                                const activeList = document.getElementById('view-' + selectedValue);
+                                if (activeList) {
+                                    activeList.classList.remove('d-none');
+
+                                    // Küçük bir animasyon efekti (isteğe bağlı)
+                                    activeList.style.opacity = 0;
+                                    setTimeout(() => {
+                                        activeList.style.transition = 'opacity 0.3s ease';
+                                        activeList.style.opacity = 1;
+                                    }, 10);
+                                }
+
+                                // 3. Başlığı güncelle
+                                if (titleSpan && titles[selectedValue]) {
+                                    titleSpan.textContent = titles[selectedValue];
+                                }
+                            });
+                        });
+                    </script>
+                </div>
             </div>
+
+            
+            <?php if(isset($chartData) && !empty($chartData)): ?>
+                <div class="card create-shipment-card">
+                    <div class="card-header">
+                        📊 <?php echo e($chartTitle ?? 'Genel Veri Akışı'); ?>
+
+                    </div>
+                    <div class="card-body">
+                        <div class="sankey-container-wrapper">
+                            <div id="sankey-chart" data-sankey='<?php echo json_encode($chartData, 15, 512) ?>'
+                                style="width: 100%; height: 500px;">
+                                <p class="text-center text-muted p-5">Grafik
+                                    yükleniyor...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
+    </div>
     </div>
 <?php $__env->stopSection(); ?>
 

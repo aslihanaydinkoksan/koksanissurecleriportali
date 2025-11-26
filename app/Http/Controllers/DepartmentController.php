@@ -97,9 +97,9 @@ class DepartmentController extends Controller
     public function destroy(Department $department)
     {
         // Ana departmanların silinmesini engelle (Ekstra koruma)
-        if (in_array($department->slug, ['lojistik', 'uretim', 'hizmet'])) {
+        if (in_array($department->slug, ['lojistik', 'uretim', 'hizmet', 'bakim'])) {
             return redirect()->route('departments.index')
-                ->with('error', 'Ana sistem departmanları (lojistik, üretim, hizmet) silinemez.');
+                ->with('error', 'Ana sistem departmanları (lojistik, üretim, hizmet, bakım) silinemez.');
         }
 
         try {

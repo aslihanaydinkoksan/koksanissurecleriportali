@@ -3,7 +3,7 @@
 
 @push('styles')
     <style>
-        /* === 1. GENEL SAYFA VE ARKA PLAN === */
+        /* === 1. SAYFA VE LAYOUT === */
         #app>main.py-4 {
             padding: 2.5rem 0 !important;
             min-height: calc(100vh - 72px);
@@ -26,94 +26,25 @@
             }
         }
 
-        /* === 2. FULLCALENDAR MODERNİZASYONU (Hizalama Düzeltmeleri) === */
-        #calendar {
-            background: rgba(255, 255, 255, 0.6);
-            border-radius: 1.25rem;
-            padding: 15px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+        .wide-container {
+            max-width: 1600px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
-        /* Hücre Yükseklikleri Eşitlensin */
-        .fc .fc-daygrid-day-frame {
-            min-height: 120px;
-            transition: background-color 0.2s;
-        }
-
-        /* Bugünün Rengi */
-        .fc .fc-daygrid-day.fc-day-today {
-            background-color: rgba(102, 126, 234, 0.08) !important;
-        }
-
-        /* Etkinlik Kutuları - Tek Satır ve Düzenli */
-        .fc-event {
-            border: none !important;
-            margin: 2px 4px !important;
-            padding: 3px 6px;
-            font-size: 0.85rem;
-            border-radius: 6px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .fc-event:hover {
-            transform: scale(1.02);
-            z-index: 50;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Metin Taşmasını Engelle (...) */
-        .fc-event-main {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: block !important;
-            font-weight: 600;
-        }
-
-        .fc-event-time {
-            font-weight: 700;
-            margin-right: 5px;
-            opacity: 0.8;
-            font-size: 0.8em;
-        }
-
-        /* "+ Daha Fazla" Linki */
-        .fc-daygrid-more-link {
-            font-weight: 700;
-            color: #667EEA !important;
-            background: rgba(102, 126, 234, 0.1);
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 0.75rem;
-            text-decoration: none;
-            display: inline-block;
-            margin-top: 2px;
-        }
-
-        /* FullCalendar Header Butonları */
-        .fc .fc-button-primary {
-            background: linear-gradient(135deg, #667EEA, #764BA2);
-            border: none;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-        }
-
-        .fc .fc-button-primary:hover {
-            background: linear-gradient(135deg, #764BA2, #667EEA);
-            transform: translateY(-1px);
-        }
-
-        /* === 3. KART VE TABLO TASARIMLARI === */
+        /* === 2. KART TASARIMLARI === */
         .create-shipment-card {
             border-radius: 1.25rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.4);
             background-color: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(10px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .create-shipment-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
         }
 
         .create-shipment-card .card-header {
@@ -126,7 +57,129 @@
             border-radius: 1.25rem 1.25rem 0 0;
         }
 
-        /* === 4. MODAL TASARIMI (ESKİ CSS'LER GERİ GELDİ) === */
+        .create-shipment-card .card-body {
+            padding: 1.5rem;
+        }
+
+        /* === 3. FULLCALENDAR İYİLEŞTİRMELERİ === */
+        #calendar {
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 1rem;
+            padding: 10px;
+        }
+
+        .fc .fc-daygrid-day-frame {
+            min-height: 100px;
+        }
+
+        .fc .fc-daygrid-day.fc-day-today {
+            background-color: rgba(102, 126, 234, 0.08) !important;
+        }
+
+        .fc-event {
+            border: none !important;
+            margin: 1px 2px !important;
+            padding: 3px 6px;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .fc-event:hover {
+            transform: scale(1.03);
+            z-index: 50;
+        }
+
+        .fc-event-main {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block !important;
+        }
+
+        .fc-daygrid-more-link {
+            color: #667EEA !important;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-decoration: none;
+        }
+
+        .fc .fc-button-primary {
+            background: linear-gradient(135deg, #667EEA, #764BA2);
+            border: none;
+            font-weight: 600;
+        }
+
+        /* === 4. BUTON VE ALERT STİLLERİ === */
+        .btn-animated-gradient {
+            background: linear-gradient(-45deg, #667EEA, #F093FB, #4FD1C5, #FBD38D);
+            background-size: 400% 400%;
+            animation: gradientWave 18s ease infinite;
+            border: none;
+            color: white;
+            font-weight: 700;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+        }
+
+        .btn-animated-gradient:hover {
+            color: white;
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #4FD1C5, #38B2AC);
+            color: white !important;
+            border: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #718096, #4a5568);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667EEA, #764BA2);
+            border: none;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #FC8181, #F56565);
+            color: white;
+            border: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .alert {
+            border-radius: 1rem;
+            border: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .alert-success {
+            background: rgba(72, 187, 120, 0.15);
+            color: #2f855a;
+            border-left: 4px solid #48bb78;
+        }
+
+        .alert-danger {
+            background: rgba(245, 101, 101, 0.15);
+            color: #c53030;
+            border-left: 4px solid #f56565;
+        }
+
+        /* === 5. MODAL STİLLERİ === */
         .modal-backdrop.show {
             background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(8px);
@@ -159,18 +212,8 @@
             pointer-events: none;
         }
 
-        #detailModal .modal-title {
-            font-weight: 700;
-            font-size: 1.75rem;
-            z-index: 1;
-            display: flex;
-            gap: 0.75rem;
-            align-items: center;
-        }
-
         #detailModal .btn-close {
-            background-color: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.25);
+            background-color: rgba(255, 255, 255, 0.2);
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -179,17 +222,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 1;
         }
 
         #detailModal .btn-close:hover {
-            background-color: rgba(255, 255, 255, 0.3);
+            background-color: rgba(255, 255, 255, 0.4);
             transform: rotate(90deg);
-        }
-
-        #detailModal .modal-body {
-            padding: 2.5rem;
-            background: #fafbfc;
         }
 
         .modal-info-card {
@@ -197,8 +234,8 @@
             border-radius: 16px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
             border: 1px solid rgba(102, 126, 234, 0.15);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
             transition: all 0.3s ease;
         }
 
@@ -207,43 +244,18 @@
             box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
         }
 
-        /* === 5. BUTON STİLLERİ (GERİ GETİRİLEN KISIM) === */
-        .btn {
-            border-radius: 0.75rem;
-            font-weight: 600;
-            padding: 0.625rem 1.25rem;
-            transition: all 0.2s ease;
-            border: none;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-        }
-
-        /* Modal Edit Butonu */
         #modalEditButton {
             background: linear-gradient(135deg, #ffa726, #fb8c00);
             color: white;
             box-shadow: 0 4px 15px rgba(255, 167, 38, 0.4);
         }
 
-        #modalEditButton:hover {
-            box-shadow: 0 8px 25px rgba(255, 167, 38, 0.5);
-        }
-
-        /* Modal Export Butonu */
         #modalExportButton {
             background: linear-gradient(135deg, #4fd1c5, #38b2ac);
             color: white;
             box-shadow: 0 4px 15px rgba(79, 209, 197, 0.4);
         }
 
-        #modalExportButton:hover {
-            box-shadow: 0 8px 25px rgba(79, 209, 197, 0.5);
-        }
-
-        /* Modal Onay/Sil/İptal Butonları */
         #modalOnayForm .btn-success {
             background: linear-gradient(135deg, #48bb78, #38a169);
             color: white;
@@ -262,75 +274,6 @@
             box-shadow: 0 4px 15px rgba(245, 101, 101, 0.4);
         }
 
-        .btn-secondary {
-            background: linear-gradient(135deg, #718096, #4a5568);
-            color: white;
-        }
-
-        .btn-outline-primary {
-            border: 2px solid #667eea;
-            color: #667eea;
-            background: transparent;
-        }
-
-        .btn-outline-primary:hover {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border-color: transparent;
-        }
-
-        /* Modal Notlar Alanı */
-        .modal-notes-box {
-            background: linear-gradient(135deg, rgba(67, 233, 123, 0.08), rgba(56, 249, 215, 0.08));
-            border-left: 4px solid #43e97b;
-            border-radius: 12px;
-            padding: 1.5rem;
-        }
-
-        .modal-notes-title {
-            font-weight: 700;
-            color: #43e97b;
-            margin-bottom: 0.75rem;
-        }
-
-        /* Badge ve Checkbox */
-        #modalOnayBadge {
-            background: linear-gradient(135deg, #48bb78, #38a169);
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
-            animation: badgeSlideIn 0.5s ease;
-        }
-
-        @keyframes badgeSlideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        #modalImportantCheckboxContainer {
-            background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(255, 107, 107, 0.1));
-            border-radius: 12px;
-            padding: 1rem 1.5rem;
-            margin-bottom: 1.5rem;
-            border: 2px solid rgba(220, 53, 69, 0.3);
-        }
-
-        #modalImportantCheckbox {
-            accent-color: #dc3545;
-            width: 20px;
-            height: 20px;
-        }
-
-        /* Loading Spinner */
         .modal-loading {
             display: flex;
             justify-content: center;
@@ -347,6 +290,51 @@
             animation: spin 1s linear infinite;
         }
 
+        .fc-event-holiday {
+            font-weight: 600;
+            border: none !important;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%) !important;
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+            padding: 3px 6px;
+            font-size: 11px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            display: block;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .fc-event-holiday::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shine 3s infinite;
+            pointer-events: none;
+        }
+
+        .fc-event-holiday:hover {
+            transform: scale(1.05);
+            z-index: 1000;
+            white-space: normal;
+            min-width: max-content;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.5);
+            overflow: visible;
+        }
+
+        @keyframes shine {
+            to {
+                left: 100%;
+            }
+        }
+
         @keyframes spin {
             0% {
                 transform: rotate(0deg);
@@ -357,7 +345,6 @@
             }
         }
 
-        /* Önemli Event Animasyonu */
         .event-important-pulse {
             border: 2px solid #ff4136 !important;
             animation: pulse-animation 2s infinite;
@@ -377,149 +364,36 @@
             }
         }
 
-        /* Tablo Stilleri */
-        .table thead th {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
-            color: #2d3748;
-            padding: 1rem;
-            border: none;
-            border-radius: 0.5rem;
-        }
-
-        .table tbody tr:hover {
-            background: rgba(255, 255, 255, 0.95);
-            transform: scale(1.01);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            transition: all 0.2s ease;
-        }
-
-        .fc-event-holiday {
-
-            font-weight: 600;
-
-            border: none !important;
-
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%) !important;
-
-            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
-
-            border-radius: 4px;
-
-            position: relative;
-
-            overflow: hidden;
-
-            padding: 3px 6px;
-
-            font-size: 11px;
-
-            white-space: nowrap;
-
-            text-overflow: ellipsis;
-
-            max-width: 100%;
-
-            display: block;
-
-            transition: all 0.3s ease;
-
-            cursor: pointer;
-
-        }
-
-
-
-        .fc-event-holiday::before {
-
-            content: '';
-
-            position: absolute;
-
-            top: 0;
-
-            left: -100%;
-
-            width: 100%;
-
-            height: 100%;
-
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-
-            animation: shine 3s infinite;
-
-            pointer-events: none;
-
-        }
-
-
-
-        .fc-event-holiday:hover {
-
-            transform: scale(1.05);
-
-            z-index: 1000;
-
-            white-space: normal;
-
-            min-width: max-content;
-
-            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.5);
-
-            overflow: visible;
-
-        }
-
-        @keyframes shine {
-
-            to {
-
-                left: 100%;
-
-            }
-
-        }
-
         .custom-calendar-tooltip .tooltip-inner {
             background-color: #ffffff !important;
-            /* Beyaz Arkaplan */
             color: #2d3748 !important;
-            /* Koyu Gri Yazı */
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
-            /* Yumuşak Gölge */
             border: 1px solid rgba(102, 126, 234, 0.2);
-            /* İnce Mor Çerçeve */
             border-radius: 12px !important;
-            /* Yuvarlak Köşeler */
             padding: 12px 16px !important;
             font-size: 0.9rem;
             max-width: 300px;
-            /* Genişlik Sınırı */
             text-align: left;
             font-family: system-ui, -apple-system, sans-serif;
             z-index: 10000;
         }
 
-        /* Tooltip Ok İşareti (Arrow) Rengini Beyaza Çevirme */
         .custom-calendar-tooltip .tooltip-arrow::before {
             border-top-color: #ffffff !important;
-            /* Ok rengi beyaz olsun */
             border-bottom-color: #ffffff !important;
             border-left-color: #ffffff !important;
             border-right-color: #ffffff !important;
         }
 
-        /* Tooltip İçindeki Başlık */
         .tooltip-title-styled {
             font-weight: 700;
             color: #667EEA;
-            /* Senin tema rengin (Mor/Mavi) */
             margin-bottom: 4px;
             display: block;
             border-bottom: 1px solid #f0f0f0;
             padding-bottom: 4px;
         }
 
-        /* Tooltip İçindeki Açıklama */
         .tooltip-desc-styled {
             font-size: 0.8rem;
             color: #718096;
@@ -535,8 +409,53 @@
                 <div class="card create-shipment-card">
                     <div class="card-header">📅 Genel KÖKSAN Takvimi</div>
                     <div class="card-body">
+                        {{-- FİLTRELEME ALANI (BAKIM EKLENDİ) --}}
+                        @php
+                            // Admin veya Departmanı Olmayan Yönetici ise TRUE
+                            $canFilter =
+                                Auth::user()->role === 'admin' ||
+                                (Auth::user()->role === 'yönetici' && is_null(Auth::user()->department_id));
+                        @endphp
+
+                        @if ($canFilter)
+                            <div class="calendar-filters p-3 mb-3"
+                                style="background: rgba(102, 126, 234, 0.05); border-radius: 0.75rem;">
+                                <strong class="me-3"><i class="fa-solid fa-filter"></i> Filtrele:</strong>
+
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" value="lojistik" id="filterLojistik"
+                                        checked>
+                                    <label class="form-check-label" for="filterLojistik"
+                                        style="color: #667EEA;">Lojistik</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" value="uretim" id="filterUretim"
+                                        checked>
+                                    <label class="form-check-label" for="filterUretim"
+                                        style="color: #4FD1C5;">Üretim</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" value="hizmet" id="filterHizmet"
+                                        checked>
+                                    <label class="form-check-label" for="filterHizmet" style="color: #F093FB;">İdari
+                                        İşler</label>
+                                </div>
+                                {{-- YENİ EKLENEN BAKIM FİLTRESİ --}}
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" value="bakim" id="filterBakim" checked>
+                                    <label class="form-check-label" for="filterBakim" style="color: #ED8936;">Bakım</label>
+                                </div>
+
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" value="important" id="filterImportant">
+                                    <label class="form-check-label" for="filterImportant"
+                                        style="color: #dc3545;"><strong>Sadece
+                                            Önemliler</strong></label>
+                                </div>
+                            </div>
+                        @endif
                         <div id='calendar' data-current-user-id="{{ Auth::id() }}"
-                            data-is-authorized="{{ in_array(Auth::user()->role, ['admin', 'yönetici']) ? 'true' : 'false' }}">
+                            data-user-role="{{ Auth::user()->role }}" data-user-dept="{{ Auth::user()->department_id }}">
                         </div>
                     </div>
                 </div>
@@ -544,14 +463,14 @@
         </div>
     </div>
 
+    {{-- MODAL (HOME SAYFASI İLE AYNI YAPI) --}}
     <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalTitle"><i class="fas fa-info-circle"></i> <span>Detaylar</span></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"><i
+                            class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div class="modal-body">
                     <div id="modalOnayBadge" style="display: none;">
@@ -568,7 +487,7 @@
                     <div id="modalImportantCheckboxContainer" class="d-flex align-items-center justify-content-between"
                         style="display: none;">
                         <label for="modalImportantCheckbox" class="form-check-label"><i
-                                class="fas fa-exclamation-circle me-1"></i> Bu Etkinliği Önemli Olarak İşaretle</label>
+                                class="fas fa-exclamation-circle me-1"></i> Bu Veriyi Önemli Olarak İşaretle</label>
                         <input type="checkbox" id="modalImportantCheckbox" class="form-check-input">
                     </div>
                     <div id="modalDynamicBody">
@@ -584,8 +503,8 @@
                             class="fas fa-file-excel me-2"></i> Excel İndir</a>
 
                     <form method="POST" id="modalOnayForm" style="display: none;" class="d-inline">@csrf<button
-                            type="submit" class="btn btn-success"><i class="fas fa-check me-2"></i> Tesise Ulaştı</button>
-                    </form>
+                            type="submit" class="btn btn-success"><i class="fas fa-check me-2"></i> Tesise
+                            Ulaştı</button></form>
                     <form method="POST" id="modalOnayKaldirForm" style="display: none;" class="d-inline">@csrf
                         @method('DELETE')<button type="submit" class="btn btn-warning"><i class="fas fa-undo me-2"></i>
                             Onayı Kaldır</button></form>
@@ -611,27 +530,11 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            // === DÜZELTME: URL Params en başta ===
             const urlParams = new URLSearchParams(window.location.search);
             const dateFromUrl = urlParams.get('date');
-
-            // === KULLANICI BİLGİLERİ (Yetki İçin) ===
-            const currentUserDepartment = "{{ Auth::user()->department?->slug }}";
             const currentUserRole = "{{ Auth::user()->role }}";
-            const isSuperAdmin = (currentUserRole === 'admin' || currentUserRole === 'yönetici');
-
             var detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
 
-            function splitDateTime(dt) {
-                dt = String(dt || '');
-                const parts = dt.split(' ');
-                return {
-                    date: parts[0] || '-',
-                    time: parts[1] || '-'
-                };
-            }
-
-            // === UI HARD RESET (Hayalet Buton ve Yetki Temizliği) ===
             function hardResetModalUI() {
                 const ids = ['modalEditButton', 'modalExportButton', 'modalOnayForm', 'modalOnayKaldirForm',
                     'modalDeleteForm', 'modalOnayBadge', 'modalImportantCheckboxContainer'
@@ -651,10 +554,44 @@
             }
 
             function openUniversalModal(props) {
+                console.log('--- MODAL AÇILIYOR (GENEL) ---', props.eventType);
                 hardResetModalUI();
+
                 if (!props || !props.eventType) return;
 
-                // Elementleri Seç
+                // === 1. DİNAMİK ÇEVİRİ VE STİL HARİTASI ===
+                const statusMap = {
+                    'Critical': {
+                        text: 'Kritik',
+                        class: 'bg-danger text-white'
+                    },
+                    'High': {
+                        text: 'Yüksek',
+                        class: 'bg-warning text-dark'
+                    },
+                    'Medium': {
+                        text: 'Orta',
+                        class: 'bg-info text-white'
+                    },
+                    'Low': {
+                        text: 'Düşük',
+                        class: 'bg-success text-white'
+                    },
+                    'Normal': {
+                        text: 'Normal',
+                        class: 'bg-secondary text-white'
+                    },
+                    'Pending': {
+                        text: 'Beklemede',
+                        class: 'bg-warning text-dark'
+                    },
+                    'Active': {
+                        text: 'Aktif',
+                        class: 'bg-success text-white'
+                    }
+                };
+
+                // DOM Elementleri
                 const modalTitle = document.getElementById('modalTitle');
                 const modalBody = document.getElementById('modalDynamicBody');
                 const modalEditButton = document.getElementById('modalEditButton');
@@ -665,26 +602,53 @@
                 const modalOnayBadge = document.getElementById('modalOnayBadge');
                 const modalImportantContainer = document.getElementById('modalImportantCheckboxContainer');
                 const modalImportantCheckbox = document.getElementById('modalImportantCheckbox');
-
-                // Yetkiler
                 const calendarEl = document.getElementById('calendar');
-                const currentUserId = parseInt(calendarEl.dataset.currentUserId, 10);
-                const isAuthorized = calendarEl.dataset.isAuthorized === 'true';
 
-                // Checkbox
-                if (isAuthorized) {
-                    modalImportantContainer.style.display = 'flex';
-                    modalImportantCheckbox.checked = props.is_important || false;
-                    modalImportantCheckbox.dataset.modelType = props.model_type;
-                    modalImportantCheckbox.dataset.modelId = props.id;
+                // === YENİ YETKİLENDİRME VE GÜVENLİK MANTIĞI ===
+                const currentUserId = parseInt(calendarEl.dataset.currentUserId, 10);
+                const currentUserRole = calendarEl.dataset.userRole; // HTML'e eklediğimiz data-user-role
+                const currentUserDept = calendarEl.dataset.userDept; // HTML'e eklediğimiz data-user-dept
+
+                // Event verileri (Backend'den department_id geldiğinden emin ol)
+                const eventOwnerId = props.user_id;
+                const eventDeptId = props.department_id; // Event hangi departmana ait?
+
+                let canModify = false;
+
+                // KURAL 1: Admin her şeyi düzenleyebilir.
+                if (currentUserRole === 'admin') {
+                    canModify = true;
+                }
+                // KURAL 2: Veriyi oluşturan kişi kendi verisini düzenleyebilir.
+                else if (eventOwnerId && eventOwnerId === currentUserId) {
+                    canModify = true;
+                }
+                // KURAL 3: Yöneticiler, kendi departmanlarına ait verileri düzenleyebilir.
+                else if (currentUserRole === 'yönetici') {
+                    // Yöneticinin departmanı yoksa (örneğin üst düzey yönetici) veya departmanlar eşleşiyorsa
+                    if (!currentUserDept || (eventDeptId && String(currentUserDept) === String(eventDeptId))) {
+                        canModify = true;
+                    }
                 }
 
+                // === UI GÜNCELLEMELERİ (Yetkiye Göre) ===
+
+                // 1. Önemli Checkbox'ı
+                if (canModify) {
+                    modalImportantContainer.style.display = 'flex';
+                    modalImportantCheckbox.checked = props.is_important || false;
+                    modalImportantCheckbox.disabled = false; // Aktif et
+                    modalImportantCheckbox.dataset.modelType = props.model_type;
+                    modalImportantCheckbox.dataset.modelId = props.id;
+                } else {
+                    // Yetki yoksa gizle
+                    modalImportantContainer.style.display = 'none';
+                }
+
+                // Başlık
                 modalTitle.innerHTML = `<span>${props.title || 'Detaylar'}</span>`;
 
-                // Düzenle/Sil Yetkisi
-                let canModify = isAuthorized;
-                if (props.user_id && props.user_id === currentUserId) canModify = true;
-
+                // 2. Düzenle ve Sil Butonları
                 if (canModify && props.editUrl && props.editUrl !== '#') {
                     modalEditButton.href = props.editUrl;
                     modalEditButton.style.display = 'inline-block';
@@ -694,119 +658,152 @@
                     modalDeleteForm.style.display = 'inline-block';
                 }
 
+                // === DİNAMİK İÇERİK OLUŞTURMA (HTML) ===
                 let html = '';
 
-                // --- SEVKİYAT (SHIPMENT) ---
+                // Simge ve Başlık Seçimi
+                let icon = 'fa-info-circle';
+                let typeTitle = 'Etkinlik Detayları';
+
                 if (props.eventType === 'shipment') {
-                    // 1. Yetki Kontrolü: Sadece Lojistikçiler veya Adminler işlem yapabilir
-                    const canManageShipment = isSuperAdmin || currentUserDepartment === 'lojistik';
+                    icon = 'fa-truck';
+                    typeTitle = 'Sevkiyat Bilgileri';
+                } else if (props.eventType === 'travel') {
+                    icon = 'fa-plane';
+                    typeTitle = 'Seyahat Bilgileri';
+                } else if (props.eventType === 'maintenance') {
+                    icon = 'fa-screwdriver-wrench';
+                    typeTitle = 'Bakım Bilgileri';
+                } else if (props.eventType === 'production') {
+                    icon = 'fa-industry';
+                    typeTitle = 'Üretim Bilgileri';
+                }
 
-                    modalExportButton.href = props.exportUrl || '#';
-                    modalExportButton.style.display =
-                        'inline-block'; // Excel herkese açık olabilir veya buraya da canManageShipment koyabilirsin.
+                html += `<div class="modal-info-card">
+                <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">
+                    <i class="fas ${icon} me-2"></i>${typeTitle}
+                </h6>
+                <div class="table-responsive">
+                    <table class="table table-borderless table-sm m-0 align-middle">
+                        <tbody>`;
 
-                    if (canManageShipment) {
-                        if (props.details['Onay Durumu']) {
-                            modalOnayBadge.style.display = 'block';
-                            document.getElementById('modalOnayBadgeTarih').textContent = props.details[
-                                'Onay Durumu'];
-                            document.getElementById('modalOnayBadgeKullanici').textContent = props.details[
-                                'Onaylayan'] || '';
-                            if (modalOnayKaldirForm) {
-                                modalOnayKaldirForm.action = props.onayKaldirUrl;
-                                modalOnayKaldirForm.style.display = 'inline-block';
+                // Döngü ve Formatlama
+                const excludeKeys = ['Açıklama', 'Notlar', 'Açıklamalar', 'Dosya Yolu', 'Plan Detayları',
+                    'Onay Durumu', 'Onaylayan'
+                ];
+
+                if (props.details && typeof props.details === 'object') {
+                    Object.entries(props.details).forEach(([key, value]) => {
+                        if (excludeKeys.includes(key)) return;
+                        if (value === null || value === undefined || value === '' || value === '-') return;
+
+                        let displayValue = '-';
+
+                        // Badge Objesi Geldiyse
+                        if (value && typeof value === 'object' && value.is_badge) {
+                            displayValue =
+                                `<span class="badge ${value.class} px-3 py-2 rounded-pill fw-normal">${value.text}</span>`;
+                        }
+                        // Normal Metin Geldiyse
+                        else if (value !== null && value !== undefined && value !== '') {
+                            const strValue = String(value).trim();
+
+                            if (statusMap[strValue]) {
+                                const mapItem = statusMap[strValue];
+                                displayValue =
+                                    `<span class="badge ${mapItem.class} px-3 py-2 rounded-pill fw-normal">${mapItem.text}</span>`;
+                            } else {
+                                const dateRegex = /^(\d{1,2}\.\d{1,2}\.\d{4})\s(\d{1,2}:\d{2})$/;
+                                const match = strValue.match(dateRegex);
+                                if (match) {
+                                    displayValue = `<div class="d-flex gap-2">
+                                            <span class="badge bg-light text-dark border border-secondary fw-normal"><i class="fas fa-calendar-alt text-primary me-1"></i> ${match[1]}</span>
+                                            <span class="badge bg-light text-dark border fw-normal"><i class="fas fa-clock text-warning me-1"></i> ${match[2]}</span>
+                                        </div>`;
+                                } else {
+                                    displayValue = strValue;
+                                }
                             }
-                        } else {
+                        }
+
+                        html += `<tr>
+                        <td class="text-dark fw-bolder" style="width: 35%;">${key}:</td>
+                        <td class="text-dark">${displayValue}</td>
+                     </tr>`;
+                    });
+                }
+
+                html += `   </tbody>
+             </table>
+           </div>
+         </div>`;
+
+                // Özel Durumlar
+                if (props.eventType === 'production' && props.details['Plan Detayları']) {
+                    html +=
+                        '<div class="modal-info-card"><h6 class="text-primary fw-bold mb-2">Üretim Kalemleri</h6><table class="table table-sm table-striped"><thead><tr><th>Makine</th><th>Ürün</th><th>Adet</th></tr></thead><tbody>';
+                    props.details['Plan Detayları'].forEach(i => {
+                        html += `<tr><td>${i.machine}</td><td>${i.product}</td><td>${i.quantity}</td></tr>`;
+                    });
+                    html += '</tbody></table></div>';
+                }
+
+                // Dosya Linki
+                if (props.details && props.details['Dosya Yolu']) {
+                    html += `<div class="text-center mt-3 mb-3">
+                    <a href="${props.details['Dosya Yolu']}" target="_blank" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-paperclip me-2"></i> Dosyayı Görüntüle
+                    </a>
+                 </div>`;
+                }
+
+                // Açıklama
+                const aciklama = props.details['Açıklamalar'] || props.details['Notlar'] || props.details[
+                    'Açıklama'];
+                if (aciklama) {
+                    html += `<div class="modal-notes-box mt-3 p-3 bg-light rounded border">
+                    <div class="modal-notes-title fw-bold mb-2 text-primary">
+                        <i class="fas fa-sticky-note me-1"></i> Açıklama / Notlar
+                    </div>
+                    <p class="mb-0 text-secondary" style="white-space: pre-wrap;">${aciklama}</p>
+                 </div>`;
+                }
+
+                // === DİĞER BUTON MANTIKLARI (Export, Onay vb.) ===
+                // Not: Bu butonların görünürlüğü yetkiden bağımsız olabilir, ancak düzenleme butonları yukarıda 'canModify' ile korundu.
+                if (props.eventType === 'shipment') {
+                    modalExportButton.href = props.exportUrl || '#';
+                    modalExportButton.style.display = 'inline-block';
+                    if (props.details['Onay Durumu']) {
+                        modalOnayBadge.style.display = 'block';
+                        document.getElementById('modalOnayBadgeTarih').textContent = props.details['Onay Durumu'];
+                        document.getElementById('modalOnayBadgeKullanici').textContent = props.details[
+                            'Onaylayan'] || '';
+                        if (modalOnayKaldirForm) {
+                            modalOnayKaldirForm.action = props.onayKaldirUrl;
+                            modalOnayKaldirForm.style.display = 'inline-block';
+                        }
+                    } else {
+                        if (modalOnayForm) {
                             modalOnayForm.action = props.onayUrl;
                             modalOnayForm.style.display = 'inline-block';
                         }
-                    } else {
-                        // Yetkisi yoksa sadece Badge göster (onaylıysa)
-                        if (props.details['Onay Durumu']) {
-                            modalOnayBadge.style.display = 'block';
-                            document.getElementById('modalOnayBadgeTarih').textContent = props.details[
-                                'Onay Durumu'];
-                            document.getElementById('modalOnayBadgeKullanici').textContent = props.details[
-                                'Onaylayan'] || '';
-                        }
                     }
-
-                    const isGemi = (props.details['Araç Tipi'] || '').toLowerCase().includes('gemi');
-                    html +=
-                        `<div class="modal-info-card"><h6 class="text-primary fw-bold mb-3"><i class="fas fa-truck me-2"></i>Araç Bilgileri</h6><div class="row">
-                        <div class="col-md-6"><p><strong>Araç Tipi:</strong> ${props.details['Araç Tipi'] || '-'}</p></div>`;
-                    if (!isGemi) {
-                        html +=
-                            `<div class="col-md-6"><p><strong>Plaka:</strong> ${props.details['Plaka'] || '-'}</p></div>
-                                 <div class="col-md-6"><p><strong>Dorse:</strong> ${props.details['Dorse Plakası'] || '-'}</p></div>
-                                 <div class="col-md-6"><p><strong>Şoför:</strong> ${props.details['Şoför Adı'] || '-'}</p></div>`;
-                    } else {
-                        html +=
-                            `<div class="col-md-6"><p><strong>IMO:</strong> ${props.details['IMO Numarası'] || '-'}</p></div>
-                                 <div class="col-md-6"><p><strong>Gemi:</strong> ${props.details['Gemi Adı'] || '-'}</p></div>`;
-                    }
-                    html += `</div></div>`;
-
-                    html +=
-                        `<div class="modal-info-card"><h6 class="text-primary fw-bold mb-3"><i class="fas fa-route me-2"></i>Rota</h6><div class="row">
-                             <div class="col-md-6"><p><strong>Kalkış:</strong> ${props.details['Kalkış Noktası'] || props.details['Kalkış Limanı'] || '-'}</p></div>
-                             <div class="col-md-6"><p><strong>Varış:</strong> ${props.details['Varış Noktası'] || props.details['Varış Limanı'] || '-'}</p></div></div></div>`;
-
-                    const cikis = splitDateTime(props.details['Çıkış Tarihi']);
-                    const varis = splitDateTime(props.details['Tahmini Varış']);
-                    html +=
-                        `<div class="modal-info-card"><h6 class="text-primary fw-bold mb-3"><i class="fas fa-clock me-2"></i>Zaman</h6>
-                             <div class="row"><div class="col-md-6"><p><strong>Çıkış:</strong> ${cikis.date} ${cikis.time}</p></div>
-                             <div class="col-md-6"><p><strong>Varış:</strong> ${varis.date} ${varis.time}</p></div></div></div>`;
-
-                    if (props.details['Dosya Yolu']) html +=
-                        `<div class="text-center mt-3"><a href="${props.details['Dosya Yolu']}" target="_blank" class="btn btn-outline-primary"><i class="fas fa-paperclip me-2"></i> Dosya</a></div>`;
-                }
-
-                // --- SEVKİYAT (TRAVEL) ---
-                else if (props.eventType === 'travel') {
+                } else if (props.eventType === 'travel') {
                     if (modalOnayForm) modalOnayForm.style.display = 'none';
-                    html += `<div class="modal-info-card"><h6 class="text-primary fw-bold mb-3"><i class="fas fa-plane-departure me-2"></i>Seyahat</h6>
-                             <p><strong>Plan:</strong> ${props.details['Plan Adı'] || '-'}</p>
-                             <p><strong>Kişi:</strong> ${props.details['Oluşturan'] || '-'}</p>
-                             <p><strong>Tarih:</strong> ${props.details['Başlangıç']} - ${props.details['Bitiş']}</p>
-                             <p><strong>Durum:</strong> ${props.details['Durum'] || '-'}</p></div>`;
-                    if (props.url) {
+                    if (canModify && props.url) {
                         modalExportButton.href = props.url;
                         modalExportButton.target = "_blank";
                         modalExportButton.innerHTML = '<i class="fas fa-plane-departure me-2"></i> Detaya Git';
                         modalExportButton.style.display = 'inline-block';
                     }
-                }
-
-                // --- DİĞERLERİ ---
-                else {
-                    if (props.eventType === 'service_event') {
-                        const baslangic = splitDateTime(props.details['Başlangıç']);
-                        html +=
-                            `<div class="modal-info-card"><h6 class="text-primary fw-bold mb-3">Etkinlik</h6><p>${props.title}</p><p><strong>Tarih:</strong> ${baslangic.date} ${baslangic.time}</p><p><strong>Konum:</strong> ${props.details['Konum'] || '-'}</p></div>`;
-                    } else if (props.eventType === 'production') {
-                        html +=
-                            `<div class="modal-info-card"><h6 class="text-primary fw-bold mb-3">Üretim Planı</h6><p>${props.details['Plan Başlığı'] || '-'}</p></div>`;
-                        if (props.details['Plan Detayları']) {
-                            html +=
-                                '<div class="modal-info-card"><table class="table table-sm"><thead><tr><th>Makine</th><th>Ürün</th><th>Adet</th></tr></thead><tbody>';
-                            props.details['Plan Detayları'].forEach(i => {
-                                html +=
-                                    `<tr><td>${i.machine}</td><td>${i.product}</td><td>${i.quantity}</td></tr>`;
-                            });
-                            html += '</tbody></table></div>';
-                        }
-                    } else if (props.eventType === 'vehicle_assignment') {
-                        html +=
-                            `<div class="modal-info-card"><h6 class="text-primary fw-bold mb-3">Araç Görevi</h6><p>${props.details['Araç'] || '-'}</p><p>${props.details['Görev'] || '-'}</p></div>`;
+                } else if (props.eventType === 'maintenance') {
+                    if (canModify && props.url) {
+                        modalExportButton.href = props.url;
+                        modalExportButton.innerHTML = '<i class="fas fa-eye me-2"></i> Detaya Git';
+                        modalExportButton.style.display = 'inline-block';
                     }
                 }
-
-                const aciklama = props.details['Açıklamalar'] || props.details['Notlar'] || props.details[
-                    'Açıklama'];
-                if (aciklama) html +=
-                    `<div class="modal-notes-box"><div class="modal-notes-title">Notlar</div><p class="mb-0">${aciklama}</p></div>`;
 
                 modalBody.innerHTML = html;
                 detailModal.show();
@@ -829,9 +826,8 @@
                     day: 'Gün',
                     list: 'Liste'
                 },
-
                 slotEventOverlap: false,
-                dayMaxEvents: 3, // UI Düzeltmesi için
+                dayMaxEvents: 3,
                 height: 'auto',
                 eventTimeFormat: {
                     hour: '2-digit',
@@ -840,44 +836,30 @@
                     hour12: false
                 },
                 displayEventEnd: true,
-                eventDisplay: 'list-item', // UI Düzeltmesi için (noktalı liste görünümü)
-
+                eventDisplay: 'list-item',
                 eventSources: [{
-                        url: '{{ route('web.calendar.events') }}',
-                        failure: () => alert('Veri hatası!')
-                    },
-                    {
-                        googleCalendarId: 'tr.turkish#holiday@group.v.calendar.google.com',
-                        color: '#dc3545',
-                        className: 'fc-event-holiday',
-                        googleCalendarApiKey: 'AIzaSyAQmEWGR-krGzcCk1r8R69ER-NyZM2BeWM'
-                    }
-                ],
+                    url: '{{ route('web.calendar.events') }}',
+                    failure: () => alert('Veri hatası!')
+                }, {
+                    googleCalendarId: 'tr.turkish#holiday@group.v.calendar.google.com',
+                    color: '#dc3545',
+                    className: 'fc-event-holiday',
+                    googleCalendarApiKey: 'AIzaSyAQmEWGR-krGzcCk1r8R69ER-NyZM2BeWM'
+                }],
 
                 eventClick: function(info) {
                     info.jsEvent.preventDefault();
                     if (info.event.extendedProps && info.event.extendedProps.eventType)
                         openUniversalModal(info.event.extendedProps);
                 },
-
                 eventDidMount: function(info) {
-                    // 1. Önemli Etkinlik Çerçevesi
-                    if (info.event.extendedProps && info.event.extendedProps.is_important) {
-                        info.el.classList.add('event-important-pulse');
-                    }
-
-                    // 2. Modern Tooltip Oluşturma
+                    if (info.event.extendedProps && info.event.extendedProps.is_important) info.el
+                        .classList.add('event-important-pulse');
                     try {
-                        // İçerik Hazırlama
                         let title = info.event.title;
                         let desc = '';
-
-                        // Açıklama varsa al
-                        if (info.event.extendedProps && info.event.extendedProps.details && info.event
-                            .extendedProps.details['Açıklama']) {
-                            desc = info.event.extendedProps.details['Açıklama'];
-                        }
-                        // Yoksa ve tarih aralığı varsa tarihleri göster (Opsiyonel)
+                        if (info.event.extendedProps?.details?.['Açıklama']) desc = info.event
+                            .extendedProps.details['Açıklama'];
                         else if (info.event.start) {
                             let start = info.event.start.toLocaleTimeString('tr-TR', {
                                 hour: '2-digit',
@@ -885,94 +867,98 @@
                             });
                             if (start !== '00:00') desc = `Saat: ${start}`;
                         }
-
-                        // HTML İçeriği Oluşturma (Modern Görünüm İçin)
-                        let tooltipContent = `
-            <div class="text-start">
-                <span class="tooltip-title-styled">${title}</span>
-                ${desc ? `<span class="tooltip-desc-styled">${desc}</span>` : ''}
-            </div>
-        `;
-
+                        let tooltipContent =
+                            `<div class="text-start"><span class="tooltip-title-styled">${title}</span>${desc ? `<span class="tooltip-desc-styled">${desc}</span>` : ''}</div>`;
                         if (typeof bootstrap !== 'undefined') {
                             new bootstrap.Tooltip(info.el, {
                                 title: tooltipContent,
-                                html: true, // HTML kullanımını açtık
-                                placement: 'top', // Üstte göster
-                                trigger: 'hover', // Üzerine gelince
+                                html: true,
+                                placement: 'top',
+                                trigger: 'hover',
                                 container: 'body',
-                                customClass: 'custom-calendar-tooltip', // CSS sınıfımızı bağladık
+                                customClass: 'custom-calendar-tooltip',
                                 delay: {
                                     "show": 100,
                                     "hide": 100
-                                } // Hafif gecikme daha doğal hissettirir
+                                }
                             });
                         } else {
-                            // Yedek (Bootstrap yoksa)
                             info.el.setAttribute('title', title + (desc ? ' - ' + desc : ''));
                         }
-
                     } catch (error) {
                         console.warn('Tooltip hatası:', error);
                     }
                 },
-
-                eventsSet: function(info) {
-                    const mid = urlParams.get('open_modal_id');
-                    const mtype = urlParams.get('open_modal_type');
-                    if (mid && mtype) {
-                        const target = calendar.getEvents().find(e => e.extendedProps.id == mid && e
-                            .extendedProps.model_type == mtype);
-                        if (target) {
-                            openUniversalModal(target.extendedProps);
-                            window.history.replaceState({}, document.title, window.location.pathname);
-                        }
-                    }
-                }
             });
 
             calendar.render();
             setInterval(function() {
                 console.log('Veriler arkaplanda güncelleniyor...');
-                calendar.refetchEvents(); // FullCalendar'ın sihirli fonksiyonu
+                calendar.refetchEvents();
             }, 30000);
 
-            // Listeners
+            // === FİLTRELEME MANTIĞI (GÜNCELLENDİ) ===
+            function applyCalendarFilters() {
+                const isChecked = (id, defaultValue = true) => {
+                    const el = document.getElementById(id);
+                    return el ? el.checked : defaultValue;
+                };
+                const showLojistik = isChecked('filterLojistik', true);
+                const showUretim = isChecked('filterUretim', true);
+                const showHizmet = isChecked('filterHizmet', true);
+                const showBakim = isChecked('filterBakim', true);
+                const showImportant = isChecked('filterImportant', false);
+
+                let eventSource = calendar.getEventSources()[0];
+                if (eventSource) {
+                    eventSource.remove();
+                }
+
+                calendar.addEventSource({
+                    url: '{{ route('web.calendar.events') }}',
+                    extraParams: {
+                        lojistik: showLojistik ? 1 : 0,
+                        uretim: showUretim ? 1 : 0,
+                        hizmet: showHizmet ? 1 : 0,
+                        bakim: showBakim ? 1 : 0, // YENİ
+                        important_only: showImportant ? 1 : 0
+                    }
+                });
+            }
+
+            const filters = document.querySelectorAll('.calendar-filters .form-check-input');
+            filters.forEach(filter => filter.addEventListener('change', applyCalendarFilters));
+
+            // ... Diğer Listenerlar (Silme, Onay vs) ...
             const btnOnay = document.getElementById('modalOnayForm');
             if (btnOnay) btnOnay.addEventListener('submit', e => {
                 if (!confirm('Onaylıyor musunuz?')) e.preventDefault();
             });
-
             const btnSil = document.getElementById('modalDeleteForm');
             if (btnSil) btnSil.addEventListener('submit', e => {
                 if (!confirm('Silinsin mi?')) e.preventDefault();
             });
-
             const chkImportant = document.getElementById('modalImportantCheckbox');
             if (chkImportant) {
                 chkImportant.addEventListener('change', function() {
                     const isChecked = this.checked;
                     this.disabled = true;
                     fetch('{{ route('calendar.toggleImportant') }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': getCsrfToken(),
-                                'Accept': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                model_id: this.dataset.modelId,
-                                model_type: this.dataset.modelType,
-                                is_important: isChecked
-                            })
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': getCsrfToken(),
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            model_id: this.dataset.modelId,
+                            model_type: this.dataset.modelType,
+                            is_important: isChecked
                         })
-                        .then(res => res.json())
-                        .then(data => calendar.refetchEvents())
-                        .catch(err => {
-                            alert('Hata');
-                            this.checked = !isChecked;
-                        })
-                        .finally(() => this.disabled = false);
+                    }).then(res => res.json()).then(data => calendar.refetchEvents()).catch(err => {
+                        alert('Hata');
+                        this.checked = !isChecked;
+                    }).finally(() => this.disabled = false);
                 });
             }
         });

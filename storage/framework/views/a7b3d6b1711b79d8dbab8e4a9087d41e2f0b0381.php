@@ -1,7 +1,7 @@
-@extends('layouts.app')
-@section('title', 'Üretim Planları')
 
-@push('styles')
+<?php $__env->startSection('title', 'Üretim Planları'); ?>
+
+<?php $__env->startPush('styles'); ?>
     <style>
         /* Ana içerik alanı - Modern gradient arka plan */
         #app>main.py-4 {
@@ -397,34 +397,36 @@
             }
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container-fluid modern-container">
         <div class="row justify-content-center">
             <div class="col-12">
 
-                {{-- Sayfa Başlığı --}}
+                
                 <div class="page-header">
                     <h1><i class="fas fa-clipboard-list"></i> Üretim Planları</h1>
                     <p>Haftalık üretim planlarınızı görüntüleyin, düzenleyin ve yönetin.</p>
                 </div>
 
-                {{-- Başarı/Hata Mesajları --}}
-                @if (session('success'))
+                
+                <?php if(session('success')): ?>
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-                @if (session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
+                        <i class="fas fa-check-circle me-2"></i><?php echo e(session('success')); ?>
 
-                {{-- Filtre Bölümü --}}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
+                <?php if(session('error')): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i><?php echo e(session('error')); ?>
+
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
+
+                
                 <div class="mb-4">
                     <div class="d-grid">
                         <button class="btn btn-filter-toggle" type="button" data-bs-toggle="collapse"
@@ -436,64 +438,64 @@
 
                     <div class="collapse mt-3" id="filterCollapse">
                         <div class="card filter-card">
-                            <form method="GET" action="{{ route('production.plans.index') }}">
+                            <form method="GET" action="<?php echo e(route('production.plans.index')); ?>">
                                 <div class="row">
-                                    @php
+                                    <?php
                                         $isAdminOrManager = in_array(Auth::user()->role, ['admin', 'yönetici']);
-                                    @endphp
+                                    ?>
 
-                                    {{-- Plan Başlığı --}}
-                                    <div class="{{ $isAdminOrManager ? 'col-lg-3 col-md-6' : 'col-md-6' }}">
+                                    
+                                    <div class="<?php echo e($isAdminOrManager ? 'col-lg-3 col-md-6' : 'col-md-6'); ?>">
                                         <label for="plan_title" class="form-label">
                                             <i class="fas fa-search"></i>Plan Başlığı
                                         </label>
                                         <input type="text" class="form-control" id="plan_title" name="plan_title"
-                                            value="{{ $filters['plan_title'] ?? '' }}" placeholder="Plan başlığı girin...">
+                                            value="<?php echo e($filters['plan_title'] ?? ''); ?>" placeholder="Plan başlığı girin...">
                                     </div>
 
-                                    {{-- Önem Durumu --}}
-                                    @if ($isAdminOrManager)
+                                    
+                                    <?php if($isAdminOrManager): ?>
                                         <div class="col-lg-3 col-md-6">
                                             <label for="is_important" class="form-label">
                                                 <i class="fas fa-exclamation-triangle"></i>Önem Durumu
                                             </label>
                                             <select class="form-select" id="is_important" name="is_important">
                                                 <option value="all"
-                                                    {{ ($filters['is_important'] ?? 'all') == 'all' ? 'selected' : '' }}>
+                                                    <?php echo e(($filters['is_important'] ?? 'all') == 'all' ? 'selected' : ''); ?>>
                                                     Tümü
                                                 </option>
                                                 <option value="yes"
-                                                    {{ ($filters['is_important'] ?? '') == 'yes' ? 'selected' : '' }}>
+                                                    <?php echo e(($filters['is_important'] ?? '') == 'yes' ? 'selected' : ''); ?>>
                                                     Sadece Önemliler
                                                 </option>
                                                 <option value="no"
-                                                    {{ ($filters['is_important'] ?? '') == 'no' ? 'selected' : '' }}>
+                                                    <?php echo e(($filters['is_important'] ?? '') == 'no' ? 'selected' : ''); ?>>
                                                     Önemli Olmayanlar
                                                 </option>
                                             </select>
                                         </div>
-                                    @endif
+                                    <?php endif; ?>
 
-                                    {{-- Tarih Aralığı --}}
+                                    
                                     <div class="col-lg-3 col-md-6">
                                         <label for="date_from" class="form-label">
                                             <i class="fas fa-calendar-alt"></i>Başlangıç Tarihi
                                         </label>
                                         <input type="date" class="form-control" id="date_from" name="date_from"
-                                            value="{{ $filters['date_from'] ?? '' }}">
+                                            value="<?php echo e($filters['date_from'] ?? ''); ?>">
                                     </div>
                                     <div class="col-lg-3 col-md-6">
                                         <label for="date_to" class="form-label">
                                             <i class="fas fa-calendar-check"></i>Bitiş Tarihi
                                         </label>
                                         <input type="date" class="form-control" id="date_to" name="date_to"
-                                            value="{{ $filters['date_to'] ?? '' }}">
+                                            value="<?php echo e($filters['date_to'] ?? ''); ?>">
                                     </div>
                                 </div>
 
-                                {{-- Butonlar --}}
+                                
                                 <div class="d-flex justify-content-end gap-2 mt-4">
-                                    <a href="{{ route('production.plans.index') }}" class="btn btn-clear-filter">
+                                    <a href="<?php echo e(route('production.plans.index')); ?>" class="btn btn-clear-filter">
                                         <i class="fas fa-times me-2"></i>Temizle
                                     </a>
                                     <button type="submit" class="btn btn-apply-filter">
@@ -505,7 +507,7 @@
                     </div>
                 </div>
 
-                {{-- Ana Liste Kartı --}}
+                
                 <div class="card list-card">
                     <div class="card-header">
                         <i class="fas fa-list"></i>
@@ -513,11 +515,11 @@
                     </div>
 
                     <div class="card-body p-0">
-                        @if ($plans->isEmpty())
+                        <?php if($plans->isEmpty()): ?>
                             <div class="alert alert-warning m-4" role="alert">
                                 <i class="fas fa-info-circle me-2"></i>Kayıtlı üretim planı bulunamadı.
                             </div>
-                        @else
+                        <?php else: ?>
                             <div class="table-responsive">
                                 <table class="table mb-0">
                                     <thead>
@@ -530,67 +532,71 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($plans as $plan)
-                                            <tr class="{{ $plan->is_important ? 'row-important' : '' }}">
+                                        <?php $__currentLoopData = $plans; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $plan): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <tr class="<?php echo e($plan->is_important ? 'row-important' : ''); ?>">
                                                 <td class="ps-3">
-                                                    <strong>{{ $plan->plan_title }}</strong>
-                                                    @if ($plan->is_important)
+                                                    <strong><?php echo e($plan->plan_title); ?></strong>
+                                                    <?php if($plan->is_important): ?>
                                                         <span class="badge badge-custom badge-important ms-2">
                                                             <i class="fas fa-star"></i> Önemli
                                                         </span>
-                                                    @endif
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td>
                                                     <i class="fas fa-calendar me-2"></i>
-                                                    {{ $plan->week_start_date ? \Carbon\Carbon::parse($plan->week_start_date)->format('d.m.Y') : '-' }}
+                                                    <?php echo e($plan->week_start_date ? \Carbon\Carbon::parse($plan->week_start_date)->format('d.m.Y') : '-'); ?>
+
                                                 </td>
                                                 <td>
                                                     <i class="fas fa-user me-2"></i>
-                                                    {{ $plan->user->name ?? 'Bilinmiyor' }}
+                                                    <?php echo e($plan->user->name ?? 'Bilinmiyor'); ?>
+
                                                 </td>
                                                 <td>
                                                     <i class="fas fa-clock me-2"></i>
-                                                    {{ $plan->created_at ? \Carbon\Carbon::parse($plan->created_at)->format('d.m.Y H:i') : '-' }}
+                                                    <?php echo e($plan->created_at ? \Carbon\Carbon::parse($plan->created_at)->format('d.m.Y H:i') : '-'); ?>
+
                                                 </td>
                                                 <td class="text-end pe-3">
-                                                    @if (!in_array(Auth::user()->role, ['izleyici']))
-                                                        <a href="{{ route('production.plans.edit', $plan) }}"
+                                                    <?php if(!in_array(Auth::user()->role, ['izleyici'])): ?>
+                                                        <a href="<?php echo e(route('production.plans.edit', $plan)); ?>"
                                                             class="btn btn-action btn-primary" title="Düzenle">
                                                             <i class="fas fa-edit"></i>
                                                         </a>
-                                                        <form action="{{ route('production.plans.destroy', $plan) }}"
+                                                        <form action="<?php echo e(route('production.plans.destroy', $plan)); ?>"
                                                             method="POST" class="d-inline"
                                                             onsubmit="return confirm('Bu planı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.');">
-                                                            @csrf
-                                                            @method('DELETE')
+                                                            <?php echo csrf_field(); ?>
+                                                            <?php echo method_field('DELETE'); ?>
                                                             <button type="submit" class="btn btn-action btn-danger"
                                                                 title="Sil">
                                                                 <i class="fas fa-trash"></i>
                                                             </button>
                                                         </form>
-                                                    @endif
+                                                    <?php endif; ?>
                                                 </td>
                                             </tr>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </tbody>
                                 </table>
                             </div>
 
-                            {{-- Sayfalama --}}
-                            @if ($plans->hasPages())
+                            
+                            <?php if($plans->hasPages()): ?>
                                 <div class="card-footer">
-                                    {{ $plans->appends($filters ?? [])->links('pagination::bootstrap-5') }}
+                                    <?php echo e($plans->appends($filters ?? [])->links('pagination::bootstrap-5')); ?>
+
                                 </div>
-                            @endif
-                        @endif
+                            <?php endif; ?>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('page_scripts')
+<?php $__env->startSection('page_scripts'); ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Filtre toggle animasyonu
@@ -630,4 +636,6 @@
             });
         });
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/production/plans/index.blade.php ENDPATH**/ ?>

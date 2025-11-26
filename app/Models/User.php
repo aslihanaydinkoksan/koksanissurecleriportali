@@ -190,5 +190,20 @@ class User extends Authenticatable
 
         return $count;
     }
+    /**
+     * Kullanıcı Admin mi?
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Kullanıcı Yönetici mi?
+     */
+    public function isManager(): bool
+    {
+        return $this->role === 'yönetici';
+    }
 
 }

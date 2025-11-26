@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 
 use App\Models\Customer;
 use Illuminate\Http\Request;
@@ -17,9 +19,9 @@ class CustomerController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return View
      */
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         // Arama terimini al
         $search = $request->input('search');
@@ -41,9 +43,9 @@ class CustomerController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return View
      */
-    public function create()
+    public function create(): View
     {
         return view('customers.create');
     }
@@ -52,9 +54,9 @@ class CustomerController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         // 1. Validasyon (Doğrulama)
         $validatedData = $request->validate([
@@ -78,9 +80,9 @@ class CustomerController extends Controller
      * Display the specified resource.
      *
      * @param  \App\Models\Customer  $customer
-     * @return \Illuminate\Http\Response
+     * @return View
      */
-    public function show(Customer $customer)
+    public function show(Customer $customer): View
     {
         // Müşteriyi ve ona bağlı TÜM verileri tek bir sorguyla (verimli) yükle
         $customer->load([
@@ -98,9 +100,9 @@ class CustomerController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param  \App\Models\Customer  $customer
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\View
      */
-    public function edit(Customer $customer)
+    public function edit(Customer $customer): View
     {
         return view('customers.edit', compact('customer'));
     }
@@ -110,9 +112,9 @@ class CustomerController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Customer  $customer
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, Customer $customer)
+    public function update(Request $request, Customer $customer): RedirectResponse
     {
         // 1. Validasyon (Doğrulama)
         $validatedData = $request->validate([
@@ -139,9 +141,9 @@ class CustomerController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\Customer  $customer
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(Customer $customer)
+    public function destroy(Customer $customer): RedirectResponse
     {
         // Yetki kontrolü (gerekirse) eklenebilir
         // $this->authorize('delete', $customer);
