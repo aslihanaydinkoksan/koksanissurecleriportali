@@ -441,8 +441,6 @@
                                                 <td>
                                                     <div class="d-flex flex-column">
                                                         <strong class="text-dark">{{ $plan->title }}</strong>
-                                                        <small class="text-muted" style="font-size: 0.75rem;">ID:
-                                                            #{{ $plan->id }}</small>
                                                     </div>
                                                 </td>
                                                 <td>
@@ -486,52 +484,75 @@
                                                 </td>
                                                 <td class="text-end pe-4">
                                                     <div class="btn-group" role="group">
+
+                                                        {{-- 1. İNCELE BUTONU (Herkes görebilir) --}}
                                                         <a href="{{ route('maintenance.show', $plan->id) }}"
-                                                            class="btn btn-action btn-info" title="Detay ve Yönet">
+                                                            class="btn btn-action btn-info" title="Plan Detayları">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
 
-                                                        {{-- Edit Butonu: Yetkisi olana normal, olmayana uyarı (Opsiyonel, şu an aktif bıraktım ama istersen buna da @can ekleyebiliriz) --}}
-                                                        <a href="{{ route('maintenance.edit', $plan->id) }}"
-                                                            class="btn btn-action btn-warning text-white"><i
-                                                                class="fas fa-edit"></i></a>
-                                                        {{-- SİLME BUTONU MANTIĞI --}}
-                                                        @can('delete', $plan)
-                                                            {{-- YETKİLİ VE SİLİNEBİLİR DURUMDA --}}
-                                                            <form action="{{ route('maintenance.destroy', $plan->id) }}"
-                                                                method="POST" class="d-inline"
-                                                                onsubmit="return confirm('Bu planı silmek istediğinize emin misiniz?');">
-                                                                @csrf
-                                                                @method('DELETE')
-                                                                <button type="submit" class="btn btn-action btn-danger"
-                                                                    title="Sil">
-                                                                    <i class="fas fa-trash"></i>
-                                                                </button>
-                                                            </form>
+                                                        {{-- 2. DÜZENLE BUTONU MANTIĞI --}}
+                                                        {{-- KURAL: Plan Tamamlanmışsa VE Kullanıcı Yönetici Değilse -> KİLİTLE --}}
+                                                        @if ($plan->status === 'completed' && Auth::user()->cannot('approve', $plan))
+                                                            <button type="button"
+                                                                class="btn btn-action btn-danger-disabled"
+                                                                style="background: #a4a6a8; cursor: not-allowed;"
+                                                                onclick="alert('İşlem Engellendi!\n\nBu plan tamamlanmıştır. Değişiklik yapmak için yöneticinizle görüşün.')"
+                                                                title="Tamamlandığı için kilitli">
+                                                                <i class="fas fa-lock"></i>
+                                                            </button>
                                                         @else
-                                                            {{-- SİLME YETKİSİ YOK (Ya yetkisiz ya da plan tamamlanmış) --}}
-
-                                                            @if ($plan->status === 'completed')
-                                                                {{-- DURUM 1: Plan Tamamlanmış --}}
+                                                            {{-- Diğer Durumlar: Yetki kontrolü --}}
+                                                            @can('update', $plan)
+                                                                <a href="{{ route('maintenance.edit', $plan->id) }}"
+                                                                    class="btn btn-action btn-warning text-white"
+                                                                    title="Düzenle">
+                                                                    <i class="fas fa-edit"></i>
+                                                                </a>
+                                                            @else
                                                                 <button type="button"
                                                                     class="btn btn-action btn-danger-disabled"
                                                                     style="background: #a4a6a8; cursor: not-allowed;"
-                                                                    onclick="alert('İşlem Engellendi!\n\nTamamlanmış bakım planları arşiv güvenliği nedeniyle silinemez.')"
-                                                                    title="Tamamlandığı için silinemez">
-                                                                    <i class="fas fa-lock"></i>
+                                                                    onclick="alert('Bu işlemi yapmaya yetkiniz yok!\nSadece Admin, Yönetici veya Kaydı Oluşturan kişi düzenleyebilir.')"
+                                                                    title="Yetkiniz Yok">
+                                                                    <i class="fas fa-ban"></i>
                                                                 </button>
+                                                            @endcan
+                                                        @endif
+
+                                                        {{-- 3. SİLME BUTONU MANTIĞI --}}
+                                                        {{-- KURAL: Plan Tamamlanmışsa -> HERKESE KİLİTLE (Arşiv Güvenliği) --}}
+                                                        @if ($plan->status === 'completed')
+                                                            <button type="button"
+                                                                class="btn btn-action btn-danger-disabled"
+                                                                style="background: #a4a6a8; cursor: not-allowed;"
+                                                                onclick="alert('İşlem Engellendi!\n\nTamamlanmış bakım planları arşiv güvenliği nedeniyle silinemez.')"
+                                                                title="Tamamlandığı için silinemez">
+                                                                <i class="fas fa-lock"></i>
+                                                            </button>
+                                                        @else
+                                                            {{-- Plan Açık/İşlemde ise -> Yetki kontrolü --}}
+                                                            @can('delete', $plan)
+                                                                <form action="{{ route('maintenance.destroy', $plan->id) }}"
+                                                                    method="POST" class="d-inline"
+                                                                    onsubmit="return confirm('Bu planı silmek istediğinize emin misiniz?');">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <button type="submit" class="btn btn-action btn-danger"
+                                                                        title="Sil">
+                                                                        <i class="fas fa-trash"></i>
+                                                                    </button>
+                                                                </form>
                                                             @else
-                                                                {{-- DURUM 2: Kullanıcı Yetkisiz --}}
                                                                 <button type="button"
                                                                     class="btn btn-action btn-danger-disabled"
                                                                     style="background: #a4a6a8; cursor: not-allowed;"
                                                                     onclick="alert('Bu işlemi yapmaya yetkiniz yok!\nSadece Admin, Yönetici veya Kaydı Oluşturan kişi silebilir.')"
                                                                     title="Yetkiniz Yok">
-                                                                    <i class="fas fa-trash"></i>
+                                                                    <i class="fas fa-trash"></i> {{-- Yetkisi yoksa çöp kutusu ama gri --}}
                                                                 </button>
-                                                            @endif
-                                                        @endcan
-
+                                                            @endcan
+                                                        @endif
                                                     </div>
                                                 </td>
                                             </tr>

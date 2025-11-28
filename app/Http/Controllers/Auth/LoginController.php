@@ -162,4 +162,17 @@ class LoginController extends Controller
         $key = 'login_ip_check|' . $request->ip();
         Cache::forget($key);
     }
+    /**
+     * Kullanıcı başarıyla giriş yaptıktan sonra çalışır.
+     */
+    protected function authenticated(\Illuminate\Http\Request $request, $user)
+    {
+        // 1. Eğer kullanıcı TV ise direkt TV Dashboard'a gönder
+        if ($user->email === 'tv@koksan.com') {
+            return redirect()->route('tv.dashboard');
+        }
+
+        // 2. Diğer kullanıcılar normal akışına (Home veya gitmek istedikleri yere) devam etsin
+        return redirect()->intended($this->redirectPath());
+    }
 }

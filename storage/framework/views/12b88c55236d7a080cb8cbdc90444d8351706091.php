@@ -222,11 +222,68 @@
         .swal2-content {
             font-size: 0.9rem !important;
         }
+
+        #global-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 99999;
+            /* Her şeyin üstünde olsun */
+            background: #f0f5ff;
+            /* Senin body renginle uyumlu */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            transition: opacity 0.6s ease-out, visibility 0.6s ease-out;
+        }
+
+        #global-loader.loaded {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(102, 126, 234, 0.2);
+            border-left-color: #667eea;
+            /* Senin primary rengin */
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .loader-text {
+            margin-top: 15px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
     </style>
     <?php echo $__env->yieldPushContent('styles'); ?>
 </head>
 
 <body>
+    <div id="global-loader">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Yükleniyor...</div>
+    </div>
     <div id="app">
         <nav class="navbar navbar-expand-lg navbar-light">
             <div class="container-fluid px-lg-4">
@@ -280,17 +337,20 @@
                                 </ul>
                             </li>
 
-                            <li class="nav-item">
-                                <a class="nav-link" href="<?php echo e(route('my-assignments.index')); ?>">
-                                    <i class="fas fa-tasks" style="color: #df6060;"></i><span>Görevlerim</span>
-                                    <?php if(Auth::user()->pending_assignments_count > 0): ?>
-                                        <span
-                                            class="badge bg-danger rounded-pill"><?php echo e(Auth::user()->pending_assignments_count); ?></span>
-                                    <?php endif; ?>
-                                </a>
-                            </li>
+                            <?php if(Auth::user()->hasDepartment('İdari İşler') || Auth::user()->role == 'admin'): ?>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="<?php echo e(route('my-assignments.index')); ?>">
+                                        <i class="fas fa-tasks" style="color: #df6060;"></i><span>Görevlerim</span>
+                                        <?php if(Auth::user()->pending_assignments_count > 0): ?>
+                                            <span
+                                                class="badge bg-danger rounded-pill"><?php echo e(Auth::user()->pending_assignments_count); ?></span>
+                                        <?php endif; ?>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
 
-                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('access-department', 'lojistik')): ?>
+                            <?php if(Auth::user()->hasRole('admin') || Auth::user()->hasDepartment('Lojistik')): ?>
+                                <li class="nav-item">
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown"><i class="fa-solid fa-route"
@@ -300,20 +360,22 @@
                                                     class="fa-solid fa-truck-fast" style="color: #FBD38D;"></i> Yeni
                                                 Sevkiyat</a></li>
                                         <li><a class="dropdown-item" href="<?php echo e(route('products.list')); ?>"><i
-                                                    class="fa-solid fa-truck-ramp-box" style="color: #4FD1C5;"></i> Sevkiyat
+                                                    class="fa-solid fa-truck-ramp-box" style="color: #4FD1C5;"></i>
+                                                Sevkiyat
                                                 Listesi</a></li>
                                     </ul>
                                 </li>
                             <?php endif; ?>
 
-                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('access-department', 'uretim')): ?>
+                            <?php if(Auth::user()->hasRole('admin') || Auth::user()->hasDepartment('Üretim')): ?>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown"><i class="fa-solid fa-industry"
                                             style="color: #4FD1C5;"></i><span>Üretim</span></a>
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         <li><a class="dropdown-item" href="<?php echo e(route('production.plans.create')); ?>"><i
-                                                    class="fa-solid fa-plus-circle" style="color: #F093FB;"></i> Yeni Plan</a>
+                                                    class="fa-solid fa-plus-circle" style="color: #F093FB;"></i> Yeni
+                                                Plan</a>
                                         </li>
                                         <li><a class="dropdown-item" href="<?php echo e(route('production.plans.index')); ?>"><i
                                                     class="fa-solid fa-list-check" style="color: #A78BFA;"></i> Plan
@@ -323,7 +385,7 @@
                             <?php endif; ?>
 
                             
-                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('access-department', 'bakim')): ?>
+                            <?php if(Auth::user()->hasRole('admin') || Auth::user()->hasDepartment('Bakım')): ?>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown">
@@ -344,6 +406,23 @@
                                                 Planlanan Bakımlar Listesi
                                             </a>
                                         </li>
+                                        
+                                        <?php if(Auth::user()->role === 'admin' || Auth::user()->isManagerOrDirector()): ?>
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="<?php echo e(route('approvals.maintenance')); ?>">
+                                                    <i class="fas fa-check-double" style="color: #F6AD55;"></i> Onayımı
+                                                    Bekleyenler
+                                                    
+                                                    <?php if(isset($globalPendingCount) && $globalPendingCount > 0): ?>
+                                                        <span
+                                                            class="badge bg-danger ms-auto rounded-pill"><?php echo e($globalPendingCount); ?></span>
+                                                    <?php endif; ?>
+                                                </a>
+                                            </li>
+                                        <?php endif; ?>
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
@@ -357,47 +436,159 @@
                                 </li>
                             <?php endif; ?>
 
-                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('access-department', 'hizmet')): ?>
+                            
+                            <?php if(Auth::user()->hasDepartment('İdari İşler') || Auth::user()->hasDepartment('Ulaştırma')): ?>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
-                                        data-bs-toggle="dropdown"><i class="fa-solid fa-concierge-bell"
-                                            style="color: #F093FB;"></i><span>İdari İşler</span></a>
+                                        data-bs-toggle="dropdown">
+                                        <i class="fa-solid fa-concierge-bell" style="color: #F093FB;"></i>
+                                        <span>İdari İşler</span>
+                                    </a>
+
                                     <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><a class="dropdown-item" href="<?php echo e(route('service.events.create')); ?>"><i
-                                                    class="fa-solid fa-calendar-plus" style="color: #667EEA;"></i> Yeni
-                                                Etkinlik</a></li>
-                                        <li><a class="dropdown-item" href="<?php echo e(route('service.events.index')); ?>"><i
-                                                    class="fa-solid fa-calendar-days" style="color: #4FD1C5;"></i> Etkinlik
-                                                Listesi</a></li>
-                                        <li>
-                                            <hr class="dropdown-divider">
-                                        </li>
-                                        <li><a class="dropdown-item" href="<?php echo e(route('service.vehicles.index')); ?>"><i
-                                                    class="fa-solid fa-car" style="color: #FBD38D;"></i> Şirket Araçları </a>
-                                        </li>
-                                        <li><a class="dropdown-item"
-                                                href="<?php echo e(route('service.logistics-vehicles.index')); ?>"><i
-                                                    class="fa-solid fa-truck" style="color: #f1b09e;"></i> Nakliye Araçları
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <hr class="dropdown-divider">
-                                        </li>
-                                        <li><a class="dropdown-item" href="<?php echo e(route('travels.create')); ?>"><i
-                                                    class="fa-solid fa-route" style="color: #A78BFA;"></i> Yeni Seyahat</a>
-                                        </li>
-                                        <li><a class="dropdown-item" href="<?php echo e(route('travels.index')); ?>"><i
-                                                    class="fa-solid fa-list-check" style="color: #A78BFA;"></i> Seyahat
-                                                Listesi</a></li>
-                                        <li>
-                                            <hr class="dropdown-divider">
-                                        </li>
-                                        <li><a class="dropdown-item" href="<?php echo e(route('customers.index')); ?>"><i
-                                                    class="fa-solid fa-users" style="color: #A78BFA;"></i> Müşteri
-                                                Yönetimi</a></li>
+
+                                        
+                                        <?php if(Auth::user()->hasDepartment('İdari İşler')): ?>
+                                            <li>
+                                                <a class="dropdown-item" href="<?php echo e(route('service.events.create')); ?>">
+                                                    <i class="fa-solid fa-calendar-plus" style="color: #667EEA;"></i>
+                                                    Yeni Etkinlik
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="<?php echo e(route('service.events.index')); ?>">
+                                                    <i class="fa-solid fa-calendar-days" style="color: #4FD1C5;"></i>
+                                                    Etkinlik Listesi
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
+                                        <?php endif; ?>
+
+
+                                        
+                                        <?php if(Auth::user()->hasDepartment('İdari İşler') || Auth::user()->hasDepartment('Ulaştırma')): ?>
+                                            <li>
+                                                <a class="dropdown-item" href="<?php echo e(route('service.vehicles.index')); ?>">
+                                                    <i class="fa-solid fa-car" style="color: #FBD38D;"></i>
+                                                    Şirket Araçları
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item"
+                                                    href="<?php echo e(route('service.logistics-vehicles.index')); ?>">
+                                                    <i class="fa-solid fa-truck" style="color: #f1b09e;"></i>
+                                                    Nakliye Araçları
+                                                </a>
+                                            </li>
+                                        <?php endif; ?>
+
+
+                                        
+                                        <?php if(Auth::user()->hasDepartment('İdari İşler')): ?>
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
+
+                                            <li>
+                                                <a class="dropdown-item" href="<?php echo e(route('travels.create')); ?>">
+                                                    <i class="fa-solid fa-route" style="color: #A78BFA;"></i>
+                                                    Yeni Seyahat
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="<?php echo e(route('travels.index')); ?>">
+                                                    <i class="fa-solid fa-list-check" style="color: #A78BFA;"></i>
+                                                    Seyahat Listesi
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
+
+                                            <li>
+                                                <a class="dropdown-item" href="<?php echo e(route('customers.index')); ?>">
+                                                    <i class="fa-solid fa-users" style="color: #A78BFA;"></i>
+                                                    Müşteri Yönetimi
+                                                </a>
+                                            </li>
+                                        <?php endif; ?>
                                     </ul>
                                 </li>
                             <?php endif; ?>
+                            <li class="nav-item dropdown me-3">
+                                
+                                <?php
+                                    $unreadCount = auth()->user()->unreadNotifications->count();
+                                    // Bildirim varsa Kırmızı (#d11f1f), yoksa Bootstrap Mavisi (#0d6efd)
+                                    $iconColor = $unreadCount > 0 ? '#d11f1f' : '#0d6efd';
+                                ?>
+
+                                <a class="nav-link position-relative" data-bs-toggle="dropdown" href="#"
+                                    role="button">
+
+                                    
+                                    <i class="fa-solid fa-bell fa-lg"
+                                        style="color: <?php echo e($iconColor); ?>; transition: color 0.3s ease;"></i>
+
+                                    
+                                    <?php if($unreadCount > 0): ?>
+                                        <span
+                                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                            <?php echo e($unreadCount); ?>
+
+                                        </span>
+                                    <?php endif; ?>
+                                </a>
+
+                                <div class="dropdown-menu dropdown-menu-end shadow-lg border-0"
+                                    style="width: 320px; border-radius: 1rem;">
+                                    <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light"
+                                        style="border-radius: 1rem 1rem 0 0;">
+                                        <h6 class="mb-0 fw-bold text-dark">Bildirimler</h6>
+
+                                        
+                                        <?php if($unreadCount > 0): ?>
+                                            <a href="<?php echo e(route('notifications.readAll')); ?>"
+                                                class="text-decoration-none small fw-bold text-primary">Tümünü Oku</a>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <div class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
+                                        <?php $__empty_1 = true; $__currentLoopData = auth()->user()->unreadNotifications; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $notification): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                                            <a href="<?php echo e(route('notifications.read', $notification->id)); ?>"
+                                                class="list-group-item list-group-item-action p-3 border-bottom-0 d-flex align-items-start">
+                                                <div
+                                                    class="me-3 mt-1 text-<?php echo e($notification->data['color'] ?? 'primary'); ?>">
+                                                    <i
+                                                        class="fa-solid <?php echo e($notification->data['icon'] ?? 'fa-info-circle'); ?> fa-lg"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div class="small fw-bold text-dark mb-1">
+                                                        <?php echo e($notification->data['title'] ?? 'Bildirim'); ?>
+
+                                                    </div>
+                                                    <p class="mb-1 small text-muted lh-sm">
+                                                        <?php echo e($notification->data['message'] ?? ''); ?>
+
+                                                    </p>
+                                                    <small class="text-secondary fw-bold" style="font-size: 0.7rem;">
+                                                        <?php echo e($notification->created_at->diffForHumans()); ?>
+
+                                                    </small>
+                                                </div>
+                                            </a>
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                                            <div class="p-4 text-center text-muted">
+                                                <i
+                                                    class="fa-regular fa-bell-slash fa-2x mb-3 text-secondary opacity-50"></i>
+                                                <p class="mb-0 small fw-medium">Şu an yeni bildiriminiz yok.</p>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </li>
 
                             <li class="nav-item dropdown">
                                 <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button"
@@ -416,12 +607,19 @@
                                                 Ekle</a></li>
                                     <?php endif; ?>
                                     <?php if(Auth::user()->role === 'admin'): ?>
+                                        <li><a class="dropdown-item" href="<?php echo e(route('users.index')); ?>"><i
+                                                    class="fa-solid fa-list" style="color: #31317e;"></i>
+                                                Kullanıcıları
+                                                Görüntüle</a></li>
                                         <li><a class="dropdown-item" href="<?php echo e(route('birimler.index')); ?>"><i
                                                     class="fa-solid fa-tags" style="color: #FBD38D;"></i> Birimleri
                                                 Yönet</a></li>
                                         <li><a class="dropdown-item" href="<?php echo e(route('departments.index')); ?>"><i
-                                                    class="fa-solid fa-building-user" style="color: #667EEA;"></i>
+                                                    class="fa-solid fa-building" style="color: #667EEA;"></i>
                                                 Departmanlar</a></li>
+                                        <li><a class="dropdown-item" href="<?php echo e(route('roles.index')); ?>"><i
+                                                    class="fa-solid fa-building-user" style="color: #8b0672;"></i>
+                                                Roller</a></li>
                                         <li><a class="dropdown-item" href="<?php echo e(route('logs.index')); ?>"><i
                                                     class="fa-solid fa-file-lines" style="color: #f78dfb;"></i> Loglar</a>
                                         </li>
@@ -429,12 +627,16 @@
                                             <hr class="dropdown-divider">
                                         </li>
                                     <?php endif; ?>
-                                    <li><a class="dropdown-item" href="<?php echo e(route('logout')); ?>"
-                                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><i
-                                                class="fa-solid fa-right-from-bracket" style="color: #FC8181;"></i> Çıkış
-                                            Yap</a></li>
-                                    <form id="logout-form" action="<?php echo e(route('logout')); ?>" method="POST"
-                                        class="d-none"><?php echo csrf_field(); ?></form>
+                                    <li>
+                                        <form method="POST" action="<?php echo e(route('logout')); ?>">
+                                            <?php echo csrf_field(); ?>
+                                            <button type="submit" class="dropdown-item w-100 text-start"
+                                                style="cursor: pointer; background: transparent; border: none;">
+                                                <i class="fa-solid fa-right-from-bracket" style="color: #FC8181;"></i>
+                                                Çıkış Yap
+                                            </button>
+                                        </form>
+                                    </li>
                                 </ul>
                             </li>
                         <?php endif; ?>
@@ -453,6 +655,12 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+        window.addEventListener('load', function() {
+            const loader = document.getElementById('global-loader');
+            setTimeout(function() {
+                loader.classList.add('loaded');
+            }, 150); // 150ms gecikme 
+        });
         // 1. Scroll Efekti
         window.addEventListener('scroll', function() {
             const navbar = document.querySelector('.navbar');

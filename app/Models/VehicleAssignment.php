@@ -52,6 +52,7 @@ class VehicleAssignment extends Model
         'status',
         'start_time',
         'end_time',
+        'is_important',
         'created_by_user_id',
         'customer_id',
     ];

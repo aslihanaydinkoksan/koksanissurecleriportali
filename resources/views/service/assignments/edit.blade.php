@@ -153,33 +153,6 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
-        .status-badge {
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            display: inline-block;
-        }
-
-        .status-pending {
-            background: linear-gradient(135deg, #fef3c7, #fde68a);
-            color: #92400e;
-        }
-
-        .status-in_progress {
-            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-            color: #1e40af;
-        }
-
-        .status-completed {
-            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-            color: #065f46;
-        }
-
-        .status-cancelled {
-            background: linear-gradient(135deg, #fee2e2, #fecaca);
-            color: #991b1b;
-        }
-
         .selection-card {
             border: 2px solid #e5e7eb;
             border-radius: 1rem;
@@ -271,7 +244,11 @@
     @php
         $canChangeResponsible = Auth::user()->id === $assignment->user_id || Auth::user()->role === 'admin';
         $disableInput = $canChangeResponsible ? '' : 'disabled';
+
+        // Kullanıcı yetkili mi? (Müdür, Admin, Yönetici)
+        $isManager = in_array(Auth::user()->role, ['mudur', 'müdür', 'admin', 'yönetici']);
     @endphp
+
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-9">
@@ -282,7 +259,7 @@
                     isLogistics() {
                         return this.vehicleType === 'logistics';
                     }
-                }"x-cloak>
+                }" x-cloak>
 
                     <div class="card-header bg-transparent border-0 pt-4 pb-3">
                         <div class="d-flex justify-content-between align-items-center">
@@ -322,12 +299,6 @@
                             <input type="hidden" name="responsible_type" value="{{ $assignment->responsible_type }}">
                             <input type="hidden" name="responsible_id" value="{{ $assignment->responsible_id }}">
 
-                            @if ($assignment->requiresVehicle())
-                                <input type="hidden" name="vehicle_id" value="{{ $assignment->vehicle_id }}">
-                            @else
-                                <input type="hidden" name="vehicle_id" value="">
-                            @endif
-
                             {{-- GÖREV BİLGİLERİ --}}
                             <div class="section-header">
                                 <div class="icon">📋</div>
@@ -347,137 +318,221 @@
 
                                 <div class="col-md-4 mb-3">
                                     <label for="status" class="form-label">🔄 Görev Durumu *</label>
-                                    <select name="status" id="status" x-model="status"
-                                        class="form-select @error('status') is-invalid @enderror" required>
-                                        <option value="pending">⏳ Bekliyor</option>
-                                        <option value="in_progress">🔄 Devam Ediyor</option>
-                                        <option value="completed">✅ Tamamlandı</option>
-                                        <option value="cancelled">❌ İptal Edildi</option>
-                                    </select>
-                                    @error('status')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+
+                                    @if ($isManager)
+                                        {{-- YÖNETİCİ İSE: Dropdown Açık --}}
+                                        <select name="status" id="status" x-model="status"
+                                            class="form-select @error('status') is-invalid @enderror" required>
+                                            <option value="waiting_assignment">⏳ Atama Bekliyor</option>
+                                            <option value="pending">🕒 Bekliyor (Onaylandı)</option>
+                                            <option value="in_progress">🔄 Devam Ediyor</option>
+                                            <option value="completed">✅ Tamamlandı</option>
+                                            <option value="cancelled">❌ İptal Edildi</option>
+                                        </select>
+                                        @error('status')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    @else
+                                        {{-- PERSONEL İSE: Sadece Bilgi (Değiştirilemez) --}}
+                                        <div class="p-2 border rounded bg-light">
+                                            @if ($assignment->status == 'waiting_assignment')
+                                                <span class="badge bg-warning text-dark">⏳ Atama Bekliyor</span>
+                                            @elseif($assignment->status == 'pending')
+                                                <span class="badge bg-info text-dark">🕒 Onaylandı / Sırada</span>
+                                            @elseif($assignment->status == 'in_progress')
+                                                <span class="badge bg-primary">🔄 Yolda / Devam Ediyor</span>
+                                            @elseif($assignment->status == 'completed')
+                                                <span class="badge bg-success">✅ Tamamlandı</span>
+                                            @else
+                                                <span class="badge bg-secondary">❌ İptal</span>
+                                            @endif
+                                            <div class="small text-muted mt-1">
+                                                <i class="fas fa-lock"></i> Durum yönetici tarafından güncellenir.
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="status" value="{{ $assignment->status }}">
+                                    @endif
                                 </div>
                             </div>
 
                             <div class="info-box mb-4">
                                 <div class="info-box-content">
-                                    <strong>Sefer Zamanı:</strong> {{ $assignment->start_time->format('d.m.Y H:i') }}
+                                    <strong>Sefer Zamanı:</strong>
+                                    {{ $assignment->start_time ? $assignment->start_time->format('d.m.Y H:i') : 'Henüz Belirlenmedi' }}
                                     <br>
-                                    <small>Görev zamanını değiştirmek için görevi silip yeniden oluşturmanız
-                                        gerekmektedir.</small>
+                                    <small>Görev zamanı araç ataması yapıldığında kesinleşecektir.</small>
                                 </div>
                             </div>
 
-                            {{-- ARAÇ SEÇİMİ --}}
-                            <div class="section-header">
-                                <div class="icon">🚗</div>
-                                <h5>Araç Bilgileri</h5>
-                            </div>
-                            @if ($assignment->vehicle_id) {{-- Kesin çözüm: ID varsa araç vardır --}}
-                                <div class="mb-4">
-                                    <label for="vehicle_id" class="form-label">
-                                        <span x-show="vehicleType === 'company'">🚙</span>
-                                        <span x-show="vehicleType === 'logistics'">🚚</span>
-                                        Araç Seçimi *
-                                    </label>
+                            {{-- ========================================================= --}}
+                            {{-- ARAÇ BİLGİLERİ (GÜNCELLENMİŞ MANTIK) --}}
+                            {{-- ========================================================= --}}
 
-                                    {{-- ŞİRKET ARAÇLARI LİSTESİ (Alpine ile kontrol edilir) --}}
-                                    <div x-show="vehicleType === 'company'">
-                                        <select name="vehicle_id" class="form-select"
-                                            :disabled="vehicleType !== 'company'">
-                                            <option value="">Araç Seçiniz...</option>
-                                            @foreach ($companyVehicles as $vehicle)
-                                                <option value="{{ $vehicle->id }}"
-                                                    {{ $assignment->vehicle_id == $vehicle->id && !$assignment->isLogistics() ? 'selected' : '' }}>
-                                                    {{ $vehicle->plate_number }} -
-                                                    {{ $vehicle->brand_model ?? $vehicle->model }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                            {{-- KURAL: Eğer bu görev bir "Araç Görevi" ise (Tipi varsa), bu bölüm hep açık olsun. --}}
+                            @if ($assignment->vehicle_type)
+                                <div class="section-header">
+                                    <div class="icon">🚗</div>
+                                    <h5>Araç Bilgileri</h5>
+                                </div>
+
+                                {{-- SENARYO A: YÖNETİCİ (MÜDÜR) --}}
+                                {{-- Yönetici her durumda (atama bekliyor veya atanmış) araç seçimi yapabilir/değiştirebilir --}}
+                                @if ($isManager)
+                                    <div class="mb-4">
+                                        <div class="alert alert-light border">
+                                            <i class="fas fa-info-circle text-primary me-2"></i>
+                                            Şu anki durum:
+                                            <strong>{{ $assignment->vehicle ? 'Araç Atanmış' : 'Araç Bekleniyor' }}</strong>.
+                                            Gerekirse aşağıdan aracı değiştirebilirsiniz.
+                                        </div>
+
+                                        <label for="vehicle_id" class="form-label">
+                                            <span x-show="vehicleType === 'company'">🚙</span>
+                                            <span x-show="vehicleType === 'logistics'">🚚</span>
+                                            Araç Seçimi / Değişimi *
+                                        </label>
+
+                                        {{-- ŞİRKET ARAÇLARI --}}
+                                        <div x-show="vehicleType === 'company'">
+                                            <select name="vehicle_id" class="form-select">
+                                                <option value="">Araç Seçiniz...</option>
+                                                @foreach ($companyVehicles as $vehicle)
+                                                    <option value="{{ $vehicle->id }}"
+                                                        {{ $assignment->vehicle_id == $vehicle->id ? 'selected' : '' }}>
+                                                        {{ $vehicle->plate_number }} -
+                                                        {{ $vehicle->brand_model ?? $vehicle->model }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        {{-- NAKLİYE ARAÇLARI --}}
+                                        <div x-show="vehicleType === 'logistics'">
+                                            <select name="vehicle_id" class="form-select">
+                                                <option value="">Nakliye Aracı Seçiniz...</option>
+                                                @foreach ($logisticsVehicles as $vehicle)
+                                                    <option value="{{ $vehicle->id }}"
+                                                        {{ $assignment->vehicle_id == $vehicle->id ? 'selected' : '' }}>
+                                                        {{ $vehicle->plate_number }} - {{ $vehicle->brand }}
+                                                        {{ $vehicle->model }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
                                     </div>
 
-                                    {{-- NAKLİYE ARAÇLARI LİSTESİ --}}
-                                    <div x-show="vehicleType === 'logistics'">
-                                        <select name="vehicle_id" class="form-select"
-                                            :disabled="vehicleType !== 'logistics'">
-                                            <option value="">Nakliye Aracı Seçiniz...</option>
-                                            @foreach ($logisticsVehicles as $vehicle)
-                                                <option value="{{ $vehicle->id }}"
-                                                    {{ $assignment->vehicle_id == $vehicle->id && $assignment->isLogistics() ? 'selected' : '' }}>
-                                                    {{ $vehicle->plate_number }} - {{ $vehicle->brand }}
-                                                    {{ $vehicle->model }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                    {{-- SENARYO B: STANDART PERSONEL --}}
+                                    {{-- Personel sadece mevcut durumu görür, müdahale edemez --}}
+                                @else
+                                    <div class="mb-4">
+                                        @if ($assignment->vehicle)
+                                            {{-- Araç Atanmışsa Göster --}}
+                                            <div class="alert alert-success d-flex align-items-center">
+                                                <div class="h2 me-3 mb-0">✅</div>
+                                                <div>
+                                                    <h6 class="alert-heading fw-bold mb-0">Atanan Araç</h6>
+                                                    <p class="mb-0">
+                                                        {{ $assignment->vehicle->plate_number }}
+                                                        <span
+                                                            class="text-muted small">({{ $assignment->vehicle->brand_model ?? $assignment->vehicle->brand }})</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            {{-- Form hatası vermemesi için mevcut ID'yi gizli yolluyoruz --}}
+                                            <input type="hidden" name="vehicle_id" value="{{ $assignment->vehicle_id }}">
+                                        @else
+                                            {{-- Araç Henüz Atanmamışsa Uyarı Göster --}}
+                                            <div class="alert alert-warning d-flex align-items-center">
+                                                <div class="h2 me-3 mb-0">⏳</div>
+                                                <div>
+                                                    <h6 class="alert-heading fw-bold mb-0">Araç Bekleniyor</h6>
+                                                    <p class="mb-0 small">
+                                                        Bu görev için araç ataması henüz yapılmamıştır.
+                                                        Yönetici atama yaptığında burada görünecektir.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <input type="hidden" name="vehicle_id" value="">
+                                        @endif
                                     </div>
-                                    @error('vehicle_id')
-                                        <div class="text-danger small mt-1">{{ $message }}</div>
-                                    @enderror
+                                @endif
+
+                                {{-- NAKLİYE DETAYLARI (KM & Yakıt) --}}
+                                <div x-show="isLogistics()" class="fade-in mt-4">
+                                    <div class="section-header">
+                                        <div class="icon">📊</div>
+                                        <h5>Nakliye Detayları (KM & Yakıt)</h5>
+                                    </div>
+
+                                    @if ($isManager)
+                                        {{-- Yönetici: Değerleri Düzenleyebilir --}}
+                                        <div class="row mb-4">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">📍 Başlangıç KM</label>
+                                                <input type="number" step="0.1" name="start_km"
+                                                    class="form-control" value="{{ $assignment->start_km }}">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">⛽ Başlangıç Yakıt</label>
+                                                <select name="start_fuel_level" class="form-select">
+                                                    @foreach (['full', '3/4', '1/2', '1/4', 'empty'] as $lvl)
+                                                        <option value="{{ $lvl }}"
+                                                            {{ $assignment->start_fuel_level == $lvl ? 'selected' : '' }}>
+                                                            {{ $lvl }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                    @else
+                                        {{-- Personel: Sadece Okuyabilir --}}
+                                        <div class="row mb-4">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">📍 Başlangıç KM</label>
+                                                <input type="text" class="form-control readonly-field"
+                                                    value="{{ $assignment->start_km ? number_format($assignment->start_km, 2) . ' km' : '-' }}"
+                                                    disabled readonly>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">⛽ Başlangıç Yakıt Durumu</label>
+                                                <input type="text" class="form-control readonly-field"
+                                                    value="{{ $assignment->start_fuel_level ?? '-' }}" disabled readonly>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    {{-- Bitiş Değerleri (Herkes Görebilir - Görev Tamamlanırken) --}}
+                                    <div class="row mb-4">
+                                        <div class="col-md-4 mb-3">
+                                            <label for="final_km" class="form-label">🏁 Bitiş KM</label>
+                                            <input type="number" step="0.01" name="final_km" id="final_km"
+                                                class="form-control" value="{{ old('final_km', $assignment->end_km) }}"
+                                                placeholder="Örn: 125250.75">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="final_fuel" class="form-label">⛽ Bitiş Yakıt Durumu</label>
+                                            <select name="final_fuel" id="final_fuel" class="form-select">
+                                                <option value="">Seçiniz...</option>
+                                                @foreach (['full' => 'Dolu (Full)', '3/4' => '3/4', '1/2' => '1/2 (Yarım)', '1/4' => '1/4', 'empty' => 'Boş'] as $level => $label)
+                                                    <option value="{{ $level }}"
+                                                        {{ old('final_fuel', $assignment->end_fuel_level) == $level ? 'selected' : '' }}>
+                                                        {{ $label }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="fuel_cost" class="form-label">💰 Yakıt Maliyeti (TL)</label>
+                                            <input type="number" step="0.01" name="fuel_cost" id="fuel_cost"
+                                                class="form-control"
+                                                value="{{ old('fuel_cost', $assignment->fuel_cost) }}"
+                                                placeholder="Örn: 1250.50">
+                                        </div>
+                                    </div>
                                 </div>
                             @else
+                                {{-- Bu bir araç görevi değilse input gönderme --}}
                                 <input type="hidden" name="vehicle_id" value="">
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle me-2"></i> Bu görev için araç ataması gerekmemektedir.
-                                </div>
                             @endif
-                            {{-- NAKLİYE DETAYLARI --}}
-                            <div x-show="isLogistics()" class="fade-in">
-                                <div class="section-header">
-                                    <div class="icon">📊</div>
-                                    <h5>Nakliye Detayları (KM & Yakıt)</h5>
-                                </div>
-
-                                <div class="warning-box mb-4">
-                                    <div class="warning-box-content">
-                                        <strong>Not:</strong> Başlangıç KM ve yakıt durumu değiştirilemez. Sadece bitiş
-                                        değerlerini güncelleyebilirsiniz.
-                                    </div>
-                                </div>
-
-                                <div class="row mb-4">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">📍 Başlangıç KM</label>
-                                        <input type="text" class="form-control readonly-field"
-                                            value="{{ number_format($assignment->start_km, 2) }} km" disabled readonly>
-                                    </div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">⛽ Başlangıç Yakıt Durumu</label>
-                                        <input type="text" class="form-control readonly-field"
-                                            value="{{ $assignment->start_fuel_level }}" disabled readonly>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-4">
-                                    <div class="col-md-4 mb-3">
-                                        <label for="final_km" class="form-label">🏁 Bitiş KM</label>
-                                        <input type="number" step="0.01" name="final_km" id="final_km"
-                                            class="form-control" value="{{ old('final_km', $assignment->end_km) }}"
-                                            placeholder="Örn: 125250.75">
-                                    </div>
-
-                                    <div class="col-md-4 mb-3">
-                                        <label for="final_fuel" class="form-label">⛽ Bitiş Yakıt Durumu</label>
-                                        <select name="final_fuel" id="final_fuel" class="form-select">
-                                            <option value="">Seçiniz...</option>
-                                            @foreach (['full' => 'Dolu (Full)', '3/4' => '3/4', '1/2' => '1/2 (Yarım)', '1/4' => '1/4', 'empty' => 'Boş'] as $level => $label)
-                                                <option value="{{ $level }}"
-                                                    {{ old('final_fuel', $assignment->end_fuel_level) == $level ? 'selected' : '' }}>
-                                                    {{ $label }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-
-                                    <div class="col-md-4 mb-3">
-                                        <label for="fuel_cost" class="form-label">💰 Yakıt Maliyeti (TL)</label>
-                                        <input type="number" step="0.01" name="fuel_cost" id="fuel_cost"
-                                            class="form-control" value="{{ old('fuel_cost', $assignment->fuel_cost) }}"
-                                            placeholder="Örn: 1250.50">
-                                    </div>
-                                </div>
-                            </div>
 
                             {{-- SORUMLULAR --}}
                             <div class="section-header">

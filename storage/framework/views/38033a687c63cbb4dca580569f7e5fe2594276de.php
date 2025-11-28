@@ -300,6 +300,10 @@
             animation: progress 5s linear forwards;
         }
 
+        .btn-white:hover {
+            background: #f8fafc !important;
+        }
+
         @keyframes progress {
             from {
                 width: 100%;
@@ -317,7 +321,7 @@
 
         
         <div class="position-relative mb-4">
-            <div class="d-flex align-items-center justify-content-between p-4 rounded-4 shadow-sm"
+            <div class="d-flex align-items-center justify-content-between p-3 rounded-4 shadow-sm"
                 style="background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.98) 100%); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);">
 
                 
@@ -342,8 +346,7 @@
                         <div class="d-flex align-items-center gap-2 ms-1">
                             <span class="badge rounded-pill px-3 py-1"
                                 style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); font-size: 11px; font-weight: 600; letter-spacing: 0.3px;">
-                                PLAN #<?php echo e($plan->id); ?>
-
+                                PLAN "<?php echo e($plan->title); ?>"
                             </span>
                             <span style="color: #64748b; font-size: 13px; font-weight: 500;">
                                 Detayları görüntülüyorsunuz
@@ -352,36 +355,116 @@
                     </div>
                 </div>
 
-                <div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
                 
-                <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('update', $plan)): ?>
+                <div class="d-flex align-items-center gap-3">
+
                     
-                    <a href="<?php echo e(route('maintenance.edit', $plan->id)); ?>"
-                        class="btn btn-primary border-0 shadow-sm px-4 py-2 rounded-3 d-flex align-items-center gap-2"
-                        style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); font-weight: 600; font-size: 14px; letter-spacing: 0.3px; transition: all 0.3s ease;"
-                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 24px rgba(99, 102, 241, 0.3)';"
-                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='';">
-                        <i class="fas fa-edit" style="font-size: 14px;"></i>
-                        <span>Düzenle</span>
-                    </a>
-                <?php else: ?>
+                    <?php if($plan->status == 'pending_approval'): ?>
+                        <div
+                            class="d-flex align-items-center px-3 py-2 rounded-3 bg-warning bg-opacity-10 border border-warning border-opacity-25">
+                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('approve', $plan)): ?>
+                                
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="d-flex align-items-center text-warning-emphasis">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <span class="small fw-bold lh-1">Onay Bekliyor</span>
+                                    </div>
+
+                                    <div class="d-flex gap-2">
+                                        
+                                        <form action="<?php echo e(route('maintenance.update', $plan->id)); ?>" method="POST"
+                                            onsubmit="return confirm('Bu planı reddedip personele geri göndermek istediğinize emin misiniz?');">
+                                            <?php echo csrf_field(); ?>
+                                            <?php echo method_field('PUT'); ?>
+                                            <input type="hidden" name="status" value="in_progress">
+                                            <button type="submit"
+                                                class="btn btn-danger btn-sm fw-bold text-white shadow-sm px-3" title="Reddet">
+                                                <i class="fas fa-undo-alt"></i> Reddet
+                                            </button>
+                                        </form>
+
+                                        
+                                        <form action="<?php echo e(route('maintenance.update', $plan->id)); ?>" method="POST">
+                                            <?php echo csrf_field(); ?>
+                                            <?php echo method_field('PUT'); ?>
+                                            <input type="hidden" name="status" value="completed">
+                                            <button type="submit" class="btn btn-success btn-sm fw-bold shadow-sm px-3">
+                                                <i class="fas fa-check me-1"></i> Onayla
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            <?php else: ?>
+                                
+                                <div class="d-flex align-items-center text-warning-emphasis">
+                                    <i class="fas fa-clock me-2"></i>
+                                    <div>
+                                        <strong class="d-block small">Yönetici Onayı Bekleniyor</strong>
+                                        <span style="font-size: 11px; opacity: 0.8;">İşlem tamamlandı, onay bekleniyor.</span>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+
                     
-                    <button type="button"
-                        class="btn btn-secondary border-0 shadow-sm px-4 py-2 rounded-3 d-flex align-items-center gap-2"
-                        style="background: #94a3b8; cursor: not-allowed; opacity: 0.8;" onclick="showToast()">
-                        <i class="fas fa-lock" style="font-size: 14px;"></i>
-                        <span>Düzenle</span>
-                    </button>
-                <?php endif; ?>
+                    <?php if($plan->status === 'completed' && Auth::user()->cannot('approve', $plan)): ?>
+                        <button type="button"
+                            class="btn btn-secondary border-0 shadow-sm px-4 py-2 rounded-3 d-flex align-items-center gap-2"
+                            style="background: #a4a6a8; cursor: not-allowed; opacity: 0.8;"
+                            onclick="alert('İşlem Engellendi!\n\nBu plan tamamlanmıştır. Değişiklik yapmak için yöneticinizle görüşün.')">
+                            <i class="fas fa-lock" style="font-size: 14px;"></i>
+                            <span>Düzenle</span>
+                        </button>
+                    <?php else: ?>
+                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('update', $plan)): ?>
+                            <a href="<?php echo e(route('maintenance.edit', $plan->id)); ?>"
+                                class="btn btn-primary border-0 shadow-sm px-4 py-2 rounded-3 d-flex align-items-center gap-2"
+                                style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); font-weight: 600; font-size: 14px; letter-spacing: 0.3px; transition: all 0.3s ease;"
+                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 24px rgba(99, 102, 241, 0.3)';"
+                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='';">
+                                <i class="fas fa-edit" style="font-size: 14px;"></i>
+                                <span>Düzenle</span>
+                            </a>
+                        <?php else: ?>
+                            <button type="button"
+                                class="btn btn-secondary border-0 shadow-sm px-4 py-2 rounded-3 d-flex align-items-center gap-2"
+                                style="background: #94a3b8; cursor: not-allowed; opacity: 0.8;"
+                                onclick="alert('Bu planı düzenleme yetkiniz bulunmuyor.\nSadece Admin, Departman Yöneticisi veya Oluşturan kişi düzenleyebilir.')">
+                                <i class="fas fa-ban" style="font-size: 14px;"></i>
+                                <span>Düzenle</span>
+                            </button>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
 
-        <style>
-            .btn-white:hover {
-                background: #f8fafc !important;
-            }
-        </style>
+        
+        <?php
+            $lastLog = $plan->logs->sortByDesc('created_at')->first();
+        ?>
 
+        <?php if(
+            $plan->status == 'in_progress' &&
+                $lastLog &&
+                $lastLog->action == 'rejected' &&
+                Auth::user()->cannot('approve', $plan)): ?>
+            <div class="alert alert-danger d-flex align-items-center shadow-sm mb-4">
+                <i class="fas fa-undo-alt fa-2x me-3"></i>
+                <div>
+                    <h6 class="fw-bold mb-1">İşlem Reddedildi / Geri Gönderildi</h6>
+                    <p class="mb-0 small">
+                        Yöneticiniz bu planı onaylamadı ve size geri gönderdi. Lütfen eksikleri tamamlayıp tekrar onaya
+                        sununuz.
+                        <br>
+                        <span class="fst-italic text-opacity-75">(<?php echo e($lastLog->created_at->diffForHumans()); ?>
+
+                            reddedildi)</span>
+                    </p>
+                </div>
+            </div>
+        <?php endif; ?>
         <div class="row">
             
             <div class="col-lg-4">
@@ -430,13 +513,47 @@
                         </ul>
 
                         <div class="mt-4 p-3 bg-light rounded-3 border">
-                            <div class="d-flex justify-content-between mb-2">
-                                <small class="text-muted">Planlanan Başlangıç:</small>
-                                <small class="fw-bold"><?php echo e($plan->planned_start_date->format('d.m.Y H:i')); ?></small>
+                            
+                            <div
+                                class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-light-subtle">
+                                <div class="d-flex flex-column">
+                                    <small class="text-muted fw-semibold"
+                                        style="font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase;">Planlanan
+                                        Başlangıç</small>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold text-dark fs-6">
+                                        <i class="far fa-calendar me-1 text-muted opacity-50"></i>
+                                        <?php echo e($plan->planned_start_date->format('d.m.Y')); ?>
+
+                                    </div>
+                                    <div class="text-muted small" style="font-size: 12px;">
+                                        <i class="far fa-clock me-1 text-muted opacity-50"></i>
+                                        <?php echo e($plan->planned_start_date->format('H:i')); ?>
+
+                                    </div>
+                                </div>
                             </div>
-                            <div class="d-flex justify-content-between">
-                                <small class="text-muted">Planlanan Bitiş:</small>
-                                <small class="fw-bold"><?php echo e($plan->planned_end_date->format('d.m.Y H:i')); ?></small>
+
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex flex-column">
+                                    <small class="text-muted fw-semibold"
+                                        style="font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase;">Planlanan
+                                        Bitiş</small>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold text-dark fs-6">
+                                        <i class="far fa-calendar me-1 text-muted opacity-50"></i>
+                                        <?php echo e($plan->planned_end_date->format('d.m.Y')); ?>
+
+                                    </div>
+                                    <div class="text-muted small" style="font-size: 12px;">
+                                        <i class="far fa-clock me-1 text-muted opacity-50"></i>
+                                        <?php echo e($plan->planned_end_date->format('H:i')); ?>
+
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -467,16 +584,48 @@
                                     <i class="fas fa-stop-circle me-2"></i>Çalışmayı Durdur
                                 </button>
                             </div>
+                        <?php elseif($plan->status == 'pending_approval'): ?>
+                            
+                            <div class="timer-widget bg-light border-warning">
+                                <div class="text-warning fw-bold mb-3">
+                                    <i class="fas fa-hourglass-half fa-3x mb-2"></i><br>
+                                    ONAY SÜRECİNDE
+                                </div>
+                                <p class="text-muted small mb-0">
+                                    Bu iş tamamlanmış ve yönetici onayına sunulmuştur. <br>
+                                    Onaylanana veya reddedilene kadar tekrar işlem yapılamaz.
+                                </p>
+                                <div class="mt-3 pt-3 border-top border-warning border-opacity-25">
+                                    <strong class="text-dark d-block mb-1">Kaydedilen Toplam Süre</strong>
+                                    <span class="fs-5 font-monospace text-secondary">
+                                        <?php echo e(floor($plan->previous_duration_minutes / 60)); ?> sa
+                                        <?php echo e($plan->previous_duration_minutes % 60); ?> dk
+                                    </span>
+                                </div>
+                            </div>
+                        <?php elseif($plan->status == 'completed'): ?>
+                            
+                            <div
+                                class="alert alert-success border-0 bg-success bg-opacity-10 text-success text-center py-4 rounded-3 mb-0">
+                                <i class="fas fa-check-circle fa-3x mb-3"></i>
+                                <h5 class="fw-bold">Bakım Tamamlandı</h5>
+                                <p class="mb-0">
+                                    Toplam Süre: <br>
+                                    <strong><?php echo e(floor($plan->previous_duration_minutes / 60)); ?> saat
+                                        <?php echo e($plan->previous_duration_minutes % 60); ?> dakika</strong>
+                                </p>
+                            </div>
                         <?php else: ?>
                             
-                            <?php if($plan->status != 'completed'): ?>
-                                <div class="timer-widget">
-                                    <div class="text-muted mb-1 small">Toplam Çalışma Süresi</div>
-                                    <h2 class="display-6 timer-display mb-3 text-secondary">
-                                        <?php echo e(sprintf('%02d:%02d:00', floor($plan->previous_duration_minutes / 60), $plan->previous_duration_minutes % 60)); ?>
+                            <div class="timer-widget">
+                                <div class="text-muted mb-1 small">Toplam Çalışma Süresi</div>
+                                <h2 class="display-6 timer-display mb-3 text-secondary">
+                                    <?php echo e(sprintf('%02d:%02d:00', floor($plan->previous_duration_minutes / 60), $plan->previous_duration_minutes % 60)); ?>
 
-                                    </h2>
+                                </h2>
 
+                                <div class="d-grid gap-2">
+                                    
                                     <form action="<?php echo e(route('maintenance.start-timer', $plan->id)); ?>" method="POST">
                                         <?php echo csrf_field(); ?>
                                         <button type="submit" class="btn btn-success w-100 py-2 rounded-3 shadow-sm">
@@ -488,23 +637,140 @@
                                             <?php endif; ?>
                                         </button>
                                     </form>
+
+                                    
+                                    
+                                    <?php if($plan->previous_duration_minutes > 0): ?>
+                                        <button type="button"
+                                            class="btn btn-outline-primary w-100 py-2 rounded-3 border-2 fw-bold"
+                                            data-bs-toggle="modal" data-bs-target="#quickFinishModal">
+                                            <i class="fas fa-check-double me-2"></i>
+                                            Sayaçsız Tamamla / Onaya Gönder
+                                        </button>
+                                    <?php endif; ?>
                                 </div>
-                            <?php else: ?>
-                                
-                                <div
-                                    class="alert alert-success border-0 bg-success bg-opacity-10 text-success text-center py-4 rounded-3">
-                                    <i class="fas fa-check-circle fa-3x mb-3"></i>
-                                    <h5 class="fw-bold">Bakım Tamamlandı</h5>
-                                    <p class="mb-0">
-                                        Toplam Süre: <br>
-                                        <strong><?php echo e(floor($plan->previous_duration_minutes / 60)); ?> saat
-                                            <?php echo e($plan->previous_duration_minutes % 60); ?> dakika</strong>
-                                    </p>
-                                </div>
-                            <?php endif; ?>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>
+                
+                <?php if($plan->actual_end_date && ($plan->status == 'completed' || $plan->status == 'pending_approval')): ?>
+                    <div class="detail-card">
+                        <div class="card-header-custom bg-gradient-dark text-white">
+                            <span><i class="fas fa-chart-line me-2"></i>Zamanlama ve Performans Analizi</span>
+                        </div>
+                        <div class="p-4">
+
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+
+                                
+                                <div class="text-center">
+                                    <small class="text-uppercase text-secondary fw-bold"
+                                        style="font-size: 0.7rem; letter-spacing: 1px;">
+                                        PLANLANAN
+                                    </small>
+                                    <div class="mt-2">
+                                        <div class="fw-bold text-dark fs-4" style="line-height: 1;">
+                                            <?php echo e($plan->planned_end_date->format('d.m.Y')); ?>
+
+                                        </div>
+                                        <div class="text-muted fw-bold mt-1">
+                                            <?php echo e($plan->planned_end_date->format('H:i')); ?>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                                
+                                <div class="text-muted opacity-25">
+                                    <i class="fas fa-chevron-right fa-2x"></i>
+                                </div>
+
+                                
+                                <div class="text-center">
+                                    <small class="text-uppercase text-secondary fw-bold"
+                                        style="font-size: 0.7rem; letter-spacing: 1px;">
+                                        GERÇEKLEŞEN
+                                    </small>
+                                    <div class="mt-2">
+                                        <div class="fw-bold text-dark fs-4" style="line-height: 1;">
+                                            <?php echo e($plan->actual_end_date->format('d.m.Y')); ?>
+
+                                        </div>
+                                        <div class="text-muted fw-bold mt-1">
+                                            <?php echo e($plan->actual_end_date->format('H:i')); ?>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            
+                            <?php
+                                $diffMinutes = $plan->actual_end_date->diffInMinutes($plan->planned_end_date, false);
+                                $isEarly = $diffMinutes > 0;
+                                $diffAbs = abs($diffMinutes);
+
+                                // Daha okunaklı süre formatı (Gün varsa ekle)
+                                $days = floor($diffAbs / (24 * 60));
+                                $hours = floor(($diffAbs % (24 * 60)) / 60);
+                                $minutes = $diffAbs % 60;
+
+                                $diffText = '';
+                                if ($days > 0) {
+                                    $diffText .= $days . ' gün ';
+                                }
+                                if ($hours > 0) {
+                                    $diffText .= $hours . ' sa ';
+                                }
+                                $diffText .= $minutes . ' dk';
+                            ?>
+
+                            <div class="progress rounded-pill mb-2" style="height: 35px; background-color: #f1f5f9;">
+                                <?php if($isEarly): ?>
+                                    <div class="progress-bar bg-success d-flex align-items-center justify-content-center"
+                                        role="progressbar" style="width: 100%; font-size: 0.9rem;">
+                                        <i class="fas fa-check-circle me-2"></i> <?php echo e($diffText); ?> ERKEN
+                                    </div>
+                                <?php else: ?>
+                                    <div class="progress-bar bg-danger d-flex align-items-center justify-content-center"
+                                        role="progressbar" style="width: 100%; font-size: 0.9rem;">
+                                        <i class="fas fa-exclamation-triangle me-2"></i> <?php echo e($diffText); ?> GECİKMELİ
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="text-center mb-4">
+                                <?php if($isEarly): ?>
+                                    <small class="text-success fw-bold"><i class="fas fa-thumbs-up me-1"></i> Harika!
+                                        Planlanandan daha kısa sürdü.</small>
+                                <?php else: ?>
+                                    <small class="text-danger fw-bold"><i class="fas fa-clock me-1"></i> Planlanan süreyi
+                                        aştı.</small>
+                                <?php endif; ?>
+                            </div>
+
+                            
+                            <hr class="border-secondary opacity-10 my-4">
+
+                            
+                            <div>
+                                <h6 class="fw-bold text-secondary mb-2" style="font-size: 0.85rem;">
+                                    <i class="fas fa-comment-alt me-2"></i>Bitiş Notu / Sapma Nedeni:
+                                </h6>
+                                <div
+                                    class="bg-light p-3 rounded-3 border border-start-0 border-end-0 border-top-0 border-bottom-4 
+                    <?php echo e($isEarly ? 'border-success' : 'border-danger'); ?> bg-opacity-25">
+                                    <p class="mb-0 text-dark fst-italic">
+                                        "<?php echo e($plan->completion_note ?? 'Herhangi bir not girilmemiş.'); ?>"
+                                    </p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
 
             
@@ -602,16 +868,6 @@
                                     </div>
                                 </div>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-
-                            <div class="timeline-item system">
-                                <div class="d-flex flex-column">
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <strong class="text-muted">Sistem</strong>
-                                        <small class="text-muted"><?php echo e($plan->created_at->format('d.m.Y H:i')); ?></small>
-                                    </div>
-                                    <p class="mb-0 small text-muted fst-italic">Plan oluşturuldu.</p>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -621,31 +877,87 @@
     </div>
 
     
-
-    
     <div class="modal fade" id="stopTimerModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4">
                 <form action="<?php echo e(route('maintenance.stop-timer', $plan->id)); ?>" method="POST">
                     <?php echo csrf_field(); ?>
                     <div class="modal-header border-0 pb-0">
-                        <h5 class="modal-title fw-bold">Çalışmayı Durdur</h5>
+                        <h5 class="modal-title fw-bold">Çalışma İşlemi</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="alert alert-light border">
-                            <i class="fas fa-info-circle me-2 text-primary"></i>
-                            Çalışma süresi sisteme kaydedilecek.
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-dark mb-3">Ne yapmak istiyorsunuz?</label>
+
+                            
+                            <div class="form-check custom-option basic-checkbox p-3 rounded border mb-3 bg-light"
+                                style="cursor: pointer;" onclick="document.getElementById('radioFinish').checked = true;">
+                                <input class="form-check-input" type="radio" name="completion_type" id="radioFinish"
+                                    value="finish" checked>
+                                <label class="form-check-label ms-2" for="radioFinish" style="cursor: pointer;">
+                                    <span class="fw-bold d-block text-dark"><i
+                                            class="fas fa-check-circle text-success me-2"></i>İşi Tamamla</span>
+                                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('approve', $plan)): ?>
+                                        <span class="small text-success">İşlem direkt <strong>Tamamlandı</strong>
+                                            olacak.</span>
+                                    <?php else: ?>
+                                        <span class="small text-muted">İşlem <strong>Onay Bekliyor</strong> statüsüne
+                                            geçecek.</span>
+                                    <?php endif; ?>
+                                </label>
+                            </div>
+
+                            
+                            <div class="form-check custom-option basic-checkbox p-3 rounded border"
+                                style="cursor: pointer;" onclick="document.getElementById('radioPause').checked = true;">
+                                <input class="form-check-input" type="radio" name="completion_type" id="radioPause"
+                                    value="pause">
+                                <label class="form-check-label ms-2" for="radioPause" style="cursor: pointer;">
+                                    <span class="fw-bold d-block text-dark"><i
+                                            class="fas fa-pause-circle text-warning me-2"></i>Sadece Duraklat / Ara
+                                        Ver</span>
+                                    <span class="small text-muted">Sayaç duracak ama durum "İşlemde" kalacak.</span>
+                                </label>
+                            </div>
                         </div>
+
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Yapılan İşlem Notu (Opsiyonel)</label>
-                            <textarea name="note" class="form-control bg-light" rows="3"
-                                placeholder="Örn: Parça beklendiği için ara verildi..."></textarea>
+                            <label class="form-label fw-semibold">
+                                Açıklama / Not <span class="text-danger">*</span>
+                            </label>
+
+                            
+                            <textarea name="note" class="form-control bg-light <?php $__errorArgs = ['note'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" rows="3"
+                                placeholder="Yapılan işlemi kısaca özetleyin..."><?php echo e(old('note')); ?></textarea>
+
+                            
+                            <?php $__errorArgs = ['note'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                <div class="invalid-feedback d-block">
+                                    <i class="fas fa-exclamation-circle me-1"></i> <?php echo e($message); ?>
+
+                                </div>
+                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </div>
                     </div>
                     <div class="modal-footer border-0 pt-0">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Vazgeç</button>
-                        <button type="submit" class="btn btn-danger px-4">Durdur ve Kaydet</button>
+                        <button type="submit" class="btn btn-primary px-4">Kaydet</button>
                     </div>
                 </form>
             </div>
@@ -685,16 +997,80 @@
             </div>
         </div>
     </div>
+    
+    <div class="modal fade" id="quickFinishModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                
+                <form action="<?php echo e(route('maintenance.update', $plan->id)); ?>" method="POST">
+                    <?php echo csrf_field(); ?>
+                    <?php echo method_field('PUT'); ?>
 
+                    
+                    
+                    <input type="hidden" name="status" value="completed">
+
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-bold">İşlemi Tamamla</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="alert alert-info border-0 bg-info bg-opacity-10 text-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Sayaç çalıştırılmadan işlem sonlandırılıyor. (Hızlı Onay)
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                Açıklama / Yapılan Düzeltme <span class="text-danger">*</span>
+                            </label>
+                            <textarea name="completion_note" class="form-control bg-light" rows="3" required
+                                placeholder="Örn: Yöneticinin belirttiği eksikler tamamlandı..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Vazgeç</button>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-paper-plane me-2"></i>Gönder
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('page_scripts'); ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const hasNoteError = <?php echo json_encode($errors->has('note'), 15, 512) ?>;
+            const hasCompletionNoteError = <?php echo json_encode($errors->has('completion_note'), 15, 512) ?>;
+
+            if (hasNoteError) {
+                const stopModalEl = document.getElementById('stopTimerModal');
+                if (stopModalEl) {
+                    const stopModal = new bootstrap.Modal(stopModalEl);
+                    stopModal.show();
+                }
+            }
+
+            if (hasCompletionNoteError) {
+                const quickModalEl = document.getElementById('quickFinishModal');
+                if (quickModalEl) {
+                    const quickModal = new bootstrap.Modal(quickModalEl);
+                    quickModal.show();
+                }
+            }
+
+            // --- 2. SAYAÇ MANTIĞI ---
             <?php if($plan->isTimerActive()): ?>
-                // Sayaç Mantığı (Değişmedi, sadece ID'ler kontrol edildi)
+                // ... (Sayaç kodları aynen kalacak, buraya dokunma) ...
                 const startTimeString =
-                    "<?php echo e($plan->timeEntries->whereNull('end_time')->first()->start_time->format('Y-m-d H:i:s')); ?>";
+                    "<?php echo e($plan->timeEntries->whereNull('end_time')->where('user_id', Auth::id())->first()->start_time->format('Y-m-d H:i:s')); ?>";
+                // ...
+                // NOT: Yukarıdaki satırda ->where('user_id', Auth::id()) ekledim ki başkasının saatiyle karışmasın.
                 const startTime = new Date(startTimeString).getTime();
                 const previousDurationMs = <?php echo e($plan->previous_duration_minutes * 60 * 1000); ?>;
                 const timerElement = document.getElementById("liveTimer");
@@ -718,42 +1094,13 @@
             <?php endif; ?>
         });
 
+        // ... (Toast fonksiyonları aynen kalacak) ...
         function showToast() {
-            const container = document.getElementById('toastContainer');
-
-            const toast = document.createElement('div');
-            toast.className = 'toast-notification';
-
-            toast.innerHTML = `
-        <div class="toast-header">
-            <div class="toast-icon">
-                <i class="fas fa-lock"></i>
-            </div>
-            <div class="toast-title">Yetkisiz İşlem</div>
-            <button class="toast-close" onclick="closeToast(this)">×</button>
-        </div>
-        <div class="toast-message">
-            Bu planı düzenleme yetkiniz bulunmuyor.<br>
-            Sadece Admin, Departman Yöneticisi veya Oluşturan kişi düzenleyebilir.
-        </div>
-        <div class="toast-progress"></div>
-    `;
-
-            container.appendChild(toast);
-
-            // 5 saniye sonra otomatik kapan
-            setTimeout(() => {
-                closeToast(toast.querySelector('.toast-close'));
-            }, 5000);
+            /* ... */
         }
 
         function closeToast(button) {
-            const toast = button.closest('.toast-notification');
-            toast.classList.add('hiding');
-
-            setTimeout(() => {
-                toast.remove();
-            }, 300);
+            /* ... */
         }
     </script>
 <?php $__env->stopSection(); ?>

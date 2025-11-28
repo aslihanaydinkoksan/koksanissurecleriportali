@@ -445,8 +445,6 @@
                                                 <td>
                                                     <div class="d-flex flex-column">
                                                         <strong class="text-dark"><?php echo e($plan->title); ?></strong>
-                                                        <small class="text-muted" style="font-size: 0.75rem;">ID:
-                                                            #<?php echo e($plan->id); ?></small>
                                                     </div>
                                                 </td>
                                                 <td>
@@ -494,52 +492,75 @@
                                                 </td>
                                                 <td class="text-end pe-4">
                                                     <div class="btn-group" role="group">
+
+                                                        
                                                         <a href="<?php echo e(route('maintenance.show', $plan->id)); ?>"
-                                                            class="btn btn-action btn-info" title="Detay ve Yönet">
+                                                            class="btn btn-action btn-info" title="Plan Detayları">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
 
                                                         
-                                                        <a href="<?php echo e(route('maintenance.edit', $plan->id)); ?>"
-                                                            class="btn btn-action btn-warning text-white"><i
-                                                                class="fas fa-edit"></i></a>
                                                         
-                                                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('delete', $plan)): ?>
-                                                            
-                                                            <form action="<?php echo e(route('maintenance.destroy', $plan->id)); ?>"
-                                                                method="POST" class="d-inline"
-                                                                onsubmit="return confirm('Bu planı silmek istediğinize emin misiniz?');">
-                                                                <?php echo csrf_field(); ?>
-                                                                <?php echo method_field('DELETE'); ?>
-                                                                <button type="submit" class="btn btn-action btn-danger"
-                                                                    title="Sil">
-                                                                    <i class="fas fa-trash"></i>
-                                                                </button>
-                                                            </form>
+                                                        <?php if($plan->status === 'completed' && Auth::user()->cannot('approve', $plan)): ?>
+                                                            <button type="button"
+                                                                class="btn btn-action btn-danger-disabled"
+                                                                style="background: #a4a6a8; cursor: not-allowed;"
+                                                                onclick="alert('İşlem Engellendi!\n\nBu plan tamamlanmıştır. Değişiklik yapmak için yöneticinizle görüşün.')"
+                                                                title="Tamamlandığı için kilitli">
+                                                                <i class="fas fa-lock"></i>
+                                                            </button>
                                                         <?php else: ?>
                                                             
-
-                                                            <?php if($plan->status === 'completed'): ?>
-                                                                
+                                                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('update', $plan)): ?>
+                                                                <a href="<?php echo e(route('maintenance.edit', $plan->id)); ?>"
+                                                                    class="btn btn-action btn-warning text-white"
+                                                                    title="Düzenle">
+                                                                    <i class="fas fa-edit"></i>
+                                                                </a>
+                                                            <?php else: ?>
                                                                 <button type="button"
                                                                     class="btn btn-action btn-danger-disabled"
                                                                     style="background: #a4a6a8; cursor: not-allowed;"
-                                                                    onclick="alert('İşlem Engellendi!\n\nTamamlanmış bakım planları arşiv güvenliği nedeniyle silinemez.')"
-                                                                    title="Tamamlandığı için silinemez">
-                                                                    <i class="fas fa-lock"></i>
+                                                                    onclick="alert('Bu işlemi yapmaya yetkiniz yok!\nSadece Admin, Yönetici veya Kaydı Oluşturan kişi düzenleyebilir.')"
+                                                                    title="Yetkiniz Yok">
+                                                                    <i class="fas fa-ban"></i>
                                                                 </button>
+                                                            <?php endif; ?>
+                                                        <?php endif; ?>
+
+                                                        
+                                                        
+                                                        <?php if($plan->status === 'completed'): ?>
+                                                            <button type="button"
+                                                                class="btn btn-action btn-danger-disabled"
+                                                                style="background: #a4a6a8; cursor: not-allowed;"
+                                                                onclick="alert('İşlem Engellendi!\n\nTamamlanmış bakım planları arşiv güvenliği nedeniyle silinemez.')"
+                                                                title="Tamamlandığı için silinemez">
+                                                                <i class="fas fa-lock"></i>
+                                                            </button>
+                                                        <?php else: ?>
+                                                            
+                                                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('delete', $plan)): ?>
+                                                                <form action="<?php echo e(route('maintenance.destroy', $plan->id)); ?>"
+                                                                    method="POST" class="d-inline"
+                                                                    onsubmit="return confirm('Bu planı silmek istediğinize emin misiniz?');">
+                                                                    <?php echo csrf_field(); ?>
+                                                                    <?php echo method_field('DELETE'); ?>
+                                                                    <button type="submit" class="btn btn-action btn-danger"
+                                                                        title="Sil">
+                                                                        <i class="fas fa-trash"></i>
+                                                                    </button>
+                                                                </form>
                                                             <?php else: ?>
-                                                                
                                                                 <button type="button"
                                                                     class="btn btn-action btn-danger-disabled"
                                                                     style="background: #a4a6a8; cursor: not-allowed;"
                                                                     onclick="alert('Bu işlemi yapmaya yetkiniz yok!\nSadece Admin, Yönetici veya Kaydı Oluşturan kişi silebilir.')"
                                                                     title="Yetkiniz Yok">
-                                                                    <i class="fas fa-trash"></i>
+                                                                    <i class="fas fa-trash"></i> 
                                                                 </button>
                                                             <?php endif; ?>
                                                         <?php endif; ?>
-
                                                     </div>
                                                 </td>
                                             </tr>

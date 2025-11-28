@@ -99,6 +99,12 @@ class AuthServiceProvider extends ServiceProvider
             if ($user->role === 'yönetici') {
                 return true;
             }
+            if ($user->role === 'müdür') {
+                return true;
+            }
+            if ($user->role === 'mudur') {
+                return true;
+            }
             // Görevin kendisine atanmış olması (bireysel veya takım üyesi)
             // Bireysel atama kontrolü
             if ($assignment->responsible_type === User::class && $assignment->responsible_id === $user->id) {

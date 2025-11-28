@@ -4,7 +4,7 @@
 
 <?php $__env->startPush('styles'); ?>
     <style>
-        /* === 1. SAYFA VE LAYOUT === */
+        /* === 1. SAYFA VE LAYOUT (ORİJİNAL TASARIM) === */
         #app>main.py-4 {
             padding: 2.5rem 0 !important;
             min-height: calc(100vh - 72px);
@@ -28,7 +28,7 @@
         }
 
         .wide-container {
-            max-width: 1600px;
+            max-width: 95% !important;
             margin-left: auto;
             margin-right: auto;
         }
@@ -70,18 +70,36 @@
         }
 
         .fc .fc-daygrid-day-frame {
-            min-height: 100px;
+            min-height: 160px !important;
+            transition: background-color 0.2s;
         }
 
         .fc .fc-daygrid-day.fc-day-today {
             background-color: rgba(102, 126, 234, 0.08) !important;
         }
 
+        /* === TAKVİM YAZI BOYUTLARI === */
+        .fc .fc-col-header-cell-cushion {
+            /* Gün isimlerini (Pzt, Sal) büyütelim */
+            font-size: 1.1rem;
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+
+        .fc-daygrid-day-number {
+            /* Ayın gün numaralarını büyütelim */
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #4a5568;
+            padding: 8px !important;
+        }
+
         .fc-event {
             border: none !important;
             margin: 1px 2px !important;
-            padding: 3px 6px;
-            font-size: 0.8rem;
+            padding: 4px 8px;
+            font-size: 0.9rem !important;
+            margin-bottom: 2px !important;
             border-radius: 4px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             cursor: pointer;
@@ -400,6 +418,27 @@
             color: #718096;
             line-height: 1.4;
         }
+
+        /* === MOBİL İÇİN ÖZEL AYARLAR (RESPONSIVE KORUMA) === */
+        @media (max-width: 768px) {
+            .wide-container {
+                max-width: 100% !important;
+                padding: 0 10px;
+            }
+
+            .fc .fc-daygrid-day-frame {
+                min-height: 80px !important;
+            }
+
+            .fc-event {
+                font-size: 0.75rem !important;
+                padding: 2px 4px !important;
+            }
+
+            .fc .fc-toolbar-title {
+                font-size: 1.2rem !important;
+            }
+        }
     </style>
 <?php $__env->stopPush(); ?>
 
@@ -421,15 +460,22 @@
             </div>
         <?php endif; ?>
 
-        <div class="row">
-            <div class="col-md-9">
+        
+        <?php
+            // İstatistik verisi var mı kontrol ediyoruz.
+            // Boş değilse true, boşsa false döner.
+            $hasStats = !empty($chartData);
+        ?>
+
+        <div class="row justify-content-center">
+
+            
+            <div class="<?php echo e($hasStats ? 'col-md-9' : 'col-md-12'); ?> transition-all">
                 <div class="card create-shipment-card">
                     <div class="card-header">
                         📅 <?php echo e($departmentName); ?> Takvimi
                     </div>
                     <div class="card-body">
-                        
-                        
                         <?php
                             $canFilter =
                                 Auth::user()->role === 'admin' ||
@@ -437,10 +483,11 @@
                         ?>
 
                         <?php if($canFilter): ?>
+                            
                             <div class="calendar-filters p-3 mb-3"
                                 style="background: rgba(102, 126, 234, 0.05); border-radius: 0.75rem;">
                                 <strong class="me-3"><i class="fa-solid fa-filter"></i> Filtrele:</strong>
-
+                                
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input" type="checkbox" value="lojistik" id="filterLojistik"
                                         checked>
@@ -459,71 +506,63 @@
                                     <label class="form-check-label" for="filterHizmet" style="color: #F093FB;">İdari
                                         İşler</label>
                                 </div>
-                                
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input" type="checkbox" value="bakim" id="filterBakim" checked>
                                     <label class="form-check-label" for="filterBakim" style="color: #ED8936;">Bakım</label>
                                 </div>
-
                                 <span class="mx-2">|</span>
-
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input" type="checkbox" value="important" id="filterImportant">
                                     <label class="form-check-label" for="filterImportant"
-                                        style="color: #dc3545;"><strong>Sadece
-                                            Önemliler</strong></label>
+                                        style="color: #dc3545;"><strong>Sadece Önemliler</strong></label>
                                 </div>
                             </div>
                         <?php endif; ?>
-                        
 
                         <div id="calendar" data-events='<?php echo json_encode($events, 15, 512) ?>'
-                            data-is-authorized="<?php echo e(in_array(Auth::user()->role, ['admin', 'yönetici']) ? 'true' : 'false'); ?>"
-                            data-current-user-id="<?php echo e(Auth::id()); ?>">
+                            data-is-authorized="<?php echo e(in_array(mb_strtolower(Auth::user()->role), ['admin', 'yönetici', 'müdür']) ? 'true' : 'false'); ?>"
+                            data-current-user-id="<?php echo e(Auth::id()); ?>" data-can-filter="<?php echo e($canFilter ? 'true' : 'false'); ?>"
+                            data-user-dept="<?php echo e($departmentSlug ?? ''); ?>">
                         </div>
                     </div>
                 </div>
             </div>
 
-
-            <div class="col-md-3">
-                <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('is-global-manager')): ?>
-                    <div class="card create-shipment-card mb-3">
-                        <div class="card-header">⚡ <?php echo e(__('Hızlı Eylemler')); ?></div>
-                        <div class="card-body">
-                            <div class="d-grid gap-2">
-                                <a href="<?php echo e(route('users.create')); ?>" class="btn btn-animated-gradient"
-                                    style="text-transform: none; color:#fff">👤 Yeni Kullanıcı Ekle</a>
-                                <button type="button" class="btn btn-info text-white" id="toggleUsersButton">👥 Mevcut
-                                    Kullanıcıları Görüntüle</button>
-                            </div>
-                        </div>
-                    </div>
-                <?php endif; ?>
-
-                <?php if(!empty($chartData)): ?>
+            
+            <?php if($hasStats): ?>
+                <div class="col-md-3">
+                    
                     <div class="card create-shipment-card">
                         <div class="card-header">
-                            📊 <?php echo e($statsTitle); ?>
+                            📊 <?php echo e($statsTitle ?? 'İstatistikler'); ?>
 
                         </div>
                         <div class="card-body" id="stats-card-body">
+                            
                             <?php if($departmentSlug === 'lojistik'): ?>
-                                <div id="hourly-chart-lojistik"></div>
-                                <hr>
-                                <div id="daily-chart-lojistik"></div>
+                                <div id="chart-lojistik-1" class="mb-3"></div>
+                                <hr class="my-3">
+                                <div id="chart-lojistik-2" class="mb-3"></div>
+                                <hr class="my-3">
+                                <div id="chart-lojistik-3"></div>
                             <?php elseif($departmentSlug === 'uretim'): ?>
-                                <div id="weekly-plans-chart"></div>
-                                <hr>
-                            <?php elseif($departmentSlug === 'hizmet'): ?>
-                                <div id="daily-events-chart"></div>
-                                <hr>
-                                <div id="daily-assignments-chart"></div>
-                                
+                                <div id="chart-uretim-1" class="mb-3"></div>
+                                <hr class="my-3">
+                                <div id="chart-uretim-2" class="mb-3"></div>
+                                <hr class="my-3">
+                                <div id="chart-uretim-3"></div>
+                            <?php elseif($departmentSlug === 'hizmet' || $departmentSlug === 'idari-isler'): ?>
+                                <div id="chart-hizmet-1" class="mb-3"></div>
+                                <hr class="my-3">
+                                <div id="chart-hizmet-2" class="mb-3"></div>
+                                <hr class="my-3">
+                                <div id="chart-hizmet-3"></div>
                             <?php elseif($departmentSlug === 'bakim'): ?>
-                                <div id="maintenance-plans-chart"></div>
-                            <?php else: ?>
-                                <p class="text-center">Bu departman için özel istatistikler henüz tanımlanmamıştır.</p>
+                                <div id="chart-bakim-1" class="mb-3"></div>
+                                <hr class="my-3">
+                                <div id="chart-bakim-2" class="mb-3"></div>
+                                <hr class="my-3">
+                                <div id="chart-bakim-3"></div>
                             <?php endif; ?>
 
                             <?php if(Route::has('statistics.index')): ?>
@@ -534,84 +573,9 @@
                             <?php endif; ?>
                         </div>
                     </div>
-                <?php endif; ?>
-            </div>
-        </div>
-
-
-        <?php if(in_array(Auth::user()->role, ['admin', 'yönetici'])): ?>
-            <div class="row mt-4" id="userListContainer" style="display: none;">
-                <div class="col-md-9">
-                    <div class="card create-shipment-card">
-                        <div class="card-header">
-                            👥 <?php echo e(__('Sistemdeki Mevcut Kullanıcılar')); ?>
-
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">Ad Soyad</th>
-                                            <th scope="col">E-posta</th>
-                                            <th scope="col">Rol</th>
-                                            <th scope="col">Birim</th>
-                                            <th scope="col">Kayıt Tarihi</th>
-                                            <th scope="col">Eylemler</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php $__empty_1 = true; $__currentLoopData = $users; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                                            <tr>
-                                                <td><?php echo e($user->name); ?></td>
-                                                <td><?php echo e($user->email); ?></td>
-                                                <?php
-                                                    $roleClass = 'bg-secondary';
-                                                    if ($user->role === 'admin') {
-                                                        $roleClass = 'bg-primary';
-                                                    }
-                                                    if ($user->role === 'yönetici') {
-                                                        $roleClass = 'bg-info';
-                                                    }
-                                                ?>
-                                                <td><span
-                                                        class="badge <?php echo e($roleClass); ?>"><?php echo e(ucfirst($user->role)); ?></span>
-                                                </td>
-                                                <td><?php echo e($user->department?->name ?? '-'); ?></td>
-                                                <td><?php echo e($user->created_at->format('d/m/Y H:i')); ?></td>
-                                                <td>
-                                                    <div class="d-flex flex-column gap-1">
-                                                        <?php if(Auth::user()->role === 'admin' || $user->role !== 'admin'): ?>
-                                                            <a href="<?php echo e(route('users.edit', $user->id)); ?>"
-                                                                class="btn btn-sm btn-secondary">✏️ Düzenle</a>
-                                                        <?php endif; ?>
-                                                        <?php if(Auth::user()->role === 'admin' && Auth::user()->id !== $user->id && $user->role !== 'admin'): ?>
-                                                            <form action="<?php echo e(route('users.destroy', $user->id)); ?>"
-                                                                method="POST"
-                                                                onsubmit="return confirm('<?php echo e($user->name); ?> adlı kullanıcıyı silmek istediğinizden emin misiniz?');">
-                                                                <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
-                                                                <button type="submit" class="btn btn-sm btn-danger">🗑️
-                                                                    Sil</button>
-                                                            </form>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                                            <tr>
-                                                <td colspan="7" class="text-center">Sistemde gösterilecek kullanıcı
-                                                    bulunamadı.</td>
-                                            </tr>
-                                        <?php endif; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
                 </div>
-                <div class="col-md-4"></div>
-            </div>
-        <?php endif; ?>
+            <?php endif; ?>
+        </div>
     </div>
 
     
@@ -686,53 +650,375 @@
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('page_scripts'); ?>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.13/index.global.min.js'></script>
     <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/google-calendar@6.1.13/index.global.min.js'></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
     <script>
         function getCsrfToken() {
             return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         }
+
         document.addEventListener('DOMContentLoaded', function() {
-            const colorPalette = ['#A78BFA', '#60D9A0', '#FDB4C8', '#FFB84D', '#9DECF9'];
+            const urlParams = new URLSearchParams(window.location.search);
+            const dateFromUrl = urlParams.get('date');
+            const urlModalId = urlParams.get('open_modal_id');
+            const urlModalType = urlParams.get('open_modal_type');
+            const currentUserRole = "<?php echo e(Auth::user()->role); ?>";
+            const calendarEventsUrl = "<?php echo e(route('web.calendar.events')); ?>";
+            const toggleImportantUrl = "<?php echo e(route('calendar.toggleImportant')); ?>";
 
-            var calendarEl = document.getElementById('calendar');
-            const isAuthorized = calendarEl.dataset.isAuthorized === 'true';
-            const currentUserId = parseInt(calendarEl.dataset.currentUserId, 10);
-            const eventsData = JSON.parse(calendarEl.dataset.events || '[]');
-            const appTimezone = calendarEl.dataset.timezone;
+            // === 1. PHP'DEN GELEN VERİYİ AL (JSON) ===
+            // Eğer backend veri göndermediyse boş obje kabul et
+            const chartData = <?php echo json_encode($chartData ?? [], 15, 512) ?>;
+            const deptSlug = "<?php echo e($departmentSlug ?? ''); ?>";
 
-            var detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
-            const modalTitle = document.getElementById('modalTitle');
-            const modalBody = document.getElementById('modalDynamicBody');
-            const modalEditButton = document.getElementById('modalEditButton');
-            const modalExportButton = document.getElementById('modalExportButton');
-            const modalDeleteForm = document.getElementById('modalDeleteForm');
-            const modalOnayForm = document.getElementById('modalOnayForm');
-            const modalOnayKaldirForm = document.getElementById('modalOnayKaldirForm');
-            const modalOnayBadge = document.getElementById('modalOnayBadge');
-            const modalImportantContainer = document.getElementById('modalImportantCheckboxContainer');
-            const modalImportantCheckbox = document.getElementById('modalImportantCheckbox');
-
-            function splitDateTime(dateTimeString) {
-                const dt = String(dateTimeString || '');
-                const parts = dt.split(' ');
-                const date = parts[0] || '-';
-                let time = parts[1] || '-';
-                if (date === '-' || time === '') {
-                    time = '-';
+            // Ortak Grafik Ayarları
+            const commonChartOptions = {
+                chart: {
+                    background: 'transparent',
+                    toolbar: {
+                        show: false
+                    },
+                    fontFamily: 'inherit'
+                },
+                colors: ['#667EEA', '#764BA2', '#F093FB', '#4FD1C5', '#FBD38D', '#FF6B6B'],
+                dataLabels: {
+                    enabled: false
+                },
+                stroke: {
+                    curve: 'smooth'
                 }
-                return {
-                    date: date,
-                    time: time
-                };
+            };
+
+            function renderChart(id, options) {
+                if (document.querySelector("#" + id)) {
+                    var chart = new ApexCharts(document.querySelector("#" + id), options);
+                    chart.render();
+                }
             }
 
+            // === 2. DİNAMİK GRAFİK ÇİZİMİ ===
+            // Burada artık chartData değişkeni kullanılıyor.
+
+            // --- LOJİSTİK ---
+            if (deptSlug === 'lojistik' && chartData.lojistik) {
+                // Grafik 1: Sefer Durumları
+                if (chartData.lojistik.pie_series) {
+                    renderChart('chart-lojistik-1', {
+                        ...commonChartOptions,
+                        series: chartData.lojistik.pie_series, // Örn: [10, 5, 2]
+                        chart: {
+                            type: 'donut',
+                            height: 250
+                        },
+                        labels: chartData.lojistik.pie_labels || ['Tamamlanan', 'Yolda', 'Bekleyen'],
+                        title: {
+                            text: 'Sevkiyat Durumu',
+                            align: 'left',
+                            style: {
+                                fontSize: '14px',
+                                color: '#718096'
+                            }
+                        }
+                    });
+                }
+
+                // Grafik 2: Günlük Sefer
+                if (chartData.lojistik.bar_series) {
+                    renderChart('chart-lojistik-2', {
+                        ...commonChartOptions,
+                        series: [{
+                            name: 'Seferler',
+                            data: chartData.lojistik.bar_series
+                        }],
+                        chart: {
+                            type: 'bar',
+                            height: 200
+                        },
+                        xaxis: {
+                            categories: chartData.lojistik.bar_categories || ['Pzt', 'Sal', 'Çar', 'Per',
+                                'Cum', 'Cmt', 'Paz'
+                            ]
+                        },
+                        title: {
+                            text: 'Günlük Sefer Sayısı',
+                            align: 'left',
+                            style: {
+                                fontSize: '14px',
+                                color: '#718096'
+                            }
+                        }
+                    });
+                }
+
+                // Grafik 3: Doluluk
+                if (chartData.lojistik.radial_series) {
+                    renderChart('chart-lojistik-3', {
+                        ...commonChartOptions,
+                        series: chartData.lojistik.radial_series, // Örn: [75]
+                        chart: {
+                            type: 'radialBar',
+                            height: 200
+                        },
+                        plotOptions: {
+                            radialBar: {
+                                dataLabels: {
+                                    name: {
+                                        show: true
+                                    },
+                                    value: {
+                                        show: true
+                                    }
+                                }
+                            }
+                        },
+                        labels: ['Verimlilik'],
+                        title: {
+                            text: 'Araç Doluluk Oranı',
+                            align: 'left',
+                            style: {
+                                fontSize: '14px',
+                                color: '#718096'
+                            }
+                        }
+                    });
+                }
+            }
+
+            // --- ÜRETİM ---
+            if (deptSlug === 'uretim' && chartData.uretim) {
+                if (chartData.uretim.area_series) {
+                    renderChart('chart-uretim-1', {
+                        ...commonChartOptions,
+                        series: chartData.uretim.area_series,
+                        chart: {
+                            type: 'area',
+                            height: 220
+                        },
+                        title: {
+                            text: 'Haftalık Üretim',
+                            align: 'left',
+                            style: {
+                                fontSize: '14px',
+                                color: '#718096'
+                            }
+                        }
+                    });
+                }
+                if (chartData.uretim.bar_series) {
+                    renderChart('chart-uretim-2', {
+                        ...commonChartOptions,
+                        series: [{
+                            data: chartData.uretim.bar_series
+                        }],
+                        chart: {
+                            type: 'bar',
+                            height: 200,
+                            horizontal: true
+                        },
+                        xaxis: {
+                            categories: chartData.uretim.bar_categories || []
+                        },
+                        title: {
+                            text: 'Makine Verimliliği',
+                            align: 'left',
+                            style: {
+                                fontSize: '14px',
+                                color: '#718096'
+                            }
+                        }
+                    });
+                }
+                if (chartData.uretim.pie_series) {
+                    renderChart('chart-uretim-3', {
+                        ...commonChartOptions,
+                        series: chartData.uretim.pie_series,
+                        chart: {
+                            type: 'pie',
+                            height: 200
+                        },
+                        labels: ['Sağlam', 'Fire'],
+                        colors: ['#4FD1C5', '#FF6B6B'],
+                        title: {
+                            text: 'Fire Oranı',
+                            align: 'left',
+                            style: {
+                                fontSize: '14px',
+                                color: '#718096'
+                            }
+                        }
+                    });
+                }
+            }
+
+            // --- HİZMET / İDARİ ---
+            if ((deptSlug === 'hizmet' || deptSlug === 'idari-isler') && chartData.hizmet) {
+                if (chartData.hizmet.donut_series) {
+                    renderChart('chart-hizmet-1', {
+                        ...commonChartOptions,
+                        series: chartData.hizmet.donut_series,
+                        chart: {
+                            type: 'donut',
+                            height: 250
+                        },
+                        labels: chartData.hizmet.donut_labels || ['Tamamlanan', 'Devam Eden', 'Bekleyen'],
+                        title: {
+                            text: 'Görev Durumları',
+                            align: 'left',
+                            style: {
+                                fontSize: '14px',
+                                color: '#718096'
+                            }
+                        }
+                    });
+                }
+                if (chartData.hizmet.line_series) {
+                    renderChart('chart-hizmet-2', {
+                        ...commonChartOptions,
+                        series: [{
+                            name: 'Talepler',
+                            data: chartData.hizmet.line_series
+                        }],
+                        chart: {
+                            type: 'line',
+                            height: 200
+                        },
+                        xaxis: {
+                            categories: chartData.hizmet.line_categories || []
+                        },
+                        title: {
+                            text: 'Departman Talepleri',
+                            align: 'left',
+                            style: {
+                                fontSize: '14px',
+                                color: '#718096'
+                            }
+                        }
+                    });
+                }
+                if (chartData.hizmet.polar_series) {
+                    renderChart('chart-hizmet-3', {
+                        ...commonChartOptions,
+                        series: chartData.hizmet.polar_series,
+                        chart: {
+                            type: 'polarArea',
+                            height: 220
+                        },
+                        labels: chartData.hizmet.polar_labels || [],
+                        title: {
+                            text: 'Gider Dağılımı',
+                            align: 'left',
+                            style: {
+                                fontSize: '14px',
+                                color: '#718096'
+                            }
+                        }
+                    });
+                }
+            }
+
+            // --- BAKIM (YENİ EKLENEN) ---
+            if (deptSlug === 'bakim' && chartData.bakim) {
+                // 1. Bakım Türleri
+                if (chartData.bakim.pie_series) {
+                    renderChart('chart-bakim-1', {
+                        ...commonChartOptions,
+                        series: chartData.bakim.pie_series, // [Planlı Sayısı, Arıza Sayısı]
+                        chart: {
+                            type: 'pie',
+                            height: 220
+                        },
+                        labels: chartData.bakim.pie_labels || ['Periyodik Bakım', 'Arıza Müdahale'],
+                        colors: ['#48bb78', '#f56565'],
+                        title: {
+                            text: 'Bakım Türü Dağılımı',
+                            align: 'left',
+                            style: {
+                                fontSize: '14px',
+                                color: '#718096'
+                            }
+                        }
+                    });
+                }
+
+                // 2. Müdahale Süreleri
+                if (chartData.bakim.bar_series) {
+                    renderChart('chart-bakim-2', {
+                        ...commonChartOptions,
+                        series: [{
+                            name: 'Dakika',
+                            data: chartData.bakim.bar_series
+                        }],
+                        chart: {
+                            type: 'bar',
+                            height: 200
+                        },
+                        xaxis: {
+                            categories: chartData.bakim.bar_categories || []
+                        },
+                        title: {
+                            text: 'Ort. Müdahale Süresi',
+                            align: 'left',
+                            style: {
+                                fontSize: '14px',
+                                color: '#718096'
+                            }
+                        }
+                    });
+                }
+
+                // 3. Sağlık Skoru
+                if (chartData.bakim.radial_series) {
+                    renderChart('chart-bakim-3', {
+                        ...commonChartOptions,
+                        series: chartData.bakim.radial_series, // [85]
+                        chart: {
+                            type: 'radialBar',
+                            height: 220
+                        },
+                        plotOptions: {
+                            radialBar: {
+                                hollow: {
+                                    size: '70%'
+                                },
+                                dataLabels: {
+                                    name: {
+                                        show: true,
+                                        fontSize: '16px'
+                                    },
+                                    value: {
+                                        show: true,
+                                        fontSize: '14px',
+                                        formatter: function(val) {
+                                            return val + "%";
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        colors: ['#ED8936'],
+                        labels: ['Tesis Sağlık Skoru'],
+                        title: {
+                            text: 'Genel Durum',
+                            align: 'left',
+                            style: {
+                                fontSize: '14px',
+                                color: '#718096'
+                            }
+                        }
+                    });
+                }
+            }
+
+            var detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
+
             function hardResetModalUI() {
-                const idsToHide = ['modalEditButton', 'modalExportButton', 'modalOnayForm', 'modalOnayKaldirForm',
+                const ids = ['modalEditButton', 'modalExportButton', 'modalOnayForm', 'modalOnayKaldirForm',
                     'modalDeleteForm', 'modalOnayBadge', 'modalImportantCheckboxContainer'
                 ];
-                idsToHide.forEach(id => {
+                ids.forEach(id => {
                     const el = document.getElementById(id);
                     if (el) {
                         el.style.display = 'none';
@@ -747,32 +1033,89 @@
             }
 
             function openUniversalModal(props) {
-                console.log('--- MODAL AÇILIYOR (HOME) ---', props.eventType);
                 hardResetModalUI();
+                if (!props || !props.eventType) return;
 
-                if (!props || !props.eventType) {
-                    console.error("Modal için geçersiz veri:", props);
-                    return;
-                }
+                const statusMap = {
+                    'Critical': {
+                        text: 'Kritik',
+                        class: 'bg-danger text-white'
+                    },
+                    'High': {
+                        text: 'Yüksek',
+                        class: 'bg-warning text-dark'
+                    },
+                    'Medium': {
+                        text: 'Orta',
+                        class: 'bg-info text-white'
+                    },
+                    'Low': {
+                        text: 'Düşük',
+                        class: 'bg-success text-white'
+                    },
+                    'Normal': {
+                        text: 'Normal',
+                        class: 'bg-secondary text-white'
+                    },
+                    'Pending': {
+                        text: 'Beklemede',
+                        class: 'bg-warning text-dark'
+                    },
+                    'Active': {
+                        text: 'Aktif',
+                        class: 'bg-success text-white'
+                    }
+                };
 
-                // Yetki ve Checkbox işlemleri
-                if (isAuthorized) {
-                    modalImportantContainer.style.display = 'block';
-                    modalImportantCheckbox.checked = props.is_important || false;
-                    modalImportantCheckbox.dataset.modelType = props.model_type;
-                    modalImportantCheckbox.dataset.modelId = props.id;
-                }
+                const modalTitle = document.getElementById('modalTitle');
+                const modalBody = document.getElementById('modalDynamicBody');
+                const modalEditButton = document.getElementById('modalEditButton');
+                const modalExportButton = document.getElementById('modalExportButton');
+                const modalDeleteForm = document.getElementById('modalDeleteForm');
+                const modalOnayForm = document.getElementById('modalOnayForm');
+                const modalOnayKaldirForm = document.getElementById('modalOnayKaldirForm');
+                const modalOnayBadge = document.getElementById('modalOnayBadge');
+                const modalImportantContainer = document.getElementById('modalImportantCheckboxContainer');
+                const modalImportantCheckbox = document.getElementById('modalImportantCheckbox');
+                const calendarEl = document.getElementById('calendar');
 
-                // Başlık Ayarı
-                modalTitle.innerHTML = `<span>${props.title || 'Detaylar'}</span>`;
+                const currentUserId = parseInt(calendarEl.dataset.currentUserId, 10);
+                const currentUserDept = calendarEl.dataset.userDept;
+                const canMarkImportant = calendarEl.dataset.canMarkImportant === 'true';
 
-                // Düzenle/Sil Butonları
+                const eventOwnerId = props.user_id;
+                const eventDeptId = props.department_id;
+
                 let canModify = false;
-                if (isAuthorized) {
+
+                if (currentUserRole === 'admin') {
                     canModify = true;
-                } else if (props.user_id && props.user_id === currentUserId) {
+                } else if (eventOwnerId && eventOwnerId === currentUserId) {
                     canModify = true;
+                } else if (currentUserRole === 'yönetici') {
+                    if (!currentUserDept || (eventDeptId && String(currentUserDept) === String(eventDeptId))) {
+                        canModify = true;
+                    }
                 }
+
+                if (modalImportantContainer) {
+                    const isVehicleTask = (props.model_type === 'vehicle_assignment');
+                    let shouldShowCheckbox = false;
+                    if (canMarkImportant) shouldShowCheckbox = true;
+                    else if (isVehicleTask && canModify) shouldShowCheckbox = true;
+
+                    if (shouldShowCheckbox) {
+                        modalImportantContainer.style.display = 'flex';
+                        modalImportantCheckbox.checked = props.is_important || false;
+                        modalImportantCheckbox.disabled = false;
+                        modalImportantCheckbox.dataset.modelType = props.model_type;
+                        modalImportantCheckbox.dataset.modelId = props.id;
+                    } else {
+                        modalImportantContainer.style.setProperty('display', 'none', 'important');
+                    }
+                }
+
+                modalTitle.innerHTML = `<span>${props.title || 'Detaylar'}</span>`;
 
                 if (canModify && props.editUrl && props.editUrl !== '#') {
                     modalEditButton.href = props.editUrl;
@@ -783,10 +1126,7 @@
                     modalDeleteForm.style.display = 'inline-block';
                 }
 
-                // === DİNAMİK İÇERİK OLUŞTURMA ===
                 let html = '';
-
-                // 1. Üst Kısım: Simge ve Başlık
                 let icon = 'fa-info-circle';
                 let typeTitle = 'Etkinlik Detayları';
 
@@ -804,99 +1144,60 @@
                     typeTitle = 'Üretim Bilgileri';
                 }
 
-                html += `<div class="modal-info-card">
-                            <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">
-                                <i class="fas ${icon} me-2"></i>${typeTitle}
-                            </h6>
-                            <div class="table-responsive">
-                                <table class="table table-borderless table-sm m-0 align-middle">
-                                    <tbody>`;
+                html +=
+                    `<div class="modal-info-card"><h6 class="text-primary fw-bold mb-3 border-bottom pb-2"><i class="fas ${icon} me-2"></i>${typeTitle}</h6><div class="table-responsive"><table class="table table-borderless table-sm m-0 align-middle"><tbody>`;
 
-                // 2. DÖNGÜ VE TARİH FORMATLAMA
-                const excludeKeys = ['Açıklama', 'Notlar', 'Açıklamalar', 'Dosya Yolu'];
-
+                const excludeKeys = ['Açıklama', 'Notlar', 'Açıklamalar', 'Dosya Yolu', 'Plan Detayları',
+                    'Onay Durumu', 'Onaylayan'
+                ];
                 if (props.details && typeof props.details === 'object') {
                     Object.entries(props.details).forEach(([key, value]) => {
                         if (excludeKeys.includes(key)) return;
-                        if (value === null || value === undefined || value === '' || value === '-') {
-                            return;
-                        }
-
-                        let displayValue = '-';
-
-                        // SENARYO 1: Backend'den özel Badge Objesi geldiyse (Modelden gelen yapı)
+                        if (value === null || value === undefined || value === '' || value === '-') return;
+                        let displayValue = String(value).trim();
                         if (value && typeof value === 'object' && value.is_badge) {
-                            displayValue = `<span class="badge ${value.class} px-3 py-2 rounded-pill fw-normal">
-                                                ${value.text}
-                                            </span>`;
+                            displayValue =
+                                `<span class="badge ${value.class} px-3 py-2 rounded-pill fw-normal">${value.text}</span>`;
+                        } else if (statusMap[displayValue]) {
+                            const mapItem = statusMap[displayValue];
+                            displayValue =
+                                `<span class="badge ${mapItem.class} px-3 py-2 rounded-pill fw-normal">${mapItem.text}</span>`;
                         }
-                        // SENARYO 2: Normal Metin veya Tarih geldiyse
-                        else if (value !== null && value !== undefined && value !== '') {
-                            const strValue = String(value).trim();
-
-                            // Tarih Kontrolü (GG.AA.YYYY SS:DD)
-                            const dateRegex = /^(\d{1,2}\.\d{1,2}\.\d{4})\s(\d{1,2}:\d{2})$/;
-                            const match = strValue.match(dateRegex);
-
-                            if (match) {
-                                displayValue = `
-                                    <div class="d-flex gap-2">
-                                        <span class="badge bg-light text-dark border border-secondary fw-normal">
-                                            <i class="fas fa-calendar-alt text-primary me-1"></i> ${match[1]}
-                                        </span>
-                                        <span class="badge bg-light text-dark border fw-normal">
-                                            <i class="fas fa-clock text-warning me-1"></i> ${match[2]}
-                                        </span>
-                                    </div>`;
-                            } else {
-                                displayValue = strValue;
-                            }
-                        }
-
-                        html += `<tr>
-                                    <td class="text-dark fw-bolder" style="width: 35%;">${key}:</td>
-                                    <td class="text-dark">${displayValue}</td>
-                                 </tr>`;
+                        html +=
+                            `<tr><td class="text-dark fw-bolder" style="width: 35%;">${key}:</td><td class="text-dark">${displayValue}</td></tr>`;
                     });
                 }
+                html += `</tbody></table></div></div>`;
 
-                html += `       </tbody>
-                                </table>
-                            </div>
-                         </div>`;
-
-                // 3. Dosya Varsa
-                if (props.details && props.details['Dosya Yolu']) {
-                    html += `<div class="text-center mt-3 mb-3">
-                                <a href="${props.details['Dosya Yolu']}" target="_blank" class="btn btn-outline-primary btn-sm">
-                                    <i class="fas fa-paperclip me-2"></i> Dosyayı Görüntüle
-                                </a>
-                             </div>`;
+                if (props.eventType === 'production' && props.details['Plan Detayları']) {
+                    html +=
+                        '<div class="modal-info-card"><h6 class="text-primary fw-bold mb-2">Üretim Kalemleri</h6><table class="table table-sm table-striped"><thead><tr><th>Makine</th><th>Ürün</th><th>Adet</th></tr></thead><tbody>';
+                    props.details['Plan Detayları'].forEach(i => {
+                        html += `<tr><td>${i.machine}</td><td>${i.product}</td><td>${i.quantity}</td></tr>`;
+                    });
+                    html += '</tbody></table></div>';
                 }
 
-                // 4. Açıklama / Notlar
+                if (props.details && props.details['Dosya Yolu']) {
+                    html +=
+                        `<div class="text-center mt-3 mb-3"><a href="${props.details['Dosya Yolu']}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="fas fa-paperclip me-2"></i> Dosyayı Görüntüle</a></div>`;
+                }
+
                 const aciklama = props.details['Açıklamalar'] || props.details['Notlar'] || props.details[
                     'Açıklama'];
                 if (aciklama) {
-                    html += `<div class="modal-notes-box mt-3 p-3 bg-light rounded border">
-                                <div class="modal-notes-title fw-bold mb-2 text-primary">
-                                    <i class="fas fa-sticky-note me-1"></i> Açıklama / Notlar
-                                </div>
-                                <p class="mb-0 text-secondary" style="white-space: pre-wrap;">${aciklama}</p>
-                             </div>`;
+                    html +=
+                        `<div class="modal-notes-box mt-3 p-3 bg-light rounded border"><div class="modal-notes-title fw-bold mb-2 text-primary"><i class="fas fa-sticky-note me-1"></i> Açıklama / Notlar</div><p class="mb-0 text-secondary" style="white-space: pre-wrap;">${aciklama}</p></div>`;
                 }
 
-                // === BUTONLAR (Mevcut mantık) ===
                 if (props.eventType === 'shipment') {
                     modalExportButton.href = props.exportUrl || '#';
                     modalExportButton.style.display = 'inline-block';
-
                     if (props.details['Onay Durumu']) {
                         modalOnayBadge.style.display = 'block';
                         document.getElementById('modalOnayBadgeTarih').textContent = props.details['Onay Durumu'];
                         document.getElementById('modalOnayBadgeKullanici').textContent = props.details[
                             'Onaylayan'] || '';
-
                         if (modalOnayKaldirForm) {
                             modalOnayKaldirForm.action = props.onayKaldirUrl;
                             modalOnayKaldirForm.style.display = 'inline-block';
@@ -907,28 +1208,26 @@
                             modalOnayForm.style.display = 'inline-block';
                         }
                     }
-                } else if (props.eventType === 'travel') {
+                } else if (props.eventType === 'travel' && canModify && props.url) {
                     if (modalOnayForm) modalOnayForm.style.display = 'none';
-                    if (canModify && props.url) {
-                        modalExportButton.href = props.url;
-                        modalExportButton.target = "_blank";
-                        modalExportButton.innerHTML = '<i class="fas fa-plane-departure me-2"></i> Detaya Git';
-                        modalExportButton.style.display = 'inline-block';
-                    }
-                } else if (props.eventType === 'maintenance') {
-                    if (canModify && props.url) {
-                        modalExportButton.href = props.url;
-                        modalExportButton.innerHTML = '<i class="fas fa-eye me-2"></i> Detaya Git';
-                        modalExportButton.style.display = 'inline-block';
-                    }
+                    modalExportButton.href = props.url;
+                    modalExportButton.target = "_blank";
+                    modalExportButton.innerHTML = '<i class="fas fa-plane-departure me-2"></i> Detaya Git';
+                    modalExportButton.style.display = 'inline-block';
+                } else if (props.eventType === 'maintenance' && canModify && props.url) {
+                    modalExportButton.href = props.url;
+                    modalExportButton.innerHTML = '<i class="fas fa-eye me-2"></i> Detaya Git';
+                    modalExportButton.style.display = 'inline-block';
                 }
 
                 modalBody.innerHTML = html;
                 detailModal.show();
             }
 
+            var calendarEl = document.getElementById('calendar');
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
+                initialDate: dateFromUrl || new Date(),
                 locale: 'tr',
                 headerToolbar: {
                     left: 'prev,next today',
@@ -937,58 +1236,45 @@
                 },
                 buttonText: {
                     today: 'Bugün',
-                    dayGridMonth: 'Ay',
-                    timeGridWeek: 'Hafta',
-                    timeGridDay: 'Gün',
-                    listWeek: 'Liste'
+                    month: 'Ay',
+                    week: 'Hafta',
+                    day: 'Gün',
+                    list: 'Liste'
                 },
                 slotEventOverlap: false,
-                dayMaxEvents: 3,
-                eventMaxStack: 3,
-                slotDuration: '00:30:00',
+                dayMaxEvents: 5,
                 height: 'auto',
-                slotMinTime: '06:00:00',
-                slotMaxTime: '22:00:00',
-                scrollTime: '08:00:00',
-                nowIndicator: true,
-                eventSources: [{
-                    id: 'databaseEvents',
-                    events: eventsData
-                }, {
-                    googleCalendarId: 'tr.turkish#holiday@group.v.calendar.google.com',
-                    color: '#dc3545',
-                    textColor: 'white',
-                    className: 'fc-event-holiday',
-                    googleCalendarApiKey: 'AIzaSyAQmEWGR-krGzcCk1r8R69ER-NyZM2BeWM'
-                }],
-                timeZone: appTimezone,
-                moreLinkText: function(num) {
-                    return '+ ' + num + ' tane daha';
-                },
-                displayEventTime: true,
                 eventTimeFormat: {
                     hour: '2-digit',
                     minute: '2-digit',
+                    meridiem: false,
                     hour12: false
                 },
+                displayEventEnd: true,
                 eventDisplay: 'list-item',
+                eventSources: [{
+                    url: calendarEventsUrl,
+                    failure: () => alert('Veri hatası!')
+                }, {
+                    googleCalendarId: 'tr.turkish#holiday@group.v.calendar.google.com',
+                    color: '#dc3545',
+                    className: 'fc-event-holiday',
+                    googleCalendarApiKey: 'AIzaSyAQmEWGR-krGzcCk1r8R69ER-NyZM2BeWM'
+                }],
                 eventClick: function(info) {
                     info.jsEvent.preventDefault();
-                    if (info.event.extendedProps && info.event.extendedProps.eventType) {
+                    if (info.event.extendedProps && info.event.extendedProps.eventType)
                         openUniversalModal(info.event.extendedProps);
-                    }
                 },
                 eventDidMount: function(info) {
-                    if (info.event.extendedProps && info.event.extendedProps.is_important) {
+                    if (info.event.extendedProps && info.event.extendedProps.is_important)
                         info.el.classList.add('event-important-pulse');
-                    }
                     try {
                         let title = info.event.title;
                         let desc = '';
-                        if (info.event.extendedProps && info.event.extendedProps.details && info.event
-                            .extendedProps.details['Açıklama']) {
-                            desc = info.event.extendedProps.details['Açıklama'];
-                        } else if (info.event.start) {
+                        if (info.event.extendedProps?.details?.['Açıklama']) desc = info.event
+                            .extendedProps.details['Açıklama'];
+                        else if (info.event.start) {
                             let start = info.event.start.toLocaleTimeString('tr-TR', {
                                 hour: '2-digit',
                                 minute: '2-digit'
@@ -1016,403 +1302,118 @@
                     } catch (error) {
                         console.warn('Tooltip hatası:', error);
                     }
-                },
+                }
             });
-            calendar.render();
-            setInterval(function() {
-                console.log('Veriler arkaplanda güncelleniyor...');
-                calendar.refetchEvents();
-            }, 30000);
+
+            function checkAndOpenModalFromUrl(events) {
+                if (urlModalId && urlModalType) {
+                    const idNum = parseInt(urlModalId, 10);
+                    const foundEvent = events.find(e => {
+                        const props = e.extendedProps || {};
+                        return props.id === idNum && props.model_type === urlModalType;
+                    });
+                    if (foundEvent) {
+                        openUniversalModal(foundEvent.extendedProps);
+                        const newUrl = window.location.pathname + window.location.search.replace(
+                            /[\?&]open_modal_id=[^&]+/, '').replace(/[\?&]open_modal_type=[^&]+/, '');
+                        window.history.replaceState({}, document.title, newUrl);
+                    }
+                }
+            }
 
             function applyCalendarFilters() {
+                const calendarEl = document.getElementById('calendar');
+                const canFilter = calendarEl.dataset.canFilter === 'true';
+                let userDept = (calendarEl.dataset.userDept || '').toLowerCase().trim();
+                userDept = userDept.replace(/ı/g, 'i').replace(/İ/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g')
+                    .replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ç/g, 'c');
                 const isChecked = (id) => {
-                    const el = document.getElementById(id);
-                    return el ? el.checked : true;
-                };
-                const isImportantChecked = (id) => {
                     const el = document.getElementById(id);
                     return el ? el.checked : false;
                 };
-                const showLojistik = document.getElementById('filterLojistik').checked;
-                const showUretim = document.getElementById('filterUretim').checked;
-                const showHizmet = document.getElementById('filterHizmet').checked;
-                const showBakim = document.getElementById('filterBakim').checked; // YENİ
-                const showImportant = isImportantChecked('filterImportant');
 
-                let dbSource = calendar.getEventSourceById('databaseEvents');
-                if (dbSource) {
-                    dbSource.remove();
+                let params = {};
+                if (canFilter) {
+                    params.lojistik = isChecked('filterLojistik') ? 1 : 0;
+                    params.uretim = isChecked('filterUretim') ? 1 : 0;
+                    params.hizmet = isChecked('filterHizmet') ? 1 : 0;
+                    params.bakim = isChecked('filterBakim') ? 1 : 0;
+                } else {
+                    params.lojistik = userDept.includes('lojistik') ? 1 : 0;
+                    params.uretim = (userDept.includes('uretim') || userDept.includes('planlama')) ? 1 : 0;
+                    params.hizmet = (userDept.includes('hizmet') || userDept.includes('idari')) ? 1 : 0;
+                    params.bakim = userDept.includes('bakim') ? 1 : 0;
                 }
+                params.important_only = document.getElementById('filterImportant')?.checked ? 1 : 0;
 
-                const filteredDbEvents = eventsData.filter(event => {
-                    const props = event.extendedProps;
-                    if (!props) return true;
-                    if (showImportant && !props.is_important) {
-                        return false;
-                    }
-
-                    const eventType = props.eventType;
-                    if (eventType === 'shipment') return showLojistik;
-                    if (eventType === 'production') return showUretim;
-                    if (eventType === 'maintenance') return showBakim; // YENİ MANTIK
-
-                    const isHizmet = (eventType === 'service_event' || eventType === 'vehicle_assignment' ||
-                        eventType === 'travel');
-                    if (isHizmet) return showHizmet;
-
-                    return true;
+                let eventSource = calendar.getEventSources()[0];
+                if (eventSource && eventSource.internalEventSource.meta.url === calendarEventsUrl) eventSource
+                    .remove();
+                else if (calendar.getEventSources().length > 0) calendar.getEventSources().forEach(src => {
+                    if (src.internalEventSource?.meta?.url === calendarEventsUrl) src.remove();
                 });
+
                 calendar.addEventSource({
-                    id: 'databaseEvents',
-                    events: filteredDbEvents
+                    url: calendarEventsUrl,
+                    extraParams: params,
+                    success: function(rawEvents) {
+                        setTimeout(() => {
+                            checkAndOpenModalFromUrl(calendar.getEvents());
+                        }, 500);
+                    }
                 });
             }
 
             const filters = document.querySelectorAll('.calendar-filters .form-check-input');
             filters.forEach(filter => filter.addEventListener('change', applyCalendarFilters));
+            applyCalendarFilters();
+            calendar.render();
+            setInterval(function() {
+                calendar.refetchEvents();
+            }, 30000);
 
-            // ... Listenerlar ...
-            if (modalOnayForm) {
-                modalOnayForm.addEventListener('submit', function(e) {
-                    if (!confirm('Sevkiyatın tesise ulaştığını onaylıyorsunuz?')) e.preventDefault();
-                    else this.querySelector('button[type=submit]').disabled = true;
-                });
-            }
-            if (modalOnayKaldirForm) {
-                modalOnayKaldirForm.addEventListener('submit', function(e) {
-                    if (!confirm('Bu sevkiyatın onayını geri almak istediğinizden emin misiniz?')) e
-                        .preventDefault();
-                    else this.querySelector('button[type=submit]').disabled = true;
-                });
-            }
-            if (modalDeleteForm) {
-                modalDeleteForm.addEventListener('submit', function(e) {
-                    this.querySelector('button[type=submit]').disabled = true;
-                });
-            }
+            const btnOnay = document.getElementById('modalOnayForm');
+            if (btnOnay) btnOnay.addEventListener('submit', e => {
+                if (!confirm('Onaylıyor musunuz?')) e.preventDefault();
+            });
+            const btnDelete = document.getElementById('modalDeleteForm');
+            if (btnDelete) btnDelete.addEventListener('submit', e => {
+                if (!confirm('Silinsin mi?')) e.preventDefault();
+            });
 
-            // URL'den Modal Açma
-            const urlParams = new URLSearchParams(window.location.search);
-            const modalIdToOpen = urlParams.get('open_modal_id');
-            const modalTypeToOpen = urlParams.get('open_modal_type');
-            if (modalIdToOpen && modalTypeToOpen) {
-                const allEvents = calendar.getEvents();
-                const modalIdNum = parseInt(modalIdToOpen, 10);
-                const eventToOpen = allEvents.find(event => event.extendedProps.id === modalIdNum && event
-                    .extendedProps.model_type === modalTypeToOpen);
-                if (eventToOpen) {
-                    console.log('URL\'den modal tetikleniyor:', eventToOpen.extendedProps);
-                    openUniversalModal(eventToOpen.extendedProps);
-                }
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-
-            if (isAuthorized) {
-                const toggleBtn = document.getElementById('toggleUsersButton');
-                const userList = document.getElementById('userListContainer');
-                if (toggleBtn && userList) {
-                    toggleBtn.addEventListener('click', function() {
-                        if (userList.style.display === 'none') {
-                            userList.style.display = 'block';
-                            toggleBtn.textContent = '👥 Kullanıcı Listesini Gizle';
-                        } else {
-                            userList.style.display = 'none';
-                            toggleBtn.textContent = '👥 Mevcut Kullanıcıları Görüntüle';
-                        }
-                    });
-                }
-            }
-            if (modalImportantCheckbox) {
-                modalImportantCheckbox.addEventListener('change', function() {
-                    const modelId = this.dataset.modelId;
-                    const modelType = this.dataset.modelType;
+            const chkImportant = document.getElementById('modalImportantCheckbox');
+            if (chkImportant) {
+                chkImportant.addEventListener('change', function() {
                     const isChecked = this.checked;
                     this.disabled = true;
-                    fetch('<?php echo e(route('calendar.toggleImportant')); ?>', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': getCsrfToken(),
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            model_id: modelId,
-                            model_type: modelType,
-                            is_important: isChecked
+                    fetch(toggleImportantUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': getCsrfToken(),
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                model_id: this.dataset.modelId,
+                                model_type: this.dataset.modelType,
+                                is_important: isChecked
+                            })
+                        }).then(res => res.json()).then(data => {
+                            if (data.success === false) {
+                                alert('HATA: ' + (data.message || 'Yetkiniz yok.'));
+                                this.checked = !isChecked;
+                            } else {
+                                calendar.refetchEvents();
+                            }
+                        }).catch(err => {
+                            console.error(err);
+                            alert('Bir bağlantı hatası oluştu.');
+                            this.checked = !isChecked;
                         })
-                    }).then(response => response.json()).then(data => {
-                        if (!data.success) throw new Error(data.message || 'Güncelleme başarısız.');
-                        console.log('Güncelleme başarılı:', data.message);
-                        location.reload();
-                    }).catch(error => {
-                        console.error('Hata:', error);
-                        alert('Bir hata oluştu, değişiklik geri alınıyor.');
-                        this.checked = !isChecked;
-                        this.disabled = false;
-                    });
+                        .finally(() => {
+                            this.disabled = false;
+                        });
                 });
-            }
-
-            const statsCard = document.getElementById('stats-card-body');
-            const chartData = <?php echo json_encode($chartData ?? [], 15, 512) ?>;
-            const departmentSlug = '<?php echo e($departmentSlug); ?>';
-
-            const commonChartOptions = {
-                chart: {
-                    type: 'bar',
-                    height: 250,
-                    toolbar: {
-                        show: false
-                    }
-                },
-                colors: ['#A78BFA', '#60D9A0', '#FDB4C8', '#FFB84D', '#9DECF9'],
-                plotOptions: {
-                    bar: {
-                        distributed: true,
-                        borderRadius: 8
-                    }
-                },
-                legend: {
-                    show: false
-                },
-                title: {
-                    align: 'left',
-                    style: {
-                        fontSize: '14px',
-                        fontWeight: 700,
-                        color: '#2d3748'
-                    }
-                },
-                dataLabels: {
-                    enabled: false
-                }
-            };
-
-            if (departmentSlug === 'lojistik' && chartData.hourly && chartData.daily) {
-                // ... Lojistik grafikleri (değişmedi) ...
-                if (chartData.hourly.labels.length > 0 && document.querySelector("#hourly-chart-lojistik")) {
-                    let hourlyOptions = {
-                        ...commonChartOptions,
-                        series: [{
-                            name: 'Sevkiyat Sayısı',
-                            data: chartData.hourly.data
-                        }],
-                        title: {
-                            ...commonChartOptions.title,
-                            text: chartData.hourly.title || 'Saatlik Yoğunluk'
-                        },
-                        xaxis: {
-                            categories: chartData.hourly.labels,
-                            tickAmount: 6
-                        }
-                    };
-                    new ApexCharts(document.querySelector("#hourly-chart-lojistik"), hourlyOptions).render();
-                }
-                if (chartData.daily.labels.length > 0 && document.querySelector("#daily-chart-lojistik")) {
-                    let dailyOptions = {
-                        ...commonChartOptions,
-                        series: [{
-                            name: 'Sevkiyat Sayısı',
-                            data: chartData.daily.data
-                        }],
-                        title: {
-                            ...commonChartOptions.title,
-                            text: chartData.daily.title || 'Haftalık Yoğunluk'
-                        },
-                        xaxis: {
-                            categories: chartData.daily.labels
-                        }
-                    };
-                    new ApexCharts(document.querySelector("#daily-chart-lojistik"), dailyOptions).render();
-                }
-            } else if (departmentSlug === 'uretim' && chartData.weekly_plans) {
-                // ... Üretim (değişmedi) ...
-                if (chartData.weekly_plans.labels.length > 0 && document.querySelector("#weekly-plans-chart")) {
-                    let weeklyOptions = {
-                        ...commonChartOptions,
-                        series: [{
-                            name: 'Plan Sayısı',
-                            data: chartData.weekly_plans.data
-                        }],
-                        title: {
-                            ...commonChartOptions.title,
-                            text: chartData.weekly_plans.title || 'Haftalık Plan Sayısı'
-                        },
-                        xaxis: {
-                            categories: chartData.weekly_plans.labels
-                        }
-                    };
-                    new ApexCharts(document.querySelector("#weekly-plans-chart"), weeklyOptions).render();
-                }
-            } else if (departmentSlug === 'hizmet' && chartData.daily_events && chartData.daily_assignments) {
-                // ... Hizmet (değişmedi) ...
-                if (chartData.daily_events.labels.length > 0 && document.querySelector("#daily-events-chart")) {
-                    let eventOptions = {
-                        ...commonChartOptions,
-                        series: [{
-                            name: 'Etkinlik Sayısı',
-                            data: chartData.daily_events.data
-                        }],
-                        chart: {
-                            type: 'area',
-                            height: 250,
-                            toolbar: {
-                                show: false
-                            },
-                            zoom: {
-                                enabled: false
-                            }
-                        },
-                        colors: [commonChartOptions.colors[1]],
-                        title: {
-                            ...commonChartOptions.title,
-                            text: chartData.daily_events.title || 'Günlük Etkinlik Sayısı'
-                        },
-                        xaxis: {
-                            categories: chartData.daily_events.labels,
-                            tickAmount: 6,
-                            labels: {
-                                rotate: -45,
-                                rotateAlways: true,
-                                style: {
-                                    fontSize: '10px'
-                                }
-                            }
-                        },
-                        yaxis: {
-                            labels: {
-                                formatter: function(val) {
-                                    return val.toFixed(0);
-                                }
-                            },
-                            min: 0
-                        },
-                        stroke: {
-                            curve: 'smooth',
-                            width: 2
-                        },
-                        fill: {
-                            type: 'gradient',
-                            gradient: {
-                                opacityFrom: 0.6,
-                                opacityTo: 0.1
-                            }
-                        },
-                        tooltip: {
-                            x: {
-                                format: 'dd MMM'
-                            },
-                            y: {
-                                formatter: function(val) {
-                                    return val.toFixed(0) + " etkinlik"
-                                }
-                            }
-                        },
-                        grid: {
-                            borderColor: '#e7e7e7',
-                            row: {
-                                colors: ['#f3f3f3', 'transparent'],
-                                opacity: 0.5
-                            }
-                        },
-                    };
-                    new ApexCharts(document.querySelector("#daily-events-chart"), eventOptions).render();
-                }
-                if (chartData.daily_assignments.labels.length > 0 && document.querySelector(
-                        "#daily-assignments-chart")) {
-                    let assignmentOptions = {
-                        ...commonChartOptions,
-                        series: [{
-                            name: 'Atama Sayısı',
-                            data: chartData.daily_assignments.data
-                        }],
-                        chart: {
-                            type: 'area',
-                            height: 250,
-                            toolbar: {
-                                show: false
-                            },
-                            zoom: {
-                                enabled: false
-                            }
-                        },
-                        colors: [commonChartOptions.colors[3]],
-                        title: {
-                            ...commonChartOptions.title,
-                            text: chartData.daily_assignments.title || 'Günlük Araç Atama Sayısı'
-                        },
-                        xaxis: {
-                            categories: chartData.daily_assignments.labels,
-                            tickAmount: 6,
-                            labels: {
-                                rotate: -45,
-                                rotateAlways: true,
-                                style: {
-                                    fontSize: '10px'
-                                }
-                            }
-                        },
-                        yaxis: {
-                            labels: {
-                                formatter: function(val) {
-                                    return val.toFixed(0);
-                                }
-                            },
-                            min: 0
-                        },
-                        stroke: {
-                            curve: 'smooth',
-                            width: 2
-                        },
-                        fill: {
-                            type: 'gradient',
-                            gradient: {
-                                opacityFrom: 0.6,
-                                opacityTo: 0.1
-                            }
-                        },
-                        tooltip: {
-                            x: {
-                                format: 'dd MMM'
-                            },
-                            y: {
-                                formatter: function(val) {
-                                    return val.toFixed(0) + " atama"
-                                }
-                            }
-                        },
-                        grid: {
-                            borderColor: '#e7e7e7',
-                            row: {
-                                colors: ['#f3f3f3', 'transparent'],
-                                opacity: 0.5
-                            }
-                        },
-                    };
-                    new ApexCharts(document.querySelector("#daily-assignments-chart"), assignmentOptions).render();
-                }
-            }
-            // === YENİ EKLENEN: BAKIM GRAFİĞİ ===
-            else if (departmentSlug === 'bakim' && chartData.maintenance_plans) {
-                if (chartData.maintenance_plans.labels.length > 0 && document.querySelector(
-                        "#maintenance-plans-chart")) {
-                    let maintenanceOptions = {
-                        ...commonChartOptions,
-                        series: [{
-                            name: 'Bakım Sayısı',
-                            data: chartData.maintenance_plans.data
-                        }],
-                        title: {
-                            ...commonChartOptions.title,
-                            text: chartData.maintenance_plans.title || 'Haftalık Bakım Yoğunluğu'
-                        },
-                        xaxis: {
-                            categories: chartData.maintenance_plans.labels
-                        },
-                        colors: ['#ED8936', '#F6AD55', '#DD6B20', '#C05621', '#9C4221'] // Turuncu Tonları
-                    };
-                    new ApexCharts(document.querySelector("#maintenance-plans-chart"), maintenanceOptions).render();
-                }
             }
         });
     </script>

@@ -15,21 +15,26 @@ use App\Models\ProductionPlan;
 use App\Models\Event;
 use App\Models\VehicleAssignment;
 use App\Models\Travel;
-use Illuminate\Support\Facades\Storage;
-use App\Http\Controllers\EventController;
 use Illuminate\Support\Facades\Gate;
 use App\Models\Department;
-use App\Data\StatisticsData;
 use App\Models\MaintenancePlan;
 use Illuminate\Support\Collection;
+use App\Services\StatisticsService; // EKLENDİ
 
 class HomeController extends Controller
 {
-    public function __construct()
+    protected $statsService; // EKLENDİ
+
+    // Servisi buraya enjekte ediyoruz
+    public function __construct(StatisticsService $statsService)
     {
         $this->middleware('auth');
+        $this->statsService = $statsService;
     }
 
+    /**
+     * ANA TAKVİM SAYFASI
+     */
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -95,10 +100,12 @@ class HomeController extends Controller
         ));
     }
 
+    /**
+     * KARŞILAMA / DASHBOARD SAYFASI
+     */
     public function welcome(Request $request)
     {
         $user = Auth::user();
-        // Önemli bildirimleri mevcut yapındaki gibi alıyoruz
         $allItems = $this->getMappedImportantItems($request);
         $importantItems = $allItems->take(4);
         $importantItemsCount = $allItems->count();
@@ -111,172 +118,96 @@ class HomeController extends Controller
             $departmentSlug = null;
         }
 
-        // 1. TARİH ARALIKLARINI BELİRLE
         $today = \Carbon\Carbon::today();
-
         $weekStart = \Carbon\Carbon::now()->startOfWeek();
         $weekEnd = \Carbon\Carbon::now()->endOfWeek();
-
         $monthStart = \Carbon\Carbon::now()->startOfMonth();
         $monthEnd = \Carbon\Carbon::now()->endOfMonth();
 
-        // 2. BOŞ KOLEKSİYONLARI OLUŞTUR
+        $welcomeTitle = "Hoş Geldiniz";
+        $chartTitle = "Genel Bakış";
+        $chartData = [];
+        $kpiData = [];
+
         $todayItems = collect();
         $weeklyItems = collect();
         $monthlyItems = collect();
 
-        // Varsayılan Başlıklar
-        $welcomeTitle = "Hoş Geldiniz";
-        $chartTitle = "Genel Bakış";
-        $chartData = [];
-        $kpiData = []; // KPI verilerini aşağıda dolduracağız veya mevcut helper'dan alacağız
-
-        // -------------------------------------------------------------------------
-        // 3. DEPARTMANA GÖRE VERİ ÇEKME (KPI ve CHART Helper'lardan, LİSTE Buradan)
-        // -------------------------------------------------------------------------
-
-        // --- A) ÜRETİM ---
         if ($departmentSlug === 'uretim') {
-            // Chart ve Title bilgilerini helper'dan al (Mevcut yapıyı koru)
             list($welcomeTitle, $chartTitle, $dummyToday, $chartData) = $this->getProductionWelcomeData();
-
-            // Listeleri Tarihe Göre Çek
             $query = \App\Models\ProductionPlan::query();
             $todayItems = (clone $query)->whereDate('week_start_date', $today)->get();
             $weeklyItems = (clone $query)->whereBetween('week_start_date', [$weekStart, $weekEnd])->get();
             $monthlyItems = (clone $query)->whereBetween('week_start_date', [$monthStart, $monthEnd])->get();
 
-            // --- B) HİZMET / İDARİ İŞLER ---
         } elseif ($departmentSlug === 'hizmet') {
             list($welcomeTitle, $chartTitle, $dummyToday, $chartData) = $this->getServiceWelcomeData();
-
-            // Hizmet departmanı hem Etkinlik hem Araç Görevi görür
-            // Etkinlikler
             $eventQ = \App\Models\Event::query();
             $tEvents = (clone $eventQ)->whereDate('start_datetime', $today)->get();
             $wEvents = (clone $eventQ)->whereBetween('start_datetime', [$weekStart, $weekEnd])->get();
             $mEvents = (clone $eventQ)->whereBetween('start_datetime', [$monthStart, $monthEnd])->get();
 
-            // Araç Görevleri
             $vehicleQ = \App\Models\VehicleAssignment::whereIn('status', ['pending', 'in_progress', 'approved']);
             $tVehicle = (clone $vehicleQ)->whereDate('start_time', $today)->get();
             $wVehicle = (clone $vehicleQ)->whereBetween('start_time', [$weekStart, $weekEnd])->get();
             $mVehicle = (clone $vehicleQ)->whereBetween('start_time', [$monthStart, $monthEnd])->get();
 
-            // Birleştir ve Sırala
-            $todayItems = $tEvents->merge($tVehicle)->sortBy('start_datetime'); // start_time ile çakışırsa manuel sort gerekebilir
+            $todayItems = $tEvents->merge($tVehicle)->sortBy('start_datetime');
             $weeklyItems = $wEvents->merge($wVehicle)->sortBy('start_datetime');
             $monthlyItems = $mEvents->merge($mVehicle)->sortBy('start_datetime');
 
-            // --- C) LOJİSTİK ---
+        } elseif ($departmentSlug === 'ulastirma') {
+            // Service'ten verileri çek
+            list($welcomeTitle, $chartTitle, $dummyToday, $chartData) = $this->statsService->getUlastirmaWelcomeData();
+
+            // Listeleri Oluştur
+            $query = \App\Models\VehicleAssignment::whereIn('status', ['pending', 'approved', 'in_progress']);
+
+            $todayItems = (clone $query)->whereDate('start_time', $today)->orderBy('start_time')->get();
+            $weeklyItems = (clone $query)->whereBetween('start_time', [$weekStart, $weekEnd])->orderBy('start_time')->get();
+            $monthlyItems = (clone $query)->whereBetween('start_time', [$monthStart, $monthEnd])->orderBy('start_time')->get();
+
+            // KPI Kartları İçin Veri (Müdürün gördüğü sayılar)
+            $kpiData = [
+                'aktif_gorev' => \App\Models\VehicleAssignment::where('status', 'in_progress')->count(),
+                'bekleyen_talep' => \App\Models\VehicleAssignment::where('status', 'pending')->count(),
+                'toplam_arac' => \App\Models\Vehicle::count(),
+                'bugunku_gorev' => $todayItems->count()
+            ];
         } elseif ($departmentSlug === 'lojistik') {
             list($welcomeTitle, $chartTitle, $dummyToday, $chartData) = $this->getLogisticsWelcomeData();
-
             $query = \App\Models\Shipment::query();
             $todayItems = (clone $query)->whereDate('tahmini_varis_tarihi', $today)->get();
             $weeklyItems = (clone $query)->whereBetween('tahmini_varis_tarihi', [$weekStart, $weekEnd])->get();
             $monthlyItems = (clone $query)->whereBetween('tahmini_varis_tarihi', [$monthStart, $monthEnd])->get();
 
-            // --- D) BAKIM ---
         } elseif ($departmentSlug === 'bakim') {
             list($welcomeTitle, $chartTitle, $dummyToday, $chartData) = $this->getMaintenanceWelcomeData();
-
-            $query = \App\Models\MaintenancePlan::with('asset'); // İlişki varsa ekle
+            $query = \App\Models\MaintenancePlan::with('asset');
             $todayItems = (clone $query)->whereDate('planned_start_date', $today)->get();
             $weeklyItems = (clone $query)->whereBetween('planned_start_date', [$weekStart, $weekEnd])->get();
             $monthlyItems = (clone $query)->whereBetween('planned_start_date', [$monthStart, $monthEnd])->get();
 
-            // --- E) ADMİN / YÖNETİCİ / TV (HEPSİ) ---
         } elseif ($userRole == 'admin' || (empty($departmentSlug) && $userRole == 'yönetici') || $isTvUser) {
-            $welcomeTitle = "Genel Bakış";
-            $chartTitle = "Şirket Geneli İş Akışı";
-
-            // 1. Lojistik Verileri
-            $shipQ = \App\Models\Shipment::query();
-            $tShip = (clone $shipQ)->whereDate('tahmini_varis_tarihi', $today)->get();
-            $wShip = (clone $shipQ)->whereBetween('tahmini_varis_tarihi', [$weekStart, $weekEnd])->get();
-            $mShip = (clone $shipQ)->whereBetween('tahmini_varis_tarihi', [$monthStart, $monthEnd])->get();
-
-            // 2. Üretim Verileri
-            $prodQ = \App\Models\ProductionPlan::query();
-            $tProd = (clone $prodQ)->whereDate('week_start_date', $today)->get();
-            $wProd = (clone $prodQ)->whereBetween('week_start_date', [$weekStart, $weekEnd])->get();
-            $mProd = (clone $prodQ)->whereBetween('week_start_date', [$monthStart, $monthEnd])->get();
-
-            // 3. Etkinlik Verileri
-            $eventQ = \App\Models\Event::query();
-            $tEvent = (clone $eventQ)->whereDate('start_datetime', $today)->get();
-            $wEvent = (clone $eventQ)->whereBetween('start_datetime', [$weekStart, $weekEnd])->get();
-            $mEvent = (clone $eventQ)->whereBetween('start_datetime', [$monthStart, $monthEnd])->get();
-
-            // 4. Bakım Verileri
-            $maintQ = \App\Models\MaintenancePlan::query();
-            $tMaint = (clone $maintQ)->whereDate('planned_start_date', $today)->get();
-            $wMaint = (clone $maintQ)->whereBetween('planned_start_date', [$weekStart, $weekEnd])->get();
-            $mMaint = (clone $maintQ)->whereBetween('planned_start_date', [$monthStart, $monthEnd])->get();
-
-            // 5. Araç Görevleri (Admin için bunu da ekleyelim)
-            $vehQ = \App\Models\VehicleAssignment::whereIn('status', ['pending', 'in_progress']);
-            $tVeh = (clone $vehQ)->whereDate('start_time', $today)->get();
-            $wVeh = (clone $vehQ)->whereBetween('start_time', [$weekStart, $weekEnd])->get();
-            $mVeh = (clone $vehQ)->whereBetween('start_time', [$monthStart, $monthEnd])->get();
-
-            // 6. Birleştirme Fonksiyonu (Sort işlemini kolaylaştırmak için)
-            $sorter = fn($item) => $item->start_datetime ?? $item->start_time ?? $item->tahmini_varis_tarihi ?? $item->planned_start_date ?? $item->week_start_date;
-
-            $todayItems = $tShip->merge($tProd)->merge($tEvent)->merge($tMaint)->merge($tVeh)->sortBy($sorter);
-            $weeklyItems = $wShip->merge($wProd)->merge($wEvent)->merge($wMaint)->merge($wVeh)->sortBy($sorter);
-            $monthlyItems = $mShip->merge($mProd)->merge($mEvent)->merge($mMaint)->merge($mVeh)->sortBy($sorter);
-
-            // KPI DATA (Admin İçin Manuel Oluşturuyoruz - Senin kodundan alındı)
-            $kpiData = [
-                'sevkiyat_sayisi' => $tShip->count(),
-                'plan_sayisi' => $tProd->count(),
-                'etkinlik_sayisi' => $tEvent->count(),
-                'arac_gorevi_sayisi' => $tVeh->count(),
-                'bakim_sayisi' => $tMaint->count(),
-                'kullanici_sayisi' => \App\Models\User::count()
-            ];
-
-            // CHART DATA (Admin İçin)
-            $lojistikCount = (int) \App\Models\Shipment::count();
-            $uretimCount = (int) \App\Models\ProductionPlan::count();
-            $etkinlikCount = (int) \App\Models\Event::count();
-            $aracCount = (int) \App\Models\VehicleAssignment::count();
-            $bakimCount = (int) \App\Models\MaintenancePlan::count();
-
-            $chartData = [];
-            if ($lojistikCount > 0)
-                $chartData[] = ['Lojistik', 'Sevkiyatlar', $lojistikCount];
-            if ($uretimCount > 0)
-                $chartData[] = ['Üretim', 'Planlar', $uretimCount];
-            if ($etkinlikCount > 0)
-                $chartData[] = ['İdari İşler', 'Etkinlikler', $etkinlikCount];
-            if ($aracCount > 0)
-                $chartData[] = ['İdari İşler', 'Araç Görevleri', $aracCount];
-            if ($bakimCount > 0)
-                $chartData[] = ['Bakım', 'Bakım Planları', $bakimCount];
-            if (empty($chartData))
-                $chartData[] = ['Sistem', 'Henüz Kayıt Yok', 1];
+            $adminData = $this->getAdminDashboardData($today, $weekStart, $weekEnd, $monthStart, $monthEnd);
+            $welcomeTitle = $adminData['welcomeTitle'];
+            $chartTitle = $adminData['chartTitle'];
+            $todayItems = $adminData['todayItems'];
+            $weeklyItems = $adminData['weeklyItems'];
+            $monthlyItems = $adminData['monthlyItems'];
+            $kpiData = $adminData['kpiData'];
+            $chartData = $adminData['chartData'];
         }
-
-        Log::info('Welcome sayfası yüklendi', [
-            'user_id' => $user->id,
-            'today_count' => $todayItems->count(),
-            'weekly_count' => $weeklyItems->count(),
-            'monthly_count' => $monthlyItems->count(),
-        ]);
 
         $chartType = 'sankey';
 
-        // View'a weeklyItems ve monthlyItems değişkenlerini de gönderiyoruz
         return view('welcome', compact(
             'importantItems',
             'importantItemsCount',
             'welcomeTitle',
-            'todayItems',     // Mevcut değişken
-            'weeklyItems',    // YENİ
-            'monthlyItems',   // YENİ
+            'todayItems',
+            'weeklyItems',
+            'monthlyItems',
             'chartType',
             'chartData',
             'chartTitle',
@@ -285,115 +216,84 @@ class HomeController extends Controller
         ));
     }
 
-    public function showStatistics(Request $request)
+    /**
+     * Takvim üzerinde "Önemli" işaretleme işlemi
+     */
+    public function toggleImportant(Request $request)
     {
         $user = Auth::user();
-        $isTvUser = ($user->email === 'tv@koksan.com');
-        $isSuperUser = $user->role === 'admin' || $user->role === 'yönetici' || $isTvUser;
-        if ($isSuperUser) {
-            $departmentSlug = $request->input('target_dept', 'genel'); // Varsayılan: Genel
+        $modelType = $request->input('model_type');
+        $modelId = $request->input('model_id');
+        $isImportant = $request->input('is_important');
+
+        $isManager = in_array($user->role, ['admin', 'yönetici', 'müdür']);
+        $isAllowed = false;
+
+        if ($isManager) {
+            $isAllowed = true;
+        } elseif ($modelType === 'vehicle_assignment') {
+            $isAllowed = true;
+        }
+
+        if (!$isAllowed) {
+            return response()->json(['success' => false, 'message' => 'Yetkiniz yok.'], 403);
+        }
+
+        $model = null;
+        switch ($modelType) {
+            case 'shipment':
+                $model = \App\Models\Shipment::find($modelId);
+                break;
+            case 'production_plan':
+                $model = \App\Models\ProductionPlan::find($modelId);
+                break;
+            case 'event':
+                $model = \App\Models\Event::find($modelId);
+                break;
+            case 'vehicle_assignment':
+                $model = \App\Models\VehicleAssignment::find($modelId);
+                break;
+            case 'travel':
+                $model = \App\Models\Travel::find($modelId);
+                break;
+            case 'maintenance_plan':
+                $model = \App\Models\MaintenancePlan::find($modelId);
+                break;
+        }
+
+        if (!$model) {
+            return response()->json(['success' => false, 'message' => 'Kayıt bulunamadı.'], 404);
+        }
+
+        if ($model instanceof \App\Models\MaintenancePlan) {
+            $model->priority = $isImportant ? 'critical' : 'normal';
         } else {
-            $departmentSlug = $user->department ? trim($user->department->slug) : 'genel';
+            $model->is_important = $isImportant;
         }
 
-        if ($departmentSlug === 'genel') {
-            $departmentName = 'Genel Bakış';
-        } else {
-            // Seçilen slug'a ait departman ismini bulalım (Görsel açıdan düzgün görünmesi için)
-            $targetDeptObj = \App\Models\Department::where('slug', $departmentSlug)->first();
-            $departmentName = $targetDeptObj ? $targetDeptObj->name : ucfirst($departmentSlug);
-        }
-        $pageTitle = $departmentName . " İstatistikleri";
+        $model->save();
 
-
-        $defaultStartDate = Carbon::now()->startOfYear();
-        $defaultEndDate = Carbon::now()->endOfDay();
-        $filters = [
-            'date_from' => $request->input('date_from', $defaultStartDate->toDateString()),
-            'date_to' => $request->input('date_to', $defaultEndDate->toDateString())
-        ];
-        $startDate = Carbon::parse($filters['date_from'])->startOfDay();
-        $endDate = Carbon::parse($filters['date_to'])->endOfDay();
-
-
-        $statsData = [];
-        switch ($departmentSlug) {
-            case 'lojistik':
-                $pageTitle = "Ayrıntılı Sevkiyat İstatistikleri";
-                $statsData = $this->getLojistikStatsData($startDate, $endDate)->toArray();
-                break;
-            case 'uretim':
-                $pageTitle = "Ayrıntılı Üretim İstatistikleri";
-                $statsData = $this->getUretimStatsData($startDate, $endDate)->toArray();
-                break;
-            case 'hizmet':
-                $pageTitle = "Ayrıntılı İdari İşler İstatistikleri";
-                $statsData = $this->getHizmetStatsData($startDate, $endDate)->toArray();
-                break;
-            case 'bakim':
-                $pageTitle = "Ayrıntılı Bakım İstatistikleri";
-                $statsData = $this->getBakimStatsData($startDate, $endDate)->toArray();
-                break;
-            default:
-                $pageTitle = "Genel Bakış İstatistikleri"; // Başlığı da netleştirelim
-                $statsData = $this->getGenelBakisData($startDate, $endDate)->toArray();
-                break;
-        }
-        $allDepartments = collect();
-        if ($isSuperUser) {
-            $allDepartments = Department::orderBy('name')->get();
-        }
-        return view('statistics.index', array_merge(
-            [
-                'pageTitle' => $pageTitle,
-                'departmentSlug' => $departmentSlug,
-                'departmentName' => $departmentName,
-                'filters' => $filters,
-                'isSuperUser' => $isSuperUser,
-                'allDepartments' => $allDepartments,
-                'isTvUser' => $isTvUser // View'da stil ayarı için
-            ],
-            $statsData
-        ));
+        return response()->json([
+            'success' => true,
+            'message' => 'İşlem başarılı.',
+            'new_status' => $isImportant
+        ]);
     }
-    /**
-     * Genel bakış için özet istatistikler
-     */
-    private function getGenelBakisData(Carbon $startDate, Carbon $endDate): StatisticsData
+
+    public function showAllImportant(Request $request)
     {
-        // Tüm departmanların özet verilerini topla
-        $lojistikCount = \App\Models\Shipment::whereBetween('created_at', [$startDate, $endDate])->count();
-        $uretimCount = \App\Models\ProductionPlan::whereBetween('week_start_date', [$startDate, $endDate])->count();
-        $hizmetEventCount = \App\Models\Event::whereBetween('start_datetime', [$startDate, $endDate])->count();
-        $hizmetTravelCount = \App\Models\Travel::whereBetween('start_date', [$startDate, $endDate])->count();
-        $bakimCount = \App\Models\MaintenancePlan::whereBetween('planned_start_date', [$startDate, $endDate])->count();
-
-        $chartData = [
-            'departmentSummary' => [
-                'title' => 'Departman Aktivite Özeti',
-                'labels' => ['Lojistik', 'Üretim', 'İdari İşler', 'Bakım'],
-                'data' => [
-                    $lojistikCount,
-                    $uretimCount,
-                    $hizmetEventCount + $hizmetTravelCount,
-                    $bakimCount
-                ]
-            ]
-        ];
-
-        return new StatisticsData(
-            chartData: $chartData,
-            shipmentsForFiltering: [],
-            productionPlansForFiltering: [],
-            eventsForFiltering: [],
-            assignmentsForFiltering: [],
-            vehiclesForFiltering: [],
-            monthlyLabels: [],
-            maintenancePlansForFiltering: [],
-            maintenanceTypes: [],
-            assets: []
-        );
+        $filters = $request->only(['type', 'department_id', 'date_from', 'date_to']);
+        $departments = Department::orderBy('name')->get();
+        $allItems = $this->getMappedImportantItems($request);
+        return view('important-items', [
+            'importantItems' => $allItems,
+            'filters' => $filters,
+            'departments' => $departments
+        ]);
     }
+
+    // --- TAKVİM ve DASHBOARD İÇİN YARDIMCI FONKSİYONLAR ---
+
     private function getLojistikIndexData($user)
     {
         $events = [];
@@ -401,104 +301,27 @@ class HomeController extends Controller
         $shipments = Shipment::with('onaylayanKullanici')->get();
 
         foreach ($shipments as $shipment) {
-            $cikisTarihi = null;
-            $varisTarihi = null;
-            try {
-                if ($shipment->cikis_tarihi) {
-                    $cikisTarihi = Carbon::parse($shipment->cikis_tarihi);
-                }
-                if ($shipment->tahmini_varis_tarihi) {
-                    $varisTarihi = Carbon::parse($shipment->tahmini_varis_tarihi);
-                }
-            } catch (\Exception $e) {
-                Log::error("Tarih parse hatası - Shipment ID: " . $shipment->id, ['error' => $e->getMessage()]);
-            }
+            $cikisTarihi = $shipment->cikis_tarihi ? Carbon::parse($shipment->cikis_tarihi) : null;
+            $varisTarihi = $shipment->tahmini_varis_tarihi ? Carbon::parse($shipment->tahmini_varis_tarihi) : null;
 
             $color = '#0d6efd';
-            if ($shipment->onaylanma_tarihi) {
+            if ($shipment->onaylanma_tarihi)
                 $color = '#198754';
-            } elseif ($varisTarihi) {
-                if ($now->greaterThan($varisTarihi)) {
+            elseif ($varisTarihi) {
+                if ($now->greaterThan($varisTarihi))
                     $color = '#dc3545';
-                } elseif ($varisTarihi->isBetween($now, $now->copy()->addDays(3))) {
+                elseif ($varisTarihi->isBetween($now, $now->copy()->addDays(3)))
                     $color = '#ffc107';
-                }
             }
 
-            $normalizedKargo = $this->normalizeCargoContent($shipment->kargo_icerigi);
-            $normalizedAracTipi = $this->normalizeVehicleType($shipment->arac_tipi);
+            $extendedProps = ['eventType' => 'shipment', 'model_type' => 'shipment', 'id' => $shipment->id, 'is_important' => $shipment->is_important, 'title' => '🚚 ' . $shipment->kargo_icerigi, 'details' => []];
 
-            $extendedProps = [
-                'eventType' => 'shipment',
-                'model_type' => 'shipment',
-                'is_important' => $shipment->is_important,
-                'title' => '🚚 Sevkiyat Detayı: ' . $normalizedKargo,
-                'id' => $shipment->id,
-                'user_id' => $shipment->user_id,
-                'editUrl' => route('shipments.edit', $shipment->id),
-                'deleteUrl' => route('shipments.destroy', $shipment->id),
-                'exportUrl' => route('shipments.export', $shipment->id),
-                'onayUrl' => route('shipments.onayla', $shipment->id),
-                'onayKaldirUrl' => route('shipments.onayiGeriAl', $shipment->id),
-                'details' => [
-                    'Araç Tipi' => $normalizedAracTipi,
-                    'Plaka' => $shipment->plaka,
-                    'Dorse Plakası' => $shipment->dorse_plakasi,
-                    'Şoför Adı' => $shipment->sofor_adi,
-                    'IMO Numarası' => $shipment->imo_numarasi,
-                    'Gemi Adı' => $shipment->gemi_adi,
-                    'Kalkış Limanı' => $shipment->kalkis_limani,
-                    'Varış Limanı' => $shipment->varis_limani,
-                    'Kalkış Noktası' => $shipment->kalkis_noktasi,
-                    'Varış Noktası' => $shipment->varis_noktasi,
-                    'Sevkiyat Türü' => $shipment->shipment_type === 'import' ? 'İthalat' : 'İhracat',
-                    'Kargo Yükü' => $normalizedKargo,
-                    'Kargo Tipi' => $shipment->kargo_tipi,
-                    'Kargo Miktarı' => $shipment->kargo_miktari,
-                    'Çıkış Tarihi' => $cikisTarihi ? $cikisTarihi->format('d.m.Y H:i') : '-',
-                    'Tahmini Varış' => $varisTarihi ? $varisTarihi->format('d.m.Y H:i') : '-',
-                    'Açıklamalar' => $shipment->aciklamalar,
-                    'Dosya Yolu' => $shipment->dosya_yolu ? asset('storage/' . $shipment->dosya_yolu) : null,
-                    'Onay Durumu' => $shipment->onaylanma_tarihi ? $shipment->onaylanma_tarihi->format('d.m.Y H:i') : null,
-                    'Onaylayan' => $shipment->onaylayanKullanici?->name,
-                ]
-            ];
-
-            if ($cikisTarihi) {
-                $events[] = ['title' => 'ÇIKIŞ: ' . $normalizedKargo . ' (' . $normalizedAracTipi . ')', 'start' => $cikisTarihi->toIso8601String(), 'color' => $color, 'extendedProps' => $extendedProps];
-            }
-            if ($varisTarihi) {
-                $events[] = ['title' => 'VARIŞ: ' . $normalizedKargo . ' (' . $normalizedAracTipi . ')', 'start' => $varisTarihi->toIso8601String(), 'color' => $color, 'extendedProps' => $extendedProps];
-            }
+            if ($cikisTarihi)
+                $events[] = ['title' => 'ÇIKIŞ: ' . $shipment->kargo_icerigi, 'start' => $cikisTarihi->toIso8601String(), 'color' => $color, 'extendedProps' => $extendedProps];
+            if ($varisTarihi)
+                $events[] = ['title' => 'VARIŞ: ' . $shipment->kargo_icerigi, 'start' => $varisTarihi->toIso8601String(), 'color' => $color, 'extendedProps' => $extendedProps];
         }
-
-        $chartData = [];
-        $statsTitle = "Sevkiyat İstatistikleri";
-        $hourlyLabels = array_map(fn($h) => str_pad($h, 2, '0', STR_PAD_LEFT) . ':00', range(0, 23));
-        $hourlyCounts = array_fill_keys(range(0, 23), 0);
-
-        $hourlyDbData = Shipment::select([DB::raw('HOUR(cikis_tarihi) as hour'), DB::raw('COUNT(*) as count')])
-            ->groupBy('hour')->pluck('count', 'hour');
-        foreach ($hourlyDbData as $hour => $count) {
-            if (isset($hourlyCounts[$hour])) {
-                $hourlyCounts[$hour] = $count;
-            }
-        }
-        $chartData['hourly'] = ['labels' => $hourlyLabels, 'data' => array_values($hourlyCounts), 'title' => '⏰ Saatlik Sevkiyat Yoğunluğu'];
-
-        $dayLabels = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
-        $dayCounts = array_fill(0, 7, 0);
-        $dayMap = [2 => 0, 3 => 1, 4 => 2, 5 => 3, 6 => 4, 7 => 5, 1 => 6];
-        $dailyDbData = Shipment::select([DB::raw('DAYOFWEEK(cikis_tarihi) as day_of_week'), DB::raw('COUNT(*) as count')])
-            ->groupBy('day_of_week')->pluck('count', 'day_of_week');
-        foreach ($dailyDbData as $dayNum => $count) {
-            if (isset($dayMap[$dayNum])) {
-                $dayCounts[$dayMap[$dayNum]] = $count;
-            }
-        }
-        $chartData['daily'] = ['labels' => $dayLabels, 'data' => $dayCounts, 'title' => '📅 Haftalık Sevkiyat Yoğunluğu'];
-
-        return ['events' => $events, 'chartData' => $chartData, 'statsTitle' => $statsTitle];
+        return ['events' => $events, 'chartData' => [], 'statsTitle' => "Sevkiyat Takvimi"];
     }
 
     private function getUretimIndexData($user)
@@ -514,460 +337,63 @@ class HomeController extends Controller
                 'start' => $plan->week_start_date->startOfDay()->toIso8601String(),
                 'end' => $plan->week_start_date->copy()->addDay()->startOfDay()->toIso8601String(),
                 'color' => '#4FD1C5',
-                'extendedProps' => [
-                    'eventType' => 'production',
-                    'title' => '📅 Üretim Planı Detayı',
-                    'id' => $plan->id,
-                    'user_id' => $plan->user_id,
-                    'editUrl' => route('production.plans.edit', $plan->id),
-                    'deleteUrl' => route('production.plans.destroy', $plan->id),
-                    'details' => [
-                        'Plan Başlığı' => $plan->plan_title,
-                        'Hafta Başlangıcı' => $plan->week_start_date->format('d.m.Y'),
-                        'Plan Detayları' => $plan->plan_details,
-                        'Oluşturan' => $plan->user?->name,
-                        'Kayıt Tarihi' => $plan->created_at->format('d.m.Y H:i'),
-                    ]
-                ]
+                'extendedProps' => ['eventType' => 'production', 'id' => $plan->id, 'title' => $plan->plan_title, 'details' => ['Plan Detayları' => $plan->plan_details]]
             ];
         }
-
-        $chartData = [];
-        $statsTitle = "Üretim İstatistikleri";
-        $twelveWeeksAgo = Carbon::now()->subWeeks(11)->startOfWeek();
-        $weeklyPlanCounts = ProductionPlan::select([DB::raw('YEARWEEK(week_start_date, 1) as year_week'), DB::raw('COUNT(*) as count')])
-            ->where('week_start_date', '>=', $twelveWeeksAgo)
-            ->groupBy('year_week')->orderBy('year_week')->pluck('count', 'year_week');
-
-        $weeklyLabels = [];
-        $weeklyData = [];
-        $currentWeek = $twelveWeeksAgo->copy();
-        for ($i = 0; $i < 12; $i++) {
-            $yearWeek = $currentWeek->format('oW');
-            $weeklyLabels[] = $currentWeek->format('W') . '. Hafta';
-            $weeklyData[] = $weeklyPlanCounts[$yearWeek] ?? 0;
-            $currentWeek->addWeek();
-        }
-        $chartData['weekly_plans'] = ['labels' => $weeklyLabels, 'data' => $weeklyData, 'title' => '📅 Son 12 Haftanın Plan Sayısı'];
-        $chartData['placeholder'] = ['labels' => [], 'data' => [], 'title' => 'Başka Grafik Gelecek'];
-
-        return ['events' => $events, 'chartData' => $chartData, 'statsTitle' => $statsTitle];
+        return ['events' => $events, 'chartData' => [], 'statsTitle' => "Üretim Takvimi"];
     }
 
     private function getHizmetIndexData($user)
     {
         $events = [];
-
         $serviceEvents = Event::with('user')->get();
         foreach ($serviceEvents as $event) {
-            $databaseEventType = $event->event_type ?? 'diger';
-
-            $finalEventType = 'service_event';
-            if ($databaseEventType === 'diger') {
-                $finalEventType = 'general';
-            }
             $events[] = [
                 'title' => 'Etkinlik: ' . $event->title,
                 'start' => $event->start_datetime->format('Y-m-d\TH:i:s'),
                 'end' => $event->end_datetime->format('Y-m-d\TH:i:s'),
                 'color' => '#F093FB',
-                'extendedProps' => [
-                    'eventType' => $finalEventType,
-                    'model_type' => 'event',
-                    'is_important' => $event->is_important,
-                    'title' => '🎉 Etkinlik Detayı: ' . $event->title,
-                    'id' => $event->id,
-                    'user_id' => $event->user_id,
-                    'editUrl' => route('service.events.edit', $event->id),
-                    'deleteUrl' => route('service.events.destroy', $event->id),
-                    'details' => [
-                        'Etkinlik Tipi' => $this->getEventTypes()[$event->event_type] ?? ucfirst($event->event_type), // getEventTypes() kullan
-                        'Konum' => $event->location,
-                        'Başlangıç' => $event->start_datetime->format('d.m.Y H:i'),
-                        'Bitiş' => $event->end_datetime->format('d.m.Y H:i'),
-                        'Açıklama' => $event->description,
-                        'Kayıt Yapan' => $event->user?->name,
-                    ]
-                ]
+                'extendedProps' => ['eventType' => 'service_event', 'model_type' => 'event', 'is_important' => $event->is_important, 'id' => $event->id, 'details' => ['Konum' => $event->location]]
             ];
         }
 
         $assignments = VehicleAssignment::with(['vehicle', 'createdBy'])->get();
         foreach ($assignments as $assignment) {
-            $extendedProps = [
-                'eventType' => 'vehicle_assignment',
-                'model_type' => 'vehicle_assignment',
-                'is_important' => $assignment->is_important,
-                'title' => '🚗 Araç Atama Detayı',
-                'id' => $assignment->id,
-                'editUrl' => Gate::allows('manage-assignment', $assignment) ? route('service.assignments.edit', $assignment->id) : null,
-                'details' => [
-                    'Araç' => $assignment->vehicle?->plate_number . ' (' . $assignment->vehicle?->type . ')',
-                    'Görev' => $assignment->task_description,
-                    'Yer' => $assignment->destination,
-                    'Talep Eden' => $assignment->requester_name,
-                    'Başlangıç' => $assignment->start_time->format('d.m.Y H:i'),
-                    'Bitiş' => $assignment->end_time->format('d.m.Y H:i'),
-                    'Notlar' => $assignment->notes,
-                    'Kayıt Yapan' => $assignment->createdBy?->name,
-                ]
-            ];
-            if (Gate::allows('manage-assignment', $assignment)) {
-                $extendedProps['deleteUrl'] = route('service.assignments.destroy', $assignment->id);
-            }
             $events[] = [
-                'title' => 'Araç (' . ($assignment->vehicle?->plate_number ?? '?') . '): ' . $assignment->task_description, // DÜZELTME: getVehiclePlate yerine null-safe operatör
+                'title' => 'Araç: ' . ($assignment->vehicle?->plate_number ?? '?') . ' - ' . $assignment->task_description,
                 'start' => $assignment->start_time->format('Y-m-d\TH:i:s'),
                 'end' => $assignment->end_time->format('Y-m-d\TH:i:s'),
                 'color' => '#FBD38D',
-                'extendedProps' => $extendedProps
+                'extendedProps' => ['eventType' => 'vehicle_assignment', 'model_type' => 'vehicle_assignment', 'is_important' => $assignment->is_important, 'id' => $assignment->id, 'details' => ['Görev' => $assignment->task_description]]
             ];
         }
-
-        $travels = Travel::with('user')->get();
-        foreach ($travels as $travel) {
-            $period = CarbonPeriod::create($travel->start_date, $travel->end_date);
-
-            foreach ($period as $date) {
-                $extendedProps = [
-                    'eventType' => 'travel',
-                    'model_type' => 'travel',
-                    'is_important' => $travel->is_important,
-                    'title' => '✈️ Seyahat Detayı: ' . $travel->name,
-                    'id' => $travel->id,
-                    'user_id' => $travel->user_id,
-                    'url' => route('travels.show', $travel),
-                    'editUrl' => (Auth::id() == $travel->user_id || Auth::user()->can('is-global-manager')) ? route('travels.edit', $travel) : null,
-                    'deleteUrl' => (Auth::id() == $travel->user_id || Auth::user()->can('is-global-manager')) ? route('travels.destroy', $travel) : null,
-                    'details' => [
-                        'Plan Adı' => $travel->name,
-                        'Oluşturan' => $travel->user?->name,
-                        'Başlangıç' => $travel->start_date->format('d.m.Y'),
-                        'Bitiş' => $travel->end_date->format('d.m.Y'),
-                        'Durum' => $travel->status == 'planned' ? 'Planlandı' : 'Tamamlandı',
-                    ]
-                ];
-
-                $events[] = [
-                    'title' => '✈️ Seyahat: ' . $travel->name,
-                    'start' => $date->toDateString(),
-                    'allDay' => true,
-                    'color' => '#A78BFA',
-                    'extendedProps' => $extendedProps
-                ];
-            }
-        }
-
-        $chartData = [];
-        $statsTitle = "İdari İşler İstatistikleri";
-        $thirtyDaysAgo = Carbon::now()->subDays(29)->startOfDay();
-        $dailyEventCounts = Event::select([DB::raw('DATE(start_datetime) as date'), DB::raw('COUNT(*) as count')])
-            ->where('start_datetime', '>=', $thirtyDaysAgo)
-            ->groupBy('date')->orderBy('date')->pluck('count', 'date');
-        $dailyLabels = [];
-        $dailyEventData = [];
-        $currentDay = $thirtyDaysAgo->copy();
-        for ($i = 0; $i < 30; $i++) {
-            $dateStr = $currentDay->toDateString();
-            $dailyLabels[] = $currentDay->format('d M');
-            $dailyEventData[] = $dailyEventCounts[$dateStr] ?? 0;
-            $currentDay->addDay();
-        }
-        $chartData['daily_events'] = ['labels' => $dailyLabels, 'data' => $dailyEventData, 'title' => '📅 Son 30 Günlük Etkinlik Sayısı'];
-
-
-        $dailyAssignmentCounts = VehicleAssignment::select([DB::raw('DATE(start_time) as date'), DB::raw('COUNT(*) as count')])
-            ->where('start_time', '>=', $thirtyDaysAgo)
-            ->groupBy('date')->orderBy('date')->pluck('count', 'date');
-        $dailyAssignmentData = [];
-        $currentDay = $thirtyDaysAgo->copy();
-        for ($i = 0; $i < 30; $i++) {
-            $dateStr = $currentDay->toDateString();
-            $dailyAssignmentData[] = $dailyAssignmentCounts[$dateStr] ?? 0;
-            $currentDay->addDay();
-        }
-        $chartData['daily_assignments'] = ['labels' => $dailyLabels, 'data' => $dailyAssignmentData, 'title' => '🚗 Son 30 Günlük Araç Atama Sayısı'];
-
-        return ['events' => $events, 'chartData' => $chartData, 'statsTitle' => $statsTitle];
+        return ['events' => $events, 'chartData' => [], 'statsTitle' => "İdari İşler Takvimi"];
     }
 
-    private function getLojistikStatsData($startDate, $endDate): StatisticsData
+    private function getBakimIndexData($user)
     {
-        $chartData = [];
-        $shipmentQuery = Shipment::whereNotNull('cikis_tarihi')
-            ->whereBetween('cikis_tarihi', [$startDate, $endDate]);
-
-
-        $hourlyLabels = array_map(fn($h) => str_pad($h, 2, '0', STR_PAD_LEFT) . ':00', range(0, 23));
-        $hourlyCounts = array_fill_keys(range(0, 23), 0);
-        $hourlyDbData = (clone $shipmentQuery)->select([DB::raw('HOUR(cikis_tarihi) as hour'), DB::raw('COUNT(*) as count')])->groupBy('hour')->pluck('count', 'hour');
-        foreach ($hourlyDbData as $hour => $count) {
-            if (isset($hourlyCounts[$hour])) {
-                $hourlyCounts[$hour] = $count;
-            }
+        $events = [];
+        $plans = MaintenancePlan::with(['asset', 'type'])->get();
+        foreach ($plans as $plan) {
+            $color = match ($plan->status) {
+                'pending' => '#F6E05E', 'in_progress' => '#3182CE', 'completed' => '#48BB78', 'cancelled' => '#E53E3E', default => '#A0AEC0',
+            };
+            $events[] = [
+                'title' => 'Bakım: ' . ($plan->asset->name ?? '?'),
+                'start' => $plan->planned_start_date->format('Y-m-d\TH:i:s'),
+                'end' => $plan->planned_end_date->format('Y-m-d\TH:i:s'),
+                'color' => $color,
+                'extendedProps' => [
+                    'eventType' => 'maintenance',
+                    'model_type' => 'maintenance_plan',
+                    'is_important' => ($plan->priority == 'critical' || $plan->priority == 'high'),
+                    'id' => $plan->id,
+                    'details' => ['Varlık' => $plan->asset->name ?? '-', 'Durum' => $plan->status]
+                ]
+            ];
         }
-        $chartData['hourly'] = ['labels' => $hourlyLabels, 'data' => array_values($hourlyCounts), 'title' => '⏰ Saatlik Sevkiyat Yoğunluğu'];
-
-        $dayLabels = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
-        $dayCounts = array_fill(0, 7, 0);
-        $dayMap = [2 => 0, 3 => 1, 4 => 2, 5 => 3, 6 => 4, 7 => 5, 1 => 6];
-        $dailyDbData = (clone $shipmentQuery)->select([DB::raw('DAYOFWEEK(cikis_tarihi) as day_of_week'), DB::raw('COUNT(*) as count')])->groupBy('day_of_week')->pluck('count', 'day_of_week');
-        foreach ($dailyDbData as $dayNum => $count) {
-            if (isset($dayMap[$dayNum])) {
-                $dayCounts[$dayMap[$dayNum]] = $count;
-            }
-        }
-        $chartData['daily'] = ['labels' => $dayLabels, 'data' => $dayCounts, 'title' => '📅 Haftalık Sevkiyat Yoğunluğu'];
-
-        $monthLabels = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
-        $monthCounts = array_fill(0, 12, 0);
-        $monthlyDbData = (clone $shipmentQuery)->select([DB::raw('MONTH(cikis_tarihi) as month'), DB::raw('COUNT(*) as count')])->groupBy('month')->pluck('count', 'month');
-        foreach ($monthlyDbData as $monthNum => $count) {
-            if ($monthNum >= 1 && $monthNum <= 12) {
-                $monthCounts[$monthNum - 1] = $count;
-            }
-        }
-        $chartData['monthly'] = ['labels' => $monthLabels, 'data' => $monthCounts, 'title' => 'Aylık Sevkiyat Dağılımı (' . $startDate->format('d M') . ' - ' . $endDate->format('d M Y') . ')'];
-
-        $yearlyDbData = (clone $shipmentQuery)->select([DB::raw('YEAR(cikis_tarihi) as year'), DB::raw('COUNT(*) as count')])->groupBy('year')->orderBy('year')->pluck('count', 'year');
-        $chartData['yearly'] = ['labels' => $yearlyDbData->keys()->map(fn($y) => (string) $y)->all(), 'data' => $yearlyDbData->values()->all(), 'title' => 'Yıllara Göre Toplam Sevkiyat Sayısı'];
-
-        $vehicleTypeData = (clone $shipmentQuery)->select(['arac_tipi', DB::raw('COUNT(*) as count')])->whereNotNull('arac_tipi')->groupBy('arac_tipi')->get()
-            ->groupBy(fn($item) => $this->normalizeVehicleType($item->arac_tipi))
-            ->map(fn($group) => $group->sum('count'));
-        $chartData['pie'] = ['labels' => $vehicleTypeData->keys()->map(fn($tip) => $tip ?? 'Bilinmiyor')->all(), 'data' => $vehicleTypeData->values()->all(), 'title' => 'Araç Tipi Dağılımı (Genel)'];
-
-        $shipmentsForFiltering = Shipment::select(['arac_tipi', 'kargo_icerigi', 'shipment_type'])
-            ->whereNotNull('cikis_tarihi')
-            ->whereBetween('cikis_tarihi', [$startDate, $endDate]) // Ana tarih filtresi uygulanmış olarak
-            ->get()
-            ->map(function ($shipment) {
-                return [
-                    'vehicle' => $this->normalizeVehicleType($shipment->arac_tipi ?? 'Bilinmiyor'),
-                    'cargo' => $this->normalizeCargoContent($shipment->kargo_icerigi ?? 'Bilinmiyor'),
-                    'shipment_type' => $shipment->shipment_type
-                ];
-            })
-            ->values()->all();
-
-        return new StatisticsData(
-            chartData: $chartData,
-            shipmentsForFiltering: $shipmentsForFiltering
-        );
+        return ['events' => $events, 'chartData' => [], 'statsTitle' => "Bakım Takvimi"];
     }
-
-    private function getUretimStatsData($startDate, $endDate): StatisticsData
-    {
-        $chartData = [];
-        $productionQuery = ProductionPlan::whereBetween('week_start_date', [$startDate, $endDate])
-            ->whereNotNull('week_start_date');
-
-        $weeklyPlanCounts = (clone $productionQuery)->select([DB::raw('YEARWEEK(week_start_date, 1) as year_week'), DB::raw('COUNT(*) as count')])
-            ->groupBy('year_week')->orderBy('year_week')->pluck('count', 'year_week');
-        $weeklyLabels = [];
-        $weeklyData = [];
-        $currentWeek = $startDate->copy()->startOfWeek();
-        while ($currentWeek->lte($endDate)) {
-            $yearWeek = $currentWeek->format('oW');
-            $weeklyLabels[] = $currentWeek->format('W') . '. Hafta';
-            $weeklyData[] = $weeklyPlanCounts[$yearWeek] ?? 0;
-            $currentWeek->addWeek();
-        }
-        $chartData['weekly_prod'] = ['labels' => $weeklyLabels, 'data' => $weeklyData, 'title' => '📅 Haftalık Üretim Planı Sayısı'];
-
-        $monthlyPlanCounts = (clone $productionQuery)->select([DB::raw('YEAR(week_start_date) as year'), DB::raw('MONTH(week_start_date) as month'), DB::raw('COUNT(*) as count')])
-            ->groupBy('year', 'month')->orderBy('year')->orderBy('month')->get();
-        $monthlyLabels = [];
-        $monthlyData = [];
-        $currentMonth = $startDate->copy()->startOfMonth();
-        while ($currentMonth->lte($endDate)) {
-            $year = $currentMonth->year;
-            $month = $currentMonth->month;
-            $count = $monthlyPlanCounts->where('year', $year)->where('month', $month)->first()?->count ?? 0;
-            $monthlyLabels[] = $currentMonth->translatedFormat('M Y');
-            $monthlyData[] = $count;
-            $currentMonth->addMonth();
-        }
-        $chartData['monthly_prod'] = ['labels' => $monthlyLabels, 'data' => $monthlyData, 'title' => '🗓️ Aylık Üretim Planı Sayısı'];
-
-        $allPlansRaw = (clone $productionQuery)->whereNotNull('plan_details')->get(['plan_details']);
-        $flatDetails = [];
-        foreach ($allPlansRaw as $plan) {
-            if (is_array($plan->plan_details)) {
-                foreach ($plan->plan_details as $detail) {
-                    $machine = trim(strval($detail['machine'] ?? 'Bilinmiyor'));
-                    $product = is_numeric($detail['product'] ?? 'Bilinmiyor') ? 'Ürün-' . $detail['product'] : trim(strval($detail['product'] ?? 'Bilinmiyor'));
-                    if ($machine !== 'Bilinmiyor' && $product !== 'Bilinmiyor') {
-                        $flatDetails[] = [
-                            'machine' => $machine,
-                            'product' => $product,
-                            'quantity' => (int) ($detail['quantity'] ?? 0)
-                        ];
-                    }
-                }
-            }
-        }
-        $productionPlansForFiltering = $flatDetails;
-
-        return new StatisticsData(
-            chartData: $chartData,
-            productionPlansForFiltering: $productionPlansForFiltering
-        );
-    }
-    private function getHizmetStatsData($startDate, $endDate): StatisticsData
-    {
-        // YÖNETİCİ FONKSİYON:
-        // Artık sadece görev dağıtımı yapıyor.
-        $eventTypesList = $this->getEventTypes();
-
-        // 1. Görev: Pasta grafik verisini getir.
-        $pieChartData = $this->getHizmetPieChartData($startDate, $endDate, $eventTypesList);
-
-        // 2. Görev: Aylık görev grafiği verisini getir.
-        $monthlyAssignmentData = $this->getHizmetMonthlyAssignmentChartData($startDate, $endDate);
-
-        // 3. Görev: Filtreleme için etkinlik verilerini getir.
-        $eventsForFiltering = $this->getHizmetEventFilterData($startDate, $endDate, $eventTypesList);
-
-        // 4. Görev: Filtreleme için atama verilerini getir.
-        $assignmentsForFiltering = $this->getHizmetAssignmentFilterData($startDate, $endDate);
-
-        // 5. Görev: Filtreleme için araç listesini getir.
-        $vehiclesForFiltering = $this->getHizmetVehicleFilterData();
-
-        // Tüm verileri topla
-        $chartData = [
-            'event_type_pie' => $pieChartData,
-            'monthly_assign' => $monthlyAssignmentData['chartData'],
-        ];
-
-        // DTO'yu doldur ve döndür
-        return new StatisticsData(
-            chartData: $chartData,
-            eventsForFiltering: $eventsForFiltering,
-            assignmentsForFiltering: $assignmentsForFiltering,
-            vehiclesForFiltering: $vehiclesForFiltering,
-            monthlyLabels: $monthlyAssignmentData['labels'] // Bu veriyi de 2. görevden aldık
-        );
-    }
-
-    // --- YENİ YARDIMCI FONKSİYONLAR ---
-    // (Bu 5 yeni fonksiyonu getHizmetStatsData'nın hemen altına ekleyin)
-
-    /**
-     * Hizmet departmanı için "Etkinlik Tipi" pasta grafiği verisini hazırlar.
-     */
-    private function getHizmetPieChartData($startDate, $endDate, array $eventTypesList): array
-    {
-        // 1. Etkinlikleri al
-        $eventTypeCounts = Event::select(['event_type', DB::raw('COUNT(*) as count')])
-            ->whereNotNull('event_type')
-            ->whereBetween('start_datetime', [$startDate, $endDate])
-            ->groupBy('event_type')->pluck('count', 'event_type')
-            ->mapWithKeys(function ($count, $key) use ($eventTypesList) {
-                return [$eventTypesList[$key] ?? ucfirst($key) => $count];
-            });
-
-        // 2. Seyahatleri al
-        $travelCount = Travel::whereBetween('start_date', [$startDate, $endDate])->count();
-        if ($travelCount > 0) {
-            $eventTypeCounts[' Seyahat Planı'] = $travelCount;
-        }
-
-        // 3. Grafik için formatla
-        return [
-            'labels' => $eventTypeCounts->keys()->all(),
-            'data' => $eventTypeCounts->values()->all(),
-            'title' => 'Etkinlik ve Seyahat Tipi Dağılımı'
-        ];
-    }
-
-    /**
-     * Hizmet departmanı için "Aylık Araç Atama" çizgi grafiği verisini hazırlar.
-     * Hem grafik verisini hem de etiketleri döndürür.
-     */
-    private function getHizmetMonthlyAssignmentChartData($startDate, $endDate): array
-    {
-        $monthlyAssignmentCounts = VehicleAssignment::select([DB::raw('YEAR(start_time) as year'), DB::raw('MONTH(start_time) as month'), DB::raw('COUNT(*) as count')])
-            ->whereBetween('start_time', [$startDate, $endDate])
-            ->whereNotNull('start_time')
-            ->groupBy('year', 'month')->orderBy('year')->orderBy('month')->get();
-
-        $monthlyLabels = [];
-        $monthlyData = [];
-        $currentMonth = $startDate->copy()->startOfMonth();
-
-        while ($currentMonth->lte($endDate)) {
-            $year = $currentMonth->year;
-            $month = $currentMonth->month;
-            $count = $monthlyAssignmentCounts->where('year', $year)->where('month', $month)->first()?->count ?? 0;
-            $monthlyLabels[] = $currentMonth->translatedFormat('M Y');
-            $monthlyData[] = $count;
-            $currentMonth->addMonth();
-        }
-
-        $chartData = ['labels' => $monthlyLabels, 'data' => $monthlyData, 'title' => '🚗 Aylık Araç Atama Sayısı'];
-
-        return ['chartData' => $chartData, 'labels' => $monthlyLabels];
-    }
-
-    /**
-     * İstatistik sayfasındaki filtreleme için Etkinlik ve Seyahat verilerini çeker.
-     */
-    private function getHizmetEventFilterData($startDate, $endDate, array $eventTypesList): array
-    {
-        $eventsForFiltering = Event::whereBetween('start_datetime', [$startDate, $endDate])
-            ->get(['event_type', 'location'])
-            ->map(function ($event) use ($eventTypesList) {
-                return [
-                    'type_name' => $eventTypesList[$event->event_type] ?? ucfirst($event->event_type),
-                    'type_slug' => $event->event_type,
-                    'group' => 'Etkinlikler',
-                ];
-            });
-
-        $travelsForFiltering = Travel::whereBetween('start_date', [$startDate, $endDate])
-            ->get(['name'])
-            ->map(function ($travel) {
-                return [
-                    'type_name' => ' Seyahat Planı',
-                    'type_slug' => 'travel',
-                    'group' => 'Seyahatler',
-                ];
-            });
-
-        return $eventsForFiltering->merge($travelsForFiltering)->all();
-    }
-
-    /**
-     * İstatistik sayfasındaki filtreleme için Araç Atama verilerini çeker.
-     */
-    private function getHizmetAssignmentFilterData($startDate, $endDate): array
-    {
-        return VehicleAssignment::with('vehicle:id,plate_number')
-            ->whereBetween('start_time', [$startDate, $endDate])
-            ->get(['vehicle_id', 'start_time'])
-            ->map(function ($assignment) {
-                return [
-                    'vehicle_id' => $assignment->vehicle_id,
-                    'vehicle_plate' => $assignment->vehicle->plate_number ?? 'Bilinmeyen Araç',
-                    'start_month_label' => $assignment->start_time ? $assignment->start_time->translatedFormat('M Y') : null
-                ];
-            })
-            ->filter(fn($a) => $a['start_month_label'] !== null)
-            ->all();
-    }
-
-    /**
-     * İstatistik sayfasındaki filtreleme için tüm araçların listesini çeker.
-     */
-    private function getHizmetVehicleFilterData(): array
-    {
-        // Orijinal kodunuzda `->all()` vardı, ben de ekledim.
-        // Eğer StatisticsData DTO'su 'Collection' kabul ediyorsa `->all()` kısmını silebilirsiniz.
-        return \App\Models\Vehicle::orderBy('plate_number')->get(['id', 'plate_number'])->all();
-    }
-
 
     private function getMappedImportantItems(Request $request)
     {
@@ -976,118 +402,122 @@ class HomeController extends Controller
         $dateFrom = $request->input('date_from');
         $dateTo = $request->input('date_to');
 
-        // Varsayılan departman filtresi (Admin için null/all, bireysel için ID)
+        // Varsayılan departman filtresi (Admin panellerinden gelen istekler için)
         $deptFilter = $request->input('department_id', null);
 
-        // Admin veya Global Yönetici değilse VE bir departmana bağlıysa, 
-        // filtreyi kendi departman ID'sine zorla.
+        // KURAL: Admin veya Global Yönetici değilse, zorunlu olarak kendi departmanını filtreler.
+        // Müdürler de eğer "is-global-manager" yetkisine sahip değilse kendi departmanına hapsolur.
         $isUserFiltered = false;
         if ($user->department_id && $user->role !== 'admin' && !Auth::user()->can('is-global-manager')) {
-            $deptFilter = $user->department_id; // Departman ID'si ile filtrelemeye zorla
+            $deptFilter = $user->department_id;
             $isUserFiltered = true;
         }
-        // Admin/Global Yönetici ise, $deptFilter null/all kalır ve $isUserFiltered false kalır.
 
         $allMappedItems = collect();
 
-        // --- SHIPMENT (Sevkiyat) ---
+        // --- 1. SEVKİYAT ---
         if ($typeFilter == 'all' || $typeFilter == 'shipment') {
             $query = Shipment::where('is_important', true);
+
             if ($dateFrom)
                 $query->where('tahmini_varis_tarihi', '>=', Carbon::parse($dateFrom)->startOfDay());
             if ($dateTo)
                 $query->where('tahmini_varis_tarihi', '<=', Carbon::parse($dateTo)->endOfDay());
 
-            // KRİTİK FİLTRE: Sadece bireysel kullanıcı departman filtresine zorlanırsa çalıştır.
-            if ($isUserFiltered) {
+            // Kullanıcı yetkisine veya seçilen departmana göre filtrele
+            if ($deptFilter)
                 $query->whereHas('user', fn($q) => $q->where('department_id', $deptFilter));
-            }
 
-            $allMappedItems = $allMappedItems->merge(
-                $query->get()->map(function ($item) {
-                    return (object) [
-                        'title' => 'Sevkiyat: ' . ($item->kargo_icerigi ?? 'Detay Yok'),
-                        'date' => $item->tahmini_varis_tarihi,
-                        'model_id' => $item->id,
-                        'model_type' => 'shipment'
-                    ];
-                })
-            );
+            $allMappedItems = $allMappedItems->merge($query->get()->map(fn($item) => (object) [
+                'title' => 'Sevkiyat: ' . ($item->kargo_icerigi ?? 'Detay Yok'),
+                'date' => $item->tahmini_varis_tarihi,
+                'model_id' => $item->id,
+                'model_type' => 'shipment'
+            ]));
         }
 
-        // --- PRODUCTION PLAN (Üretim Planı) ---
+        // --- 2. ÜRETİM PLANI ---
         if ($typeFilter == 'all' || $typeFilter == 'production_plan') {
             $query = ProductionPlan::where('is_important', true);
+
             if ($dateFrom)
                 $query->where('week_start_date', '>=', Carbon::parse($dateFrom)->startOfDay());
             if ($dateTo)
                 $query->where('week_start_date', '<=', Carbon::parse($dateTo)->endOfDay());
 
-            if ($isUserFiltered) {
+            if ($deptFilter)
                 $query->whereHas('user', fn($q) => $q->where('department_id', $deptFilter));
-            }
 
-            $allMappedItems = $allMappedItems->merge(
-                $query->get()->map(function ($item) {
-                    return (object) [
-                        'title' => 'Üretim: ' . $item->plan_title,
-                        'date' => $item->week_start_date,
-                        'model_id' => $item->id,
-                        'model_type' => 'production_plan'
-                    ];
-                })
-            );
+            $allMappedItems = $allMappedItems->merge($query->get()->map(fn($item) => (object) [
+                'title' => 'Üretim: ' . $item->plan_title,
+                'date' => $item->week_start_date,
+                'model_id' => $item->id,
+                'model_type' => 'production_plan'
+            ]));
         }
 
-        // --- EVENT (Etkinlik) ---
+        // --- 3. BAKIM PLANI ---
+        if ($typeFilter == 'all' || $typeFilter == 'maintenance_plan') {
+            // Bakımda "is_important" yerine genelde öncelik (priority) kullanılır
+            $query = MaintenancePlan::whereIn('priority', ['high', 'critical']);
+
+            if ($dateFrom)
+                $query->where('planned_start_date', '>=', Carbon::parse($dateFrom)->startOfDay());
+            if ($dateTo)
+                $query->where('planned_start_date', '<=', Carbon::parse($dateTo)->endOfDay());
+
+            if ($deptFilter)
+                $query->whereHas('user', fn($q) => $q->where('department_id', $deptFilter));
+
+            $allMappedItems = $allMappedItems->merge($query->get()->map(fn($item) => (object) [
+                'title' => 'Bakım: ' . ($item->asset->name ?? 'Bilinmiyor') . ' (' . $item->title . ')',
+                'date' => $item->planned_start_date,
+                'model_id' => $item->id,
+                'model_type' => 'maintenance_plan'
+            ]));
+        }
+
+        // --- 4. ETKİNLİK ---
         if ($typeFilter == 'all' || $typeFilter == 'event') {
             $query = Event::where('is_important', true);
+
             if ($dateFrom)
                 $query->where('start_datetime', '>=', Carbon::parse($dateFrom)->startOfDay());
             if ($dateTo)
                 $query->where('start_datetime', '<=', Carbon::parse($dateTo)->endOfDay());
 
-            if ($isUserFiltered) {
+            if ($deptFilter)
                 $query->whereHas('user', fn($q) => $q->where('department_id', $deptFilter));
-            }
 
-            $allMappedItems = $allMappedItems->merge(
-                $query->get()->map(function ($item) {
-                    return (object) [
-                        'title' => 'Etkinlik: ' . $item->title,
-                        'date' => $item->start_datetime,
-                        'model_id' => $item->id,
-                        'model_type' => 'event'
-                    ];
-                })
-            );
+            $allMappedItems = $allMappedItems->merge($query->get()->map(fn($item) => (object) [
+                'title' => 'Etkinlik: ' . $item->title,
+                'date' => $item->start_datetime,
+                'model_id' => $item->id,
+                'model_type' => 'event'
+            ]));
         }
 
-        // --- VEHICLE ASSIGNMENT (Araç Görevi) ---
+        // --- 5. ARAÇ GÖREVİ ---
         if ($typeFilter == 'all' || $typeFilter == 'vehicle_assignment') {
             $query = VehicleAssignment::where('is_important', true);
+
             if ($dateFrom)
                 $query->where('start_time', '>=', Carbon::parse($dateFrom)->startOfDay());
             if ($dateTo)
                 $query->where('start_time', '<=', Carbon::parse($dateTo)->endOfDay());
 
-            if ($isUserFiltered) {
+            if ($deptFilter)
                 $query->whereHas('createdBy', fn($q) => $q->where('department_id', $deptFilter));
-            }
 
-            $allMappedItems = $allMappedItems->merge(
-                $query->get()->map(function ($item) {
-                    return (object) [
-                        'title' => 'Araç Görevi: ' . Str::limit($item->task_description, 30),
-                        'date' => $item->start_time,
-                        'model_id' => $item->id,
-                        'model_type' => 'vehicle_assignment'
-                    ];
-                })
-            );
+            $allMappedItems = $allMappedItems->merge($query->get()->map(fn($item) => (object) [
+                'title' => 'Araç Görevi: ' . Str::limit($item->task_description, 30),
+                'date' => $item->start_time,
+                'model_id' => $item->id,
+                'model_type' => 'vehicle_assignment'
+            ]));
         }
 
-        // --- TRAVEL (Seyahat) ---
+        // --- 6. SEYAHAT ---
         if ($typeFilter == 'all' || $typeFilter == 'travel') {
             $query = Travel::where('is_important', true);
 
@@ -1096,92 +526,59 @@ class HomeController extends Controller
             if ($dateTo)
                 $query->where('start_date', '<=', Carbon::parse($dateTo)->endOfDay());
 
-            if ($isUserFiltered) {
+            if ($deptFilter)
                 $query->whereHas('user', fn($q) => $q->where('department_id', $deptFilter));
-            }
 
-            $allMappedItems = $allMappedItems->merge(
-                $query->get()->map(function ($item) {
-                    return (object) [
-                        'title' => '✈️ Seyahat: ' . Str::limit($item->name, 30),
-                        'date' => $item->start_date,
-                        'model_id' => $item->id,
-                        'model_type' => 'travel'
-                    ];
-                })
-            );
+            $allMappedItems = $allMappedItems->merge($query->get()->map(fn($item) => (object) [
+                'title' => '✈️ Seyahat: ' . Str::limit($item->name, 30),
+                'date' => $item->start_date,
+                'model_id' => $item->id,
+                'model_type' => 'travel'
+            ]));
         }
+
+        // --- 7. GECİKEN GÖREVLER (Her zaman eklenir ama departman filtresine uyar) ---
+        // Gecikenler "Important" işaretli olmasa bile önemlidir.
         $overdueQuery = VehicleAssignment::where('start_time', '<', Carbon::today())
             ->whereIn('status', ['pending', 'in_progress']);
 
-        // Admin değilse sadece kendi departmanının/kendisinin gecikenlerini görsün
-        if ($isUserFiltered) {
+        if ($deptFilter) {
             $overdueQuery->whereHas('createdBy', fn($q) => $q->where('department_id', $deptFilter));
         }
 
-        $overdueItems = $overdueQuery->get()->map(function ($item) {
-            return (object) [
-                // Başlığa dikkat çekici bir ikon ekliyoruz
-                'title' => '⚠️ TAMAMLANMAYAN/GECİKEN GÖREV: ' . Str::limit($item->task_description, 40),
-                'date' => $item->start_time,
-                'model_id' => $item->id,
-                'model_type' => 'vehicle_assignment',
-                // İsterseniz view tarafında ayırt etmek için bir flag ekleyebilirsiniz
-                'is_overdue' => true
-            ];
-        });
+        $overdueItems = $overdueQuery->get()->map(fn($item) => (object) [
+            'title' => '⚠️ GECİKEN GÖREV: ' . Str::limit($item->task_description, 40),
+            'date' => $item->start_time,
+            'model_id' => $item->id,
+            'model_type' => 'vehicle_assignment',
+            'is_overdue' => true
+        ]);
 
-        // Mevcut önemli öğeler listesine gecikenleri de ekle
+        // Gecikenleri de listeye ekle
         $allMappedItems = $allMappedItems->merge($overdueItems);
 
+        // Tarihe göre sırala (En yeni en üstte)
         return $allMappedItems->sortByDesc('date');
     }
 
-    public function showAllImportant(Request $request)
-    {
-        $filters = $request->only(['type', 'department_id', 'date_from', 'date_to']);
-        $departments = Department::orderBy('name')->get();
-        $allItems = $this->getMappedImportantItems($request);
-        return view('important-items', [
-            'importantItems' => $allItems,
-            'filters' => $filters,
-            'departments' => $departments
-        ]);
-    }
+    // --- WELCOME SANKEY GRAFİKLERİ İÇİN SERVİS ÇAĞRILARI (DÜZELTİLDİ) ---
+
     private function getLogisticsWelcomeData()
     {
         $welcomeTitle = "Yaklaşan Sevkiyatlar (Genel Bakış)";
         $chartTitle = "Kargo İçeriği -> Araç Tipi Akışı (Tüm Zamanlar)";
         $chartData = [];
+        $todayItems = Shipment::whereBetween('tahmini_varis_tarihi', [Carbon::today()->startOfDay(), Carbon::today()->addDays(3)->endOfDay()])->orderBy('tahmini_varis_tarihi', 'asc')->get();
 
-        $todayItems = Shipment::whereBetween('tahmini_varis_tarihi', [
-            Carbon::today()->startOfDay(),
-            Carbon::today()->addDays(3)->endOfDay()
-        ])
-            ->orderBy('tahmini_varis_tarihi', 'asc')
-            ->get();
-        $sankeyFlow = Shipment::select(['kargo_icerigi', 'arac_tipi', DB::raw('COUNT(*) as weight')])
-            ->whereNotNull('kargo_icerigi')
-            ->whereNotNull('arac_tipi')
-            ->groupBy('kargo_icerigi', 'arac_tipi')
-            ->having('weight', '>', 0)
-            ->get();
-
+        $sankeyFlow = Shipment::select(['kargo_icerigi', 'arac_tipi', DB::raw('COUNT(*) as weight')])->whereNotNull('kargo_icerigi')->whereNotNull('arac_tipi')->groupBy('kargo_icerigi', 'arac_tipi')->having('weight', '>', 0)->get();
         foreach ($sankeyFlow as $flow) {
-            $normalizedKargo = $this->normalizeCargoContent($flow->kargo_icerigi);
-            $normalizedArac = $this->normalizeVehicleType($flow->arac_tipi);
-            $chartData[] = [
-                strval($normalizedKargo),
-                strval($normalizedArac),
-                (int) $flow->weight
-            ];
+            // SERVİSTEN ÇAĞIRIYORUZ
+            $normalizedKargo = $this->statsService->normalizeCargoContent($flow->kargo_icerigi);
+            $normalizedArac = $this->statsService->normalizeVehicleType($flow->arac_tipi);
+            $chartData[] = [strval($normalizedKargo), strval($normalizedArac), (int) $flow->weight];
         }
-
-        if (empty($chartData)) {
-            Log::warning('Lojistik/Genel görünüm için Sankey verisi bulunamadı.');
+        if (empty($chartData))
             $chartData[] = ['Veri Yok', 'Henüz Sevkiyat Girilmedi', 1];
-        }
-
         return [$welcomeTitle, $chartTitle, $todayItems, $chartData];
     }
 
@@ -1190,408 +587,163 @@ class HomeController extends Controller
         $welcomeTitle = "Bugün Başlayan Üretim Planları";
         $chartTitle = "Makine -> Ürün Planlama Akışı (Toplam Adet)";
         $chartData = [];
-
-        $todayItems = ProductionPlan::whereBetween('week_start_date', [
-            Carbon::now()->startOfWeek(),
-            Carbon::now()->endOfWeek()
-        ])
-            ->orderBy('week_start_date', 'asc')
-            ->get();
+        $todayItems = ProductionPlan::whereBetween('week_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])->orderBy('week_start_date', 'asc')->get();
 
         $plans = ProductionPlan::whereNotNull('plan_details')->get();
         $flowCounts = [];
-
         foreach ($plans as $plan) {
             if (is_array($plan->plan_details)) {
                 foreach ($plan->plan_details as $detail) {
                     $machine = trim(strval($detail['machine'] ?? 'Bilinmiyor'));
                     $productRaw = $detail['product'] ?? 'Bilinmiyor';
-
-                    if (is_numeric($productRaw)) {
-                        $product = 'Ürün-' . $productRaw;
-                    } else {
-                        $product = trim(strval($productRaw));
-                    }
+                    $product = is_numeric($productRaw) ? 'Ürün-' . $productRaw : trim(strval($productRaw));
                     $quantity = (int) ($detail['quantity'] ?? 0);
-
-                    if (empty($machine) || empty($product) || $machine === 'Bilinmiyor' || $product === 'Bilinmiyor' || $quantity === 0) {
-                        continue;
+                    if ($machine !== 'Bilinmiyor' && $product !== 'Bilinmiyor' && $quantity > 0) {
+                        if (!isset($flowCounts[$machine]))
+                            $flowCounts[$machine] = [];
+                        if (!isset($flowCounts[$machine][$product]))
+                            $flowCounts[$machine][$product] = 0;
+                        $flowCounts[$machine][$product] += $quantity;
                     }
-
-                    if (!isset($flowCounts[$machine]))
-                        $flowCounts[$machine] = [];
-                    if (!isset($flowCounts[$machine][$product]))
-                        $flowCounts[$machine][$product] = 0;
-
-                    $flowCounts[$machine][$product] += $quantity;
                 }
             }
         }
-
         foreach ($flowCounts as $machine => $products) {
             foreach ($products as $product => $weight) {
-                if ($weight > 0) {
-                    $chartData[] = [
-                        strval($machine),
-                        strval($product),
-                        (int) $weight
-                    ];
-                }
+                $chartData[] = [strval($machine), strval($product), (int) $weight];
             }
         }
-
-        if (empty($chartData)) {
-            Log::warning('Üretim departmanı için Sankey verisi bulunamadı.');
+        if (empty($chartData))
             $chartData[] = ['Veri Yok', 'Henüz Plan Girilmedi', 1];
-        }
-
         return [$welcomeTitle, $chartTitle, $todayItems, $chartData];
     }
 
     private function getServiceWelcomeData()
     {
+        // Hizmet kısmı sankey için normalizasyon kullanmıyor, direkt veri çekiyor.
+        // O yüzden burası orijinal haliyle kalabilir ama kod tutarlılığı için buraya da ekledim.
         $welcomeTitle = "Bugünkü Etkinlikler ve Araç Görevleri";
-        $chartTitle = "Araç -> Görev Yeri Akışı (Toplam Görev Sayısı)";
+        $chartTitle = "Araç -> Görev Yeri Akışı";
+        $todayEvents = Event::whereDate('start_datetime', Carbon::today())->orderBy('start_datetime', 'asc')->get();
+        $todayAssignments = VehicleAssignment::whereDate('start_time', Carbon::today())->with('vehicle')->orderBy('start_time', 'asc')->get();
+        $todayTravels = Travel::whereDate('start_date', Carbon::today())->orderBy('start_date', 'asc')->get();
+        $todayItems = $todayEvents->merge($todayAssignments)->merge($todayTravels)->sortBy(fn($item) => $item->start_datetime ?? $item->start_time ?? $item->start_date);
+
         $chartData = [];
-
-        $todayEvents = Event::whereDate('start_datetime', Carbon::today())
-            ->orderBy('start_datetime', 'asc')
-            ->get();
-        $todayAssignments = VehicleAssignment::whereDate('start_time', Carbon::today())
-            ->with('vehicle')
-            ->orderBy('start_time', 'asc')
-            ->get();
-        $todayTravels = Travel::whereDate('start_date', Carbon::today())
-            ->orderBy('start_date', 'asc')
-            ->get();
-        $todayItems = $todayEvents->merge($todayAssignments)
-            ->merge($todayTravels)
-            ->sortBy(fn($item) => $item->start_datetime ?? $item->start_time ?? $item->start_date);
-
-        $assignments = VehicleAssignment::with('vehicle')
-            ->whereNotNull('destination')
-            ->where('destination', '!=', '')
-            ->select(['vehicle_id', 'destination', DB::raw('COUNT(*) as weight')])
-            ->groupBy('vehicle_id', 'destination')
-            ->having('weight', '>', 0)
-            ->get();
-
+        $assignments = VehicleAssignment::with('vehicle')->whereNotNull('destination')->where('destination', '!=', '')->select(['vehicle_id', 'destination', DB::raw('COUNT(*) as weight')])->groupBy('vehicle_id', 'destination')->having('weight', '>', 0)->get();
         foreach ($assignments as $flow) {
             $vehicleName = $flow->vehicle?->plate_number ?? 'Bilinmeyen Araç';
             $destination = trim($flow->destination);
-            if (!empty($destination) && $flow->weight > 0) {
-                $chartData[] = [
-                    strval($vehicleName),
-                    strval($destination),
-                    (int) $flow->weight
-                ];
-            }
+            $chartData[] = [strval($vehicleName), strval($destination), (int) $flow->weight];
         }
-
-        if (empty($chartData)) {
-            $chartTitle = "Etkinlik Tipi -> Konum Akışı (Tüm Zamanlar)";
-            $eventFlows = Event::whereNotNull('location')
-                ->where('location', '!=', '')
-                ->select(['event_type', 'location', DB::raw('COUNT(*) as weight')])
-                ->groupBy('event_type', 'location')
-                ->having('weight', '>', 0)
-                ->get();
-
-            $eventTypesList = $this->getEventTypes();
-
-            foreach ($eventFlows as $flow) {
-                $eventType = $eventTypesList[$flow->event_type] ?? ucfirst($flow->event_type);
-                $location = trim($flow->location);
-                if (!empty($location) && $flow->weight > 0) {
-                    $chartData[] = [
-                        strval($eventType),
-                        strval($location),
-                        (int) $flow->weight
-                    ];
-                }
-            }
-        }
-
-        if (empty($chartData)) {
-            Log::warning('Hizmet departmanı için Sankey verisi bulunamadı.');
+        if (empty($chartData))
             $chartData[] = ['Veri Yok', 'Henüz Görev Girilmedi', 1];
-        }
-
         return [$welcomeTitle, $chartTitle, $todayItems, $chartData];
     }
 
-    private function normalizeCargoContent($cargo)
-    {
-        if (empty($cargo)) {
-            return 'Bilinmiyor';
-        }
-        $normalized = mb_strtoupper(trim($cargo), 'UTF-8');
-        $normalized = Str::ascii($normalized);
-        $specialCases = [
-            'LEVBA' => 'LEVHA',
-            'LEVBE' => 'LEVHA',
-            'PLASTIC' => 'PLASTİK',
-            'KAPAK' => 'KAPAK',
-            'PLASTİK' => 'PLASTİK',
-            'LEVHA' => 'LEVHA',
-        ];
-        return $specialCases[$normalized] ?? $normalized;
-    }
-
-    private function normalizeVehicleType($vehicle)
-    {
-        if (empty($vehicle)) {
-            return 'Bilinmiyor';
-        }
-        $normalized = mb_strtoupper(trim($vehicle), 'UTF-8');
-        $vehicleMapping = [
-            'TIR' => 'TIR',
-            'TİR' => 'TIR',
-            'TRUCK' => 'TIR',
-            'GEMI' => 'GEMI',
-            'GEMİ' => 'GEMI',
-            'SHIP' => 'GEMI',
-            'KAMYON' => 'KAMYON',
-            'TRUCK_SMALL' => 'KAMYON',
-            'KAMYONET' => 'KAMYON',
-        ];
-        return $vehicleMapping[$normalized] ?? $normalized;
-    }
-
-    public function getEventTypes()
-    {
-        return [
-            'toplanti' => 'Toplantı',
-            'egitim' => 'Eğitim',
-            'fuar' => 'Fuar',
-            'gezi' => 'Gezi',
-            'musteri_ziyareti' => 'Müşteri Ziyareti',
-            'misafir_karsilama' => 'Misafir Karşılama',
-            'diger' => 'Diğer',
-        ];
-    }
-
-    private function getEventColor($aracTipi)
-    {
-        switch (strtolower($aracTipi)) {
-            case 'tır':
-                return '#0d6efd';
-            case 'gemi':
-                return '#198754';
-            case 'kamyon':
-                return '#fd7e14';
-            default:
-                return '#6c757d';
-        }
-    }
-
-    private function getVehiclePlate($assignment)
-    {
-        if (!$assignment->relationLoaded('vehicle')) {
-            $assignment->load('vehicle');
-        }
-        return $assignment->vehicle?->plate_number;
-    }
-    private function getBakimIndexData($user)
-    {
-        $events = [];
-        // Bakım planlarını, ilişkileriyle beraber çek
-        $plans = MaintenancePlan::with(['asset', 'user', 'type'])->get();
-
-        foreach ($plans as $plan) {
-            // Renk belirleme (Modeldeki helper'ı kullanıyoruz ama hex kodu lazım)
-            $color = match ($plan->status) {
-                'pending' => '#F6E05E',      // Sarı
-                'in_progress' => '#3182CE',  // Mavi
-                'completed' => '#48BB78',    // Yeşil
-                'cancelled' => '#E53E3E',    // Kırmızı
-                default => '#A0AEC0',
-            };
-
-            $events[] = [
-                'title' => 'Bakım: ' . $plan->asset->name,
-                'start' => $plan->planned_start_date->format('Y-m-d\TH:i:s'),
-                'end' => $plan->planned_end_date->format('Y-m-d\TH:i:s'),
-                'color' => $color,
-                'extendedProps' => [
-                    'eventType' => 'maintenance', // Blade'de bu tipi yakalayacağız
-                    'model_type' => 'maintenance_plan',
-                    'is_important' => ($plan->priority == 'critical' || $plan->priority == 'high'),
-                    'title' => '🔧 Bakım Planı Detayı: ' . $plan->title,
-                    'id' => $plan->id,
-                    'user_id' => $plan->user_id,
-                    'url' => route('maintenance.show', $plan->id), // Detay linki
-                    'details' => [
-                        'Başlık' => $plan->title,
-                        'Varlık' => $plan->asset->name . ' (' . $plan->asset->code . ')',
-                        'Tür' => $plan->type->name,
-                        'Öncelik' => $plan->priority_badge,
-                        'Durum' => $plan->status_badge, // Modeldeki accessor
-                        'Başlangıç' => $plan->planned_start_date->format('d.m.Y H:i'),
-                        'Bitiş' => $plan->planned_end_date->format('d.m.Y H:i'),
-                        'Açıklama' => $plan->description,
-                        'Sorumlu' => $plan->user->name,
-                    ]
-                ]
-            ];
-        }
-
-        // GRAFİK VERİSİ (Haftalık Bakım Sayısı)
-        $chartData = [];
-        $statsTitle = "Bakım İstatistikleri";
-
-        // Son 12 haftanın verisini çek
-        $twelveWeeksAgo = Carbon::now()->subWeeks(11)->startOfWeek();
-        $weeklyCounts = MaintenancePlan::select([
-            DB::raw('YEARWEEK(planned_start_date, 1) as year_week'),
-            DB::raw('COUNT(*) as count')
-        ])
-            ->where('planned_start_date', '>=', $twelveWeeksAgo)
-            ->groupBy('year_week')
-            ->pluck('count', 'year_week');
-
-        $weeklyLabels = [];
-        $weeklyData = [];
-        $currentWeek = $twelveWeeksAgo->copy();
-
-        for ($i = 0; $i < 12; $i++) {
-            $yearWeek = $currentWeek->format('oW');
-            $weeklyLabels[] = $currentWeek->format('W') . '. Hafta';
-            $weeklyData[] = $weeklyCounts[$yearWeek] ?? 0;
-            $currentWeek->addWeek();
-        }
-
-        $chartData['maintenance_plans'] = [
-            'labels' => $weeklyLabels,
-            'data' => $weeklyData,
-            'title' => '📅 Haftalık Bakım Planı Sayısı'
-        ];
-
-        return ['events' => $events, 'chartData' => $chartData, 'statsTitle' => $statsTitle];
-    }
     private function getMaintenanceWelcomeData()
     {
         $welcomeTitle = "Bugünkü Bakım Planları";
-        $chartTitle = "Bakım Türü -> Varlık Akışı (Toplam Plan)";
+        $chartTitle = "Bakım Türü -> Varlık Akışı";
         $chartData = [];
-
-        // 1. Bugünün Planları (Liste İçin)
-        $todayItems = MaintenancePlan::with(['asset', 'type'])
-            ->whereBetween('planned_start_date', [
-                Carbon::today()->startOfDay(),
-                Carbon::today()->addDays(2)->endOfDay() // Bugün ve yarın
-            ])
-            ->orderBy('planned_start_date', 'asc')
-            ->get();
-
-        // 2. Sankey Grafiği Verisi (Tüm Zamanlar)
-        // Mantık: Bakım Türü (Elektronik) -> Varlık Kategorisi (Makine)
-        // veya Bakım Türü -> Varlık Adı (Çok fazla varlık varsa grafik karışabilir, kategori daha iyi)
+        $todayItems = MaintenancePlan::with(['asset', 'type'])->whereBetween('planned_start_date', [Carbon::today()->startOfDay(), Carbon::today()->addDays(2)->endOfDay()])->orderBy('planned_start_date', 'asc')->get();
 
         $plans = MaintenancePlan::with(['type', 'asset'])->get();
         $flowCounts = [];
-
         foreach ($plans as $plan) {
             $source = $plan->type->name ?? 'Diğer';
-            $target = $plan->asset->name ?? 'Bilinmiyor'; // Varlık adı
-
-            // İsterseniz target olarak $plan->asset->category kullanabilirsiniz (daha sade grafik için)
-
+            $target = $plan->asset->name ?? 'Bilinmiyor';
             if (!isset($flowCounts[$source]))
                 $flowCounts[$source] = [];
             if (!isset($flowCounts[$source][$target]))
                 $flowCounts[$source][$target] = 0;
-
             $flowCounts[$source][$target]++;
         }
-
         foreach ($flowCounts as $source => $targets) {
             foreach ($targets as $target => $weight) {
-                $chartData[] = [
-                    strval($source),
-                    strval($target),
-                    (int) $weight
-                ];
+                $chartData[] = [strval($source), strval($target), (int) $weight];
             }
         }
-
-        if (empty($chartData)) {
-            Log::warning('Bakım departmanı için Sankey verisi bulunamadı.');
+        if (empty($chartData))
             $chartData[] = ['Veri Yok', 'Henüz Plan Girilmedi', 1];
-        }
-
         return [$welcomeTitle, $chartTitle, $todayItems, $chartData];
     }
-    private function getBakimStatsData($startDate, $endDate): StatisticsData
+    private function getAdminDashboardData($today, $weekStart, $weekEnd, $monthStart, $monthEnd)
     {
-        // 1. Temel Verileri Çek
-        $maintenancePlans = MaintenancePlan::whereBetween('planned_start_date', [$startDate, $endDate])->get();
+        $welcomeTitle = "Genel Bakış";
+        $chartTitle = "Şirket Geneli İş Akışı";
 
-        // 2. Filtreleme İçin Ham Veri (Blade'e JSON olarak gidecek)
-        // Bu veri client-side (JS) filtreleme için kullanılır
-        $maintenancePlansForFiltering = $maintenancePlans->map(fn($m) => [
-            'type_id' => $m->maintenance_type_id,
-            'asset_id' => $m->maintenance_asset_id,
-            'status' => $m->status
-        ])->values()->all();
-
-        // Dropdownlar için listeler
-        $maintenanceTypes = \App\Models\MaintenanceType::select('id', 'name')->orderBy('name')->get()->toArray();
-        $assets = \App\Models\MaintenanceAsset::select('id', 'name')->orderBy('name')->get()->toArray();
-
-        // 3. Grafikler İçin Hesaplanmış Veriler
-
-        // A. Tür Dağılımı (Pie Chart)
-        $typeCounts = $maintenancePlans->groupBy('maintenance_type_id')->map->count();
-        $typeLabels = [];
-        $typeData = [];
-
-        // Tür ID'lerinden isimleri bul ve eşleştir
-        foreach ($typeCounts as $typeId => $count) {
-            // maintenanceTypes array olduğu için collect ile arama yapıyoruz
-            $typeName = collect($maintenanceTypes)->firstWhere('id', $typeId)['name'] ?? 'Bilinmiyor';
-            $typeLabels[] = $typeName;
-            $typeData[] = $count;
-        }
-
-        // B. En Çok Bakım Gören Makineler (Top 5 Bar Chart)
-        $assetCounts = $maintenancePlans->groupBy('maintenance_asset_id')->map->count()->sortDesc()->take(5);
-        $assetLabels = [];
-        $assetData = [];
-
-        foreach ($assetCounts as $assetId => $count) {
-            $assetName = collect($assets)->firstWhere('id', $assetId)['name'] ?? 'Bilinmiyor';
-            $assetLabels[] = Str::limit($assetName, 20); // İsim çok uzunsa kısalt
-            $assetData[] = $count;
-        }
-
-        // C. Aylık Bakım Sayısı (Area Chart)
-        $monthlyCounts = $maintenancePlans->groupBy(fn($d) => $d->planned_start_date->format('Y-m'))->map->count();
-        $monthlyLabels = [];
-        $monthlyData = [];
-
-        $currentMonth = $startDate->copy()->startOfMonth();
-        while ($currentMonth->lte($endDate)) {
-            $key = $currentMonth->format('Y-m');
-            $monthlyLabels[] = $currentMonth->translatedFormat('M Y');
-            $monthlyData[] = $monthlyCounts[$key] ?? 0;
-            $currentMonth->addMonth();
-        }
-
-        // 4. Verileri Paketle
-        $chartData = [
-            'type_dist' => ['labels' => $typeLabels, 'data' => $typeData],
-            'top_assets' => ['labels' => $assetLabels, 'data' => $assetData],
-            'monthly_maintenance' => ['labels' => $monthlyLabels, 'data' => $monthlyData],
+        // --- HATA BURADAYDI, EKSİK KEYLERİ EKLEDİK ---
+        $kpiData = [
+            'sevkiyat_sayisi' => \App\Models\Shipment::whereDate('tahmini_varis_tarihi', $today)->count(),
+            'plan_sayisi' => \App\Models\ProductionPlan::whereDate('week_start_date', $today)->count(),
+            'etkinlik_sayisi' => \App\Models\Event::whereDate('start_datetime', $today)->count(), // Düzeleltildi
+            'arac_gorevi_sayisi' => \App\Models\VehicleAssignment::whereDate('start_time', $today)->count(), // Düzeltildi
+            'bakim_sayisi' => \App\Models\MaintenancePlan::whereDate('planned_start_date', $today)->count(), // Düzeltildi
+            'kullanici_sayisi' => \App\Models\User::count()
         ];
 
-        // 5. DTO ile Dönüş Yap (Named Arguments Kullanıyoruz)
-        return new StatisticsData(
-            chartData: $chartData,
-            maintenancePlansForFiltering: $maintenancePlansForFiltering,
-            maintenanceTypes: $maintenanceTypes,
-            assets: $assets
-        );
+        // Chart Data (Basit pasta grafiği için veriler)
+        $chartData = [];
+        $lojistikCount = (int) $kpiData['sevkiyat_sayisi']; // Direkt yukarıdan alabiliriz veya genel count
+        // Grafikte tüm zamanları göstermek daha mantıklı olabilir:
+        $allLojistik = \App\Models\Shipment::count();
+        $allUretim = \App\Models\ProductionPlan::count();
+        $allEtkinlik = \App\Models\Event::count();
+        $allBakim = \App\Models\MaintenancePlan::count();
+
+        if ($allLojistik > 0)
+            $chartData[] = ['Lojistik', 'Sevkiyatlar', $allLojistik];
+        if ($allUretim > 0)
+            $chartData[] = ['Üretim', 'Planlar', $allUretim];
+        if ($allEtkinlik > 0)
+            $chartData[] = ['İdari İşler', 'Etkinlikler', $allEtkinlik];
+        if ($allBakim > 0)
+            $chartData[] = ['Bakım', 'Bakım Planları', $allBakim];
+
+        if (empty($chartData))
+            $chartData[] = ['Sistem', 'Henüz Kayıt Yok', 1];
+
+        // Bugünün verilerini boş collection olarak başlatalım (Admin dashboard'da liste göstermiyorsak)
+        // Veya yukarıdaki gibi sorgularla doldurabilirsin. Şimdilik hatayı çözmek için boş geçiyoruz.
+        return [
+            'welcomeTitle' => $welcomeTitle,
+            'chartTitle' => $chartTitle,
+            'todayItems' => collect(),
+            'weeklyItems' => collect(),
+            'monthlyItems' => collect(),
+            'kpiData' => $kpiData,
+            'chartData' => $chartData
+        ];
+    }
+    /**
+     * BİLDİRİM OKUMA VE YÖNLENDİRME
+     * Kullanıcı bildirime tıkladığında bu fonksiyon çalışır.
+     */
+    public function readNotification($id)
+    {
+        // 1. Kullanıcının bildirimleri içinde bu ID'ye sahip olanı bul
+        $notification = auth()->user()->unreadNotifications->where('id', $id)->first();
+
+        if ($notification) {
+            // 2. Okundu olarak işaretle (Veritabanında read_at sütununu doldurur)
+            $notification->markAsRead();
+
+            // 3. Bildirimin içindeki 'link' verisine yönlendir
+            // Eğer link yoksa anasayfaya at
+            return redirect($notification->data['link'] ?? route('home'));
+        }
+
+        // Eğer bildirim bulunamazsa (zaten okunmuşsa veya yoksa) direkt geri dön
+        return back();
     }
 
+    /**
+     * TÜM BİLDİRİMLERİ OKUNDU YAP
+     */
+    public function readAllNotifications()
+    {
+        auth()->user()->unreadNotifications->markAsRead();
+        return back()->with('success', 'Tüm bildirimler okundu olarak işaretlendi.');
+    }
 }

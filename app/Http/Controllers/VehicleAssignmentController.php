@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Team;
 use App\Models\Customer;
 use App\Notifications\VehicleAssignmentCreated;
+use App\Notifications\NewRequestForManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -18,6 +19,8 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Log;
 
 class VehicleAssignmentController extends Controller
 {
@@ -31,21 +34,26 @@ class VehicleAssignmentController extends Controller
             'createdBy',
             'responsible' // Polymorphic ilişki
         ]);
-        $query->whereNotNull('vehicle_id');
+
+        // ESKİ KOD: $query->whereNotNull('vehicle_id');
+        // YENİ MANTIK: Araç ID'si dolu olanlar VEYA durumu 'waiting_assignment' olanlar listelensin.
+        $query->where(function ($q) {
+            $q->whereNotNull('vehicle_id')
+                ->orWhere('status', 'waiting_assignment');
+        });
+
         $query->whereIn('responsible_type', [
             User::class,
             Team::class
         ]);
+
         // --- FİLTRELEME ---
         if ($request->filled('vehicle_id')) {
             $parts = explode('|', $request->input('vehicle_id'));
-
             if (count($parts) === 2) {
                 $type = $parts[0];
                 $id = $parts[1];
-
-                $query->where('vehicle_type', $type)
-                    ->where('vehicle_id', $id);
+                $query->where('vehicle_type', $type)->where('vehicle_id', $id);
             }
         }
 
@@ -66,11 +74,12 @@ class VehicleAssignmentController extends Controller
             });
         }
 
+        // Tarih filtreleri
         if ($request->filled('date_from')) {
             try {
                 $dateFrom = Carbon::parse($request->input('date_from'))->startOfDay();
                 $query->where('end_time', '>=', $dateFrom);
-            } catch (\Exception $e) { /* Hatalı tarihi yoksay */
+            } catch (\Exception $e) {
             }
         }
 
@@ -78,43 +87,31 @@ class VehicleAssignmentController extends Controller
             try {
                 $dateTo = Carbon::parse($request->input('date_to'))->endOfDay();
                 $query->where('start_time', '<=', $dateTo);
-            } catch (\Exception $e) { /* Hatalı tarihi yoksay */
+            } catch (\Exception $e) {
             }
         }
         // --- FİLTRELEME SONU ---
 
-        $assignments = $query->orderBy('start_time', 'desc')->paginate(15);
-        $filters = $request->only([
-            'vehicle_id',
-            'assignment_type',
-            'status',
-            'search',
-            'date_from',
-            'date_to'
-        ]);
+        // Bekleyen atamaları en üste, diğerlerini tarihe göre sırala
+        $assignments = $query->orderByRaw("CASE WHEN status = 'waiting_assignment' THEN 0 ELSE 1 END")
+            ->orderBy('start_time', 'desc')
+            ->paginate(15);
 
-        // 1. Şirket Araçlarını Çek ve Etiketle
-        $companyVehicles = Vehicle::active()
-            ->orderBy('plate_number')
-            ->get()
-            ->map(function ($vehicle) {
-                // Dropdown için özel format
-                $vehicle->filter_key = get_class($vehicle) . '|' . $vehicle->id; // Örn: App\Models\Vehicle|1
-                $vehicle->display_name = '🚙 ' . $vehicle->plate_number . ' - ' . $vehicle->brand_model;
-                return $vehicle;
-            });
+        $filters = $request->only(['vehicle_id', 'assignment_type', 'status', 'search', 'date_from', 'date_to']);
 
-        // 2. Nakliye Araçlarını Çek ve Etiketle
-        $logisticsVehicles = LogisticsVehicle::active() // scopeActive varsayalım veya where('status', 'active')
-            ->orderBy('plate_number')
-            ->get()
-            ->map(function ($vehicle) {
-                $vehicle->filter_key = get_class($vehicle) . '|' . $vehicle->id; // Örn: App\Models\LogisticsVehicle|1
-                $vehicle->display_name = '🚚 ' . $vehicle->plate_number . ' - ' . $vehicle->brand . ' ' . $vehicle->model;
-                return $vehicle;
-            });
+        // Filtreleme dropdownları için araç listesi
+        $companyVehicles = Vehicle::active()->orderBy('plate_number')->get()->map(function ($vehicle) {
+            $vehicle->filter_key = get_class($vehicle) . '|' . $vehicle->id;
+            $vehicle->display_name = '🚙 ' . $vehicle->plate_number . ' - ' . $vehicle->brand_model;
+            return $vehicle;
+        });
 
-        // 3. İkisini Birleştir
+        $logisticsVehicles = LogisticsVehicle::active()->orderBy('plate_number')->get()->map(function ($vehicle) {
+            $vehicle->filter_key = get_class($vehicle) . '|' . $vehicle->id;
+            $vehicle->display_name = '🚚 ' . $vehicle->plate_number . ' - ' . $vehicle->brand . ' ' . $vehicle->model;
+            return $vehicle;
+        });
+
         $vehicles = $companyVehicles->merge($logisticsVehicles);
 
         return view('service.assignments.index', compact('assignments', 'filters', 'vehicles'));
@@ -125,11 +122,9 @@ class VehicleAssignmentController extends Controller
     public function generalIndex(Request $request): View
     {
         $query = VehicleAssignment::with(['createdBy', 'responsible']);
+        $query->whereNull('vehicle_id')
+            ->where('status', '<>', 'waiting_assignment'); // Araç bekleyenler buraya düşmesin
 
-        // KRİTİK: Sadece araçsız görevleri getir
-        $query->whereNull('vehicle_id');
-
-        // --- FİLTRELEME (Araç filtresi hariç diğerleri aynı) ---
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
         }
@@ -140,10 +135,8 @@ class VehicleAssignmentController extends Controller
                     ->orWhere('task_description', 'LIKE', "%{$search}%");
             });
         }
-        // ... (Tarih filtreleri aynı kalabilir) ...
 
         $assignments = $query->orderBy('start_time', 'desc')->paginate(15);
-
         return view('service.assignments.general_index', compact('assignments'));
     }
 
@@ -179,158 +172,154 @@ class VehicleAssignmentController extends Controller
     }
 
     /**
-     * Yeni araç atamasını veritabanında saklar.
+     * Yeni araç talebini (veya genel görevi) kaydeder.
+     * Kullanıcı araç seçmez, sadece tip seçer.
      */
     public function store(Request $request): RedirectResponse
     {
-        $vehicleTypeInput = $request->input('vehicle_type'); // formdan gelen 'company' veya 'logistics'
-        // 1. DİNAMİK VALİDASYON
+        $vehicleTypeInput = $request->input('vehicle_type');
+
         $validatedData = $request->validate([
-            // Temel Alanlar
             'needs_vehicle' => 'required|in:yes,no',
             'vehicle_type' => 'nullable|required_if:needs_vehicle,yes|in:company,logistics',
-            'vehicle_id' => [
-                'nullable',
-                Rule::requiredIf($request->needs_vehicle === 'yes'),
-                function ($attribute, $value, $fail) use ($vehicleTypeInput) {
-                    if ($vehicleTypeInput === 'company') {
-                        if (!Vehicle::where('id', $value)->exists()) {
-                            $fail('Seçilen şirket aracı bulunamadı.');
-                        }
-                    } elseif ($vehicleTypeInput === 'logistics') {
-                        if (!LogisticsVehicle::where('id', $value)->exists()) {
-                            $fail('Seçilen nakliye aracı bulunamadı.');
-                        }
-                    }
-                },
-            ],
-
-            // Sorumlu Bilgisi
             'responsible_type' => 'required|in:user,team',
             'responsible_user_id' => 'required_if:responsible_type,user|exists:users,id',
             'responsible_team_id' => 'required_if:responsible_type,team|exists:teams,id',
-
-            // Görev Detayları
             'title' => 'required|string|max:255',
             'task_description' => 'required|string',
             'destination' => 'nullable|string|max:255',
             'customer_id' => 'nullable|exists:customers,id',
-            //'requester_name' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
-
-            // Nakliye Özel Alanları
-            'start_km' => 'nullable|required_if:vehicle_type,logistics|numeric|min:0',
-            'start_fuel_level' => 'nullable|required_if:vehicle_type,logistics|string|min:0',
-        ], [
-            // Özel Hata Mesajları
-            'needs_vehicle.required' => 'Araç gerekliliği seçmelisiniz.',
-            'vehicle_id.required_if' => 'Lütfen bir araç seçin.',
-            'responsible_user_id.required_if' => 'Lütfen sorumlu kişiyi seçin.',
-            'responsible_team_id.required_if' => 'Lütfen sorumlu takımı seçin.',
-            'title.required' => 'Görev başlığı zorunludur.',
-            'start_km.required_if' => 'Nakliye görevi için başlangıç KM zorunludur.',
-            'start_fuel_level.required_if' => 'Nakliye görevi için yakıt miktarı zorunludur.',
+            'start_time' => 'required|date|after_or_equal:now',
+            'end_time' => 'required|date|after:start_time',
         ]);
 
-        // 2. Görev Tipini Belirle
         $assignmentType = $validatedData['needs_vehicle'] === 'yes' ? 'vehicle' : 'general';
 
-        // 3. Görev Nesnesini Oluştur
-        $assignment = new VehicleAssignment();
+        $assignment = new \App\Models\VehicleAssignment();
         $assignment->assignment_type = $assignmentType;
         $assignment->title = $validatedData['title'];
         $assignment->task_description = $validatedData['task_description'];
         $assignment->destination = $validatedData['destination'] ?? null;
         $assignment->requester_name = Auth::user()->name;
         $assignment->notes = $validatedData['notes'] ?? null;
-        $assignment->status = 'pending';
-        $assignment->user_id = auth()->id();
+        $assignment->user_id = auth()->id(); // Oluşturan kişi (created_by)
+        $assignment->assigned_by = auth()->id(); // İkisi de dolu olsun garanti olsun
         $assignment->customer_id = $request->input('customer_id');
 
-        // 4. Sorumluyu Ata (Polymorphic)
+        // Sorumlu Ata
         if ($validatedData['responsible_type'] === 'user') {
             $assignment->responsible_type = User::class;
             $assignment->responsible_id = $validatedData['responsible_user_id'];
         } else {
-            $assignment->responsible_type = Team::class;
+            $assignment->responsible_type = \App\Models\Team::class;
             $assignment->responsible_id = $validatedData['responsible_team_id'];
         }
 
-        // 5. Araçlı Görevler için İşlemler
+        // --- ARAÇLI GÖREV MANTIĞI ---
         if ($assignmentType === 'vehicle') {
-            $assignment->vehicle_id = $validatedData['vehicle_id'];
+            // DİKKAT: Dashboard'un görmesi için status 'pending' olmalı!
+            $assignment->status = 'pending';
+            $assignment->vehicle_id = null;
 
-            // [KRİTİK] Polymorphic Tip Ataması
+            // Model sınıfını kaydet
             if ($vehicleTypeInput === 'logistics') {
-                $assignment->vehicle_type = LogisticsVehicle::class; // Model Sınıf Adı
-
-                // Nakliye araçları için sefer saati (findNextDeparture) aranmaz, "şimdi" veya manuel girilen saat baz alınır.
-                // Nakliye esnek saatlidir.
-                $assignment->start_time = now();
-                $assignment->end_time = now()->addHours(4); // Tahmini süre, nakliyede open-ended olabilir.
-
-                // Nakliye özel verileri
-                $assignment->start_km = $request->input('start_km');
-                $assignment->start_fuel_level = $request->input('start_fuel_level');
-
-                $successMessage = 'Nakliye görevi oluşturuldu.';
-
+                $assignment->vehicle_type = \App\Models\LogisticsVehicle::class;
             } else {
-                // Şirket Aracı (Company)
-                $assignment->vehicle_type = Vehicle::class; // Model Sınıf Adı
-
-                // Şirket aracı ise Sefer Tarifesi (Schedule) kurallarına uyulur
-                $targetDepartureTime = $this->findNextDeparture();
-                if (!$targetDepartureTime) {
-                    return back()->withInput()->withErrors([
-                        'vehicle_id' => 'Sistemde tanımlı aktif bir sefer saati bulunamadı.'
-                    ]);
-                }
-                $assignment->start_time = $targetDepartureTime;
-                $assignment->end_time = $targetDepartureTime->copy()->addHour();
-
-                $successMessage = 'Görev başarıyla oluşturuldu (' .
-                    $targetDepartureTime->translatedFormat('d M H:i') . ' seferine eklendi).';
+                $assignment->vehicle_type = \App\Models\Vehicle::class;
             }
 
+            $assignment->start_time = Carbon::parse($validatedData['start_time']);
+            $assignment->end_time = Carbon::parse($validatedData['end_time']);
+
+            $successMessage = 'Araç talebiniz başarıyla oluşturuldu ve Ulaştırma birimine iletildi.';
         } else {
-            // Genel görevler
+            // Genel görevler (Araçsız)
+            $assignment->status = 'pending';
             $assignment->start_time = now();
             $assignment->end_time = now()->addDay();
             $successMessage = 'Genel görev başarıyla oluşturuldu.';
         }
 
-        // 6. Kaydet
         $assignment->save();
-        $recipients = collect();
 
-        if ($assignmentType === 'individual') {
-            if ($validatedData['responsible_type'] === 'user') {
-                $responsibleUser = User::find($validatedData['responsible_user_id']);
-                if ($responsibleUser) {
-                    $recipients->push($responsibleUser);
+        // --- BİLDİRİM GÖNDERME (SADECE ARAÇ TALEBİ İSE) ---
+        if ($assignmentType === 'vehicle') {
+            try {
+                // 1. Bildirimi alacakları bul: (Adminler + Ulaştırma Müdürleri)
+                $recipients = User::where(function ($query) {
+                    $query->where('role', 'admin') // Adminler her zaman görsün
+                        ->orWhere(function ($q) {
+                            // Rolü 'müdür' veya 'yönetici' olup departmanı 'ulastirma' olanlar
+                            $q->whereIn('role', ['müdür', 'yönetici', 'mudur'])
+                                ->whereHas('department', function ($d) {
+                                $d->where('slug', 'ulastirma');
+                            });
+                        });
+                })->get();
+
+                // 2. Yeni bildirimi gönder
+                if ($recipients->count() > 0) {
+                    // NewRequestForManager sınıfını kullandık (Simge ve renk ayarlı olan)
+                    Notification::send($recipients, new NewRequestForManager($assignment));
                 }
-            } elseif ($validatedData['responsible_type'] === 'team') {
-                $team = Team::with('users')->find($validatedData['responsible_team_id']); // team_id yerine responsible_team_id
-                if ($team) {
-                    $recipients = $recipients->merge($team->users);
-                }
+            } catch (\Exception $e) {
+                Log::error('Bildirim hatası: ' . $e->getMessage());
             }
         }
 
-        // Bildirimi alıcılara gönder
-        foreach ($recipients->unique() as $recipient) {
-            $recipient->notify(new VehicleAssignmentCreated($assignment));
+        // (Opsiyonel) Eğer genel görevse sorumlu kişiye bildirim gönderme kodu buraya eklenebilir.
+
+        $redirectRoute = ($assignmentType === 'vehicle') ? 'home' : 'home'; // İstersen ilgili listeye yönlendir
+        return redirect()->route($redirectRoute)->with('success', $successMessage);
+    }
+    /**
+     * YENİ FONKSİYON: Müdür (Ömer Bey) için Araç Atama İşlemi
+     * Route: PUT /service/assignments/{assignment}/assign
+     */
+    public function assignVehicle(Request $request, VehicleAssignment $assignment): RedirectResponse
+    {
+        // Yetki kontrolü (Opsiyonel: Sadece Müdür yapabilsin)
+        // if (!auth()->user()->hasRole('Müdür')) { abort(403); }
+
+        $validated = $request->validate([
+            'vehicle_id' => 'required',
+            'start_time' => 'required|date',
+            'end_time' => 'required|date|after:start_time',
+            // Ek olarak şoför vs. seçtiriyorsanız buraya ekleyebilirsiniz.
+        ]);
+
+        // Aracı Kontrol Et (Tipe göre doğru tabloda var mı?)
+        if ($assignment->vehicle_type == LogisticsVehicle::class) {
+            if (!LogisticsVehicle::where('id', $validated['vehicle_id'])->exists()) {
+                return back()->withErrors(['vehicle_id' => 'Seçilen nakliye aracı bulunamadı.']);
+            }
+        } else {
+            if (!Vehicle::where('id', $validated['vehicle_id'])->exists()) {
+                return back()->withErrors(['vehicle_id' => 'Seçilen şirket aracı bulunamadı.']);
+            }
         }
 
-        // --- YÖNLENDİRME MANTIĞI (GÜNCELLENDİ) ---
-        // Eğer araçlı görev ise Araç Görevlerine, değilse Genel Görevlere yönlendir.
-        $redirectRoute = ($assignmentType === 'vehicle')
-            ? 'service.assignments.index'
-            : 'service.general-tasks.index';
+        // Atamayı Yap
+        $assignment->vehicle_id = $validated['vehicle_id'];
+        $assignment->start_time = Carbon::parse($validated['start_time']);
+        $assignment->end_time = Carbon::parse($validated['end_time']);
+        $assignment->status = 'pending'; // Artık görev aktif ve yapılmayı bekliyor
 
-        return redirect()->route($redirectRoute)
-            ->with('success', $successMessage);
+        // Atamayı Yapan (Müdür) olarak not düşülebilir veya loglanabilir
+        $assignment->assigned_by = auth()->id();
+
+        $assignment->save();
+
+        // Talep edene (Requester) Bildirim Gönder: "Aracınız atandı!"
+        if ($assignment->createdBy) {
+            $assignment->createdBy->notify(new VehicleAssignmentCreated($assignment)); // Mesaj içeriği "Atandı" olarak dinamikleşmeli
+        }
+
+        // Görevi yapacak kişiye (Sorumlu) Bildirim Gönder
+        $this->forceNotificationUnread($assignment);
+
+        return back()->with('success', 'Araç ataması başarıyla yapıldı ve ilgililere bildirildi.');
     }
     /**
      * Oturum açmış kullanıcıya atanmış görevleri listeler.

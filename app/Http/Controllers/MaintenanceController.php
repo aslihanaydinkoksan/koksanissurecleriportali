@@ -22,13 +22,36 @@ class MaintenanceController extends Controller
     }
 
     // 1. LİSTELEME EKRANI
-    public function index()
+    public function index(Request $request)
     {
-        // İleride buraya filtreleme ekleyeceğiz (Tamamlananlar, Devam Edenler vs.)
-        // Eager Loading (with) kullanarak N+1 sorununu önlüyoruz.
-        $plans = MaintenancePlan::with(['type', 'asset', 'user', 'timeEntries'])
-            ->orderBy('planned_start_date', 'desc')
-            ->get();
+        // 1. Sorguyu Başlat (İlişkilerle Beraber)
+        $query = MaintenancePlan::with(['type', 'asset', 'user', 'timeEntries']);
+
+        // 2. Filtreleme Mantığı
+
+        // A. Metin Arama (Başlık veya Açıklamada)
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        // B. Durum Filtresi (SelectBox)
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        // C. Tarih Filtresi (Datepicker)
+        if ($request->filled('date')) {
+            $query->whereDate('planned_start_date', $request->input('date'));
+        }
+
+        // 3. Sıralama ve Sayfalama
+        $plans = $query->orderBy('planned_start_date', 'desc')
+            ->paginate(10) // Sayfada 10 kayıt göster
+            ->appends(request()->query()); // Sayfa değişince filtreler kaybolmasın
 
         return view('maintenance.index', compact('plans'));
     }
@@ -102,40 +125,154 @@ class MaintenanceController extends Controller
         $plan = MaintenancePlan::findOrFail($id);
         $this->authorize('update', $plan);
 
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'status' => 'required',
-        ]);
+        // 1. ÖN HAZIRLIK
+        $oldStatus = $plan->status; // Eski durumu sakla (Karşılaştırma için şart)
+        $data = $request->all();
+        $user = Auth::user();
+        $newStatus = $data['status'] ?? $oldStatus; // Formdan gelen yeni durum
 
-        $oldStatus = $plan->status;
+        // 2. GÜVENLİK KONTROLLERİ
 
-        $plan->update($request->all());
-
-        // Durum değiştiyse logla
-        if ($oldStatus !== $request->status) {
-            $this->logActivity($plan, 'status_change', "Durum $oldStatus -> {$request->status} olarak değiştirildi.");
+        // A) Geriye Dönüş Engeli (Onaydaki işi personel geri alamaz)
+        if ($oldStatus == 'pending_approval' && in_array($newStatus, ['open', 'in_progress'])) {
+            if ($user->cannot('approve', $plan)) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'HATA: Onaya sunulmuş bir planı geri çekemezsiniz. Yöneticinizin reddetmesi gerekmektedir.');
+            }
         }
 
-        return redirect()->route('maintenance.show', $plan->id)->with('success', 'Plan güncellendi.');
+        // B) Süre Kontrolü (Hızlı Bitirme Notu YOKSA ve Süre de YOKSA engelle)
+        // Eğer completion_note geliyorsa bu "Hızlı Bitirme" işlemidir, süre kontrolüne takılmasın.
+        if (in_array($newStatus, ['pending_approval', 'completed']) && !$request->has('completion_note')) {
+            $hasPastDuration = $plan->previous_duration_minutes > 0;
+            // Aktif herhangi bir sayaç var mı?
+            $isTimerRunning = $plan->timeEntries()->whereNull('end_time')->exists();
+
+            if (!$hasPastDuration && !$isTimerRunning) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'HATA: Hiç çalışma kaydı bulunmayan bir iş onaya sunulamaz. Önce "Çalışmayı Başlat" deyiniz.');
+            }
+        }
+
+        $request->validate([
+            'title' => 'sometimes|required|string|max:255',
+        ]);
+
+        // 3. SENARYOLAR VE DURUM YÖNETİMİ
+
+        // --- SENARYO 1: HIZLI BİTİRME (SAYAÇSIZ TAMAMLAMA) ---
+        if ($request->has('completion_note')) {
+            $data['completion_note'] = $request->completion_note;
+            $data['actual_end_date'] = now();
+
+            // Eğer personel tamamladıysa zorla onaya düşür
+            if ($newStatus == 'completed' && $user->cannot('approve', $plan)) {
+                $data['status'] = 'pending_approval';
+                $newStatus = 'pending_approval'; // Aşağıdaki kontroller için güncel kalmalı
+                session()->flash('success', 'İşlem tamamlandı ve Yönetici Onayına gönderildi.');
+            }
+        }
+
+        // --- SENARYO 2: DURUM BİTİŞE/ONAYA GEÇİYORSA (SAYAÇ KAPATMA) ---
+        if (in_array($newStatus, ['completed', 'pending_approval'])) {
+
+            // Normal form güncellemesi ile geliyorsa da yetki kontrolü yap
+            if ($newStatus == 'completed' && $user->cannot('approve', $plan)) {
+                $data['status'] = 'pending_approval';
+                $newStatus = 'pending_approval';
+                session()->flash('success', 'Plan tamamlandı ve Yönetici Onayına gönderildi.');
+            } else {
+                if ($newStatus == 'completed') {
+                    session()->flash('success', 'Plan başarıyla onaylandı ve tamamlandı.');
+                }
+            }
+
+            // Varsa açık sayacı kapat (Sistemsel kapatma)
+            $activeTimer = $plan->timeEntries()->whereNull('end_time')->first();
+            if ($activeTimer) {
+                $endTime = now();
+                $activeTimer->update([
+                    'end_time' => $endTime,
+                    'duration_minutes' => $activeTimer->start_time->diffInMinutes($endTime),
+                    'note' => $activeTimer->note ?? 'Durum değişikliği nedeniyle otomatik kapatıldı.'
+                ]);
+            }
+
+            if ($newStatus == 'completed') {
+                $data['actual_end_date'] = now();
+            }
+        }
+
+        // --- SENARYO 3: DURUM "İŞLEMDE"YE GEÇİYORSA (SAYAÇ BAŞLATMA MANTIĞI) ---
+        elseif ($newStatus === 'in_progress') {
+
+            // KRİTİK KONTROL: Yönetici Reddi mi? Yoksa Personel Başlatması mı?
+
+            // 1. Eğer eski durum 'pending_approval' ise bu bir REDDETME işlemidir. Sayaç BAŞLAMAMALI.
+            $isRejection = ($oldStatus == 'pending_approval');
+
+            // 2. Sadece reddetme DEĞİLSE ve kullanıcı planın SAHİBİ ise başlat.
+            // (Yönetici reddettiğinde sayaç başlamayacak, kullanıcı sonra kendisi başlatacak)
+            if (!$isRejection && $user->id === $plan->user_id) {
+
+                // Kullanıcının açık sayacı yoksa başlat
+                $hasActiveTimer = $plan->timeEntries()
+                    ->where('user_id', $user->id)
+                    ->whereNull('end_time')
+                    ->exists();
+
+                if (!$hasActiveTimer) {
+                    $plan->timeEntries()->create([
+                        'user_id' => $user->id,
+                        'start_time' => now(),
+                    ]);
+
+                    if (is_null($plan->actual_start_date)) {
+                        $data['actual_start_date'] = now();
+                    }
+                }
+            }
+        }
+
+        // 4. VERİTABANI GÜNCELLEME VE LOGLAMA
+        $plan->update($data);
+
+        if ($oldStatus !== $plan->status) {
+
+            // A) Reddetme Logu
+            if ($oldStatus == 'pending_approval' && $plan->status == 'in_progress') {
+                $this->logActivity($plan, 'rejected', "Plan yönetici tarafından REDDEDİLDİ ve personele geri gönderildi.");
+            }
+            // B) Normal Değişim Logu
+            else {
+                $labels = [
+                    'open' => 'Açık',
+                    'pending' => 'Bekliyor',
+                    'in_progress' => 'İşlemde',
+                    'pending_approval' => 'Onay Bekliyor',
+                    'completed' => 'Tamamlandı',
+                    'cancelled' => 'İptal'
+                ];
+                $oldText = $labels[$oldStatus] ?? $oldStatus;
+                $newText = $labels[$plan->status] ?? $plan->status;
+
+                $this->logActivity($plan, 'status_change', "Durum: {$oldText} -> {$newText} olarak güncellendi.");
+            }
+        }
+
+        return redirect()->route('maintenance.show', $plan->id);
     }
 
     // 7. SİLME
     public function destroy($id)
     {
-        // 1. Planı bul
         $plan = MaintenancePlan::findOrFail($id);
-
-        // 2. LOGLAMA (En Başta)
-        // Plan henüz silinmemişken logu atıyoruz. 
-        // Böylece log kaydı oluşturulurken planın ID'sine ve diğer bilgilerine sorunsuz erişiyoruz.
+        $this->authorize('delete', $plan);
         $this->logActivity($plan, 'deleted', 'Bakım planı silindi (Çöp kutusuna taşındı).');
-
-        // 3. Bağlı verileri de Soft Delete yap (Zincirleme Temizlik)
-        // Plan çöp kutusuna gidince dosyaları ve sayaçları da peşinden gitsin.
         $plan->files()->delete();
         $plan->timeEntries()->delete();
-
-        // 4. Ana planı Soft Delete yap (deleted_at sütununu doldurur)
         $plan->delete();
 
         return redirect()->route('maintenance.index')->with('success', 'Bakım planı başarıyla silindi.');
@@ -147,6 +284,11 @@ class MaintenanceController extends Controller
     public function startTimer($id)
     {
         $plan = MaintenancePlan::findOrFail($id);
+
+        // Eğer plan "Tamamlandı" veya "Onay Bekliyor" ise sayaç başlatılamaz
+        if (in_array($plan->status, ['completed', 'pending_approval'])) {
+            return back()->with('error', 'Bu plan onaya sunulmuş veya tamamlanmıştır. Tekrar işlem yapılamaz.');
+        }
 
         // Kullanıcının bu planda açık bir sayacı var mı?
         $existingEntry = MaintenanceTimeEntry::where('maintenance_plan_id', $plan->id)
@@ -178,9 +320,21 @@ class MaintenanceController extends Controller
     public function stopTimer(Request $request, $id)
     {
         $plan = MaintenancePlan::findOrFail($id);
+        $user = Auth::user();
 
+        // 1. Validasyon: Eğer iş bitiriliyorsa NOT girmek ZORUNLU olsun.
+        if ($request->input('completion_type') === 'finish') {
+            $request->validate([
+                'note' => 'required|string|min:5', // En az 5 karakter açıklama şart
+            ], [
+                'note.required' => 'İşi bitirirken açıklama/sapma nedeni girmek zorunludur.',
+                'note.min' => 'Lütfen açıklayıcı bir not giriniz.',
+            ]);
+        }
+
+        // 2. Aktif sayacı bul ve kapat
         $entry = MaintenanceTimeEntry::where('maintenance_plan_id', $plan->id)
-            ->where('user_id', Auth::id())
+            ->where('user_id', $user->id)
             ->whereNull('end_time')
             ->first();
 
@@ -191,15 +345,62 @@ class MaintenanceController extends Controller
         $endTime = now();
         $duration = $entry->start_time->diffInMinutes($endTime);
 
+        // Sayacı kapat ve süreyi kaydet
         $entry->update([
             'end_time' => $endTime,
             'duration_minutes' => $duration,
-            'note' => $request->note // Durdururken not girebilir
+            'note' => $request->note // Kullanıcının o an girdiği not
         ]);
 
-        $this->logActivity($plan, 'timer_stopped', "Çalışma durduruldu. Süre: $duration dk. Not: {$request->note}");
+        // 3. Plan Durumunu ve Bitiş Notunu Güncelle
+        $actionType = $request->input('completion_type', 'pause'); // Varsayılan pause
+        $message = "Çalışma duraklatıldı.";
 
-        return back()->with('success', 'Çalışma durduruldu ve süre kaydedildi.');
+        if ($actionType === 'finish') {
+            // --- İŞİ BİTİRME SENARYOSU ---
+
+            // Güncellenecek ortak veriler
+            $updateData = [
+                'completion_note' => $request->note, // Sapma nedeni/Bitiş notu
+                'actual_end_date' => now(),          // Gerçek bitiş zamanı
+            ];
+
+            // Yetki Kontrolü (Workflow)
+            if ($user->cannot('approve', $plan)) {
+                // Yetkisi YOKSA -> Onay Bekliyor
+                $updateData['status'] = 'pending_approval';
+                $message = "İş tamamlandı ve Yönetici Onayına gönderildi.";
+
+                // Veritabanını güncelle
+                $plan->update($updateData);
+
+                // Log: Statü değişimi
+                $this->logActivity($plan, 'status_change', 'Kullanıcı işi bitirdi, onay bekleniyor.');
+            } else {
+                // Yetkisi VARSA -> Tamamlandı
+                $updateData['status'] = 'completed';
+                $message = "İş başarıyla tamamlandı.";
+
+                // Veritabanını güncelle
+                $plan->update($updateData);
+
+                // Log: Tamamlandı
+                $this->logActivity($plan, 'completed', 'İşlem yetkili tarafından tamamlandı.');
+            }
+
+        } else {
+            // --- SADECE DURAKLATMA SENARYOSU ---
+
+            // Eğer plan durumu "pending" ise ve kullanıcı çalışıp durdurduysa "in_progress" kalmalı/olmalı.
+            if ($plan->status == 'pending') {
+                $plan->update(['status' => 'in_progress']);
+            }
+
+            // Log: Duraklatma
+            $this->logActivity($plan, 'timer_paused', "Çalışmaya ara verildi. Not: {$request->note}");
+        }
+
+        return back()->with('success', $message);
     }
 
     // DOSYA YÜKLEME

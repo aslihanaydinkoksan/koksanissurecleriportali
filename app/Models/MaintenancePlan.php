@@ -43,46 +43,39 @@ class MaintenancePlan extends Model
         return $this->hasMany(MaintenanceActivityLog::class);
     }
 
-    // Yardımcı: Sayaç açık mı?
+    // Yardımcı: Sayaç açık mı? (Sadece giriş yapan kullanıcı için kontrol etmeli)
     public function isTimerActive()
     {
-        return $this->timeEntries()->whereNull('end_time')->exists();
+        return $this->timeEntries()
+            ->where('user_id', \Illuminate\Support\Facades\Auth::id())
+            ->whereNull('end_time')
+            ->exists();
     }
+    // 1. Durumun Ekranda Görünen Adı
     public function getStatusLabelAttribute()
     {
-        // Önce standart durumları kontrol et
-        if ($this->status == 'pending')
-            return 'Bekliyor';
-        if ($this->status == 'completed')
-            return 'Tamamlandı';
-        if ($this->status == 'cancelled')
-            return 'İptal Edildi';
-
-        // Eğer durum 'in_progress' ise sayaca bak:
-        if ($this->status == 'in_progress') {
-            // Sayaç aktifse "Çalışılıyor", değilse "Duraklatıldı"
-            return $this->isTimerActive() ? 'Çalışma Sürüyor' : 'Duraklatıldı';
-        }
-
-        return 'Bilinmiyor';
+        return match ($this->status) {
+            'pending_approval' => 'Onay Bekliyor', // Yeni eklenen
+            'pending' => 'Bekliyor',
+            'in_progress' => $this->isTimerActive() ? 'Çalışma Sürüyor' : 'Duraklatıldı',
+            'completed' => 'Tamamlandı',
+            'cancelled' => 'İptal Edildi',
+            default => 'Bilinmiyor',
+        };
     }
 
     // 2. Durumun Rengini getiren özellik ($plan->status_color)
+    // 2. Durumun Rengi (Badge Fonksiyonun bunu kullanıyor)
     public function getStatusColorAttribute()
     {
-        if ($this->status == 'pending')
-            return 'warning';      // Sarı
-        if ($this->status == 'completed')
-            return 'success';    // Yeşil
-        if ($this->status == 'cancelled')
-            return 'danger';     // Kırmızı
-
-        if ($this->status == 'in_progress') {
-            // Aktif çalışılıyorsa Mavi (Primary), durduysa Turkuaz/Gri (Info veya Secondary)
-            return $this->isTimerActive() ? 'primary' : 'info text-dark';
-        }
-
-        return 'secondary';
+        return match ($this->status) {
+            'pending_approval' => 'warning text-dark',
+            'pending' => 'warning text-dark',
+            'completed' => 'success',
+            'cancelled' => 'danger',
+            'in_progress' => $this->isTimerActive() ? 'primary' : 'info text-dark',
+            default => 'secondary',
+        };
     }
     // Tamamlanmış (End time'ı olan) tüm kayıtların toplam süresi
     public function getPreviousDurationMinutesAttribute()
@@ -112,8 +105,8 @@ class MaintenancePlan extends Model
         $textColor = str_contains($color, 'text-') ? '' : 'text-white';
 
         return [
-            'text' => $this->status_label, // Senin mevcut status_label accessor'ını kullanır
-            'class' => "bg-{$color} {$textColor}", // Örn: "bg-primary text-white"
+            'text' => $this->status_label,
+            'class' => "bg-{$color} {$textColor}",
             'is_badge' => true
         ];
     }

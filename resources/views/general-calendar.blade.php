@@ -27,7 +27,7 @@
         }
 
         .wide-container {
-            max-width: 1600px;
+            max-width: 95% !important;
             margin-left: auto;
             margin-right: auto;
         }
@@ -69,18 +69,36 @@
         }
 
         .fc .fc-daygrid-day-frame {
-            min-height: 100px;
+            min-height: 160px !important;
+            transition: background-color 0.2s;
         }
 
         .fc .fc-daygrid-day.fc-day-today {
             background-color: rgba(102, 126, 234, 0.08) !important;
         }
 
+        /* === TAKVİM YAZI BOYUTLARI === */
+        .fc .fc-col-header-cell-cushion {
+            /* Gün isimlerini (Pzt, Sal) büyütelim */
+            font-size: 1.1rem;
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+
+        .fc-daygrid-day-number {
+            /* Ayın gün numaralarını büyütelim */
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #4a5568;
+            padding: 8px !important;
+        }
+
         .fc-event {
             border: none !important;
             margin: 1px 2px !important;
-            padding: 3px 6px;
-            font-size: 0.8rem;
+            padding: 4px 8px;
+            font-size: 0.9rem;
+            margin-bottom: 2px !important;
             border-radius: 4px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             cursor: pointer;
@@ -399,11 +417,35 @@
             color: #718096;
             line-height: 1.4;
         }
+
+        /* === MOBİL İÇİN ÖZEL AYARLAR (RESPONSIVE KORUMA) === */
+        @media (max-width: 768px) {
+            .wide-container {
+                max-width: 100% !important;
+                padding: 0 10px;
+            }
+
+            /* Mobilde hücreler çok uzun olursa ekran kaydırmak zorlaşır, mobilde kısalım */
+            .fc .fc-daygrid-day-frame {
+                min-height: 80px !important;
+            }
+
+            .fc-event {
+                font-size: 0.75rem !important;
+                /* Mobilde fontu küçültelim */
+                padding: 2px 4px !important;
+            }
+
+            .fc .fc-toolbar-title {
+                font-size: 1.2rem !important;
+                /* Başlığı mobilde taşmaması için küçültelim */
+            }
+        }
     </style>
 @endpush
 
 @section('content')
-    <div class="container">
+    <div class="container-fluid wide-container">
         <div class="row justify-content-center">
             <div class="col-md-11">
                 <div class="card create-shipment-card">
@@ -455,7 +497,9 @@
                             </div>
                         @endif
                         <div id='calendar' data-current-user-id="{{ Auth::id() }}"
-                            data-user-role="{{ Auth::user()->role }}" data-user-dept="{{ Auth::user()->department_id }}">
+                            data-user-role="{{ Auth::user()->role }}" data-user-dept="{{ Auth::user()->department_id }}"
+                            {{-- YENİ: Sadece bu roller checkbox'ı görebilir (Edit yetkisinden bağımsız) --}}
+                            data-can-mark-important="{{ in_array(mb_strtolower(Auth::user()->role), ['admin', 'yönetici', 'müdür']) ? 'true' : 'false' }}">
                         </div>
                     </div>
                 </div>
@@ -532,7 +576,15 @@
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
             const dateFromUrl = urlParams.get('date');
+
+            // URL'den Modal Parametrelerini Al
+            const urlModalId = urlParams.get('open_modal_id');
+            const urlModalType = urlParams.get('open_modal_type');
+
             const currentUserRole = "{{ Auth::user()->role }}";
+            const calendarEventsUrl = "{{ route('web.calendar.events') }}";
+            const toggleImportantUrl = "{{ route('calendar.toggleImportant') }}";
+
             var detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
 
             function hardResetModalUI() {
@@ -606,49 +658,49 @@
 
                 // === YENİ YETKİLENDİRME VE GÜVENLİK MANTIĞI ===
                 const currentUserId = parseInt(calendarEl.dataset.currentUserId, 10);
-                const currentUserRole = calendarEl.dataset.userRole; // HTML'e eklediğimiz data-user-role
-                const currentUserDept = calendarEl.dataset.userDept; // HTML'e eklediğimiz data-user-dept
+                const currentUserRole = calendarEl.dataset.userRole;
+                const currentUserDept = calendarEl.dataset.userDept;
+                const canMarkImportant = calendarEl.dataset.canMarkImportant === 'true';
 
-                // Event verileri (Backend'den department_id geldiğinden emin ol)
                 const eventOwnerId = props.user_id;
-                const eventDeptId = props.department_id; // Event hangi departmana ait?
+                const eventDeptId = props.department_id;
 
                 let canModify = false;
 
-                // KURAL 1: Admin her şeyi düzenleyebilir.
                 if (currentUserRole === 'admin') {
                     canModify = true;
-                }
-                // KURAL 2: Veriyi oluşturan kişi kendi verisini düzenleyebilir.
-                else if (eventOwnerId && eventOwnerId === currentUserId) {
+                } else if (eventOwnerId && eventOwnerId === currentUserId) {
                     canModify = true;
-                }
-                // KURAL 3: Yöneticiler, kendi departmanlarına ait verileri düzenleyebilir.
-                else if (currentUserRole === 'yönetici') {
-                    // Yöneticinin departmanı yoksa (örneğin üst düzey yönetici) veya departmanlar eşleşiyorsa
+                } else if (currentUserRole === 'yönetici') {
                     if (!currentUserDept || (eventDeptId && String(currentUserDept) === String(eventDeptId))) {
                         canModify = true;
                     }
                 }
 
-                // === UI GÜNCELLEMELERİ (Yetkiye Göre) ===
+                // === UI GÜNCELLEMELERİ: ÖNEMLİ BUTONU GÖRÜNÜRLÜĞÜ ===
+                if (modalImportantContainer) {
+                    const isVehicleTask = (props.model_type === 'vehicle_assignment');
+                    let shouldShowCheckbox = false;
 
-                // 1. Önemli Checkbox'ı
-                if (canModify) {
-                    modalImportantContainer.style.display = 'flex';
-                    modalImportantCheckbox.checked = props.is_important || false;
-                    modalImportantCheckbox.disabled = false; // Aktif et
-                    modalImportantCheckbox.dataset.modelType = props.model_type;
-                    modalImportantCheckbox.dataset.modelId = props.id;
-                } else {
-                    // Yetki yoksa gizle
-                    modalImportantContainer.style.display = 'none';
+                    if (canMarkImportant) {
+                        shouldShowCheckbox = true;
+                    } else if (isVehicleTask && canModify) {
+                        shouldShowCheckbox = true;
+                    }
+
+                    if (shouldShowCheckbox) {
+                        modalImportantContainer.style.display = 'flex';
+                        modalImportantCheckbox.checked = props.is_important || false;
+                        modalImportantCheckbox.disabled = false;
+                        modalImportantCheckbox.dataset.modelType = props.model_type;
+                        modalImportantCheckbox.dataset.modelId = props.id;
+                    } else {
+                        modalImportantContainer.style.setProperty('display', 'none', 'important');
+                    }
                 }
 
-                // Başlık
                 modalTitle.innerHTML = `<span>${props.title || 'Detaylar'}</span>`;
 
-                // 2. Düzenle ve Sil Butonları
                 if (canModify && props.editUrl && props.editUrl !== '#') {
                     modalEditButton.href = props.editUrl;
                     modalEditButton.style.display = 'inline-block';
@@ -660,8 +712,6 @@
 
                 // === DİNAMİK İÇERİK OLUŞTURMA (HTML) ===
                 let html = '';
-
-                // Simge ve Başlık Seçimi
                 let icon = 'fa-info-circle';
                 let typeTitle = 'Etkinlik Detayları';
 
@@ -684,10 +734,8 @@
                     <i class="fas ${icon} me-2"></i>${typeTitle}
                 </h6>
                 <div class="table-responsive">
-                    <table class="table table-borderless table-sm m-0 align-middle">
-                        <tbody>`;
+                    <table class="table table-borderless table-sm m-0 align-middle"><tbody>`;
 
-                // Döngü ve Formatlama
                 const excludeKeys = ['Açıklama', 'Notlar', 'Açıklamalar', 'Dosya Yolu', 'Plan Detayları',
                     'Onay Durumu', 'Onaylayan'
                 ];
@@ -698,16 +746,11 @@
                         if (value === null || value === undefined || value === '' || value === '-') return;
 
                         let displayValue = '-';
-
-                        // Badge Objesi Geldiyse
                         if (value && typeof value === 'object' && value.is_badge) {
                             displayValue =
                                 `<span class="badge ${value.class} px-3 py-2 rounded-pill fw-normal">${value.text}</span>`;
-                        }
-                        // Normal Metin Geldiyse
-                        else if (value !== null && value !== undefined && value !== '') {
+                        } else if (value !== null) {
                             const strValue = String(value).trim();
-
                             if (statusMap[strValue]) {
                                 const mapItem = statusMap[strValue];
                                 displayValue =
@@ -719,26 +762,18 @@
                                     displayValue = `<div class="d-flex gap-2">
                                             <span class="badge bg-light text-dark border border-secondary fw-normal"><i class="fas fa-calendar-alt text-primary me-1"></i> ${match[1]}</span>
                                             <span class="badge bg-light text-dark border fw-normal"><i class="fas fa-clock text-warning me-1"></i> ${match[2]}</span>
-                                        </div>`;
+                                    </div>`;
                                 } else {
                                     displayValue = strValue;
                                 }
                             }
                         }
-
-                        html += `<tr>
-                        <td class="text-dark fw-bolder" style="width: 35%;">${key}:</td>
-                        <td class="text-dark">${displayValue}</td>
-                     </tr>`;
+                        html +=
+                            `<tr><td class="text-dark fw-bolder" style="width: 35%;">${key}:</td><td class="text-dark">${displayValue}</td></tr>`;
                     });
                 }
+                html += `</tbody></table></div></div>`;
 
-                html += `   </tbody>
-             </table>
-           </div>
-         </div>`;
-
-                // Özel Durumlar
                 if (props.eventType === 'production' && props.details['Plan Detayları']) {
                     html +=
                         '<div class="modal-info-card"><h6 class="text-primary fw-bold mb-2">Üretim Kalemleri</h6><table class="table table-sm table-striped"><thead><tr><th>Makine</th><th>Ürün</th><th>Adet</th></tr></thead><tbody>';
@@ -748,29 +783,19 @@
                     html += '</tbody></table></div>';
                 }
 
-                // Dosya Linki
                 if (props.details && props.details['Dosya Yolu']) {
-                    html += `<div class="text-center mt-3 mb-3">
-                    <a href="${props.details['Dosya Yolu']}" target="_blank" class="btn btn-outline-primary btn-sm">
-                        <i class="fas fa-paperclip me-2"></i> Dosyayı Görüntüle
-                    </a>
-                 </div>`;
+                    html +=
+                        `<div class="text-center mt-3 mb-3"><a href="${props.details['Dosya Yolu']}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="fas fa-paperclip me-2"></i> Dosyayı Görüntüle</a></div>`;
                 }
 
-                // Açıklama
                 const aciklama = props.details['Açıklamalar'] || props.details['Notlar'] || props.details[
                     'Açıklama'];
                 if (aciklama) {
-                    html += `<div class="modal-notes-box mt-3 p-3 bg-light rounded border">
-                    <div class="modal-notes-title fw-bold mb-2 text-primary">
-                        <i class="fas fa-sticky-note me-1"></i> Açıklama / Notlar
-                    </div>
-                    <p class="mb-0 text-secondary" style="white-space: pre-wrap;">${aciklama}</p>
-                 </div>`;
+                    html +=
+                        `<div class="modal-notes-box mt-3 p-3 bg-light rounded border"><div class="modal-notes-title fw-bold mb-2 text-primary"><i class="fas fa-sticky-note me-1"></i> Açıklama / Notlar</div><p class="mb-0 text-secondary" style="white-space: pre-wrap;">${aciklama}</p></div>`;
                 }
 
-                // === DİĞER BUTON MANTIKLARI (Export, Onay vb.) ===
-                // Not: Bu butonların görünürlüğü yetkiden bağımsız olabilir, ancak düzenleme butonları yukarıda 'canModify' ile korundu.
+                // Butonlar (Onay, Export vb.)
                 if (props.eventType === 'shipment') {
                     modalExportButton.href = props.exportUrl || '#';
                     modalExportButton.style.display = 'inline-block';
@@ -827,7 +852,7 @@
                     list: 'Liste'
                 },
                 slotEventOverlap: false,
-                dayMaxEvents: 3,
+                dayMaxEvents: 5,
                 height: 'auto',
                 eventTimeFormat: {
                     hour: '2-digit',
@@ -838,7 +863,7 @@
                 displayEventEnd: true,
                 eventDisplay: 'list-item',
                 eventSources: [{
-                    url: '{{ route('web.calendar.events') }}',
+                    url: calendarEventsUrl,
                     failure: () => alert('Veri hatası!')
                 }, {
                     googleCalendarId: 'tr.turkish#holiday@group.v.calendar.google.com',
@@ -846,15 +871,15 @@
                     className: 'fc-event-holiday',
                     googleCalendarApiKey: 'AIzaSyAQmEWGR-krGzcCk1r8R69ER-NyZM2BeWM'
                 }],
-
                 eventClick: function(info) {
                     info.jsEvent.preventDefault();
                     if (info.event.extendedProps && info.event.extendedProps.eventType)
                         openUniversalModal(info.event.extendedProps);
                 },
                 eventDidMount: function(info) {
-                    if (info.event.extendedProps && info.event.extendedProps.is_important) info.el
-                        .classList.add('event-important-pulse');
+                    if (info.event.extendedProps && info.event.extendedProps.is_important)
+                        info.el.classList.add('event-important-pulse');
+
                     try {
                         let title = info.event.title;
                         let desc = '';
@@ -888,7 +913,7 @@
                     } catch (error) {
                         console.warn('Tooltip hatası:', error);
                     }
-                },
+                }
             });
 
             calendar.render();
@@ -897,17 +922,57 @@
                 calendar.refetchEvents();
             }, 30000);
 
-            // === FİLTRELEME MANTIĞI (GÜNCELLENDİ) ===
+            // === YENİ EKLENEN KISIM: URL'DEN MODAL AÇMA ===
+            // Veriler tam yüklendiğinde (Ajax veya Google Calendar fark etmez) tetiklenir
+            function checkAndOpenModalFromUrl(events) {
+                if (urlModalId && urlModalType) {
+                    const idNum = parseInt(urlModalId, 10);
+                    const foundEvent = events.find(e => {
+                        // FullCalendar event objesi içinde extendedProps'a bakıyoruz
+                        const props = e.extendedProps || {};
+                        return props.id === idNum && props.model_type === urlModalType;
+                    });
+
+                    if (foundEvent) {
+                        console.log('URL Modalı Bulundu:', foundEvent);
+                        openUniversalModal(foundEvent.extendedProps);
+
+                        // Modalı bir daha açmamak için URL'i temizle
+                        const newUrl = window.location.pathname + window.location.search.replace(
+                            /[\?&]open_modal_id=[^&]+/, '').replace(/[\?&]open_modal_type=[^&]+/, '');
+                        window.history.replaceState({}, document.title, newUrl);
+                    }
+                }
+            }
+
+            // FullCalendar eventsSet hook'u yerine manuel bir listener ekleyebiliriz ama
+            // en garantisi, veri kaynağı yüklendiğinde (loading: false olduğunda) kontrol etmektir.
+            // Ancak FullCalendar v6'da bu biraz karmaşık olabilir. 
+            // Basit çözüm: İlk yüklemeden sonra (render'dan hemen sonra) mevcut eventlere bakmak,
+            // yetmezse 1-2 saniye sonra tekrar bakmak.
+
+            // 1. Yöntem: Hemen bak (Eğer veriler HTML içinde geldiyse çalışır, AJAX ise boş döner)
+            checkAndOpenModalFromUrl(calendar.getEvents());
+
+            // 2. Yöntem: Loading bittiğinde tetiklenecek bir listener eklemek daha sağlıklı.
+            // Ancak yukarıdaki konfigürasyonda 'loading' callback yok. 
+            // O yüzden basit bir timeout ile deneyelim (Ajax bitişini beklemek için).
+            setTimeout(() => {
+                checkAndOpenModalFromUrl(calendar.getEvents());
+            }, 1500); // 1.5 saniye bekle ve dene
+
+            // === SON ===
+
             function applyCalendarFilters() {
-                const isChecked = (id, defaultValue = true) => {
+                const isChecked = (id) => {
                     const el = document.getElementById(id);
-                    return el ? el.checked : defaultValue;
+                    return el ? el.checked : true;
                 };
-                const showLojistik = isChecked('filterLojistik', true);
-                const showUretim = isChecked('filterUretim', true);
-                const showHizmet = isChecked('filterHizmet', true);
-                const showBakim = isChecked('filterBakim', true);
-                const showImportant = isChecked('filterImportant', false);
+                const showLojistik = isChecked('filterLojistik');
+                const showUretim = isChecked('filterUretim');
+                const showHizmet = isChecked('filterHizmet');
+                const showBakim = isChecked('filterBakim');
+                const showImportant = isChecked('filterImportant');
 
                 let eventSource = calendar.getEventSources()[0];
                 if (eventSource) {
@@ -915,13 +980,22 @@
                 }
 
                 calendar.addEventSource({
-                    url: '{{ route('web.calendar.events') }}',
+                    url: calendarEventsUrl,
                     extraParams: {
                         lojistik: showLojistik ? 1 : 0,
                         uretim: showUretim ? 1 : 0,
                         hizmet: showHizmet ? 1 : 0,
-                        bakim: showBakim ? 1 : 0, // YENİ
+                        bakim: showBakim ? 1 : 0,
                         important_only: showImportant ? 1 : 0
+                    },
+                    // Ajax başarılı olduğunda da modal kontrolü yapalım
+                    success: function(rawEvents) {
+                        // FullCalendar rawEvents'i işlemeden önce buraya düşer,
+                        // ama biz işlenmiş eventlere (getEvents) ihtiyaç duyuyoruz.
+                        // O yüzden yine küçük bir timeout ile UI'ın oturmasını bekleyelim.
+                        setTimeout(() => {
+                            checkAndOpenModalFromUrl(calendar.getEvents());
+                        }, 500);
                     }
                 });
             }
@@ -929,7 +1003,6 @@
             const filters = document.querySelectorAll('.calendar-filters .form-check-input');
             filters.forEach(filter => filter.addEventListener('change', applyCalendarFilters));
 
-            // ... Diğer Listenerlar (Silme, Onay vs) ...
             const btnOnay = document.getElementById('modalOnayForm');
             if (btnOnay) btnOnay.addEventListener('submit', e => {
                 if (!confirm('Onaylıyor musunuz?')) e.preventDefault();
@@ -938,27 +1011,42 @@
             if (btnSil) btnSil.addEventListener('submit', e => {
                 if (!confirm('Silinsin mi?')) e.preventDefault();
             });
+
             const chkImportant = document.getElementById('modalImportantCheckbox');
             if (chkImportant) {
                 chkImportant.addEventListener('change', function() {
                     const isChecked = this.checked;
                     this.disabled = true;
-                    fetch('{{ route('calendar.toggleImportant') }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': getCsrfToken(),
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            model_id: this.dataset.modelId,
-                            model_type: this.dataset.modelType,
-                            is_important: isChecked
+                    fetch(toggleImportantUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': getCsrfToken(),
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                model_id: this.dataset.modelId,
+                                model_type: this.dataset.modelType,
+                                is_important: isChecked
+                            })
                         })
-                    }).then(res => res.json()).then(data => calendar.refetchEvents()).catch(err => {
-                        alert('Hata');
-                        this.checked = !isChecked;
-                    }).finally(() => this.disabled = false);
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success === false) {
+                                alert('HATA: ' + (data.message || 'Yetkiniz yok.'));
+                                this.checked = !isChecked;
+                            } else {
+                                calendar.refetchEvents();
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            alert('Bir bağlantı hatası oluştu.');
+                            this.checked = !isChecked;
+                        })
+                        .finally(() => {
+                            this.disabled = false;
+                        });
                 });
             }
         });

@@ -12,6 +12,7 @@ use App\Models\Department;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use App\Traits\Loggable;
+use Illuminate\Support\Str;
 
 /**
  * App\Models\User
@@ -204,6 +205,51 @@ class User extends Authenticatable
     public function isManager(): bool
     {
         return $this->role === 'yönetici';
+    }
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class);
+    }
+    public function departments()
+    {
+        return $this->belongsToMany(Department::class, 'department_user');
+    }
+    public function hasDepartment($departmentName)
+    {
+        // 1. Admin ise her yeri görsün
+        if ($this->role === 'admin') {
+            return true;
+        }
+
+        // 2. Önce İSİM (name) ile kontrol et (Mevcut kodun bozulmasın diye)
+        if ($this->departments->contains('name', $departmentName)) {
+            return true;
+        }
+
+        // 3. Bulamazsa bir de SLUG ile kontrol et (Burası hayat kurtarır)
+        // Örnek: Kodda 'Bakım' gönderdin ama veritabanında slug 'bakim' ise bunu yakalarız.
+        // Türkçe karakterleri ve boşlukları temizleyip slug'a çeviriyoruz.
+        $slug = Str::slug($departmentName);
+
+        return $this->departments->contains('slug', $slug);
+    }
+    // YARDIMCI FONKSİYON: Kullanıcının belirli bir rolü var mı?
+    public function hasRole($roleSlug)
+    {
+        return $this->roles->contains('slug', $roleSlug) || $this->role === $roleSlug;
+    }
+
+    // YARDIMCI FONKSİYON: Kullanıcı belirli bir departmanda mı?
+    public function inDepartment($deptSlug)
+    {
+        return $this->departments->contains('slug', $deptSlug);
+    }
+    /**
+     * Kullanıcı Yönetici veya Müdür mü? (Onay yetkisi var mı?)
+     */
+    public function isManagerOrDirector(): bool
+    {
+        return in_array($this->role, ['yönetici', 'müdür']);
     }
 
 }

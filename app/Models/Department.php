@@ -44,8 +44,8 @@ class Department extends Model
     /**
      * Bu birime ait kullanıcıları getirir.
      */
-    public function users(): HasMany
+    public function users()
     {
-        return $this->hasMany(User::class);
+        return $this->belongsToMany(User::class);
     }
 }

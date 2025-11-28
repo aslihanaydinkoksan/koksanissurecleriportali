@@ -265,32 +265,123 @@
                                             required>
                                     </div>
 
-                                    {{-- YENİ EKLENEN STATUS ALANI (HATA ÇÖZÜMÜ BURADA) --}}
                                     <div class="mb-3">
                                         <label for="status" class="form-label">
                                             <i class="fas fa-tasks me-1 text-primary opacity-75"></i> Plan Durumu
                                             <span class="text-danger">*</span>
                                         </label>
+
+                                        {{-- Durum ve Yetki Kontrolleri --}}
+                                        @php
+                                            $hasWorkRecord =
+                                                $plan->previous_duration_minutes > 0 || $plan->isTimerActive();
+
+                                            // Eğer plan onaya sunulmuşsa (pending_approval), geri dönüş kilitlenir.
+                                            $isLocked = $plan->status == 'pending_approval';
+
+                                            // Ancak Yönetici (approve yetkisi olan) planı reddedip geri alabilir, ona kilit yok.
+                                            if (Auth::user()->can('approve', $plan)) {
+                                                $isLocked = false;
+                                            }
+                                        @endphp
+
                                         <select class="form-select" id="status" name="status" required>
+
+                                            {{-- AÇIK --}}
                                             <option value="open"
-                                                {{ old('status', $plan->status) == 'open' ? 'selected' : '' }}>
-                                                ⬜ Açık / Bekliyor
+                                                {{ old('status', $plan->status) == 'open' ? 'selected' : '' }}
+                                                {{ $isLocked ? 'disabled' : '' }}>
+                                                @if ($isLocked)
+                                                    🔒 Açık (Onay Sürecinde)
+                                                @else
+                                                    ⬜ Açık / Bekliyor
+                                                @endif
                                             </option>
+
+                                            {{-- İŞLEMDE --}}
                                             <option value="in_progress"
-                                                {{ old('status', $plan->status) == 'in_progress' ? 'selected' : '' }}>
-                                                🟦 İşlemde (Sürüyor)
+                                                {{ old('status', $plan->status) == 'in_progress' ? 'selected' : '' }}
+                                                {{ $isLocked ? 'disabled' : '' }}>
+                                                @if ($isLocked)
+                                                    🔒 İşlemde (Onay Sürecinde)
+                                                @else
+                                                    🟦 İşlemde (Sürüyor)
+                                                @endif
                                             </option>
-                                            <option value="completed"
-                                                {{ old('status', $plan->status) == 'completed' ? 'selected' : '' }}>
-                                                ✅ Tamamlandı
+
+                                            {{-- ONAY BEKLİYOR --}}
+                                            <option value="pending_approval"
+                                                {{ old('status', $plan->status) == 'pending_approval' ? 'selected' : '' }}
+                                                {{ !$hasWorkRecord ? 'disabled' : '' }}>
+                                                @if (!$hasWorkRecord)
+                                                    ⏳ Onay Bekliyor (Önce süre kaydedin)
+                                                @else
+                                                    ⏳ Onay Bekliyor
+                                                @endif
                                             </option>
+
+                                            {{-- TAMAMLANDI (Sadece Yetkiliye) --}}
+                                            @can('approve', $plan)
+                                                <option value="completed"
+                                                    {{ old('status', $plan->status) == 'completed' ? 'selected' : '' }}
+                                                    {{ !$hasWorkRecord ? 'disabled' : '' }}>
+                                                    ✅ Tamamlandı {{ !$hasWorkRecord ? '(Süre Yok)' : '' }}
+                                                </option>
+                                            @else
+                                                @if ($plan->status == 'completed')
+                                                    <option value="completed" selected disabled>✅ Tamamlandı (Değiştirilemez)
+                                                    </option>
+                                                @endif
+                                            @endcan
+
+                                            {{-- İPTAL --}}
                                             <option value="cancelled"
                                                 {{ old('status', $plan->status) == 'cancelled' ? 'selected' : '' }}>
                                                 ❌ İptal Edildi
                                             </option>
                                         </select>
+
+                                        {{-- DİNAMİK BİLGİLENDİRME MESAJLARI --}}
+                                        <div class="mt-2">
+                                            @if (!$hasWorkRecord)
+                                                {{-- DURUM 1: Süre Yoksa --}}
+                                                <div class="alert alert-danger d-flex align-items-center p-2 mb-0"
+                                                    role="alert" style="font-size: 0.85rem;">
+                                                    <i class="fas fa-exclamation-circle me-2 fs-5"></i>
+                                                    <div>
+                                                        <strong>İşlem Kısıtlı:</strong> Planı tamamlamak veya onaya
+                                                        göndermek için önce detay sayfasından
+                                                        <span class="text-decoration-underline fw-bold">"Çalışmayı
+                                                            Başlat"</span> demelisiniz.
+                                                    </div>
+                                                </div>
+                                            @elseif ($isLocked)
+                                                {{-- DURUM 2: Plan Onayda ve Kullanıcı Yetkisizse --}}
+                                                <div class="alert alert-warning d-flex align-items-center p-2 mb-0"
+                                                    role="alert" style="font-size: 0.85rem;">
+                                                    <i class="fas fa-lock me-2 fs-5"></i>
+                                                    <div>
+                                                        <strong>Plan Kilitli:</strong> Bu plan şu an yönetici onayındadır.
+                                                        Geri almak için yöneticinizin reddetmesi gerekir.
+                                                    </div>
+                                                </div>
+                                            @elseif (Auth::user()->cannot('approve', $plan))
+                                                {{-- DURUM 3: Standart Kullanıcı (İşlem Yapabilir Durumda) --}}
+                                                <div class="form-text text-info">
+                                                    <i class="fas fa-info-circle me-1"></i>
+                                                    İşi bitirdiğinizde <strong>"⏳ Onay Bekliyor"</strong> seçeneğini
+                                                    işaretleyip kaydedin. Yöneticiniz onayladığında plan tamamlanacaktır.
+                                                </div>
+                                            @else
+                                                {{-- DURUM 4: Yönetici --}}
+                                                <div class="form-text text-success">
+                                                    <i class="fas fa-check-double me-1"></i>
+                                                    Yetkilisiniz. İşi doğrudan <strong>"✅ Tamamlandı"</strong> durumuna
+                                                    alabilirsiniz.
+                                                </div>
+                                            @endif
+                                        </div>
                                     </div>
-                                    {{-- STATUS ALANI SONU --}}
 
                                 </div>
                             </div>

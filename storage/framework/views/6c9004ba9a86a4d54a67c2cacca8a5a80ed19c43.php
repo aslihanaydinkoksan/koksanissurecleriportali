@@ -2,342 +2,251 @@
 
 <?php $__env->startSection('title', $pageTitle); ?>
 
-<style>
-    /* Modern Gradient Background */
-    #app>main.py-4 {
-        padding: 2.5rem 0 !important;
-        min-height: calc(100vh - 72px);
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        position: relative;
-        overflow: hidden;
-    }
-
-    #app>main.py-4::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background:
-            radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-        pointer-events: none;
-    }
-
-    .container-fluid {
-        position: relative;
-        z-index: 1;
-    }
-
-    /* Modern Card Styling */
-    .modern-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
-    }
-
-    .modern-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
-    }
-
-    /* Page Header */
-    .page-header {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border-radius: 20px;
-        padding: 2rem;
-        margin-bottom: 2rem;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    }
-
-    .page-title {
-        font-size: 2rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin: 0;
-    }
-
-    /* Admin Filter Panel */
-    .admin-filter-panel {
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-        backdrop-filter: blur(20px);
-        border-radius: 20px;
-        padding: 2rem;
-        margin-bottom: 2rem;
-        border: 2px solid rgba(102, 126, 234, 0.2);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    }
-
-    .filter-section-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #667eea;
-        margin-bottom: 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .filter-section-title i {
-        font-size: 1.75rem;
-    }
-
-    /* Modern Form Controls */
-    .modern-input,
-    .modern-select {
-        border: 2px solid rgba(102, 126, 234, 0.2);
-        border-radius: 12px;
-        padding: 0.75rem 1rem;
-        font-weight: 500;
-        transition: all 0.3s ease;
-        background: white;
-    }
-
-    .modern-input:focus,
-    .modern-select:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-        outline: none;
-    }
-
-    .modern-label {
-        font-weight: 600;
-        color: #2d3748;
-        margin-bottom: 0.5rem;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    /* Modern Buttons */
-    .btn-modern {
-        border-radius: 12px;
-        padding: 0.75rem 1.5rem;
-        font-weight: 600;
-        border: none;
-        transition: all 0.3s ease;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        font-size: 0.875rem;
-    }
-
-    .btn-modern-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-    }
-
-    .btn-modern-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-        color: white;
-    }
-
-    .btn-modern-secondary {
-        background: white;
-        color: #667eea;
-        border: 2px solid #667eea;
-    }
-
-    .btn-modern-secondary:hover {
-        background: #667eea;
-        color: white;
-        transform: translateY(-2px);
-    }
-
-    /* Filter Cards */
-    .filter-card {
-        background: white;
-        border-radius: 16px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        transition: all 0.3s ease;
-    }
-
-    .filter-card:hover {
-        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Department Badge */
-    .dept-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 0.875rem;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    }
-
-    /* Chart Container */
-    .chart-container {
-        background: white;
-        border-radius: 16px;
-        padding: 1.5rem;
-        height: 100%;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    }
-
-    .chart-header {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #2d3748;
-        margin-bottom: 1rem;
-        padding-bottom: 1rem;
-        border-bottom: 2px solid #f7fafc;
-    }
-
-    /* Quick Stats Cards */
-    .stat-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 16px;
-        padding: 1.5rem;
-        color: white;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        transition: all 0.3s ease;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
-    }
-
-    .stat-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin: 0.5rem 0;
-    }
-
-    .stat-label {
-        font-size: 0.875rem;
-        opacity: 0.9;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-    /* Section Divider */
-    .section-divider {
-        margin: 3rem 0;
-        border: none;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.3), transparent);
-    }
-
-    /* Loading State */
-    .loading-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(5px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.3s ease;
-    }
-
-    .loading-overlay.active {
-        opacity: 1;
-        pointer-events: all;
-    }
-
-    .loading-spinner {
-        width: 50px;
-        height: 50px;
-        border: 4px solid rgba(102, 126, 234, 0.2);
-        border-top-color: #667eea;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        to {
-            transform: rotate(360deg);
+<?php $__env->startPush('styles'); ?>
+    <style>
+        /* === 1. SAYFA ARKA PLANI === */
+        #app>main.py-4 {
+            padding: 2rem 0 !important;
+            min-height: calc(100vh - 72px);
+            background: linear-gradient(135deg, #4c1d95 0%, #3b82f6 100%);
+            /* Biraz daha koyu/derin bir arka plan */
+            position: relative;
+            background-attachment: fixed;
+            /* Scroll yaparken arka plan sabit kalsın */
+            overflow-x: hidden;
         }
-    }
 
-    /* Alert Styling */
-    .modern-alert {
-        border-radius: 16px;
-        border: none;
-        padding: 1.5rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
+        /* Arka plan desenleri */
+        #app>main.py-4::before {
+            content: '';
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 50%;
+            height: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
 
-    .modern-alert-info {
-        background: linear-gradient(135deg, rgba(52, 211, 153, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
-        border-left: 4px solid #10b981;
-    }
+        #app>main.py-4::after {
+            content: '';
+            position: absolute;
+            bottom: -10%;
+            right: -10%;
+            width: 50%;
+            height: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
 
-    /* Responsive Design */
-    @media (max-width: 768px) {
+        /* === 2. ANA DASHBOARD KAPSAYICISI (BOXED LAYOUT) === */
+        /* İşte yayılmayı engelleyen ve "Kart" yapısını kuran kısım burası */
+        .dashboard-wrapper {
+            max-width: 1400px;
+            /* İçerik en fazla bu kadar geniş olsun */
+            width: 95%;
+            /* Mobilde kenarlardan boşluk kalsın */
+            margin: 0 auto;
+            /* Ortala */
+
+            background: rgba(255, 255, 255, 0.1);
+            /* Hafif beyaz şeffaflık */
+            backdrop-filter: blur(20px);
+            /* Buzlu cam efekti */
+            -webkit-backdrop-filter: blur(20px);
+
+            border-radius: 24px;
+            /* Köşeleri yuvarla */
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            /* İnce beyaz çerçeve */
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            /* Derin gölge */
+
+            padding: 2rem;
+            /* İç boşluk */
+            position: relative;
+            z-index: 10;
+        }
+
+        /* === 3. İÇ KARTLAR (MEVCUT TASARIMIN) === */
+        /* Ana kartın içindeki alt kartların arka planını biraz daha belirgin yapıyoruz */
+        .modern-card {
+            background: rgba(255, 255, 255, 0.85);
+            /* Daha opak beyaz */
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: 1.5rem;
+        }
+
+        .modern-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Page Header - Artık Wrapper içinde olduğu için gölgeyi azalttık */
+        .page-header {
+            background: transparent;
+            /* Wrapper zaten arka planlı */
+            padding: 0 0 1.5rem 0;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0;
+            box-shadow: none;
+        }
+
         .page-title {
-            font-size: 1.5rem;
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: #ffffff;
+            /* Koyu arka plan üzerinde beyaz yazı */
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background: none;
+            -webkit-text-fill-color: initial;
+            margin: 0;
         }
 
+        /* Admin Filter Panel - İçerideki stil */
         .admin-filter-panel {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
             padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
 
-        .stat-value {
-            font-size: 2rem;
+        .filter-section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #4c1d95;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-    }
 
-    /* TV Mode Adjustments */
-    <?php if(isset($isTvUser) && $isTvUser): ?>
-        body {
-            cursor: auto !important;
+        /* Form Elemanları */
+        .modern-input,
+        .modern-select {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 0.7rem 1rem;
+            font-size: 0.95rem;
         }
 
-        a {
-            pointer-events: auto !important;
-            cursor: pointer !important;
+        .modern-input:focus,
+        .modern-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
         }
-    <?php endif; ?>
-</style>
+
+        .modern-label {
+            color: #4a5568;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 1.5rem;
+            height: 100%;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .chart-header {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #edf2f7;
+        }
+
+        /* Badges */
+        .role-badge {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
+        }
+
+        .dept-badge {
+            background: #ffffff;
+            color: #4c1d95;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-weight: 700;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Loading */
+        .loading-overlay {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(8px);
+        }
+
+        .stat-card {
+            border-radius: 16px;
+            padding: 1.5rem;
+            color: white;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Butonlar */
+        .btn-modern-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .btn-modern-secondary:hover {
+            background: white;
+            color: #4c1d95;
+        }
+    </style>
+<?php $__env->stopPush(); ?>
 
 <?php $__env->startSection('content'); ?>
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-spinner"></div>
     </div>
 
-    <div class="container-fluid">
+    
+    <div class="dashboard-wrapper">
+
         
         <div class="page-header">
             <div class="row align-items-center">
-                <div class="col-md-6">
-                    <h1 class="page-title">
-                        <i class="fa-solid fa-chart-line me-2"></i>
-                        <?php echo e($pageTitle); ?>
+                <div class="col-md-7">
+                    <div class="d-flex align-items-center flex-wrap gap-2">
+                        <h1 class="page-title"><?php echo e($pageTitle); ?></h1>
+                        <?php if($viewLevel === 'full'): ?>
+                            <span class="role-badge"><i class="fa-solid fa-user-tie me-1"></i> Yönetici Görünümü</span>
+                        <?php else: ?>
+                            <span class="role-badge"><i class="fa-solid fa-user-gear me-1"></i> Personel Görünümü</span>
+                        <?php endif; ?>
+                    </div>
 
-                    </h1>
                     <?php if($departmentSlug !== 'genel'): ?>
-                        <div class="mt-2">
-                            <span class="dept-badge">
-                                <i class="fa-solid fa-building"></i>
-                                <?php echo e($departmentName ?? $pageTitle); ?>
-
-                            </span>
+                        <div class="mt-3">
+                            <span class="dept-badge"><i class="fa-solid fa-building me-1"></i>
+                                <?php echo e($departmentName ?? $pageTitle); ?></span>
                         </div>
                     <?php endif; ?>
                 </div>
-                <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                <div class="col-md-5 text-md-end mt-4 mt-md-0">
                     <a href="<?php echo e(route('home')); ?>" class="btn btn-modern btn-modern-secondary">
                         <i class="fa-solid fa-arrow-left me-2"></i> Takvime Dön
                     </a>
@@ -346,162 +255,72 @@
         </div>
 
         
-        
-        
-        <?php if(isset($isSuperUser) && $isSuperUser): ?>
+        <?php if($isManager || $isSuperUser || (isset($allowedDepartments) && $allowedDepartments->count() > 1)): ?>
             <div class="admin-filter-panel">
                 <div class="filter-section-title">
                     <div class="d-flex align-items-center gap-2">
-                        <i class="fa-solid fa-sliders" style="color: #667eea;"></i>
-                        <span>Yönetici Kontrol Paneli</span>
+                        <i class="fa-solid fa-sliders"></i>
+                        <span>Yönetim Filtreleri</span>
                     </div>
-                    <small class="ms-auto" style="font-size: 0.75rem; font-weight: normal; color: #718096;">
-                        <i class="fa-solid fa-bolt text-warning me-1"></i> Anlık Güncellenir
-                    </small>
                 </div>
-
                 <form method="GET" action="<?php echo e(route('statistics.index')); ?>" id="adminFilterForm">
                     <div class="row g-3 align-items-end">
-                        
                         <div class="col-md-3">
-                            <label class="modern-label">
-                                <i class="fa-solid fa-building me-2"></i> Departman
-                            </label>
+                            <label class="modern-label">Departman</label>
                             <select name="target_dept" id="deptSelect" class="form-select modern-select">
-                                <option value="genel" <?php echo e($departmentSlug == 'genel' ? 'selected' : ''); ?>>
-                                    📊 Genel Bakış
-                                </option>
-                                <?php $__currentLoopData = $allDepartments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dept): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                    <option value="<?php echo e($dept->slug); ?>"
-                                        <?php echo e($departmentSlug == $dept->slug ? 'selected' : ''); ?>>
-                                        <?php echo e($dept->name); ?>
-
+                                <?php if($isSuperUser): ?>
+                                    <option value="genel" <?php echo e($departmentSlug == 'genel' ? 'selected' : ''); ?>>📊 Genel Bakış
                                     </option>
+                                <?php endif; ?>
+                                <?php $__currentLoopData = $allowedDepartments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dept): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($dept->slug); ?>"
+                                        <?php echo e($departmentSlug == $dept->slug ? 'selected' : ''); ?>><?php echo e($dept->name); ?></option>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
-
-                        
                         <div class="col-md-3">
-                            <label class="modern-label">
-                                <i class="fa-solid fa-calendar-day me-2"></i> Başlangıç
-                            </label>
+                            <label class="modern-label">Başlangıç</label>
                             <input type="date" name="date_from" id="adminDateFrom" class="form-control modern-input"
                                 value="<?php echo e($filters['date_from']); ?>">
                         </div>
-
-                        
                         <div class="col-md-3">
-                            <label class="modern-label">
-                                <i class="fa-solid fa-calendar-check me-2"></i> Bitiş
-                            </label>
+                            <label class="modern-label">Bitiş</label>
                             <input type="date" name="date_to" id="adminDateTo" class="form-control modern-input"
                                 value="<?php echo e($filters['date_to']); ?>">
                         </div>
-
-                        
                         <div class="col-md-3">
-                            <a href="<?php echo e(route('statistics.index', ['target_dept' => 'genel'])); ?>"
-                                class="btn btn-modern btn-modern-secondary w-100 d-flex align-items-center justify-content-center gap-2">
-                                <i class="fa-solid fa-rotate-right"></i> Filtreleri Sıfırla
+                            <a href="<?php echo e(route('statistics.index')); ?>"
+                                class="btn btn-modern btn-modern-primary w-100 d-flex align-items-center justify-content-center gap-2">
+                                <i class="fa-solid fa-rotate-right"></i> Sıfırla
                             </a>
                         </div>
                     </div>
                 </form>
             </div>
-
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    const form = document.getElementById('adminFilterForm');
-                    const deptSelect = document.getElementById('deptSelect');
-                    const dateFrom = document.getElementById('adminDateFrom');
-                    const dateTo = document.getElementById('adminDateTo');
-                    const loadingOverlay = document.getElementById('loadingOverlay');
-
-                    function submitWithLoading() {
-                        loadingOverlay.classList.add('active');
-                        form.submit();
-                    }
-
-                    deptSelect?.addEventListener('change', submitWithLoading);
-
-                    dateFrom?.addEventListener('change', function() {
-                        if (dateTo.value) submitWithLoading();
-                    });
-
-                    dateTo?.addEventListener('change', function() {
-                        if (dateFrom.value) submitWithLoading();
-                    });
-                });
-            </script>
-        <?php endif; ?>
-
-
-        
-        
-        
-        <div id="stats-data-container" style="display: none;" data-chart-data='<?php echo json_encode($chartData ?? [], 15, 512) ?>'
-            data-department-slug="<?php echo e($departmentSlug ?? ''); ?>"
-            <?php if($departmentSlug === 'lojistik'): ?> data-shipments='<?php echo json_encode($shipmentsForFiltering ?? [], 15, 512) ?>'
-            <?php elseif($departmentSlug === 'uretim'): ?>
-                data-production-plans='<?php echo json_encode($productionPlansForFiltering ?? [], 15, 512) ?>'
-            <?php elseif($departmentSlug === 'hizmet'): ?>
-                data-events='<?php echo json_encode($eventsForFiltering ?? [], 15, 512) ?>'
-                data-assignments='<?php echo json_encode($assignmentsForFiltering ?? [], 15, 512) ?>'
-                data-vehicles='<?php echo json_encode($vehiclesForFiltering ?? [], 15, 512) ?>'
-                data-monthly-labels='<?php echo json_encode($monthlyLabels ?? [], 15, 512) ?>' 
-            <?php elseif($departmentSlug === 'bakim'): ?>
-                data-maintenance-plans='<?php echo json_encode($maintenancePlansForFiltering ?? [], 15, 512) ?>'
-                data-maintenance-types='<?php echo json_encode($maintenanceTypes ?? [], 15, 512) ?>'
-                data-assets='<?php echo json_encode($assets ?? [], 15, 512) ?>' <?php endif; ?>>
-        </div>
-
-
-        
-        
-        
-        
-        <?php if(!isset($isSuperUser) || !$isSuperUser): ?>
+        <?php else: ?>
+            
             <div class="modern-card mb-4">
                 <div class="card-body p-4">
                     <div class="filter-section-title mb-4 d-flex align-items-center justify-content-between">
-                        <div>
-                            <i class="fa-solid fa-filter"></i> Tarih Filtreleri
-                        </div>
-                        <small class="text-muted" style="font-size: 0.75rem; font-weight: normal;">
-                            <i class="fa-solid fa-bolt text-warning me-1"></i> Otomatik güncellenir
-                        </small>
+                        <div><i class="fa-solid fa-filter"></i> Tarih Aralığı Seçiniz</div>
                     </div>
-
-                    
                     <form method="GET" action="<?php echo e(route('statistics.index')); ?>" id="standardFilterForm">
-                        
-                        <?php if(request()->has('target_dept')): ?>
-                            <input type="hidden" name="target_dept" value="<?php echo e($departmentSlug); ?>">
-                        <?php endif; ?>
-
+                        <input type="hidden" name="target_dept" value="<?php echo e($departmentSlug); ?>">
                         <div class="row g-3 align-items-end">
-                            
                             <div class="col-md-4">
-                                <label class="modern-label">Başlangıç Tarihi</label>
-                                
+                                <label class="modern-label">Başlangıç</label>
                                 <input type="date" name="date_from" id="std_date_from" class="form-control modern-input"
                                     value="<?php echo e($filters['date_from'] ?? ''); ?>">
                             </div>
-
-                            
                             <div class="col-md-4">
-                                <label class="modern-label">Bitiş Tarihi</label>
-                                
+                                <label class="modern-label">Bitiş</label>
                                 <input type="date" name="date_to" id="std_date_to" class="form-control modern-input"
                                     value="<?php echo e($filters['date_to'] ?? ''); ?>">
                             </div>
-
-                            
                             <div class="col-md-4">
                                 <a href="<?php echo e(route('statistics.index')); ?>"
-                                    class="btn btn-modern btn-modern-secondary w-100 d-flex align-items-center justify-content-center">
-                                    <i class="fa-solid fa-rotate-right me-2"></i> Filtreleri Sıfırla
+                                    class="btn btn-modern btn-modern-primary w-100 d-flex align-items-center justify-content-center">
+                                    <i class="fa-solid fa-rotate-right me-2"></i> Sıfırla
                                 </a>
                             </div>
                         </div>
@@ -511,99 +330,94 @@
         <?php endif; ?>
 
         
-        
+        <div id="stats-data-container" style="display: none;" data-chart-data='<?php echo json_encode($chartData ?? [], 15, 512) ?>'
+            data-department-slug="<?php echo e($departmentSlug ?? ''); ?>"
+            <?php if($departmentSlug === 'lojistik'): ?> data-shipments='<?php echo json_encode($shipmentsForFiltering ?? [], 15, 512) ?>'
+
+            <?php elseif($departmentSlug === 'uretim'): ?> 
+                data-production-plans='<?php echo json_encode($productionPlansForFiltering ?? [], 15, 512) ?>'
+
+            <?php elseif($departmentSlug === 'hizmet'): ?> 
+                
+                data-events='<?php echo json_encode($eventsForFiltering ?? [], 15, 512) ?>'
+
+            <?php elseif($departmentSlug === 'ulastirma'): ?> 
+                
+                data-assignments='<?php echo json_encode($assignmentsForFiltering ?? [], 15, 512) ?>'
+                data-vehicles='<?php echo json_encode($vehiclesForFiltering ?? [], 15, 512) ?>'
+
+            <?php elseif($departmentSlug === 'bakim'): ?>
+                data-maintenance-plans='<?php echo json_encode($maintenancePlansForFiltering ?? [], 15, 512) ?>'
+                data-maintenance-types='<?php echo json_encode($maintenanceTypes ?? [], 15, 512) ?>'
+                data-assets='<?php echo json_encode($assets ?? [], 15, 512) ?>' <?php endif; ?>>
+        </div>
+
         
         <?php if($departmentSlug !== 'genel'): ?>
-            
             <div class="modern-card mb-4">
                 <div class="card-body p-4">
                     <?php if($departmentSlug === 'lojistik'): ?>
-                        <h6 class="modern-label mb-3">
-                            <i class="fa-solid fa-truck-fast me-2"></i> Lojistik Hızlı Filtreleri (Anlık)
-                        </h6>
+                        <h6 class="modern-label mb-3 text-primary"><i class="fa-solid fa-truck-fast me-2"></i> Lojistik
+                            Detay Filtrele</h6>
                         <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="modern-label">Sevkiyat Türü</label>
-                                <select id="shipmentTypeFilter" class="form-select modern-select">
+                            <div class="col-md-4"><label class="modern-label">Sevkiyat Türü</label><select
+                                    id="shipmentTypeFilter" class="form-select modern-select">
                                     <option value="all">Tümü</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="modern-label">Araç Tipi</label>
-                                <select id="vehicleTypeFilter" class="form-select modern-select">
+                                </select></div>
+                            <div class="col-md-4"><label class="modern-label">Araç Tipi</label><select
+                                    id="vehicleTypeFilter" class="form-select modern-select">
                                     <option value="all">Tümü</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="modern-label">Kargo İçeriği</label>
-                                <select id="cargoContentFilter" class="form-select modern-select">
+                                </select></div>
+                            <div class="col-md-4"><label class="modern-label">Kargo İçeriği</label><select
+                                    id="cargoContentFilter" class="form-select modern-select">
                                     <option value="all">Tümü</option>
-                                </select>
-                            </div>
+                                </select></div>
                         </div>
                     <?php elseif($departmentSlug === 'uretim'): ?>
-                        <h6 class="modern-label mb-3">
-                            <i class="fa-solid fa-gears me-2"></i> Üretim Hızlı Filtreleri (Anlık)
-                        </h6>
+                        <h6 class="modern-label mb-3 text-primary"><i class="fa-solid fa-gears me-2"></i> Üretim Detay
+                            Filtrele</h6>
                         <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="modern-label">Makine</label>
-                                <select id="machineFilter" class="form-select modern-select">
+                            <div class="col-md-6"><label class="modern-label">Makine</label><select id="machineFilter"
+                                    class="form-select modern-select">
                                     <option value="all">Tüm Makineler</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="modern-label">Ürün</label>
-                                <select id="productFilter" class="form-select modern-select">
+                                </select></div>
+                            <div class="col-md-6"><label class="modern-label">Ürün</label><select id="productFilter"
+                                    class="form-select modern-select">
                                     <option value="all">Tüm Ürünler</option>
-                                </select>
-                            </div>
+                                </select></div>
                         </div>
                     <?php elseif($departmentSlug === 'hizmet'): ?>
-                        <h6 class="modern-label mb-3">
-                            <i class="fa-solid fa-briefcase me-2"></i> İdari İşler Hızlı Filtreleri (Anlık)
-                        </h6>
+                        <h6 class="modern-label mb-3 text-primary"><i class="fa-solid fa-briefcase me-2"></i> İdari İşler
+                            Detay Filtrele</h6>
                         <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="modern-label">Etkinlik Tipi</label>
-                                <select id="eventTypeFilter" class="form-select modern-select">
+                            <div class="col-md-6"><label class="modern-label">Etkinlik Tipi</label><select
+                                    id="eventTypeFilter" class="form-select modern-select">
                                     <option value="all">Tümü</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="modern-label">Araç</label>
-                                <select id="vehicleFilter" class="form-select modern-select">
+                                </select></div>
+                            <div class="col-md-6"><label class="modern-label">Araç</label><select id="vehicleFilter"
+                                    class="form-select modern-select">
                                     <option value="all">Tümü</option>
-                                </select>
-                            </div>
+                                </select></div>
                         </div>
-                        
                     <?php elseif($departmentSlug === 'bakim'): ?>
-                        <h6 class="modern-label mb-3">
-                            <i class="fa-solid fa-screwdriver-wrench me-2"></i> Bakım Hızlı Filtreleri
-                        </h6>
+                        <h6 class="modern-label mb-3 text-primary"><i class="fa-solid fa-screwdriver-wrench me-2"></i>
+                            Bakım Detay Filtrele</h6>
                         <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="modern-label">Bakım Türü</label>
-                                <select id="maintenanceTypeFilter" class="form-select modern-select">
+                            <div class="col-md-4"><label class="modern-label">Bakım Türü</label><select
+                                    id="maintenanceTypeFilter" class="form-select modern-select">
                                     <option value="all">Tümü</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="modern-label">Makine / Varlık</label>
-                                <select id="assetFilter" class="form-select modern-select">
+                                </select></div>
+                            <div class="col-md-4"><label class="modern-label">Makine / Varlık</label><select
+                                    id="assetFilter" class="form-select modern-select">
                                     <option value="all">Tümü</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="modern-label">Durum</label>
-                                <select id="statusFilter" class="form-select modern-select">
+                                </select></div>
+                            <div class="col-md-4"><label class="modern-label">Durum</label><select id="statusFilter"
+                                    class="form-select modern-select">
                                     <option value="all">Tümü</option>
                                     <option value="pending">Bekleyenler</option>
                                     <option value="in_progress">Devam Edenler</option>
                                     <option value="completed">Tamamlananlar</option>
-                                </select>
-                            </div>
+                                </select></div>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -613,17 +427,6 @@
         
         <?php if($departmentSlug === 'genel'): ?>
             
-            <div class="modern-alert modern-alert-info mb-4">
-                <div class="d-flex align-items-center">
-                    <i class="fa-solid fa-circle-info me-3" style="font-size: 1.5rem;"></i>
-                    <div>
-                        <strong>Genel Bakış Modu</strong>
-                        <p class="mb-0 mt-1">Tüm departmanların özet istatistikleri görüntüleniyor. Detaylı analiz için
-                            yukarıdan departman seçin.</p>
-                    </div>
-                </div>
-            </div>
-
             <div class="row g-4">
                 <div class="col-lg-8">
                     <div class="chart-container">
@@ -632,7 +435,7 @@
                     </div>
                 </div>
                 <div class="col-lg-4">
-                    <div class="stat-card mb-3">
+                    <div class="stat-card mb-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                         <div class="stat-label">Toplam Aktivite</div>
                         <div class="stat-value">
                             <?php echo e(isset($chartData['departmentSummary']['data']) ? array_sum($chartData['departmentSummary']['data']) : 0); ?>
@@ -652,177 +455,202 @@
         <?php elseif($departmentSlug === 'lojistik'): ?>
             
             <div class="row g-4 mb-4">
-                <div class="col-lg-6">
+                <div class="col-md-6">
                     <div class="chart-container">
-                        <div class="chart-header" id="vehicle-chart-title">🚛 Araç Tipi Kullanımı</div>
+                        <div class="chart-header">🚛 Araç Tipi Dağılımı</div>
                         <div id="vehicle-type-chart" style="height: 350px;"></div>
                     </div>
                 </div>
-                <div class="col-lg-6">
+                <div class="col-md-6">
                     <div class="chart-container">
-                        <div class="chart-header" id="cargo-chart-title">📦 Kargo İçeriği Dağılımı</div>
+                        <div class="chart-header">📦 Kargo İçeriği</div>
                         <div id="cargo-content-chart" style="height: 350px;"></div>
                     </div>
                 </div>
             </div>
 
-            <hr class="section-divider">
-
-            <h4 class="mb-4" style="color: white; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                <i class="fa-solid fa-chart-column me-2"></i>
-                Detaylı İstatistikler (<?php echo e($filters['date_from']); ?> - <?php echo e($filters['date_to']); ?>)
-            </h4>
-
             <div class="row g-4 mb-4">
-                <div class="col-lg-8">
-                    <div class="chart-container">
-                        <div id="monthly-chart-lojistik" style="height: 350px;"></div>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="chart-container">
-                        <div id="pie-chart-lojistik" style="height: 350px;"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row g-4 mb-4">
-                <div class="col-lg-8">
+                <div class="col-lg-6">
                     <div class="chart-container">
                         <div id="hourly-chart-lojistik" style="height: 300px;"></div>
                     </div>
                 </div>
-                <div class="col-lg-4">
+                <div class="col-lg-6">
                     <div class="chart-container">
                         <div id="daily-chart-lojistik" style="height: 300px;"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="row g-4">
-                <div class="col-12">
-                    <div class="chart-container">
-                        <div id="yearly-chart-lojistik" style="height: 300px;"></div>
-                    </div>
+            <?php if(!empty($chartData['monthly']) || !empty($chartData['yearly'])): ?>
+                <hr class="section-divider">
+                <h4 class="mb-4 text-white"><i class="fa-solid fa-chart-pie me-2"></i>Yönetici Analizleri</h4>
+                <div class="row g-4 mb-4">
+                    <?php if(!empty($chartData['monthly'])): ?>
+                        <div class="col-lg-8">
+                            <div class="chart-container">
+                                <div id="monthly-chart-lojistik" style="height: 350px;"></div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                    <?php if(!empty($chartData['yearly'])): ?>
+                        <div class="col-lg-4">
+                            <div class="chart-container">
+                                <div id="yearly-chart-lojistik" style="height: 350px;"></div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 </div>
-            </div>
+            <?php endif; ?>
         <?php elseif($departmentSlug === 'uretim'): ?>
             
             <div class="row g-4 mb-4">
                 <div class="col-lg-6">
                     <div class="chart-container">
-                        <div class="chart-header" id="machine-chart-title">⚙️ Makine Kullanımı</div>
+                        <div class="chart-header">⚙️ Makine Kullanımı</div>
                         <div id="machine-chart-uretim" style="height: 350px;"></div>
                     </div>
                 </div>
                 <div class="col-lg-6">
                     <div class="chart-container">
-                        <div class="chart-header" id="product-chart-title">📊 Ürün Dağılımı</div>
+                        <div class="chart-header">📊 Ürün Dağılımı</div>
                         <div id="product-chart-uretim" style="height: 350px;"></div>
                     </div>
                 </div>
             </div>
-
-            <hr class="section-divider">
-
-            <h4 class="mb-4" style="color: white; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                <i class="fa-solid fa-chart-column me-2"></i>
-                Detaylı İstatistikler (<?php echo e($filters['date_from']); ?> - <?php echo e($filters['date_to']); ?>)
-            </h4>
-
             <div class="row g-4">
-                <div class="col-lg-6">
+                <div class="col-12">
                     <div class="chart-container">
                         <div id="weekly-prod-chart" style="height: 350px;"></div>
                     </div>
                 </div>
-                <div class="col-lg-6">
-                    <div class="chart-container">
-                        <div id="monthly-prod-chart" style="height: 350px;"></div>
+            </div>
+            <?php if(!empty($chartData['monthly_prod'])): ?>
+                <hr class="section-divider">
+                <h4 class="mb-4 text-white"><i class="fa-solid fa-chart-pie me-2"></i>Yönetici Analizleri</h4>
+                <div class="row g-4">
+                    <div class="col-12">
+                        <div class="chart-container">
+                            <div id="monthly-prod-chart" style="height: 350px;"></div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            <?php endif; ?>
         <?php elseif($departmentSlug === 'hizmet'): ?>
             
             <div class="row g-4">
                 <div class="col-lg-6">
                     <div class="chart-container">
-                        <div class="chart-header" id="event-pie-chart-title">📅 Etkinlik Dağılımı</div>
+                        <div class="chart-header">📅 Etkinlik Dağılımı</div>
                         <div id="event-type-pie-chart" style="height: 350px;"></div>
                     </div>
                 </div>
                 <div class="col-lg-6">
-                    <div class="chart-container">
-                        <div class="chart-header" id="assignment-chart-title">🚗 Aylık Araç Atama</div>
-                        <div id="monthly-assign-chart" style="height: 350px;"></div>
+                    <div class="modern-alert modern-alert-info h-100 d-flex align-items-center">
+                        <div>
+                            <strong>Bilgi</strong>
+                            <p class="mb-0">Araç görevleri ve analizleri için lütfen <b>Ulaştırma</b> departmanına
+                                geçiniz.</p>
+                        </div>
                     </div>
                 </div>
             </div>
+
             
-        <?php elseif($departmentSlug === 'bakim'): ?>
+        <?php elseif($departmentSlug === 'ulastirma'): ?>
+            
             <div class="row g-4 mb-4">
                 <div class="col-lg-6">
+                    <div class="chart-container">
+                        <div class="chart-header">📊 Görev Durumları</div>
+                        <div id="status-pie-chart" style="height: 350px;"></div>
+                    </div>
+                </div>
+                <?php if(!empty($chartData['top_vehicles'])): ?>
+                    <div class="col-lg-6">
+                        <div class="chart-container">
+                            <div class="chart-header">🚗 En Çok Kullanılan Araçlar</div>
+                            <div id="top-vehicles-chart" style="height: 350px;"></div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <?php if(!empty($chartData['monthly_trend'])): ?>
+                <div class="row g-4">
+                    <div class="col-12">
+                        <div class="chart-container">
+                            <div class="chart-header">📈 Aylık Görev Trendi</div>
+                            <div id="monthly-trend-chart" style="height: 350px;"></div>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+        <?php elseif($departmentSlug === 'bakim'): ?>
+            
+            <div class="row g-4 mb-4">
+                <div class="col-lg-12">
                     <div class="chart-container">
                         <div class="chart-header">📊 Bakım Türü Dağılımı</div>
                         <div id="maintenance-type-chart" style="height: 350px;"></div>
                     </div>
                 </div>
-                <div class="col-lg-6">
-                    <div class="chart-container">
-                        <div class="chart-header">⚠️ En Çok Arıza Yapan Makineler (Top 5)</div>
-                        <div id="top-assets-chart" style="height: 350px;"></div>
-                    </div>
-                </div>
             </div>
-
-            <hr class="section-divider">
-
-            <div class="row g-4">
-                <div class="col-12">
-                    <div class="chart-container">
-                        <div class="chart-header">📅 Aylık Bakım Planlama Yoğunluğu</div>
-                        <div id="monthly-maintenance-chart" style="height: 350px;"></div>
-                    </div>
+            <?php if(!empty($chartData['top_assets']) || !empty($chartData['monthly_maintenance'])): ?>
+                <hr class="section-divider">
+                <h4 class="mb-4 text-white"><i class="fa-solid fa-chart-pie me-2"></i>Yönetici Analizleri</h4>
+                <div class="row g-4 mb-4">
+                    <?php if(!empty($chartData['top_assets'])): ?>
+                        <div class="col-lg-6">
+                            <div class="chart-container">
+                                <div class="chart-header">⚠️ En Çok Arıza Yapanlar</div>
+                                <div id="top-assets-chart" style="height: 350px;"></div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                    <?php if(!empty($chartData['monthly_maintenance'])): ?>
+                        <div class="col-lg-6">
+                            <div class="chart-container">
+                                <div class="chart-header">📅 Aylık Bakım Yükü</div>
+                                <div id="monthly-maintenance-chart" style="height: 350px;"></div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 </div>
-            </div>
+            <?php endif; ?>
         <?php else: ?>
+            
             <div class="modern-alert modern-alert-info">
-                <div class="d-flex align-items-center">
-                    <i class="fa-solid fa-info-circle me-3" style="font-size: 1.5rem;"></i>
-                    <div>
-                        <strong>Veri Bulunamadı</strong>
+                <div class="d-flex align-items-center"><i class="fa-solid fa-info-circle me-3"
+                        style="font-size: 1.5rem;"></i>
+                    <div><strong>Veri Bulunamadı</strong>
                         <p class="mb-0 mt-1">Bu departman için henüz istatistik verisi bulunmamaktadır.</p>
                     </div>
                 </div>
             </div>
         <?php endif; ?>
 
-    </div>
+    </div> 
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('page_scripts'); ?>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // --- 1. OTOMATİK FİLTRELEME MANTIĞI (HEM ADMİN HEM STANDART) ---
+            // 1. Yükleme Ekranı ve Form Gönderimi
             const loadingOverlay = document.getElementById('loadingOverlay');
-
-            // Formları ve Inputları Tanımla
             const forms = [{
-                    id: 'adminFilterForm',
-                    from: 'adminDateFrom',
-                    to: 'adminDateTo',
-                    select: 'deptSelect'
-                },
-                {
-                    id: 'standardFilterForm',
-                    from: 'std_date_from',
-                    to: 'std_date_to',
-                    select: null // Standart kullanıcıda departman seçimi yok
-                }
-            ];
+                id: 'adminFilterForm',
+                from: 'adminDateFrom',
+                to: 'adminDateTo',
+                select: 'deptSelect'
+            }, {
+                id: 'standardFilterForm',
+                from: 'std_date_from',
+                to: 'std_date_to',
+                select: null
+            }];
 
-            // Fonksiyon: Yükleniyor ekranını aç ve formu gönder
             function submitForm(formId) {
                 const form = document.getElementById(formId);
                 if (form) {
@@ -831,57 +659,36 @@
                 }
             }
 
-            // Her bir form seti için dinleyicileri ekle
             forms.forEach(item => {
                 const formEl = document.getElementById(item.id);
                 if (formEl) {
                     const dateFromEl = document.getElementById(item.from);
                     const dateToEl = document.getElementById(item.to);
                     const selectEl = item.select ? document.getElementById(item.select) : null;
-
-                    // Departman değişirse (Varsa)
-                    if (selectEl) {
-                        selectEl.addEventListener('change', () => submitWithLoading(item.id));
-                    }
-
-                    // Başlangıç tarihi değişirse
-                    if (dateFromEl) {
-                        dateFromEl.addEventListener('change', function() {
-                            // Eğer bitiş tarihi de doluysa gönder, boşsa bekle
-                            if (dateToEl && dateToEl.value) {
-                                submitForm(item.id);
-                            }
-                        });
-                    }
-
-                    // Bitiş tarihi değişirse
-                    if (dateToEl) {
-                        dateToEl.addEventListener('change', function() {
-                            // Eğer başlangıç tarihi de doluysa gönder
-                            if (dateFromEl && dateFromEl.value) {
-                                submitForm(item.id);
-                            }
-                        });
-                    }
+                    if (selectEl) selectEl.addEventListener('change', () => submitForm(item.id));
+                    if (dateFromEl) dateFromEl.addEventListener('change', function() {
+                        if (dateToEl && dateToEl.value) submitForm(item.id);
+                    });
+                    if (dateToEl) dateToEl.addEventListener('change', function() {
+                        if (dateFromEl && dateFromEl.value) submitForm(item.id);
+                    });
                 }
             });
+
+            // 2. Grafik Ayarları ve Veri Okuma
             const colorPalette = ['#667EEA', '#764BA2', '#A78BFA', '#60D9A0', '#FDB4C8', '#FFB84D', '#9DECF9'];
             const statsContainer = document.getElementById('stats-data-container');
-
             if (!statsContainer) return;
 
-            let chartData = {};
-            let departmentSlug = '';
-
+            let chartData = {},
+                departmentSlug = '';
             try {
                 chartData = JSON.parse(statsContainer.dataset.chartData || '{}');
                 departmentSlug = statsContainer.dataset.departmentSlug || '';
-            } catch (error) {
-                console.error('Chart data parse error:', error);
+            } catch (e) {
                 return;
             }
 
-            // Common Chart Options
             const commonChartOptions = {
                 chart: {
                     height: 350,
@@ -890,7 +697,8 @@
                     },
                     zoom: {
                         enabled: false
-                    }
+                    },
+                    fontFamily: 'inherit'
                 },
                 colors: colorPalette,
                 legend: {
@@ -905,13 +713,12 @@
                     }
                 },
                 noData: {
-                    text: 'Gösterilecek veri bulunamadı.'
+                    text: 'Veri Yok'
                 },
                 dataLabels: {
                     enabled: false
                 }
             };
-
             const commonBarOptions = {
                 ...commonChartOptions,
                 chart: {
@@ -925,7 +732,6 @@
                     }
                 }
             };
-
             const commonAreaOptions = {
                 ...commonChartOptions,
                 chart: {
@@ -944,7 +750,6 @@
                     }
                 }
             };
-
             const commonPieOptions = {
                 ...commonChartOptions,
                 chart: {
@@ -957,607 +762,550 @@
                 }
             };
 
-            // === GENERAL OVERVIEW ===
-            if (departmentSlug === 'genel') {
-                if (chartData.departmentSummary) {
-                    new ApexCharts(document.querySelector("#department-summary-chart"), {
-                        chart: {
-                            type: 'bar',
-                            height: 350,
-                            toolbar: {
-                                show: false
-                            }
-                        },
-                        series: [{
-                            name: 'Aktivite Sayısı',
-                            data: chartData.departmentSummary.data || []
-                        }],
-                        xaxis: {
-                            categories: chartData.departmentSummary.labels || []
-                        },
-                        colors: colorPalette,
-                        plotOptions: {
-                            bar: {
-                                distributed: true,
-                                borderRadius: 8,
-                                columnWidth: '60%'
-                            }
-                        },
-                        dataLabels: {
-                            enabled: true,
-                            style: {
-                                fontSize: '14px',
-                                fontWeight: 'bold'
-                            }
-                        },
-                        title: {
-                            text: chartData.departmentSummary.title || 'Departman Özeti',
-                            align: 'left',
-                            style: {
-                                fontSize: '16px',
-                                fontWeight: 'bold',
-                                color: '#2d3748'
-                            }
-                        },
-                        legend: {
-                            show: false
-                        }
-                    }).render();
+            function safeRender(selector, options) {
+                if (document.querySelector(selector)) {
+                    new ApexCharts(document.querySelector(selector), options).render();
                 }
             }
 
-            // === LOGISTICS ===
-            else if (departmentSlug === 'lojistik') {
-                const allShipmentsData = JSON.parse(statsContainer.dataset.shipments || '[]');
-                const shipmentTypeDropdown = document.getElementById('shipmentTypeFilter');
-                const vehicleTypeDropdown = document.getElementById('vehicleTypeFilter');
-                const cargoContentDropdown = document.getElementById('cargoContentFilter');
+            // 3. Departman Bazlı Grafik Çizimi
 
-                let vehicleChart = new ApexCharts(document.querySelector("#vehicle-type-chart"), {
+            // --- GENEL ---
+            if (departmentSlug === 'genel') {
+                if (chartData.departmentSummary) safeRender("#department-summary-chart", {
                     ...commonBarOptions,
                     series: [{
-                        name: 'Kullanım Sayısı',
-                        data: []
+                        name: 'Aktivite',
+                        data: chartData.departmentSummary.data || []
                     }],
                     xaxis: {
-                        categories: []
+                        categories: chartData.departmentSummary.labels || []
                     },
                     title: {
                         ...commonBarOptions.title,
-                        text: 'Araç Tipi Kullanımı'
-                    }
-                });
-                vehicleChart.render();
-
-                let cargoChart = new ApexCharts(document.querySelector("#cargo-content-chart"), {
-                    ...commonBarOptions,
-                    series: [{
-                        name: 'Kargo Sayısı',
-                        data: []
-                    }],
-                    xaxis: {
-                        categories: []
+                        text: chartData.departmentSummary.title
                     },
-                    title: {
-                        ...commonBarOptions.title,
-                        text: 'Kargo İçeriği Dağılımı'
+                    plotOptions: {
+                        bar: {
+                            columnWidth: '60%',
+                            distributed: true,
+                            borderRadius: 8
+                        }
+                    },
+                    dataLabels: {
+                        enabled: true
                     }
                 });
-                cargoChart.render();
 
-                function populateLojistikFilters() {
-                    if (!allShipmentsData) return;
-                    const types = new Set(allShipmentsData.map(s => s.shipment_type));
-                    const vehicles = new Set(allShipmentsData.map(s => s.vehicle));
-                    const cargos = new Set(allShipmentsData.map(s => s.cargo));
-
-                    types.forEach(type => {
-                        if (type) shipmentTypeDropdown.innerHTML +=
-                            `<option value="${type}">${type === 'import' ? 'İthalat' : 'İhracat'}</option>`;
+                // --- LOJİSTİK ---
+            } else if (departmentSlug === 'lojistik') {
+                const allShipments = JSON.parse(statsContainer.dataset.shipments || '[]');
+                let vChart, cChart;
+                if (document.querySelector("#vehicle-type-chart")) {
+                    vChart = new ApexCharts(document.querySelector("#vehicle-type-chart"), {
+                        ...commonBarOptions,
+                        series: [{
+                            name: 'Kullanım',
+                            data: []
+                        }],
+                        xaxis: {
+                            categories: []
+                        }
                     });
-                    vehicles.forEach(vehicle => {
-                        if (vehicle) vehicleTypeDropdown.innerHTML +=
-                            `<option value="${vehicle}">${vehicle}</option>`;
+                    vChart.render();
+                }
+                if (document.querySelector("#cargo-content-chart")) {
+                    cChart = new ApexCharts(document.querySelector("#cargo-content-chart"), {
+                        ...commonBarOptions,
+                        series: [{
+                            name: 'Kargo',
+                            data: []
+                        }],
+                        xaxis: {
+                            categories: []
+                        }
                     });
-                    cargos.forEach(cargo => {
-                        if (cargo) cargoContentDropdown.innerHTML +=
-                            `<option value="${cargo}">${cargo}</option>`;
-                    });
+                    cChart.render();
                 }
 
-                function updateLojistikCharts() {
-                    const selectedType = shipmentTypeDropdown.value;
-                    const selectedVehicle = vehicleTypeDropdown.value;
-                    const selectedCargo = cargoContentDropdown.value;
-
-                    let filteredData = allShipmentsData;
-
-                    if (selectedType !== 'all') filteredData = filteredData.filter(s => s.shipment_type ===
-                        selectedType);
-                    if (selectedVehicle !== 'all') filteredData = filteredData.filter(s => s.vehicle ===
-                        selectedVehicle);
-                    if (selectedCargo !== 'all') filteredData = filteredData.filter(s => s.cargo === selectedCargo);
-
-                    const vehicleCounts = {},
-                        cargoCounts = {};
-                    filteredData.forEach(shipment => {
-                        if (shipment?.vehicle) vehicleCounts[shipment.vehicle] = (vehicleCounts[shipment
-                            .vehicle] || 0) + 1;
-                        if (shipment?.cargo) cargoCounts[shipment.cargo] = (cargoCounts[shipment.cargo] ||
-                            0) + 1;
-                    });
-
-                    const sortedVehicles = Object.entries(vehicleCounts).sort((a, b) => b[1] - a[1]);
-                    const sortedCargo = Object.entries(cargoCounts).sort((a, b) => b[1] - a[1]);
-
-                    vehicleChart.updateOptions({
-                        xaxis: {
-                            categories: sortedVehicles.map(([name]) => name)
-                        }
-                    }, false, false);
-                    vehicleChart.updateSeries([{
-                        data: sortedVehicles.map(([, count]) => count)
-                    }], true);
-
-                    cargoChart.updateOptions({
-                        xaxis: {
-                            categories: sortedCargo.map(([name]) => name)
-                        }
-                    }, false, false);
-                    cargoChart.updateSeries([{
-                        data: sortedCargo.map(([, count]) => count)
-                    }], true);
-                }
-
-                shipmentTypeDropdown?.addEventListener('change', updateLojistikCharts);
-                vehicleTypeDropdown?.addEventListener('change', updateLojistikCharts);
-                cargoContentDropdown?.addEventListener('change', updateLojistikCharts);
-
-                populateLojistikFilters();
-                updateLojistikCharts();
-
-                // General Charts
-                if (chartData.monthly) new ApexCharts(document.querySelector("#monthly-chart-lojistik"), {
+                if (chartData.monthly) safeRender("#monthly-chart-lojistik", {
                     ...commonAreaOptions,
                     series: [{
-                        name: 'Sevkiyat Sayısı',
-                        data: chartData.monthly.data || []
+                        name: 'Sevkiyat',
+                        data: chartData.monthly.data
                     }],
+                    xaxis: {
+                        categories: chartData.monthly.labels
+                    },
                     title: {
                         ...commonAreaOptions.title,
                         text: chartData.monthly.title
-                    },
-                    xaxis: {
-                        categories: chartData.monthly.labels || []
                     }
-                }).render();
-
-                if (chartData.pie) new ApexCharts(document.querySelector("#pie-chart-lojistik"), {
-                    ...commonPieOptions,
-                    series: chartData.pie.data || [],
-                    labels: chartData.pie.labels || [],
-                    title: {
-                        ...commonPieOptions.title,
-                        text: chartData.pie.title
-                    }
-                }).render();
-
-                if (chartData.hourly) new ApexCharts(document.querySelector("#hourly-chart-lojistik"), {
+                });
+                if (chartData.hourly) safeRender("#hourly-chart-lojistik", {
                     ...commonBarOptions,
-                    chart: {
-                        ...commonBarOptions.chart,
-                        height: 300
-                    },
                     series: [{
-                        name: 'Sevkiyat Sayısı',
-                        data: chartData.hourly.data || []
+                        name: 'Sevkiyat',
+                        data: chartData.hourly.data
                     }],
+                    xaxis: {
+                        categories: chartData.hourly.labels
+                    },
                     title: {
                         ...commonBarOptions.title,
                         text: chartData.hourly.title
                     },
-                    xaxis: {
-                        categories: chartData.hourly.labels || [],
-                        tickAmount: 12
-                    }
-                }).render();
-
-                if (chartData.daily) new ApexCharts(document.querySelector("#daily-chart-lojistik"), {
-                    ...commonBarOptions,
                     chart: {
                         ...commonBarOptions.chart,
                         height: 300
-                    },
+                    }
+                });
+                if (chartData.daily) safeRender("#daily-chart-lojistik", {
+                    ...commonBarOptions,
                     series: [{
-                        name: 'Sevkiyat Sayısı',
-                        data: chartData.daily.data || []
+                        name: 'Sevkiyat',
+                        data: chartData.daily.data
                     }],
+                    xaxis: {
+                        categories: chartData.daily.labels
+                    },
                     title: {
                         ...commonBarOptions.title,
                         text: chartData.daily.title
                     },
-                    xaxis: {
-                        categories: chartData.daily.labels || []
-                    }
-                }).render();
-
-                if (chartData.yearly) new ApexCharts(document.querySelector("#yearly-chart-lojistik"), {
-                    ...commonBarOptions,
                     chart: {
                         ...commonBarOptions.chart,
                         height: 300
-                    },
+                    }
+                });
+                if (chartData.yearly) safeRender("#yearly-chart-lojistik", {
+                    ...commonBarOptions,
                     series: [{
-                        name: 'Sevkiyat Sayısı',
-                        data: chartData.yearly.data || []
+                        name: 'Sevkiyat',
+                        data: chartData.yearly.data
                     }],
+                    xaxis: {
+                        categories: chartData.yearly.labels
+                    },
                     title: {
                         ...commonBarOptions.title,
                         text: chartData.yearly.title
                     },
-                    xaxis: {
-                        categories: chartData.yearly.labels || []
-                    },
                     plotOptions: {
                         bar: {
                             horizontal: true,
-                            distributed: true,
-                            borderRadius: 8
-                        }
-                    }
-                }).render();
-            }
-
-            // === PRODUCTION ===
-            else if (departmentSlug === 'uretim') {
-                const allPlansData = JSON.parse(statsContainer.dataset.productionPlans || '[]');
-                const machineDropdown = document.getElementById('machineFilter');
-                const productDropdown = document.getElementById('productFilter');
-
-                let machineChart = new ApexCharts(document.querySelector("#machine-chart-uretim"), {
-                    ...commonBarOptions,
-                    series: [{
-                        name: 'Kullanım Sayısı',
-                        data: []
-                    }],
-                    xaxis: {
-                        categories: []
-                    },
-                    title: {
-                        ...commonBarOptions.title,
-                        text: 'Makine Kullanım Sayısı'
-                    }
-                });
-                machineChart.render();
-
-                let productChart = new ApexCharts(document.querySelector("#product-chart-uretim"), {
-                    ...commonBarOptions,
-                    plotOptions: {
-                        bar: {
-                            horizontal: true,
-                            distributed: true,
-                            borderRadius: 8
+                            distributed: true
                         }
                     },
-                    series: [{
-                        name: 'Üretim Miktarı',
-                        data: []
-                    }],
-                    xaxis: {
-                        categories: []
-                    },
-                    title: {
-                        ...commonBarOptions.title,
-                        text: 'Ürün Miktar Dağılımı'
+                    chart: {
+                        ...commonBarOptions.chart,
+                        height: 350
                     }
                 });
-                productChart.render();
 
-                function populateProductionFilters() {
-                    if (!allPlansData) return;
-                    const machines = new Set(allPlansData.map(p => p.machine));
-                    const products = new Set(allPlansData.map(p => p.product));
+                const typeDd = document.getElementById('shipmentTypeFilter'),
+                    vehDd = document.getElementById('vehicleTypeFilter'),
+                    cargoDd = document.getElementById('cargoContentFilter');
 
-                    machines.forEach(machine => {
-                        if (machine && machine !== 'Bilinmiyor')
-                            machineDropdown.innerHTML += `<option value="${machine}">${machine}</option>`;
+                function popLojistik() {
+                    if (!allShipments) return;
+                    new Set(allShipments.map(s => s.shipment_type)).forEach(t => {
+                        if (t) typeDd.innerHTML +=
+                            `<option value="${t}">${t==='import'?'İthalat':'İhracat'}</option>`;
                     });
-                    products.forEach(product => {
-                        if (product && product !== 'Bilinmiyor')
-                            productDropdown.innerHTML += `<option value="${product}">${product}</option>`;
+                    new Set(allShipments.map(s => s.vehicle)).forEach(v => {
+                        if (v) vehDd.innerHTML += `<option value="${v}">${v}</option>`;
+                    });
+                    new Set(allShipments.map(s => s.cargo)).forEach(c => {
+                        if (c) cargoDd.innerHTML += `<option value="${c}">${c}</option>`;
                     });
                 }
 
-                function updateProductionCharts() {
-                    const selectedMachine = machineDropdown.value;
-                    const selectedProduct = productDropdown.value;
-
-                    let filteredData = allPlansData;
-
-                    if (selectedMachine !== 'all') filteredData = filteredData.filter(p => p.machine ===
-                        selectedMachine);
-                    if (selectedProduct !== 'all') filteredData = filteredData.filter(p => p.product ===
-                        selectedProduct);
-
-                    const machineCounts = {},
-                        productQuantities = {};
-
-                    filteredData.forEach(plan => {
-                        if (plan.machine !== 'Bilinmiyor') machineCounts[plan.machine] = (machineCounts[plan
-                            .machine] || 0) + 1;
-                        if (plan.product !== 'Bilinmiyor') productQuantities[plan.product] = (
-                            productQuantities[plan.product] || 0) + plan.quantity;
+                function updLojistik() {
+                    if (!vChart || !cChart) return;
+                    let d = allShipments,
+                        t = typeDd.value,
+                        v = vehDd.value,
+                        c = cargoDd.value;
+                    if (t !== 'all') d = d.filter(s => s.shipment_type === t);
+                    if (v !== 'all') d = d.filter(s => s.vehicle === v);
+                    if (c !== 'all') d = d.filter(s => s.cargo === c);
+                    let vc = {},
+                        cc = {};
+                    d.forEach(s => {
+                        if (s.vehicle) vc[s.vehicle] = (vc[s.vehicle] || 0) + 1;
+                        if (s.cargo) cc[s.cargo] = (cc[s.cargo] || 0) + 1;
                     });
-
-                    const sortedMachines = Object.entries(machineCounts).sort((a, b) => b[1] - a[1]);
-                    const sortedProducts = Object.entries(productQuantities).sort((a, b) => b[1] - a[1]).slice(0,
-                        15);
-
-                    machineChart.updateOptions({
+                    let sv = Object.entries(vc).sort((a, b) => b[1] - a[1]),
+                        sc = Object.entries(cc).sort((a, b) => b[1] - a[1]);
+                    vChart.updateOptions({
                         xaxis: {
-                            categories: sortedMachines.map(([name]) => name)
+                            categories: sv.map(x => x[0])
                         }
-                    }, false, false);
-                    machineChart.updateSeries([{
-                        data: sortedMachines.map(([, count]) => count)
-                    }], true);
-
-                    productChart.updateOptions({
+                    });
+                    vChart.updateSeries([{
+                        data: sv.map(x => x[1])
+                    }]);
+                    cChart.updateOptions({
                         xaxis: {
-                            categories: sortedProducts.map(([name]) => name)
+                            categories: sc.map(x => x[0])
                         }
-                    }, false, false);
-                    productChart.updateSeries([{
-                        data: sortedProducts.map(([, count]) => count)
-                    }], true);
+                    });
+                    cChart.updateSeries([{
+                        data: sc.map(x => x[1])
+                    }]);
+                }
+                if (typeDd) {
+                    typeDd.addEventListener('change', updLojistik);
+                    vehDd.addEventListener('change', updLojistik);
+                    cargoDd.addEventListener('change', updLojistik);
+                    popLojistik();
+                    updLojistik();
                 }
 
-                machineDropdown?.addEventListener('change', updateProductionCharts);
-                productDropdown?.addEventListener('change', updateProductionCharts);
-
-                populateProductionFilters();
-                updateProductionCharts();
-
-                if (chartData.weekly_prod) new ApexCharts(document.querySelector("#weekly-prod-chart"), {
+                // --- ÜRETİM ---
+            } else if (departmentSlug === 'uretim') {
+                const allPlans = JSON.parse(statsContainer.dataset.productionPlans || '[]');
+                let mChart, pChart;
+                if (document.querySelector("#machine-chart-uretim")) {
+                    mChart = new ApexCharts(document.querySelector("#machine-chart-uretim"), {
+                        ...commonBarOptions,
+                        series: [{
+                            name: 'Adet',
+                            data: []
+                        }],
+                        xaxis: {
+                            categories: []
+                        }
+                    });
+                    mChart.render();
+                }
+                if (document.querySelector("#product-chart-uretim")) {
+                    pChart = new ApexCharts(document.querySelector("#product-chart-uretim"), {
+                        ...commonBarOptions,
+                        plotOptions: {
+                            bar: {
+                                horizontal: true,
+                                distributed: true
+                            }
+                        },
+                        series: [{
+                            name: 'Adet',
+                            data: []
+                        }],
+                        xaxis: {
+                            categories: []
+                        }
+                    });
+                    pChart.render();
+                }
+                if (chartData.weekly_prod) safeRender("#weekly-prod-chart", {
                     ...commonAreaOptions,
                     series: [{
-                        name: 'Plan Sayısı',
-                        data: chartData.weekly_prod.data || []
+                        name: 'Plan',
+                        data: chartData.weekly_prod.data
                     }],
+                    xaxis: {
+                        categories: chartData.weekly_prod.labels
+                    },
                     title: {
                         ...commonAreaOptions.title,
                         text: chartData.weekly_prod.title
-                    },
-                    xaxis: {
-                        categories: chartData.weekly_prod.labels || [],
-                        tickAmount: 10,
-                        labels: {
-                            rotate: -45,
-                            style: {
-                                fontSize: '10px'
-                            }
-                        }
                     }
-                }).render();
-
-                if (chartData.monthly_prod) new ApexCharts(document.querySelector("#monthly-prod-chart"), {
+                });
+                if (chartData.monthly_prod) safeRender("#monthly-prod-chart", {
                     ...commonAreaOptions,
                     series: [{
-                        name: 'Plan Sayısı',
-                        data: chartData.monthly_prod.data || []
+                        name: 'Plan',
+                        data: chartData.monthly_prod.data
                     }],
+                    xaxis: {
+                        categories: chartData.monthly_prod.labels
+                    },
                     title: {
                         ...commonAreaOptions.title,
                         text: chartData.monthly_prod.title
-                    },
-                    xaxis: {
-                        categories: chartData.monthly_prod.labels || [],
-                        labels: {
-                            rotate: -45,
-                            style: {
-                                fontSize: '10px'
-                            }
-                        }
-                    }
-                }).render();
-            }
-
-            // === SERVICE ===
-            else if (departmentSlug === 'hizmet') {
-                const allEventsData = JSON.parse(statsContainer.dataset.events || '[]');
-                const allAssignmentsData = JSON.parse(statsContainer.dataset.assignments || '[]');
-                const allVehicles = JSON.parse(statsContainer.dataset.vehicles || '[]');
-                const monthlyLabels = JSON.parse(statsContainer.dataset.monthlyLabels || '[]');
-
-                const eventTypeDropdown = document.getElementById('eventTypeFilter');
-                const vehicleDropdown = document.getElementById('vehicleFilter');
-
-                let eventPieChart = new ApexCharts(document.querySelector("#event-type-pie-chart"), {
-                    ...commonPieOptions,
-                    series: [],
-                    labels: [],
-                    title: {
-                        ...commonPieOptions.title,
-                        text: 'Etkinlik Tipi Dağılımı'
                     }
                 });
-                eventPieChart.render();
+                const mDd = document.getElementById('machineFilter'),
+                    pDd = document.getElementById('productFilter');
 
-                let assignmentChart = new ApexCharts(document.querySelector("#monthly-assign-chart"), {
-                    ...commonAreaOptions,
-                    series: [{
-                        name: 'Atama Sayısı',
-                        data: []
-                    }],
-                    title: {
-                        ...commonAreaOptions.title,
-                        text: 'Aylık Araç Atama Sayısı'
-                    },
-                    xaxis: {
-                        categories: monthlyLabels
-                    }
-                });
-                assignmentChart.render();
-
-                function populateServiceFilters() {
-                    const eventTypes = new Map();
-                    allEventsData.forEach(e => {
-                        if (e.type_name) eventTypes.set(e.type_slug, e.type_name);
+                function popUretim() {
+                    new Set(allPlans.map(p => p.machine)).forEach(m => {
+                        if (m) mDd.innerHTML += `<option value="${m}">${m}</option>`
                     });
-
-                    eventTypes.forEach((name, slug) => {
-                        eventTypeDropdown.innerHTML += `<option value="${slug}">${name}</option>`;
-                    });
-
-                    allVehicles.forEach(vehicle => {
-                        vehicleDropdown.innerHTML +=
-                            `<option value="${vehicle.id}">${vehicle.plate_number}</option>`;
+                    new Set(allPlans.map(p => p.product)).forEach(p => {
+                        if (p) pDd.innerHTML += `<option value="${p}">${p}</option>`
                     });
                 }
 
-                function updateServiceCharts() {
-                    const selectedEventType = eventTypeDropdown.value;
-                    const selectedVehicleId = vehicleDropdown.value;
-
-                    let filteredEvents = allEventsData;
-                    if (selectedEventType !== 'all') {
-                        filteredEvents = filteredEvents.filter(e => e.type_slug === selectedEventType);
-                    }
-
-                    const eventCounts = {};
-                    filteredEvents.forEach(event => {
-                        eventCounts[event.type_name] = (eventCounts[event.type_name] || 0) + 1;
+                function updUretim() {
+                    if (!mChart || !pChart) return;
+                    let d = allPlans,
+                        m = mDd.value,
+                        p = pDd.value;
+                    if (m !== 'all') d = d.filter(x => x.machine === m);
+                    if (p !== 'all') d = d.filter(x => x.product === p);
+                    let mc = {},
+                        pc = {};
+                    d.forEach(x => {
+                        if (x.machine) mc[x.machine] = (mc[x.machine] || 0) + 1;
+                        if (x.product) pc[x.product] = (pc[x.product] || 0) + x.quantity;
                     });
-
-                    const sortedEventTypes = Object.entries(eventCounts).sort((a, b) => b[1] - a[1]);
-
-                    eventPieChart.updateOptions({
-                        labels: sortedEventTypes.map(([name]) => name),
-                        series: sortedEventTypes.map(([, count]) => count)
-                    });
-
-                    let filteredAssignments = allAssignmentsData;
-                    if (selectedVehicleId !== 'all') {
-                        filteredAssignments = filteredAssignments.filter(a => a.vehicle_id == selectedVehicleId);
-                    }
-
-                    const monthlyCounts = {};
-                    monthlyLabels.forEach(label => monthlyCounts[label] = 0);
-
-                    filteredAssignments.forEach(assignment => {
-                        const monthLabel = assignment.start_month_label;
-                        if (monthLabel in monthlyCounts) {
-                            monthlyCounts[monthLabel]++;
+                    let sm = Object.entries(mc).sort((a, b) => b[1] - a[1]),
+                        sp = Object.entries(pc).sort((a, b) => b[1] - a[1]).slice(0, 15);
+                    mChart.updateOptions({
+                        xaxis: {
+                            categories: sm.map(x => x[0])
                         }
                     });
-
-                    assignmentChart.updateSeries([{
-                        data: Object.values(monthlyCounts)
+                    mChart.updateSeries([{
+                        data: sm.map(x => x[1])
+                    }]);
+                    pChart.updateOptions({
+                        xaxis: {
+                            categories: sp.map(x => x[0])
+                        }
+                    });
+                    pChart.updateSeries([{
+                        data: sp.map(x => x[1])
                     }]);
                 }
+                if (mDd) {
+                    mDd.addEventListener('change', updUretim);
+                    pDd.addEventListener('change', updUretim);
+                    popUretim();
+                    updUretim();
+                }
 
-                eventTypeDropdown?.addEventListener('change', updateServiceCharts);
-                vehicleDropdown?.addEventListener('change', updateServiceCharts);
-
-                populateServiceFilters();
-                updateServiceCharts();
-            }
-            // === MAINTENANCE (BAKIM) ===
-            else if (departmentSlug === 'bakim') {
-                // Verileri HTML'den al
-                const allMaintenanceData = JSON.parse(statsContainer.dataset.maintenancePlans || '[]');
-                const allTypes = JSON.parse(statsContainer.dataset.maintenanceTypes || '[]');
-                const allAssets = JSON.parse(statsContainer.dataset.assets || '[]');
-                const chartData = JSON.parse(statsContainer.dataset.chartData || '{}');
-
-                // Dropdownlar
-                const typeDropdown = document.getElementById('maintenanceTypeFilter');
-                const assetDropdown = document.getElementById('assetFilter');
-                const statusDropdown = document.getElementById('statusFilter');
-
-                // 1. Filtreleri Doldur
-                allTypes.forEach(t => {
-                    typeDropdown.innerHTML += `<option value="${t.id}">${t.name}</option>`;
-                });
-                allAssets.forEach(a => {
-                    assetDropdown.innerHTML += `<option value="${a.id}">${a.name}</option>`;
-                });
-
-                // 2. Grafikleri Oluştur
-                let typeChart = new ApexCharts(document.querySelector("#maintenance-type-chart"), {
-                    ...commonPieOptions,
-                    series: chartData.type_dist.data || [],
-                    labels: chartData.type_dist.labels || [],
-                    colors: ['#ED8936', '#4299E1', '#48BB78', '#F56565', '#ECC94B'],
-                    title: {
-                        ...commonPieOptions.title,
-                        text: 'Bakım Türüne Göre Dağılım'
-                    }
-                });
-                typeChart.render();
-
-                let assetChart = new ApexCharts(document.querySelector("#top-assets-chart"), {
-                    ...commonBarOptions,
-                    series: [{
-                        name: 'Bakım Sayısı',
-                        data: chartData.top_assets.data || []
-                    }],
-                    xaxis: {
-                        categories: chartData.top_assets.labels || []
-                    },
-                    colors: ['#F56565'], // Kırmızı ton (Arıza vurgusu)
-                    title: {
-                        ...commonBarOptions.title,
-                        text: 'En Çok Bakım Gören 5 Makine'
-                    }
-                });
-                assetChart.render();
-
-                let monthlyChart = new ApexCharts(document.querySelector("#monthly-maintenance-chart"), {
-                    ...commonAreaOptions,
-                    series: [{
-                        name: 'Plan Sayısı',
-                        data: chartData.monthly_maintenance.data || []
-                    }],
-                    xaxis: {
-                        categories: chartData.monthly_maintenance.labels || []
-                    },
-                    colors: ['#ED8936'], // Turuncu
-                    title: {
-                        ...commonAreaOptions.title,
-                        text: 'Aylık Bakım Sayısı'
-                    }
-                });
-                monthlyChart.render();
-
-                // 3. Filtreleme Mantığı (Client-Side)
-                function updateMaintenanceCharts() {
-                    const selType = typeDropdown.value;
-                    const selAsset = assetDropdown.value;
-                    const selStatus = statusDropdown.value;
-
-                    let filtered = allMaintenanceData;
-
-                    if (selType !== 'all') filtered = filtered.filter(m => m.type_id == selType);
-                    if (selAsset !== 'all') filtered = filtered.filter(m => m.asset_id == selAsset);
-                    if (selStatus !== 'all') filtered = filtered.filter(m => m.status === selStatus);
-
-                    // Tür Grafiğini Güncelle (Filtrelenmiş veriye göre yeniden hesapla)
-                    const typeCounts = {};
-                    filtered.forEach(m => {
-                        const tName = allTypes.find(t => t.id == m.type_id)?.name || 'Bilinmiyor';
-                        typeCounts[tName] = (typeCounts[tName] || 0) + 1;
+                // --- HİZMET ---
+            } else if (departmentSlug === 'hizmet') {
+                const events = JSON.parse(statsContainer.dataset.events || '[]');
+                let eChart;
+                if (document.querySelector("#event-type-pie-chart")) {
+                    eChart = new ApexCharts(document.querySelector("#event-type-pie-chart"), {
+                        ...commonPieOptions,
+                        series: [],
+                        labels: []
                     });
-                    typeChart.updateOptions({
-                        labels: Object.keys(typeCounts),
-                        series: Object.values(typeCounts)
+                    eChart.render();
+                }
+                const eDd = document.getElementById('eventTypeFilter');
+
+                function popHizmet() {
+                    let types = new Map();
+                    events.forEach(e => {
+                        if (e.type_name) types.set(e.type_slug, e.type_name)
+                    });
+                    types.forEach((n, s) => eDd.innerHTML += `<option value="${s}">${n}</option>`);
+                }
+
+                function updHizmet() {
+                    let de = events,
+                        et = eDd.value;
+                    if (et !== 'all') de = de.filter(e => e.type_slug === et);
+                    let ec = {};
+                    de.forEach(e => {
+                        ec[e.type_name] = (ec[e.type_name] || 0) + 1
+                    });
+                    let se = Object.entries(ec).sort((a, b) => b[1] - a[1]);
+                    if (eChart) eChart.updateOptions({
+                        labels: se.map(x => x[0]),
+                        series: se.map(x => x[1])
+                    });
+                }
+                if (eDd) {
+                    eDd.addEventListener('change', updHizmet);
+                    popHizmet();
+                    updHizmet();
+                }
+
+                // --- ULAŞTIRMA (Burası Eksikti!) ---
+            } else if (departmentSlug === 'ulastirma') {
+                const allAssignments = JSON.parse(statsContainer.dataset.assignments || '[]');
+                const allVehicles = JSON.parse(statsContainer.dataset.vehicles || '[]');
+
+                let sChart, vChart;
+
+                // A. Durum Grafiği (Pie)
+                if (document.querySelector("#status-pie-chart")) {
+                    sChart = new ApexCharts(document.querySelector("#status-pie-chart"), {
+                        ...commonPieOptions,
+                        series: chartData.status_pie?.data || [],
+                        labels: chartData.status_pie?.labels || [],
+                        colors: ['#F6E05E', '#48BB78', '#3182CE', '#805AD5', '#E53E3E']
+                    });
+                    sChart.render();
+                }
+
+                // B. En Çok Kullanılan Araçlar (Bar)
+                if (document.querySelector("#top-vehicles-chart") && chartData.top_vehicles) {
+                    vChart = new ApexCharts(document.querySelector("#top-vehicles-chart"), {
+                        ...commonBarOptions,
+                        series: [{
+                            name: 'Görev Sayısı',
+                            data: chartData.top_vehicles.data
+                        }],
+                        xaxis: {
+                            categories: chartData.top_vehicles.labels
+                        },
+                        colors: ['#3182CE']
+                    });
+                    vChart.render();
+                }
+
+                // C. Aylık Trend (Area)
+                if (document.querySelector("#monthly-trend-chart") && chartData.monthly_trend) {
+                    safeRender("#monthly-trend-chart", {
+                        ...commonAreaOptions,
+                        series: [{
+                            name: 'Toplam Görev',
+                            data: chartData.monthly_trend.data
+                        }],
+                        xaxis: {
+                            categories: chartData.monthly_trend.labels
+                        },
+                        colors: ['#805AD5']
                     });
                 }
 
-                // Listener'ları Ekle
-                typeDropdown.addEventListener('change', updateMaintenanceCharts);
-                assetDropdown.addEventListener('change', updateMaintenanceCharts);
-                statusDropdown.addEventListener('change', updateMaintenanceCharts);
+                // Client-Side Filtreleme (Dropdownlar)
+                const vDd = document.getElementById('vehicleFilter');
+                const sDd = document.getElementById('statusFilter');
+
+                function popUlastirma() {
+                    if (allVehicles.length > 0) {
+                        allVehicles.forEach(v => {
+                            if (v.plate_number) vDd.innerHTML +=
+                                `<option value="${v.plate_number}">${v.plate_number}</option>`;
+                        });
+                    } else {
+                        let uniquePlates = [...new Set(allAssignments.map(a => a.vehicle_plate))];
+                        uniquePlates.sort().forEach(p => {
+                            if (p) vDd.innerHTML += `<option value="${p}">${p}</option>`;
+                        });
+                    }
+                }
+
+                function updUlastirma() {
+                    let d = allAssignments;
+                    const selV = vDd.value;
+                    const selS = sDd.value;
+
+                    if (selV !== 'all') d = d.filter(a => a.vehicle_plate === selV);
+                    if (selS !== 'all') d = d.filter(a => a.status === selS);
+
+                    if (sChart) {
+                        let statusCounts = {};
+                        d.forEach(a => {
+                            let sn = a.status;
+                            if (sn === 'pending') sn = 'Bekleyen';
+                            else if (sn === 'approved') sn = 'Onaylı';
+                            else if (sn === 'in_progress') sn = 'Sürüyor';
+                            else if (sn === 'completed') sn = 'Tamamlandı';
+                            else if (sn === 'cancelled') sn = 'İptal';
+                            statusCounts[sn] = (statusCounts[sn] || 0) + 1;
+                        });
+                        let sortedStatus = Object.entries(statusCounts).sort((a, b) => b[1] - a[1]);
+                        sChart.updateOptions({
+                            labels: sortedStatus.map(x => x[0]),
+                            series: sortedStatus.map(x => x[1])
+                        });
+                    }
+
+                    if (vChart) {
+                        let vc = {};
+                        d.forEach(a => {
+                            let p = a.vehicle_plate || 'Bilinmiyor';
+                            vc[p] = (vc[p] || 0) + 1;
+                        });
+                        let sortedVehicles = Object.entries(vc).sort((a, b) => b[1] - a[1]).slice(0, 5);
+                        vChart.updateOptions({
+                            xaxis: {
+                                categories: sortedVehicles.map(x => x[0])
+                            }
+                        });
+                        vChart.updateSeries([{
+                            data: sortedVehicles.map(x => x[1])
+                        }]);
+                    }
+                }
+
+                if (vDd) {
+                    vDd.addEventListener('change', updUlastirma);
+                    sDd.addEventListener('change', updUlastirma);
+                    popUlastirma();
+                    // İlk yüklemede filtreyi tetiklemiyoruz, zaten server verisiyle çizildi.
+                }
+
+                // --- BAKIM ---
+            } else if (departmentSlug === 'bakim') {
+                const maint = JSON.parse(statsContainer.dataset.maintenancePlans || '[]');
+                let tChart;
+                if (document.querySelector("#maintenance-type-chart")) {
+                    tChart = new ApexCharts(document.querySelector("#maintenance-type-chart"), {
+                        ...commonPieOptions,
+                        series: chartData.type_dist?.data || [],
+                        labels: chartData.type_dist?.labels || []
+                    });
+                    tChart.render();
+                }
+                if (chartData.top_assets) safeRender("#top-assets-chart", {
+                    ...commonBarOptions,
+                    series: [{
+                        name: 'Bakım',
+                        data: chartData.top_assets.data
+                    }],
+                    xaxis: {
+                        categories: chartData.top_assets.labels
+                    },
+                    colors: ['#F56565']
+                });
+                if (chartData.monthly_maintenance) safeRender("#monthly-maintenance-chart", {
+                    ...commonAreaOptions,
+                    series: [{
+                        name: 'Plan',
+                        data: chartData.monthly_maintenance.data
+                    }],
+                    xaxis: {
+                        categories: chartData.monthly_maintenance.labels
+                    },
+                    colors: ['#ED8936']
+                });
+                const tDd = document.getElementById('maintenanceTypeFilter'),
+                    aDd = document.getElementById('assetFilter'),
+                    sDd = document.getElementById('statusFilter');
+
+                function updBakim() {
+                    if (!tChart) return;
+                    let d = maint,
+                        t = tDd.value,
+                        a = aDd.value,
+                        s = sDd.value;
+                    if (t !== 'all') d = d.filter(x => x.type_id == t);
+                    if (a !== 'all') d = d.filter(x => x.asset_id == a);
+                    if (s !== 'all') d = d.filter(x => x.status === s);
+                    let tc = {};
+                    const types = JSON.parse(statsContainer.dataset.maintenanceTypes || '[]');
+                    d.forEach(x => {
+                        let tn = types.find(type => type.id == x.type_id)?.name || 'Bilinmiyor';
+                        tc[tn] = (tc[tn] || 0) + 1;
+                    });
+                    tChart.updateOptions({
+                        labels: Object.keys(tc),
+                        series: Object.values(tc)
+                    });
+                }
+                if (tDd) {
+                    const types = JSON.parse(statsContainer.dataset.maintenanceTypes || '[]');
+                    const assets = JSON.parse(statsContainer.dataset.assets || '[]');
+                    types.forEach(t => tDd.innerHTML += `<option value="${t.id}">${t.name}</option>`);
+                    assets.forEach(a => aDd.innerHTML += `<option value="${a.id}">${a.name}</option>`);
+                    tDd.addEventListener('change', updBakim);
+                    aDd.addEventListener('change', updBakim);
+                    sDd.addEventListener('change', updBakim);
+                    updBakim();
+                }
             }
         });
     </script>

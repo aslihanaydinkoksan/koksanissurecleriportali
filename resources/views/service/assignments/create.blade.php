@@ -103,7 +103,6 @@
             background: white;
             position: relative;
             display: block;
-            /* Label block olmalı */
         }
 
         .selection-card:hover {
@@ -160,32 +159,7 @@
             color: #6b7280;
         }
 
-        .info-box {
-            background: linear-gradient(135deg, rgba(219, 234, 254, 0.8), rgba(191, 219, 254, 0.8));
-            border: 2px solid rgba(59, 130, 246, 0.3);
-            border-radius: 1rem;
-            padding: 1rem 1.25rem;
-            margin: 1.5rem 0;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .info-box::before {
-            content: "💡";
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 1.75rem;
-        }
-
-        .info-box-content {
-            margin-left: 2.5rem;
-            color: #1e40af;
-            font-size: 0.9rem;
-            line-height: 1.6;
-        }
-
+        /* --- PULSE UYARI KUTUSU STİLLERİ --- */
         .warning-box {
             background: linear-gradient(135deg, #fff5e6 0%, #fff9f0 100%);
             border: 2px solid #ff9800;
@@ -194,6 +168,7 @@
             position: relative;
             overflow: hidden;
             box-shadow: 0 4px 12px rgba(255, 152, 0, 0.15);
+            margin-top: 1.5rem;
         }
 
         .warning-box::before {
@@ -208,13 +183,11 @@
         }
 
         @keyframes shimmer {
-
-            0%,
-            100% {
+            0% {
                 transform: translateX(-100%);
             }
 
-            50% {
+            100% {
                 transform: translateX(100%);
             }
         }
@@ -228,6 +201,8 @@
         .icon-wrapper {
             flex-shrink: 0;
             position: relative;
+            width: 30px;
+            height: 30px;
         }
 
         .warning-icon {
@@ -304,6 +279,8 @@
             border-top: 1px dashed #ffcc80;
         }
 
+        /* --- PULSE UYARI STİLLERİ BİTİŞ --- */
+
         .btn-animated-gradient {
             background: linear-gradient(-45deg, #667EEA, #F093FB, #4FD1C5, #FBD38D);
             background-size: 400% 400%;
@@ -347,7 +324,6 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-9">
-                {{-- ALPINE.JS BAŞLANGICI --}}
                 <div class="card create-assignment-card" x-data="{
                     needsVehicle: '{{ old('needs_vehicle', '') }}',
                     vehicleType: '{{ old('vehicle_type', '') }}',
@@ -404,7 +380,6 @@
                             </div>
                         @endif
 
-                        {{-- !!! KRİTİK DÜZELTME: FORM ETİKETİ ARTIK TÜM ADIMLARI KAPSIYOR !!! --}}
                         <form method="POST" action="{{ route('service.assignments.store') }}">
                             @csrf
 
@@ -431,16 +406,16 @@
                                         <div class="card-icon">👤</div>
                                         <div class="card-text">
                                             <h6>Hayır, Araç Gereksiz</h6>
-                                            <p>Ofis içi, telefon görüşmesi, toplantı vb. görevler</p>
+                                            <p>Şirket içi, telefon görüşmesi, toplantı vb. görevler</p>
                                         </div>
                                     </div>
                                 </label>
 
-                                <div x-show="needsVehicle === 'yes'" class="mt-4 fade-in-up">
+                                <div x-show="needsVehicle === 'yes'" class="mb-4 fade-in-up">
                                     <h6 class="mb-3">Hangi tür araç kullanılacak?</h6>
+
                                     <label class="selection-card">
-                                        <input type="radio" name="vehicle_type" value="company" x-model="vehicleType"
-                                            @click="currentStep = 2">
+                                        <input type="radio" name="vehicle_type" value="company" x-model="vehicleType">
                                         <div class="card-content">
                                             <div class="card-icon">🚙</div>
                                             <div class="card-text">
@@ -449,9 +424,9 @@
                                             </div>
                                         </div>
                                     </label>
+
                                     <label class="selection-card">
-                                        <input type="radio" name="vehicle_type" value="logistics" x-model="vehicleType"
-                                            @click="currentStep = 2">
+                                        <input type="radio" name="vehicle_type" value="logistics" x-model="vehicleType">
                                         <div class="card-content">
                                             <div class="card-icon">🚚</div>
                                             <div class="card-text">
@@ -460,6 +435,65 @@
                                             </div>
                                         </div>
                                     </label>
+
+                                    {{-- ========================================================= --}}
+                                    {{-- PULSE EFEKTLİ UYARI KUTUSU BURADA --}}
+                                    {{-- ========================================================= --}}
+                                    <div x-show="vehicleType === 'company'" class="warning-box fade-in-up">
+                                        <div class="warning-box-content">
+                                            <div class="icon-wrapper">
+                                                <div class="pulse-ring"></div>
+                                                <div class="pulse-ring"></div>
+                                                <div class="warning-icon">!</div>
+                                            </div>
+                                            <div class="text-content">
+                                                <strong>Önemli Bilgilendirme:</strong>
+                                                <p class="mb-2">
+                                                    Şirket araçları her gün <span class="time-badge">09:30</span> ve
+                                                    <span class="time-badge">13:30</span> saatlerinde şirketten hareket
+                                                    etmektedir.
+                                                </p>
+                                                <p class="info-text mb-0">
+                                                    Görev talebinizi, servis saatinden en az <strong>30 dakika önce</strong>
+                                                    oluşturmanız gerekmektedir.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {{-- ========================================================= --}}
+
+                                    {{-- YÖNETİCİ OLMAYANLAR İÇİN ATAMA BEKLEYECEK UYARISI --}}
+                                    @if (!in_array(auth()->user()->role, ['müdür', 'admin', 'yönetici']))
+                                        {{-- 1. DIŞ KAPSAYICI: Sadece gizleme/gösterme işini yapar --}}
+                                        <div x-show="vehicleType !== ''" x-transition.opacity x-cloak class="mt-3">
+
+                                            {{-- 2. İÇ KUTU: Tasarım (d-flex, alert vb.) burada durur --}}
+                                            <div class="alert alert-info border-info d-flex align-items-center mb-0">
+                                                <div class="h2 me-3 mb-0">🅿️</div>
+                                                <div>
+                                                    <h6 class="alert-heading fw-bold mb-1">Araç Ataması Onay Bekleyecek</h6>
+                                                    <p class="mb-0 small">
+                                                        Seçtiğiniz
+                                                        {{-- Metin mantığı: Şirket ise Şirket, değilse Nakliye --}}
+                                                        <strong
+                                                            x-text="vehicleType === 'company' ? 'Şirket Aracı' : 'Nakliye Aracı'"></strong>
+                                                        türü için talep oluşturuyorsunuz. Detayları girip kaydettikten sonra
+                                                        <strong>Araç Sorumlusu</strong> uygun aracı atayacaktır.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {{-- Boş vehicle_id gönderimi --}}
+                                        <input type="hidden" name="vehicle_id" value="">
+                                    @endif
+                                </div>
+
+                                <div class="text-end mt-3">
+                                    <button type="button" class="btn btn-primary" x-show="step1Complete"
+                                        @click="currentStep = 2">
+                                        Devam Et →
+                                    </button>
                                 </div>
                             </div>
 
@@ -470,9 +504,9 @@
 
                                 <h5 class="mb-3">2️⃣ Görevi kim yapacak?</h5>
 
-                                {{-- Tek Kişi Seçeneği --}}
                                 <label class="selection-card">
-                                    <input type="radio" name="responsible_type" value="user" x-model="responsibleType">
+                                    <input type="radio" name="responsible_type" value="user"
+                                        x-model="responsibleType">
                                     <div class="card-content">
                                         <div class="card-icon">👤</div>
                                         <div class="card-text">
@@ -482,25 +516,23 @@
                                     </div>
                                 </label>
 
-                                {{-- KİŞİ SEÇİM DROPDOWN --}}
                                 <div x-show="responsibleType === 'user'"
                                     class="mt-3 mb-4 ps-4 border-start border-3 border-primary">
                                     <label class="form-label fw-bold">Sorumlu Kişiyi Seçin *</label>
                                     <select name="responsible_user_id" class="form-select"
                                         :required="responsibleType === 'user'"
-                                        :disabled="responsibleType !== 'user'"> {{-- Disable mantığı ile veri karışmaz --}}
+                                        :disabled="responsibleType !== 'user'">
                                         <option value="">Kişi seçiniz...</option>
                                         @foreach ($users as $user)
                                             <option value="{{ $user->id }}">{{ $user->name }}</option>
                                         @endforeach
                                     </select>
                                     <div class="mt-2 text-end">
-                                        <button type="button" class="btn btn-primary btn-sm" @click="currentStep = 3">Devam
-                                            Et →</button>
+                                        <button type="button" class="btn btn-primary btn-sm"
+                                            @click="currentStep = 3">Devam Et →</button>
                                     </div>
                                 </div>
 
-                                {{-- Takım Seçeneği --}}
                                 <label class="selection-card mt-3">
                                     <input type="radio" name="responsible_type" value="team"
                                         x-model="responsibleType">
@@ -513,7 +545,6 @@
                                     </div>
                                 </label>
 
-                                {{-- TAKIM SEÇİM DROPDOWN --}}
                                 <div x-show="responsibleType === 'team'"
                                     class="mt-3 mb-4 ps-4 border-start border-3 border-primary">
                                     <label class="form-label fw-bold">Sorumlu Takımı Seçin *</label>
@@ -552,89 +583,98 @@
                                     <input type="text" name="title" class="form-control"
                                         placeholder="Görevin kısa adı" required value="{{ old('title') }}">
                                 </div>
-
-                                {{-- Araç Seçimi (Sadece Araç Gerekliyse Görünür) --}}
-                                <div x-show="needsVehicle === 'yes'" class="mb-4">
-                                    <label class="form-label fw-bold">
-                                        <span
-                                            x-text="vehicleType === 'company' ? '🚙 Şirket Aracı' : '🚚 Nakliye Aracı'"></span>
-                                        Seçin *
-                                    </label>
-
-                                    {{-- Şirket Araçları --}}
-                                    <div x-show="vehicleType === 'company'">
-                                        <select name="vehicle_id" class="form-select"
-                                            :required="needsVehicle === 'yes' && vehicleType === 'company'"
-                                            :disabled="vehicleType !== 'company'">
-                                            <option value="">Şirket aracı seçiniz...</option>
-                                            @foreach ($companyVehicles as $vehicle)
-                                                <option value="{{ $vehicle->id }}">{{ $vehicle->plate_number }} -
-                                                    {{ $vehicle->brand_model ?? $vehicle->model }}</option>
-                                            @endforeach
-                                        </select>
-                                        <div class="form-text text-muted">Sadece aktif şirket araçları listelenir.</div>
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">📅 Planlanan Başlangıç *</label>
+                                        <input type="datetime-local" name="start_time" class="form-control"
+                                            min="{{ now()->format('Y-m-d\TH:i') }}"
+                                            max="{{ now()->addMonth()->format('Y-m-d\TH:i') }}"
+                                            value="{{ old('start_time') }}" required>
+                                        <div class="form-text">En fazla 1 ay sonrasına kadar görev oluşturabilirsiniz.
+                                        </div>
                                     </div>
-
-                                    {{-- Nakliye Araçları --}}
-                                    <div x-show="vehicleType === 'logistics'">
-                                        <select name="vehicle_id" class="form-select"
-                                            :required="needsVehicle === 'yes' && vehicleType === 'logistics'"
-                                            :disabled="vehicleType !== 'logistics'">
-                                            <option value="">Nakliye aracı seçiniz...</option>
-                                            @foreach ($logisticsVehicles as $vehicle)
-                                                <option value="{{ $vehicle->id }}">{{ $vehicle->plate_number }} -
-                                                    {{ $vehicle->brand }} {{ $vehicle->model }}</option>
-                                            @endforeach
-                                        </select>
-                                        <div class="form-text text-muted">Lojistik filosu listelenir.</div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">🏁 Tahmini Bitiş *</label>
+                                        <input type="datetime-local" name="end_time" class="form-control"
+                                            min="{{ now()->format('Y-m-d\TH:i') }}"
+                                            max="{{ now()->addMonth()->endOfDay()->format('Y-m-d\TH:i') }}"
+                                            value="{{ old('end_time') }}" required>
                                     </div>
                                 </div>
 
-                                {{-- Nakliye Detayları (KM/Yakıt) --}}
-                                <div x-show="needsVehicle === 'yes' && vehicleType === 'logistics'"
-                                    class="row mb-4 p-3 bg-light rounded border mx-1">
-                                    <div class="col-12 mb-2">
-                                        <h6 class="text-primary"><i class="fas fa-tachometer-alt me-1"></i> Sefer
-                                            Başlangıç Bilgileri</h6>
+                                {{-- YÖNETİCİ İSE ARAÇ SEÇİMİ GÖRÜNÜR --}}
+                                @if (in_array(auth()->user()->role, ['müdür', 'admin', 'yönetici']))
+                                    <div x-show="needsVehicle === 'yes'" class="mb-4">
+                                        <label class="form-label fw-bold">
+                                            <span
+                                                x-text="vehicleType === 'company' ? '🚙 Şirket Aracı' : '🚚 Nakliye Aracı'"></span>
+                                            Seçin *
+                                        </label>
+
+                                        <div x-show="vehicleType === 'company'">
+                                            <select name="vehicle_id" class="form-select"
+                                                :required="needsVehicle === 'yes' && vehicleType === 'company'"
+                                                :disabled="vehicleType !== 'company'">
+                                                <option value="">Şirket aracı seçiniz...</option>
+                                                @foreach ($companyVehicles as $vehicle)
+                                                    <option value="{{ $vehicle->id }}">{{ $vehicle->plate_number }} -
+                                                        {{ $vehicle->brand_model }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <div x-show="vehicleType === 'logistics'">
+                                            <select name="vehicle_id" class="form-select"
+                                                :required="needsVehicle === 'yes' && vehicleType === 'logistics'"
+                                                :disabled="vehicleType !== 'logistics'">
+                                                <option value="">Nakliye aracı seçiniz...</option>
+                                                @foreach ($logisticsVehicles as $vehicle)
+                                                    <option value="{{ $vehicle->id }}">{{ $vehicle->plate_number }} -
+                                                        {{ $vehicle->brand }} {{ $vehicle->model }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
                                     </div>
 
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold">Başlangıç KM *</label>
-                                        <input type="number" step="0.1" name="start_km" class="form-control"
-                                            placeholder="Örn: 125000.5"
-                                            :required="needsVehicle === 'yes' && vehicleType === 'logistics'"
-                                            :disabled="vehicleType !== 'logistics'">
+                                    {{-- NAKLİYE BAŞLANGIÇ DETAYLARI (Sadece Yöneticiler Girebilir) --}}
+                                    <div x-show="needsVehicle === 'yes' && vehicleType === 'logistics'"
+                                        class="row mb-4 p-3 bg-light rounded border mx-1">
+                                        <div class="col-12 mb-2">
+                                            <h6 class="text-primary"><i class="fas fa-tachometer-alt me-1"></i> Sefer
+                                                Başlangıç Bilgileri</h6>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold">Başlangıç KM *</label>
+                                            <input type="number" step="0.1" name="start_km" class="form-control"
+                                                placeholder="Örn: 125000.5">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold">Yakıt Durumu *</label>
+                                            <select name="start_fuel_level" class="form-select">
+                                                <option value="">Seçiniz...</option>
+                                                <option value="full">Dolu (Full)</option>
+                                                <option value="3/4">3/4</option>
+                                                <option value="1/2">1/2</option>
+                                                <option value="1/4">1/4</option>
+                                                <option value="empty">Boş</option>
+                                            </select>
+                                        </div>
                                     </div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold">Yakıt Durumu *</label>
-                                        <select name="start_fuel_level" class="form-select"
-                                            :required="needsVehicle === 'yes' && vehicleType === 'logistics'"
-                                            :disabled="vehicleType !== 'logistics'">
-                                            <option value="">Seçiniz...</option>
-                                            <option value="full">Dolu (Full)</option>
-                                            <option value="3/4">3/4</option>
-                                            <option value="1/2">1/2</option>
-                                            <option value="1/4">1/4</option>
-                                            <option value="empty">Boş</option>
-                                        </select>
-                                    </div>
-                                </div>
+                                @endif
 
                                 <div class="mb-4">
                                     <label class="form-label fw-bold">📝 Görev Açıklaması *</label>
                                     <textarea name="task_description" class="form-control" rows="3" required>{{ old('task_description') }}</textarea>
                                 </div>
-                                {{-- Müşteri Seçimi --}}
+
                                 <div class="mb-4">
                                     <label class="form-label fw-bold">🏢 İlgili Müşteri (Opsiyonel)</label>
                                     <select name="customer_id" class="form-select" x-data
                                         @change="
-        // Opsiyonel: Müşteri seçilince Hedef Konum boşsa, müşteri adını oraya yaz
-        if($el.options[$el.selectedIndex].text !== 'Seçiniz...' && document.querySelector('[name=destination]').value === '') {
-            document.querySelector('[name=destination]').value = $el.options[$el.selectedIndex].text;
-        }
-    ">
+                                        if($el.options[$el.selectedIndex].text !== 'Seçiniz...' && document.querySelector('[name=destination]').value === '') {
+                                            document.querySelector('[name=destination]').value = $el.options[$el.selectedIndex].text;
+                                        }
+                                    ">
                                         <option value="">Seçiniz...</option>
                                         @foreach ($customers as $customer)
                                             <option value="{{ $customer->id }}"
@@ -643,41 +683,12 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                    <small class="text-muted">Bu görev belirli bir müşteriye yönelikse lütfen
-                                        seçiniz.</small>
                                 </div>
 
                                 <div class="mb-4">
                                     <label class="form-label fw-bold">📍 Hedef Konum</label>
                                     <input type="text" name="destination" class="form-control"
                                         value="{{ old('destination') }}">
-                                </div>
-
-                                {{-- Uyarılar --}}
-                                <div x-show="needsVehicle === 'yes' && vehicleType === 'company'" class="warning-box">
-                                    <div class="warning-box">
-                                        <div class="warning-box-content">
-                                            <div class="icon-wrapper">
-                                                <div class="pulse-ring"></div>
-                                                <div class="pulse-ring"></div>
-                                                <div class="warning-icon">!</div>
-                                            </div>
-                                            <div class="text-content">
-                                                <strong>Önemli Bilgilendirme:</strong>
-                                                <p>
-                                                    Şirket araçları her gün <span class="time-badge">09:30</span> ve <span
-                                                        class="time-badge">13:30</span> saatlerinde şirketten hareket
-                                                    etmektedir.
-                                                </p>
-                                                <p class="info-text">
-                                                    Görev talebinizi, servis saatinden en az <strong>30 dakika önce</strong>
-                                                    (<span class="time-badge">09:00</span> veya <span
-                                                        class="time-badge">13:00</span>'e kadar)
-                                                    oluşturmanız gerekmektedir.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
 
                                 <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
@@ -687,7 +698,6 @@
                                 </div>
                             </div>
                         </form>
-                        {{-- FORM BİTİŞİ --}}
                     </div>
                 </div>
             </div>
@@ -706,8 +716,6 @@
                     @csrf
                     <div class="modal-body">
                         <div id="newTeamErrors" class="alert alert-danger" style="display: none;"></div>
-                        <p class="text-muted mb-3">Takımınıza üye eklemek için görev oluşturduktan sonra Takım Yönetimi
-                            sayfasını kullanabilirsiniz.</p>
                         <div class="mb-3">
                             <label class="form-label fw-bold">Takımın İlk Üyesi/Yöneticisi *</label>
                             <select name="members[]" class="form-select" required>
@@ -766,13 +774,10 @@
                         errorContainer.innerHTML = data.message || 'Hata oluştu';
                         errorContainer.style.display = 'block';
                     } else {
-                        // Yeni takımı dropdown'a ekle
                         const newOption = new Option(`${data.team.name} (1 kişi)`, data.team.id, true,
                             true);
                         teamDropdown.appendChild(newOption);
-                        // Takım seçildiğinde input eventi tetikle (Alpine veya Form için)
                         teamDropdown.dispatchEvent(new Event('change'));
-
                         newTeamForm.reset();
                         newTeamModal.hide();
                         alert('Takım oluşturuldu ve seçildi!');

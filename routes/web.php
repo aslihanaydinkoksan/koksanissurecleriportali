@@ -23,31 +23,46 @@ use App\Http\Controllers\TeamController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\LogisticsVehicleController;
 use App\Http\Controllers\MaintenanceController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\Approvals\MaintenanceApprovalController;
 
 // Ana sayfa yönlendirmesi
 Route::get('/', function () {
+    // Kullanıcı giriş yapmış mı?
     if (Auth::check()) {
-        return redirect()->route('welcome');
+        // Evetse: TV kullanıcısı mı? -> TV Dashboard'a git : Değilse -> Home'a (veya Welcome'a) git
+        return Auth::user()->email === 'tv@koksan.com'
+            ? redirect()->route('tv.dashboard')
+            : view('welcome'); // Standart kullanıcı welcome ekranını (dashboard'unu) görür
     }
+
+    // Giriş yapmamışsa Login sayfasına yönlendir (veya welcome'da kalabilir, tercih senin)
     return redirect()->route('login');
 });
 
 // Kimlik doğrulama rotaları (kayıt kapalı)
 Auth::routes(['register' => false]);
+// HATA ÇÖZÜMÜ: Logout işlemini hem GET hem POST ile kabul et
+Route::match(['get', 'post'], '/logout', function () {
+    Auth::logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+    return redirect('/login');
+})->name('logout');
+
+// Rol yönetimi rotaları
+Route::resource('roles', RoleController::class);
 
 // Dashboard (Ana Panel) rotası
 Route::get('/home', [HomeController::class, 'index'])->name('home');
 Route::get('/welcome', [HomeController::class, 'welcome'])->name('welcome');
-Route::get('/statistics', [HomeController::class, 'showStatistics'])->name('statistics.index');
+Route::get('/statistics', [App\Http\Controllers\StatisticsController::class, 'index'])->name('statistics.index');
 Route::get('/important-items', [HomeController::class, 'showAllImportant'])->name('important.all');
 
+
 // --- KULLANICI YÖNETİMİ ROTALARI ---
-Route::middleware(['auth', 'role:admin,yönetici'])->prefix('users')->group(function () {
-    Route::get('/create', [UserController::class, 'create'])->name('users.create');
-    Route::post('/', [UserController::class, 'store'])->name('users.store');
-    Route::get('/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
-    Route::put('/{user}', [UserController::class, 'update'])->name('users.update');
-    Route::delete('/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+Route::middleware(['auth', 'role:admin,yönetici'])->group(function () {
+    Route::resource('users', UserController::class);
 });
 
 // --- SEVKİYAT YÖNETİMİ ROTALARI ---
@@ -121,6 +136,9 @@ Route::middleware(['auth'])->prefix('service')->name('service.')->group(function
     Route::get('/assignments/{assignment}/edit', [VehicleAssignmentController::class, 'edit'])->name('assignments.edit');
     Route::put('/assignments/{assignment}', [VehicleAssignmentController::class, 'update'])->name('assignments.update');
     Route::delete('/assignments/{assignment}', [VehicleAssignmentController::class, 'destroy'])->name('assignments.destroy');
+    Route::put('/assignments/{assignment}/assign', [VehicleAssignmentController::class, 'assignVehicle'])
+        ->name('assignments.assign')
+        ->middleware('auth');
 
     // Görev durumu güncelleme (AJAX)
     Route::patch('/assignments/{assignment}/status', [VehicleAssignmentController::class, 'updateStatus'])
@@ -231,3 +249,28 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'can:is-global-manager'])->group(function () {
     Route::get('/system/logs', [ActivityLogController::class, 'index'])->name('logs.index');
 });
+
+// --- ONAY SAYFALARI ---
+Route::middleware(['auth'])->prefix('approvals')->name('approvals.')->group(function () {
+
+    // Bakım Onay Sayfası -> route('approvals.maintenance')
+    Route::get('/maintenance', [MaintenanceApprovalController::class, 'index'])->name('maintenance');
+
+});
+
+Route::middleware(['auth'])->group(function () {
+    // Sadece giriş yapmış olmak yeterli, yetki kontrolünü Controller içinde yapıyoruz.
+    Route::post('/calendar/toggle-important', [App\Http\Controllers\HomeController::class, 'toggleImportant'])
+        ->name('calendar.toggleImportant');
+});
+
+// ---YONETİM ---
+Route::get('/tv-dashboard', [App\Http\Controllers\TvDashboardController::class, 'index'])->name('tv.dashboard');
+// routes/web.php dosyasında diğer tv rotasının yanına ekle:
+Route::get('/tv/check-updates', [App\Http\Controllers\TvDashboardController::class, 'checkUpdates'])->name('tv.check_updates');
+
+// Tek bir bildirimi okundu yapıp yönlendiren rota
+Route::get('/notifications/{id}/read', [HomeController::class, 'readNotification'])->name('notifications.read');
+
+// Tüm bildirimleri okundu yapan rota 
+Route::get('/notifications/read-all', [HomeController::class, 'readAllNotifications'])->name('notifications.readAll');

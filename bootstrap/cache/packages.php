@@ -6,17 +6,6 @@
       0 => 'Barryvdh\\LaravelIdeHelper\\IdeHelperServiceProvider',
     ),
   ),
-  'biscolab/laravel-recaptcha' => 
-  array (
-    'aliases' => 
-    array (
-      'ReCaptcha' => 'Biscolab\\ReCaptcha\\Facades\\ReCaptcha',
-    ),
-    'providers' => 
-    array (
-      0 => 'Biscolab\\ReCaptcha\\ReCaptchaServiceProvider',
-    ),
-  ),
   'intervention/image' => 
   array (
     'aliases' => 
