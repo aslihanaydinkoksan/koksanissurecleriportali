@@ -327,32 +327,27 @@ $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>"
-                                        type="checkbox" name="kvkk_approval" id="kvkk_approval"
-                                        <?php echo e(old('kvkk_approval') ? 'checked' : ''); ?> required>
+                                        type="checkbox" name="kvkk_approval" id="kvkk_approval" required>
 
                                     <label class="form-check-label small" for="kvkk_approval">
                                         
-                                        <a href="<?php echo e(route('kvkk.show')); ?>" target="_blank"
-                                            class="text-decoration-none fw-bold" style="color: #667eea;">
+                                        <a href="#" class="text-decoration-none fw-bold" style="color: #667eea;"
+                                            data-bs-toggle="modal" data-bs-target="#kvkkModal"> 
                                             KVKK Aydınlatma Metnini
                                         </a>
                                         okudum ve onaylıyorum.
                                     </label>
-
-                                    <?php $__errorArgs = ['kvkk_approval'];
+                                </div>
+                                <?php $__errorArgs = ['kvkk_approval'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?>
-                                        <div class="invalid-feedback">
-                                            <?php echo e($message); ?>
-
-                                        </div>
-                                    <?php unset($message);
+                                    <div class="text-danger small mt-1"><strong><?php echo e($message); ?></strong></div>
+                                <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>
-                                </div>
                             </div>
 
                             <!-- Giriş Butonu -->
@@ -364,20 +359,14 @@ unset($__errorArgs, $__bag); ?>
                             </div>
 
                             <!-- Şifremi Unuttum Linki -->
-                            <?php if(Route::has('password.request')): ?>
-                                <div class="text-center">
-                                    <a class="link-palette" href="<?php echo e(route('password.request')); ?>">
-                                        <i class="fa-solid fa-question-circle me-1"></i>
-                                        Şifreni mi unuttun?
-                                    </a>
-                                </div>
-                            <?php endif; ?>
+                            
                         </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    <?php echo $__env->make('auth.kvkk', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('page_scripts'); ?>
@@ -402,6 +391,25 @@ unset($__errorArgs, $__bag); ?>
                     eyeIcon.classList.add('fa-eye-slash');
                 }
             });
+        });
+    </script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Butonu ve Checkbox'ı bul
+            const acceptBtn = document.getElementById('btn-kvkk-accept');
+            const checkbox = document.getElementById('kvkk_approval');
+
+            if (acceptBtn && checkbox) {
+                // Butona tıklanınca çalış
+                acceptBtn.addEventListener('click', function() {
+                    // Checkbox'ı işaretle
+                    checkbox.checked = true;
+
+                    // (Opsiyonel) İşaretlendiğini hissettirmek için hafifçe parlatabiliriz
+                    checkbox.focus();
+                });
+            }
         });
     </script>
 <?php $__env->stopSection(); ?>

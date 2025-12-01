@@ -285,24 +285,20 @@
                             <div class="mb-3">
                                 <div class="form-check">
                                     <input class="form-check-input @error('kvkk_approval') is-invalid @enderror"
-                                        type="checkbox" name="kvkk_approval" id="kvkk_approval"
-                                        {{ old('kvkk_approval') ? 'checked' : '' }} required>
+                                        type="checkbox" name="kvkk_approval" id="kvkk_approval" required>
 
                                     <label class="form-check-label small" for="kvkk_approval">
-                                        {{-- target="_blank" ile yeni sekmede açılmasını sağlıyoruz --}}
-                                        <a href="{{ route('kvkk.show') }}" target="_blank"
-                                            class="text-decoration-none fw-bold" style="color: #667eea;">
+                                        {{-- TETİKLEYİCİ LİNK --}}
+                                        <a href="#" class="text-decoration-none fw-bold" style="color: #667eea;"
+                                            data-bs-toggle="modal" data-bs-target="#kvkkModal"> {{-- Hedef ID Burası --}}
                                             KVKK Aydınlatma Metnini
                                         </a>
                                         okudum ve onaylıyorum.
                                     </label>
-
-                                    @error('kvkk_approval')
-                                        <div class="invalid-feedback">
-                                            {{ $message }}
-                                        </div>
-                                    @enderror
                                 </div>
+                                @error('kvkk_approval')
+                                    <div class="text-danger small mt-1"><strong>{{ $message }}</strong></div>
+                                @enderror
                             </div>
 
                             <!-- Giriş Butonu -->
@@ -314,20 +310,21 @@
                             </div>
 
                             <!-- Şifremi Unuttum Linki -->
-                            @if (Route::has('password.request'))
+                            {{-- @if (Route::has('password.request'))
                                 <div class="text-center">
                                     <a class="link-palette" href="{{ route('password.request') }}">
                                         <i class="fa-solid fa-question-circle me-1"></i>
                                         Şifreni mi unuttun?
                                     </a>
                                 </div>
-                            @endif
+                            @endif --}}
                         </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    @include('auth.kvkk')
 @endsection
 
 @section('page_scripts')
@@ -352,6 +349,25 @@
                     eyeIcon.classList.add('fa-eye-slash');
                 }
             });
+        });
+    </script>
+    {{-- KVKK OTOMATİK ONAY SCRİPTİ --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Butonu ve Checkbox'ı bul
+            const acceptBtn = document.getElementById('btn-kvkk-accept');
+            const checkbox = document.getElementById('kvkk_approval');
+
+            if (acceptBtn && checkbox) {
+                // Butona tıklanınca çalış
+                acceptBtn.addEventListener('click', function() {
+                    // Checkbox'ı işaretle
+                    checkbox.checked = true;
+
+                    // (Opsiyonel) İşaretlendiğini hissettirmek için hafifçe parlatabiliriz
+                    checkbox.focus();
+                });
+            }
         });
     </script>
 @endsection

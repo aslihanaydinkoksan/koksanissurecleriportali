@@ -73,4 +73,9 @@ class Booking extends Model implements HasMedia
     {
         return $this->belongsTo(User::class);
     }
+    // Dosyalar İlişkisi
+    public function files()
+    {
+        return $this->morphMany(File::class, 'fileable');
+    }
 }

@@ -132,6 +132,7 @@ Route::middleware(['auth'])->prefix('service')->name('service.')->group(function
     Route::get('/assignments', [VehicleAssignmentController::class, 'index'])->name('assignments.index');
     Route::get('/assignments/create', [VehicleAssignmentController::class, 'create'])->name('assignments.create');
     Route::post('/assignments', [VehicleAssignmentController::class, 'store'])->name('assignments.store');
+    Route::get('/assignments/export', [VehicleAssignmentController::class, 'export'])->name('assignments.export');
     Route::get('/assignments/{assignment}', [VehicleAssignmentController::class, 'show'])->name('assignments.show');
     Route::get('/assignments/{assignment}/edit', [VehicleAssignmentController::class, 'edit'])->name('assignments.edit');
     Route::put('/assignments/{assignment}', [VehicleAssignmentController::class, 'update'])->name('assignments.update');
@@ -139,7 +140,6 @@ Route::middleware(['auth'])->prefix('service')->name('service.')->group(function
     Route::put('/assignments/{assignment}/assign', [VehicleAssignmentController::class, 'assignVehicle'])
         ->name('assignments.assign')
         ->middleware('auth');
-
     // Görev durumu güncelleme (AJAX)
     Route::patch('/assignments/{assignment}/status', [VehicleAssignmentController::class, 'updateStatus'])
         ->name('assignments.update-status');
@@ -280,3 +280,8 @@ Route::get('/notifications/check', [HomeController::class, 'checkNotifications']
 
 // KVKK Metni Görüntüleme Rotası (Login olmadan görülebilmeli)
 Route::view('/kvkk-aydinlatma-metni', 'auth.kvkk')->name('kvkk.show');
+
+// Dosya İşlemleri
+Route::post('/files/upload', [App\Http\Controllers\FileController::class, 'store'])->name('files.store');
+Route::delete('/files/{file}', [App\Http\Controllers\FileController::class, 'destroy'])->name('files.destroy');
+Route::get('/files/{file}/download', [App\Http\Controllers\FileController::class, 'download'])->name('files.download');

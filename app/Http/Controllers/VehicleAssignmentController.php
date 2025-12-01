@@ -31,17 +31,12 @@ class VehicleAssignmentController extends Controller
      */
     public function index(Request $request): View
     {
-        $query = VehicleAssignment::with([
-            'vehicle',
-            'createdBy',
-            'responsible' // Polymorphic ilişki
-        ]);
+        $query = VehicleAssignment::with(['vehicle', 'createdBy', 'responsible'])
+            ->where('assignment_type', 'vehicle');
 
-        // ESKİ KOD: $query->whereNotNull('vehicle_id');
-        // YENİ MANTIK: Araç ID'si dolu olanlar VEYA durumu 'waiting_assignment' olanlar listelensin.
         $query->where(function ($q) {
-            $q->whereNotNull('vehicle_id')
-                ->orWhere('status', 'waiting_assignment');
+            $q->whereNotNull('vehicle_id') // Aracı atanmışlar
+                ->orWhereIn('status', ['pending', 'waiting_assignment', 'in_progress', 'approved']); // Veya işlemdekiler
         });
 
         $query->whereIn('responsible_type', [
@@ -58,7 +53,6 @@ class VehicleAssignmentController extends Controller
                 $query->where('vehicle_type', $type)->where('vehicle_id', $id);
             }
         }
-
         if ($request->filled('assignment_type')) {
             $query->where('assignment_type', $request->input('assignment_type'));
         }
@@ -92,16 +86,12 @@ class VehicleAssignmentController extends Controller
             } catch (\Exception $e) {
             }
         }
-        // --- FİLTRELEME SONU ---
-
-        // Bekleyen atamaları en üste, diğerlerini tarihe göre sırala
-        $assignments = $query->orderByRaw("CASE WHEN status = 'waiting_assignment' THEN 0 ELSE 1 END")
+        $assignments = $query->orderByRaw("CASE WHEN status IN ('pending', 'waiting_assignment') THEN 0 ELSE 1 END")
             ->orderBy('start_time', 'desc')
             ->paginate(15);
 
         $filters = $request->only(['vehicle_id', 'assignment_type', 'status', 'search', 'date_from', 'date_to']);
 
-        // Filtreleme dropdownları için araç listesi
         $companyVehicles = Vehicle::active()->orderBy('plate_number')->get()->map(function ($vehicle) {
             $vehicle->filter_key = get_class($vehicle) . '|' . $vehicle->id;
             $vehicle->display_name = '🚙 ' . $vehicle->plate_number . ' - ' . $vehicle->brand_model;
@@ -123,10 +113,8 @@ class VehicleAssignmentController extends Controller
      */
     public function generalIndex(Request $request): View
     {
-        $query = VehicleAssignment::with(['createdBy', 'responsible']);
-        $query->whereNull('vehicle_id')
-            ->where('status', '<>', 'waiting_assignment'); // Araç bekleyenler buraya düşmesin
-
+        $query = VehicleAssignment::with(['createdBy', 'responsible'])
+            ->where('assignment_type', 'general');
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
         }
@@ -418,12 +406,7 @@ class VehicleAssignmentController extends Controller
     }
     public function show(VehicleAssignment $assignment): View
     {
-        // Gerekli ilişkileri yükleyelim
-        $assignment->load(['vehicle', 'createdBy', 'responsible']);
-
-        // Yetki kontrolü eklemek isteyebilirsiniz (Örn: sadece atanana veya admin'e göster)
-        // if (Gate::denies('view-assignment', $assignment)) { /* ... */ }
-
+        $assignment->load(['vehicle', 'createdBy', 'responsible', 'files.uploader']);
         return view('service.assignments.show', compact('assignment'));
     }
 
@@ -757,5 +740,80 @@ class VehicleAssignmentController extends Controller
                 ->where('data', 'like', '%"assignment_id":' . $assignment->id . '%')
                 ->delete();
         }
+    }
+
+    /**
+     * CSV OLARAK DIŞA AKTAR 
+     */
+    public function export()
+    {
+        $fileName = 'arac-gorevleri-' . date('d-m-Y') . '.csv';
+
+        // Verileri Çek
+        $assignments = VehicleAssignment::with(['vehicle', 'createdBy', 'responsibleUser'])->latest()->get();
+
+        $headers = [
+            "Content-type" => "text/csv; charset=utf-8",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ];
+
+        $callback = function () use ($assignments) {
+            $file = fopen('php://output', 'w');
+
+            // Türkçe karakter sorunu olmasın diye BOM (Byte Order Mark) ekliyoruz
+            fputs($file, "\xEF\xBB\xBF");
+
+            // 1. Satır: Başlıklar (Noktalı virgül kullanıyoruz ki Excel sütunları tanısın)
+            fputcsv($file, [
+                'ID',
+                'Görev Başlığı',
+                'Plaka',
+                'Sorumlu',
+                'Görevi Atayan',
+                'Başlangıç',
+                'Bitiş',
+                'Durum',
+                'Yakıt (TL)'
+            ], ';');
+
+            // 2. Satır ve sonrası: Veriler
+            foreach ($assignments as $task) {
+                // Sorumlu adını bul
+                $sorumlu = 'Bilinmiyor';
+                if ($task->responsible_type === 'App\Models\User' && $task->responsibleUser) {
+                    $sorumlu = $task->responsibleUser->name;
+                } elseif ($task->responsible_type === 'App\Models\Team') {
+                    $sorumlu = 'Takım ID: ' . $task->responsible_id;
+                }
+
+                // Durumu Türkçeleştir
+                $durum = match ($task->status) {
+                    'pending' => 'Bekliyor',
+                    'in_progress' => 'Devam Ediyor',
+                    'completed' => 'Tamamlandı',
+                    'cancelled' => 'İptal',
+                    default => $task->status,
+                };
+
+                fputcsv($file, [
+                    $task->id,
+                    $task->title,
+                    $task->vehicle ? $task->vehicle->plate_number : 'Araçsız',
+                    $sorumlu,
+                    $task->createdBy ? $task->createdBy->name : '-',
+                    \Carbon\Carbon::parse($task->start_time)->format('d.m.Y H:i'),
+                    \Carbon\Carbon::parse($task->end_time)->format('d.m.Y H:i'),
+                    $durum,
+                    $task->fuel_cost ?? '0'
+                ], ';');
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

@@ -48,4 +48,9 @@ class TestResult extends Model implements HasMedia
     {
         return $this->belongsTo(Customer::class);
     }
+    // Dosyalar İlişkisi
+    public function files()
+    {
+        return $this->morphMany(File::class, 'fileable');
+    }
 }

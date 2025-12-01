@@ -40,4 +40,9 @@ class CustomerMachine extends Model
     {
         return $this->belongsTo(Customer::class);
     }
+    // Dosyalar İlişkisi
+    public function files()
+    {
+        return $this->morphMany(File::class, 'fileable');
+    }
 }

@@ -394,6 +394,18 @@
             border-left: 4px solid #f6ad55;
         }
 
+        .modern-btn-export {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+
+        .modern-btn-export:hover {
+            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+            color: white;
+        }
+
         @media (max-width: 768px) {
             .vehicle-tasks-header {
                 padding: 1.5rem;
@@ -488,9 +500,14 @@
 
         
         <div class="filters-bar fade-in" style="animation-delay: 0.1s;">
-            <a href="<?php echo e(route('service.assignments.create')); ?>" class="modern-btn modern-btn-primary">
-                <i class="fas fa-plus"></i>Yeni Görev Oluştur
-            </a>
+            <div class="d-flex gap-2">
+                <a href="<?php echo e(route('service.assignments.create')); ?>" class="modern-btn modern-btn-primary">
+                    <i class="fas fa-plus"></i>Yeni Görev Oluştur
+                </a>
+                <a href="<?php echo e(route('service.assignments.export')); ?>" class="modern-btn modern-btn-export">
+                    <i class="fas fa-file-excel"></i>Excel'e Aktar
+                </a>
+            </div>
             <button class="modern-btn modern-btn-filter" type="button" data-bs-toggle="collapse"
                 data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
                 <i class="fas fa-filter"></i>Filtrele<i class="fas fa-chevron-down ms-1"></i>

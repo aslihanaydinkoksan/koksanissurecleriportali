@@ -206,4 +206,8 @@ class VehicleAssignment extends Model
     {
         return $this->belongsTo(Customer::class);
     }
+    public function files()
+    {
+        return $this->morphMany(File::class, 'fileable');
+    }
 }

@@ -92,4 +92,9 @@ class Vehicle extends Model
     {
         return $this->assignments()->latest()->first();
     }
+    // Dosyalar İlişkisi
+    public function files()
+    {
+        return $this->morphMany(File::class, 'fileable');
+    }
 }

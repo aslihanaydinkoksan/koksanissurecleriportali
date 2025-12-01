@@ -506,82 +506,146 @@
                             </h6>
                             <p>{{ $assignment->notes ?? 'Ek not bulunmuyor.' }}</p>
                         </div>
-
-                        {{-- NAKLİYE (LOJİSTİK) DETAYLARI --}}
-                        @if ($assignment->isLogistics())
-                            <div class="logistics-section">
-                                <h5>
-                                    <i class="fas fa-truck"></i> Nakliye / Lojistik Kayıtları
-                                </h5>
-
-                                <div class="table-responsive">
-                                    <table class="table logistics-table mb-0">
-                                        <thead>
-                                            <tr>
-                                                <th>Detay</th>
-                                                <th>Başlangıç Değeri</th>
-                                                <th>Bitiş Değeri</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>Kilometre (KM)</td>
-                                                <td>{{ $assignment->start_km ?? '-' }}</td>
-                                                <td>{{ $assignment->end_km ?? 'Bekleniyor' }}</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Yakıt Durumu</td>
-                                                <td>{{ $assignment->start_fuel_level ?? '-' }}</td>
-                                                <td>{{ $assignment->end_fuel_level ?? 'Bekleniyor' }}</td>
-                                            </tr>
-                                            @if ($assignment->fuel_cost)
-                                                <tr>
-                                                    <td colspan="2">Yakıt Maliyeti</td>
-                                                    <td class="fw-bold">{{ number_format($assignment->fuel_cost, 2) }} TL
-                                                    </td>
-                                                </tr>
-                                            @endif
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                @if ($assignment->status !== 'completed')
-                                    <div class="alert-custom">
-                                        <i class="fas fa-exclamation-triangle me-2"></i>
-                                        Görevi tamamlamak için <strong>Bitiş KM</strong> ve <strong>Yakıt
-                                            Maliyeti</strong> alanlarını doldurmanız gerekebilir.
-                                    </div>
-                                @endif
-                            </div>
-                        @endif
-
-                        {{-- ALT BİLGİ --}}
-                        <div class="card-footer-info">
-                            <span>
-                                <i class="fas fa-user-circle me-2"></i>
-                                <strong>Oluşturan:</strong> {{ $assignment->createdBy->name ?? 'Bilinmiyor' }}
-                            </span>
-                            <span>
-                                <i class="fas fa-calendar-alt me-2"></i>
-                                <strong>Oluşturulma Tarihi:</strong> {{ $assignment->created_at->format('d.m.Y') }}
-                                <strong>Saati:</strong> {{ $assignment->created_at->format('H:i') }}
-                            </span>
-
-
-                        </div>
                     </div>
-
-                    {{-- İŞLEM BUTONLARI --}}
-                    @if (Gate::allows('manage-assignment', $assignment))
-                        <div class="action-footer text-end">
-                            <a href="{{ route('service.assignments.edit', $assignment->id) }}" class="btn btn-edit">
-                                <i class="fas fa-edit me-2"></i> Görevi Düzenle / Tamamla
-                            </a>
-                        </div>
-                    @endif
                 </div>
 
+                {{-- NAKLİYE (LOJİSTİK) DETAYLARI --}}ac
+                @if ($assignment->isLogistics())
+                    <div class="logistics-section">
+                        <h5>
+                            <i class="fas fa-truck"></i> Nakliye / Lojistik Kayıtları
+                        </h5>
+
+                        <div class="table-responsive">
+                            <table class="table logistics-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Detay</th>
+                                        <th>Başlangıç Değeri</th>
+                                        <th>Bitiş Değeri</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Kilometre (KM)</td>
+                                        <td>{{ $assignment->start_km ?? '-' }}</td>
+                                        <td>{{ $assignment->end_km ?? 'Bekleniyor' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Yakıt Durumu</td>
+                                        <td>{{ $assignment->start_fuel_level ?? '-' }}</td>
+                                        <td>{{ $assignment->end_fuel_level ?? 'Bekleniyor' }}</td>
+                                    </tr>
+                                    @if ($assignment->fuel_cost)
+                                        <tr>
+                                            <td colspan="2">Yakıt Maliyeti</td>
+                                            <td class="fw-bold">{{ number_format($assignment->fuel_cost, 2) }} TL
+                                            </td>
+                                        </tr>
+                                    @endif
+                                </tbody>
+                            </table>
+                        </div>
+
+                        @if ($assignment->status !== 'completed')
+                            <div class="alert-custom">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Görevi tamamlamak için <strong>Bitiş KM</strong> ve <strong>Yakıt
+                                    Maliyeti</strong> alanlarını doldurmanız gerekebilir.
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
+                {{-- DOSYALAR --}}
+                @if ($assignment->files && $assignment->files->count() > 0)
+                    <div class="mt-5 pt-4 border-top">
+                        <div class="d-flex align-items-center mb-3">
+                            <h5 class="fw-bold mb-0 me-3 text-secondary">
+                                <i class="fa-solid fa-paperclip me-2"></i> Ekli Dosyalar
+                            </h5>
+                            <span class="badge bg-secondary rounded-pill">{{ $assignment->files->count() }}</span>
+                        </div>
+
+                        <div class="row g-3">
+                            @foreach ($assignment->files as $file)
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="card h-100 border"
+                                        style="transition: transform 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                        <div class="card-body d-flex align-items-center p-3">
+                                            {{-- Dosya Türü İkonu --}}
+                                            <div class="me-3 fs-1 text-secondary">
+                                                @if (Str::contains($file->mime_type, 'image'))
+                                                    <i class="fa-regular fa-file-image text-primary"></i>
+                                                @elseif(Str::contains($file->mime_type, 'pdf'))
+                                                    <i class="fa-regular fa-file-pdf text-danger"></i>
+                                                @elseif(Str::contains($file->mime_type, 'excel') || Str::contains($file->mime_type, 'spreadsheet'))
+                                                    <i class="fa-regular fa-file-excel text-success"></i>
+                                                @else
+                                                    <i class="fa-regular fa-file"></i>
+                                                @endif
+                                            </div>
+
+                                            <div class="flex-grow-1 overflow-hidden">
+                                                <h6 class="mb-1 text-truncate" title="{{ $file->original_name }}"
+                                                    style="font-size: 0.95rem; font-weight: 600;">
+                                                    {{ $file->original_name }}
+                                                </h6>
+                                                <div class="small text-muted" style="font-size: 0.75rem;">
+                                                    {{ $file->uploader->name ?? 'Sistem' }} •
+                                                    {{ $file->created_at->diffForHumans() }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer bg-light border-top-0 p-2 text-end">
+                                            <a href="{{ route('files.download', $file->id) }}"
+                                                class="btn btn-sm btn-dark w-100" target="_blank">
+                                                <i class="fa-solid fa-download me-2"></i> İndir / Görüntüle
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                {{-- ALT BİLGİ --}}
+                <div class="card-footer-info">
+                    <span>
+                        <i class="fas fa-user-circle me-2"></i>
+                        <strong>Oluşturan:</strong> {{ $assignment->createdBy->name ?? 'Bilinmiyor' }}
+                    </span>
+                    <span>
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        <strong>Oluşturulma Tarihi:</strong> {{ $assignment->created_at->format('d.m.Y') }}
+                        <strong>Saati:</strong> {{ $assignment->created_at->format('H:i') }}
+                    </span>
+
+
+                </div>
             </div>
+
+            @php
+                $user = Auth::user();
+                $canEdit =
+                    $user->id === $assignment->created_by ||
+                    $user->role === 'admin' ||
+                    $user->role === 'müdür' ||
+                    ($assignment->responsible_type === 'App\Models\User' && $assignment->responsible_id === $user->id);
+            @endphp
+
+            {{-- İŞLEM BUTONLARI --}}
+            @if ($canEdit)
+                <div class="action-footer text-end">
+                    <a href="{{ route('service.assignments.edit', $assignment->id) }}" class="btn btn-edit">
+                        <i class="fas fa-edit me-2"></i> Görevi Düzenle / Tamamla
+                    </a>
+                </div>
+            @endif
         </div>
+
+    </div>
+    </div>
     </div>
 @endsection

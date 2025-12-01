@@ -71,4 +71,9 @@ class ProductionPlan extends Model
     {
         return $this->belongsTo(User::class);
     }
+    // Dosyalar İlişkisi
+    public function files()
+    {
+        return $this->morphMany(File::class, 'fileable');
+    }
 }

@@ -61,4 +61,9 @@ class CustomerVisit extends Model
     {
         return $this->belongsTo(Travel::class);
     }
+    // Dosyalar İlişkisi
+    public function files()
+    {
+        return $this->morphMany(File::class, 'fileable');
+    }
 }

@@ -74,4 +74,9 @@ class Travel extends Model
     {
         return $this->hasMany(Booking::class)->orderBy('start_datetime', 'asc');
     }
+    // Dosyalar İlişkisi
+    public function files()
+    {
+        return $this->morphMany(File::class, 'fileable');
+    }
 }

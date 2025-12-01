@@ -100,4 +100,9 @@ class Event extends Model
     {
         return $this->belongsTo(\App\Models\Customer::class, 'customer_id');
     }
+    // Dosyalar İlişkisi
+    public function files()
+    {
+        return $this->morphMany(File::class, 'fileable');
+    }
 }
