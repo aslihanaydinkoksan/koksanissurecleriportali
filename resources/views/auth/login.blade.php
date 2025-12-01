@@ -269,7 +269,8 @@
                             </div>
                             @if ($showCaptcha ?? false)
                                 <div class="recaptcha-wrapper">
-                                    <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.key') }}"></div>
+                                    <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}">
+                                    </div>
                                 </div>
                                 @error('g-recaptcha-response')
                                     <div class="text-center mb-3">
@@ -279,6 +280,30 @@
                                     </div>
                                 @enderror
                             @endif
+
+                            {{-- KVKK CHECKBOX (LİNK VERSİYONU) --}}
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input @error('kvkk_approval') is-invalid @enderror"
+                                        type="checkbox" name="kvkk_approval" id="kvkk_approval"
+                                        {{ old('kvkk_approval') ? 'checked' : '' }} required>
+
+                                    <label class="form-check-label small" for="kvkk_approval">
+                                        {{-- target="_blank" ile yeni sekmede açılmasını sağlıyoruz --}}
+                                        <a href="{{ route('kvkk.show') }}" target="_blank"
+                                            class="text-decoration-none fw-bold" style="color: #667eea;">
+                                            KVKK Aydınlatma Metnini
+                                        </a>
+                                        okudum ve onaylıyorum.
+                                    </label>
+
+                                    @error('kvkk_approval')
+                                        <div class="invalid-feedback">
+                                            {{ $message }}
+                                        </div>
+                                    @enderror
+                                </div>
+                            </div>
 
                             <!-- Giriş Butonu -->
                             <div class="form-group-custom">

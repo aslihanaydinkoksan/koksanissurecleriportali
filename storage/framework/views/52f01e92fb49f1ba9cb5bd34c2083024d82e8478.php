@@ -297,7 +297,8 @@ unset($__errorArgs, $__bag); ?>
                             </div>
                             <?php if($showCaptcha ?? false): ?>
                                 <div class="recaptcha-wrapper">
-                                    <div class="g-recaptcha" data-sitekey="<?php echo e(config('services.recaptcha.key')); ?>"></div>
+                                    <div class="g-recaptcha" data-sitekey="<?php echo e(config('services.recaptcha.site_key')); ?>">
+                                    </div>
                                 </div>
                                 <?php $__errorArgs = ['g-recaptcha-response'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
@@ -314,6 +315,45 @@ if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>
                             <?php endif; ?>
+
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input <?php $__errorArgs = ['kvkk_approval'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                        type="checkbox" name="kvkk_approval" id="kvkk_approval"
+                                        <?php echo e(old('kvkk_approval') ? 'checked' : ''); ?> required>
+
+                                    <label class="form-check-label small" for="kvkk_approval">
+                                        
+                                        <a href="<?php echo e(route('kvkk.show')); ?>" target="_blank"
+                                            class="text-decoration-none fw-bold" style="color: #667eea;">
+                                            KVKK Aydınlatma Metnini
+                                        </a>
+                                        okudum ve onaylıyorum.
+                                    </label>
+
+                                    <?php $__errorArgs = ['kvkk_approval'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <div class="invalid-feedback">
+                                            <?php echo e($message); ?>
+
+                                        </div>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                                </div>
+                            </div>
 
                             <!-- Giriş Butonu -->
                             <div class="form-group-custom">

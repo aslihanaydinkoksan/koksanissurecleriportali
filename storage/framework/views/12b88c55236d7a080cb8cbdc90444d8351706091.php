@@ -337,17 +337,7 @@
                                 </ul>
                             </li>
 
-                            <?php if(Auth::user()->hasDepartment('İdari İşler') || Auth::user()->role == 'admin'): ?>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="<?php echo e(route('my-assignments.index')); ?>">
-                                        <i class="fas fa-tasks" style="color: #df6060;"></i><span>Görevlerim</span>
-                                        <?php if(Auth::user()->pending_assignments_count > 0): ?>
-                                            <span
-                                                class="badge bg-danger rounded-pill"><?php echo e(Auth::user()->pending_assignments_count); ?></span>
-                                        <?php endif; ?>
-                                    </a>
-                                </li>
-                            <?php endif; ?>
+                            
 
                             <?php if(Auth::user()->hasRole('admin') || Auth::user()->hasDepartment('Lojistik')): ?>
                                 <li class="nav-item">
@@ -518,28 +508,24 @@
                                 </li>
                             <?php endif; ?>
                             <li class="nav-item dropdown me-3">
-                                
                                 <?php
                                     $unreadCount = auth()->user()->unreadNotifications->count();
-                                    // Bildirim varsa Kırmızı (#d11f1f), yoksa Bootstrap Mavisi (#0d6efd)
                                     $iconColor = $unreadCount > 0 ? '#d11f1f' : '#0d6efd';
                                 ?>
 
                                 <a class="nav-link position-relative" data-bs-toggle="dropdown" href="#"
                                     role="button">
-
                                     
-                                    <i class="fa-solid fa-bell fa-lg"
+                                    <i class="fa-solid fa-bell fa-lg" id="notification-icon"
                                         style="color: <?php echo e($iconColor); ?>; transition: color 0.3s ease;"></i>
 
                                     
-                                    <?php if($unreadCount > 0): ?>
-                                        <span
-                                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                            <?php echo e($unreadCount); ?>
+                                    <span id="notification-badge"
+                                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                        style="display: <?php echo e($unreadCount > 0 ? 'inline-block' : 'none'); ?>;">
+                                        <?php echo e($unreadCount); ?>
 
-                                        </span>
-                                    <?php endif; ?>
+                                    </span>
                                 </a>
 
                                 <div class="dropdown-menu dropdown-menu-end shadow-lg border-0"
@@ -549,13 +535,16 @@
                                         <h6 class="mb-0 fw-bold text-dark">Bildirimler</h6>
 
                                         
-                                        <?php if($unreadCount > 0): ?>
-                                            <a href="<?php echo e(route('notifications.readAll')); ?>"
-                                                class="text-decoration-none small fw-bold text-primary">Tümünü Oku</a>
-                                        <?php endif; ?>
+                                        <a href="<?php echo e(route('notifications.readAll')); ?>" id="mark-all-read"
+                                            class="text-decoration-none small fw-bold text-primary"
+                                            style="display: <?php echo e($unreadCount > 0 ? 'inline-block' : 'none'); ?>;">
+                                            Tümünü Oku
+                                        </a>
                                     </div>
 
-                                    <div class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
+                                    
+                                    <div id="notification-list" class="list-group list-group-flush"
+                                        style="max-height: 300px; overflow-y: auto;">
                                         <?php $__empty_1 = true; $__currentLoopData = auth()->user()->unreadNotifications; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $notification): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                             <a href="<?php echo e(route('notifications.read', $notification->id)); ?>"
                                                 class="list-group-item list-group-item-action p-3 border-bottom-0 d-flex align-items-start">
@@ -566,13 +555,9 @@
                                                 </div>
                                                 <div class="flex-grow-1">
                                                     <div class="small fw-bold text-dark mb-1">
-                                                        <?php echo e($notification->data['title'] ?? 'Bildirim'); ?>
-
-                                                    </div>
+                                                        <?php echo e($notification->data['title'] ?? 'Bildirim'); ?></div>
                                                     <p class="mb-1 small text-muted lh-sm">
-                                                        <?php echo e($notification->data['message'] ?? ''); ?>
-
-                                                    </p>
+                                                        <?php echo e($notification->data['message'] ?? ''); ?></p>
                                                     <small class="text-secondary fw-bold" style="font-size: 0.7rem;">
                                                         <?php echo e($notification->created_at->diffForHumans()); ?>
 
@@ -830,6 +815,56 @@
                     });
                 }
             });
+        });
+        document.addEventListener('DOMContentLoaded', function() {
+            // PERİYODİK KONTROL
+            // Sunucuyu yormamak için süreyi 15 saniye (30000 ms) yaptım
+            setInterval(checkNotifications, 15000);
+
+            function checkNotifications() {
+                fetch("<?php echo e(route('notifications.check')); ?>")
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // 1. Badge (Sayı) Güncelleme
+                        const badge = document.getElementById('notification-badge');
+                        if (badge) {
+                            if (data.count > 0) {
+                                badge.style.display = 'inline-block';
+                                badge.innerText = data.count;
+                            } else {
+                                badge.style.display = 'none';
+                            }
+                        }
+
+                        // 2. İkon Rengi Güncelleme
+                        const icon = document.getElementById('notification-icon');
+                        if (icon) {
+                            // Varsa Kırmızı, Yoksa Mavi
+                            icon.style.color = data.count > 0 ? '#d11f1f' : '#0d6efd';
+                        }
+
+                        // 3. "Tümünü Oku" Linkini Gizle/Göster
+                        const readAllLink = document.getElementById('mark-all-read');
+                        if (readAllLink) {
+                            readAllLink.style.display = data.count > 0 ? 'inline-block' : 'none';
+                        }
+
+                        // 4. Listeyi Güncelle
+                        const list = document.getElementById('notification-list');
+                        if (list && list.innerHTML !== data.html) {
+                            list.innerHTML = data.html;
+                        }
+                    })
+                    .catch(error => {
+                        // Hata olursa sessizce logla (Kullanıcı görmesin)
+                        console.error('Bildirim hatası:', error);
+                    });
+            }
         });
     </script>
 </body>

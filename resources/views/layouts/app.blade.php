@@ -337,7 +337,7 @@
                                 </ul>
                             </li>
 
-                            @if (Auth::user()->hasDepartment('İdari İşler') || Auth::user()->role == 'admin')
+                            {{-- @if (Auth::user()->hasDepartment('İdari İşler') || Auth::user()->role == 'admin')
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('my-assignments.index') }}">
                                         <i class="fas fa-tasks" style="color: #df6060;"></i><span>Görevlerim</span>
@@ -347,7 +347,7 @@
                                         @endif
                                     </a>
                                 </li>
-                            @endif
+                            @endif --}}
 
                             @if (Auth::user()->hasRole('admin') || Auth::user()->hasDepartment('Lojistik'))
                                 <li class="nav-item">
@@ -531,27 +531,23 @@
                                 </li>
                             @endif
                             <li class="nav-item dropdown me-3">
-                                {{-- 1. ADIM: Sayıyı değişkene atayalım ki kod tekrarından kurtulalım --}}
                                 @php
                                     $unreadCount = auth()->user()->unreadNotifications->count();
-                                    // Bildirim varsa Kırmızı (#d11f1f), yoksa Bootstrap Mavisi (#0d6efd)
                                     $iconColor = $unreadCount > 0 ? '#d11f1f' : '#0d6efd';
                                 @endphp
 
                                 <a class="nav-link position-relative" data-bs-toggle="dropdown" href="#"
                                     role="button">
-
-                                    {{-- 2. ADIM: Rengi dinamik değişkenle veriyoruz --}}
-                                    <i class="fa-solid fa-bell fa-lg"
+                                    {{-- İKON: id="notification-icon" EKLENDİ --}}
+                                    <i class="fa-solid fa-bell fa-lg" id="notification-icon"
                                         style="color: {{ $iconColor }}; transition: color 0.3s ease;"></i>
 
-                                    {{-- 3. ADIM: Rozet (Badge) sadece bildirim varsa görünsün --}}
-                                    @if ($unreadCount > 0)
-                                        <span
-                                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                            {{ $unreadCount }}
-                                        </span>
-                                    @endif
+                                    {{-- ROZET: id="notification-badge" EKLENDİ --}}
+                                    <span id="notification-badge"
+                                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                        style="display: {{ $unreadCount > 0 ? 'inline-block' : 'none' }};">
+                                        {{ $unreadCount }}
+                                    </span>
                                 </a>
 
                                 <div class="dropdown-menu dropdown-menu-end shadow-lg border-0"
@@ -560,14 +556,17 @@
                                         style="border-radius: 1rem 1rem 0 0;">
                                         <h6 class="mb-0 fw-bold text-dark">Bildirimler</h6>
 
-                                        {{-- Değişkeni burada da kullandık --}}
-                                        @if ($unreadCount > 0)
-                                            <a href="{{ route('notifications.readAll') }}"
-                                                class="text-decoration-none small fw-bold text-primary">Tümünü Oku</a>
-                                        @endif
+                                        {{-- TÜMÜNÜ OKU: id="mark-all-read" EKLENDİ (JS ile gizleyip açacağız) --}}
+                                        <a href="{{ route('notifications.readAll') }}" id="mark-all-read"
+                                            class="text-decoration-none small fw-bold text-primary"
+                                            style="display: {{ $unreadCount > 0 ? 'inline-block' : 'none' }};">
+                                            Tümünü Oku
+                                        </a>
                                     </div>
 
-                                    <div class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
+                                    {{-- LİSTE: id="notification-list" EKLENDİ --}}
+                                    <div id="notification-list" class="list-group list-group-flush"
+                                        style="max-height: 300px; overflow-y: auto;">
                                         @forelse (auth()->user()->unreadNotifications as $notification)
                                             <a href="{{ route('notifications.read', $notification->id) }}"
                                                 class="list-group-item list-group-item-action p-3 border-bottom-0 d-flex align-items-start">
@@ -578,11 +577,9 @@
                                                 </div>
                                                 <div class="flex-grow-1">
                                                     <div class="small fw-bold text-dark mb-1">
-                                                        {{ $notification->data['title'] ?? 'Bildirim' }}
-                                                    </div>
+                                                        {{ $notification->data['title'] ?? 'Bildirim' }}</div>
                                                     <p class="mb-1 small text-muted lh-sm">
-                                                        {{ $notification->data['message'] ?? '' }}
-                                                    </p>
+                                                        {{ $notification->data['message'] ?? '' }}</p>
                                                     <small class="text-secondary fw-bold" style="font-size: 0.7rem;">
                                                         {{ $notification->created_at->diffForHumans() }}
                                                     </small>
@@ -839,6 +836,56 @@
                     });
                 }
             });
+        });
+        document.addEventListener('DOMContentLoaded', function() {
+            // PERİYODİK KONTROL
+            // Sunucuyu yormamak için süreyi 15 saniye (30000 ms) yaptım
+            setInterval(checkNotifications, 15000);
+
+            function checkNotifications() {
+                fetch("{{ route('notifications.check') }}")
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // 1. Badge (Sayı) Güncelleme
+                        const badge = document.getElementById('notification-badge');
+                        if (badge) {
+                            if (data.count > 0) {
+                                badge.style.display = 'inline-block';
+                                badge.innerText = data.count;
+                            } else {
+                                badge.style.display = 'none';
+                            }
+                        }
+
+                        // 2. İkon Rengi Güncelleme
+                        const icon = document.getElementById('notification-icon');
+                        if (icon) {
+                            // Varsa Kırmızı, Yoksa Mavi
+                            icon.style.color = data.count > 0 ? '#d11f1f' : '#0d6efd';
+                        }
+
+                        // 3. "Tümünü Oku" Linkini Gizle/Göster
+                        const readAllLink = document.getElementById('mark-all-read');
+                        if (readAllLink) {
+                            readAllLink.style.display = data.count > 0 ? 'inline-block' : 'none';
+                        }
+
+                        // 4. Listeyi Güncelle
+                        const list = document.getElementById('notification-list');
+                        if (list && list.innerHTML !== data.html) {
+                            list.innerHTML = data.html;
+                        }
+                    })
+                    .catch(error => {
+                        // Hata olursa sessizce logla (Kullanıcı görmesin)
+                        console.error('Bildirim hatası:', error);
+                    });
+            }
         });
     </script>
 </body>

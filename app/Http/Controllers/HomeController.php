@@ -746,4 +746,49 @@ class HomeController extends Controller
         auth()->user()->unreadNotifications->markAsRead();
         return back()->with('success', 'Tüm bildirimler okundu olarak işaretlendi.');
     }
+    /**
+     * AJAX İLE BİLDİRİM KONTROLÜ
+     */
+    public function checkNotifications()
+    {
+        $notifications = auth()->user()->unreadNotifications;
+        $count = $notifications->count();
+        $html = '';
+
+        if ($count > 0) {
+            foreach ($notifications as $notification) {
+                // Rota ve İkon ayarları
+                $url = route('notifications.read', $notification->id);
+                $icon = $notification->data['icon'] ?? 'fa-info-circle';
+                $color = $notification->data['color'] ?? 'primary';
+                $title = $notification->data['title'] ?? 'Bildirim';
+                $message = $notification->data['message'] ?? '';
+                $time = $notification->created_at->diffForHumans();
+
+                // HTML Oluştur (Layout'taki yapının aynısı)
+                $html .= '
+                <a href="' . $url . '" class="list-group-item list-group-item-action p-3 border-bottom-0 d-flex align-items-start">
+                    <div class="me-3 mt-1 text-' . $color . '">
+                        <i class="fa-solid ' . $icon . ' fa-lg"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="small fw-bold text-dark mb-1">' . $title . '</div>
+                        <p class="mb-1 small text-muted lh-sm">' . $message . '</p>
+                        <small class="text-secondary fw-bold" style="font-size: 0.7rem;">' . $time . '</small>
+                    </div>
+                </a>';
+            }
+        } else {
+            $html = '
+            <div class="p-4 text-center text-muted">
+                <i class="fa-regular fa-bell-slash fa-2x mb-3 text-secondary opacity-50"></i>
+                <p class="mb-0 small fw-medium">Şu an yeni bildiriminiz yok.</p>
+            </div>';
+        }
+
+        return response()->json([
+            'count' => $count,
+            'html' => $html
+        ]);
+    }
 }

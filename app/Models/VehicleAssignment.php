@@ -91,7 +91,7 @@ class VehicleAssignment extends Model
      */
     public function createdBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'assigned_by', 'id');
     }
 
     /**

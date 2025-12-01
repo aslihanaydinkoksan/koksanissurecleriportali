@@ -274,3 +274,9 @@ Route::get('/notifications/{id}/read', [HomeController::class, 'readNotification
 
 // Tüm bildirimleri okundu yapan rota 
 Route::get('/notifications/read-all', [HomeController::class, 'readAllNotifications'])->name('notifications.readAll');
+
+// Refresh yapmadan bildirim kontrolü için rota
+Route::get('/notifications/check', [HomeController::class, 'checkNotifications'])->name('notifications.check');
+
+// KVKK Metni Görüntüleme Rotası (Login olmadan görülebilmeli)
+Route::view('/kvkk-aydinlatma-metni', 'auth.kvkk')->name('kvkk.show');
