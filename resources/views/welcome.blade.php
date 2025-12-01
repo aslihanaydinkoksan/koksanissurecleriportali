@@ -404,7 +404,7 @@ $isAdmin = in_array($currentUser->role, ['admin', 'yönetici']);
                                             <div class="kpi-card kpi-ulastirma h-100">
                                                 <div class="kpi-icon"><i class="fa-solid fa-road"></i></div>
                                                 <div class="kpi-value">{{ $kpiData['aktif_gorev'] }}</div>
-                                                <div class="kpi-label">Yoldaki Araçlar</div>
+                                                <div class="kpi-label">Araçlar</div>
                                             </div>
                                         </div>
                                         <div class="col-lg col-md-4 col-6">

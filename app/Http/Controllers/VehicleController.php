@@ -10,13 +10,39 @@ use Illuminate\Validation\Rule;
 class VehicleController extends Controller
 {
     /**
+     * Controller Oluşturucu: Yetki Kontrolü Burada Yapılır
+     */
+    public function __construct()
+    {
+        $this->middleware('auth');
+
+        // Bu Controller'a sadece Admin, Hizmet veya Ulaştırma departmanı erişebilir
+        $this->middleware(function ($request, $next) {
+            $user = Auth::user();
+
+            // 1. Admin veya Yönetici ise geç
+            if (in_array($user->role, ['admin', 'yönetici'])) {
+                return $next($request);
+            }
+
+            // 2. Departman Kontrolü (Slug kullanmak her zaman daha güvenlidir)
+            // Departman slug'ı 'hizmet' veya 'ulastirma' ise geç
+            if ($user->department && in_array($user->department->slug, ['hizmet', 'ulastirma'])) {
+                return $next($request);
+            }
+
+            // Hiçbiri değilse 403 (Yetkisiz)
+            abort(403, 'Bu işlemi gerçekleştirmeye yetkiniz bulunmamaktadır!');
+        });
+    }
+
+    /**
      * Araçları listeler ve filtreler.
-     * View: service.vehicles.index (Sonraki adımda oluşturacağız)
      */
     public function index(Request $request)
     {
-        // YETKİ KONTROLÜ: Sadece 'hizmet' birimi erişebilir
-        $this->authorize('access-department', 'hizmet');
+        // NOT: __construct içindeki middleware yetkiyi zaten kontrol etti.
+        // Buradaki $this->authorize satırını siliyoruz.
 
         $query = Vehicle::query();
 
@@ -27,12 +53,11 @@ class VehicleController extends Controller
         if ($request->filled('type')) {
             $query->where('type', 'LIKE', '%' . $request->input('type') . '%');
         }
-        // Aktif/Pasif filtresi (varsayılan olarak tüm araçları göster)
+        // Aktif/Pasif filtresi
         $status = $request->input('status', 'all');
         if ($status !== 'all') {
             $query->where('is_active', $status === 'active');
         }
-
         // --- FİLTRELEME SONU ---
 
         $vehicles = $query->orderBy('plate_number')->paginate(15);
@@ -43,13 +68,9 @@ class VehicleController extends Controller
 
     /**
      * Yeni araç ekleme formunu gösterir.
-     * View: service.vehicles.create (Sonraki adımda oluşturacağız)
      */
     public function create()
     {
-        // YETKİ KONTROLÜ
-        $this->authorize('access-department', 'hizmet');
-
         return view('service.vehicles.create');
     }
 
@@ -58,39 +79,32 @@ class VehicleController extends Controller
      */
     public function store(Request $request)
     {
-        // YETKİ KONTROLÜ
-        $this->authorize('access-department', 'hizmet');
-
         // VALIDASYON
         $validatedData = $request->validate([
-            'plate_number' => 'required|string|max:20|unique:vehicles,plate_number', // Benzersiz olmalı
-            'type' => 'required|string|max:100', // Örn: Otomobil, Kamyonet
+            'plate_number' => 'required|string|max:20|unique:vehicles,plate_number',
+            'type' => 'required|string|max:100',
             'brand_model' => 'nullable|string|max:150',
             'description' => 'nullable|string',
-            'is_active' => 'sometimes|boolean', // Gönderilirse boolean olmalı
-            'kvkk_onay' => 'required|accepted',
-            'kvkk_onay.accepted' => 'Devam etmek için KVKK Aydınlatma Metni\'ni onaylamanız zorunludur.'
+            'is_active' => 'sometimes|boolean',
+            // 'kvkk_onay' => 'required|accepted', // Genelde araç eklerken KVKK olmaz ama varsa kalsın
         ]);
 
-        // Checkbox'tan 'is_active' gelmezse 0 (false) olarak ayarla
+        // Checkbox kontrolü
         $validatedData['is_active'] = $request->has('is_active');
-        unset($validatedData['kvkk_onay']);
+        if (isset($validatedData['kvkk_onay']))
+            unset($validatedData['kvkk_onay']);
 
         Vehicle::create($validatedData);
 
-        return redirect()->route('service.vehicles.index') // Liste sayfasına yönlendir
+        return redirect()->route('service.vehicles.index')
             ->with('success', 'Araç başarıyla eklendi.');
     }
 
     /**
      * Belirtilen aracı düzenleme formunu gösterir.
-     * View: service.vehicles.edit (Sonraki adımda oluşturacağız)
      */
     public function edit(Vehicle $vehicle)
     {
-        // YETKİ KONTROLÜ
-        $this->authorize('access-department', 'hizmet');
-
         return view('service.vehicles.edit', compact('vehicle'));
     }
 
@@ -99,16 +113,12 @@ class VehicleController extends Controller
      */
     public function update(Request $request, Vehicle $vehicle)
     {
-        // YETKİ KONTROLÜ
-        $this->authorize('access-department', 'hizmet');
-
-        // VALIDASYON (Plaka güncellenirken kendisi hariç benzersiz olmalı)
         $validatedData = $request->validate([
             'plate_number' => [
                 'required',
                 'string',
                 'max:20',
-                Rule::unique('vehicles', 'plate_number')->ignore($vehicle->id), // Kendisi hariç
+                Rule::unique('vehicles', 'plate_number')->ignore($vehicle->id),
             ],
             'type' => 'required|string|max:100',
             'brand_model' => 'nullable|string|max:150',
@@ -125,14 +135,11 @@ class VehicleController extends Controller
     }
 
     /**
-     * Belirtilen aracı siler
-     * Şimdilik direkt silme yapıyoruz.
+     * Belirtilen aracı siler.
      */
     public function destroy(Vehicle $vehicle)
     {
-        // YETKİ KONTROLÜ ('hizmet' ve 'admin')
-        $this->authorize('access-department', 'hizmet');
-
+        // İlişki kontrolü (Opsiyonel: Eğer araç görevdeyse silinmesin)
         /*if ($vehicle->assignments()->exists()) {
             return back()->with('error', 'Bu araca atanmış görevler varken silemezsiniz.');
         }*/

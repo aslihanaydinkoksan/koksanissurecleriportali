@@ -458,7 +458,8 @@
 
 
                                         
-                                        <?php if(Auth::user()->hasDepartment('İdari İşler') || Auth::user()->hasDepartment('Ulaştırma')): ?>
+                                        <?php if(Auth::user()->role === 'admin' ||
+                                                (Auth::user()->department && in_array(Auth::user()->department->slug, ['hizmet', 'ulastirma']))): ?>
                                             <li>
                                                 <a class="dropdown-item" href="<?php echo e(route('service.vehicles.index')); ?>">
                                                     <i class="fa-solid fa-car" style="color: #FBD38D;"></i>
@@ -473,36 +474,45 @@
                                                 </a>
                                             </li>
                                         <?php endif; ?>
-
-
                                         
-                                        <?php if(Auth::user()->hasDepartment('İdari İşler')): ?>
+                                        
+                                        <?php if(Auth::user()->role === 'admin' ||
+                                                (Auth::user()->department && in_array(Auth::user()->department->slug, ['hizmet', 'ulastirma']))): ?>
                                             <li>
                                                 <hr class="dropdown-divider">
                                             </li>
 
-                                            <li>
-                                                <a class="dropdown-item" href="<?php echo e(route('travels.create')); ?>">
-                                                    <i class="fa-solid fa-route" style="color: #A78BFA;"></i>
-                                                    Yeni Seyahat
-                                                </a>
-                                            </li>
+                                            
+                                            <?php if(Auth::user()->role === 'admin' || (Auth::user()->department && Auth::user()->department->slug === 'hizmet')): ?>
+                                                <li>
+                                                    <a class="dropdown-item" href="<?php echo e(route('travels.create')); ?>">
+                                                        <i class="fa-solid fa-route" style="color: #A78BFA;"></i> Yeni
+                                                        Seyahat
+                                                    </a>
+                                                </li>
+                                            <?php endif; ?>
+
+                                            
                                             <li>
                                                 <a class="dropdown-item" href="<?php echo e(route('travels.index')); ?>">
-                                                    <i class="fa-solid fa-list-check" style="color: #A78BFA;"></i>
-                                                    Seyahat Listesi
+                                                    <i class="fa-solid fa-list-check" style="color: #A78BFA;"></i> Seyahat
+                                                    Listesi
                                                 </a>
-                                            </li>
-                                            <li>
-                                                <hr class="dropdown-divider">
                                             </li>
 
-                                            <li>
-                                                <a class="dropdown-item" href="<?php echo e(route('customers.index')); ?>">
-                                                    <i class="fa-solid fa-users" style="color: #A78BFA;"></i>
-                                                    Müşteri Yönetimi
-                                                </a>
-                                            </li>
+                                            
+                                            <?php if(Auth::user()->role === 'admin' ||
+                                                    (Auth::user()->department && in_array(Auth::user()->department->slug, ['hizmet']))): ?>
+                                                <li>
+                                                    <hr class="dropdown-divider">
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item" href="<?php echo e(route('customers.index')); ?>">
+                                                        <i class="fa-solid fa-users" style="color: #A78BFA;"></i> Müşteri
+                                                        Yönetimi
+                                                    </a>
+                                                </li>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </ul>
                                 </li>
@@ -818,8 +828,8 @@
         });
         document.addEventListener('DOMContentLoaded', function() {
             // PERİYODİK KONTROL
-            // Sunucuyu yormamak için süreyi 15 saniye (30000 ms) yaptım
-            setInterval(checkNotifications, 15000);
+            // Sunucuyu yormamak için süreyi 10 saniye (30000 ms) yaptım
+            setInterval(checkNotifications, 10000);
 
             function checkNotifications() {
                 fetch("<?php echo e(route('notifications.check')); ?>")

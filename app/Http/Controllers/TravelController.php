@@ -7,16 +7,27 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Log;
+use App\Notifications\NewTravelPlanNotification;
 
 class TravelController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function index(Request $request)
     {
-        // 1. Tüm filtre parametrelerini request'ten al
-        // 'all' veya 'null' varsayılan değerleri belirler
+        $user = Auth::user();
+
+        // 1. TÜMÜNÜ GÖRME YETKİSİ KONTROLÜ
+        // Admin, Global Yönetici VEYA Ulaştırma Müdürü tüm seyahatleri görebilir.
+        $canViewAll = $user->role === 'admin' ||
+            $user->can('is-global-manager') ||
+            ($user->department && $user->department->slug === 'ulastirma');
+
         $filters = [
             'name' => $request->input('name'),
             'status' => $request->input('status', 'all'),
@@ -26,138 +37,142 @@ class TravelController extends Controller
             'user_id' => $request->input('user_id', 'all'),
         ];
 
-        $travelsQuery = Travel::with('user'); // Seyahati oluşturan kullanıcıyı da al
+        $travelsQuery = Travel::with('user');
 
-        // 2. Filtreleri sorguya uygula
-
-        // İsim Filtresi
+        // --- FİLTRELER ---
         if (!empty($filters['name'])) {
             $travelsQuery->where('name', 'LIKE', '%' . $filters['name'] . '%');
         }
-
-        // Durum Filtresi
         if ($filters['status'] !== 'all') {
             $travelsQuery->where('status', $filters['status']);
         }
-
-        // Önemli Filtresi
         if ($filters['is_important'] !== 'all') {
             $travelsQuery->where('is_important', $filters['is_important'] === 'yes');
         }
-
-        // Tarih Aralığı Filtresi (Başlangıç)
         if (!empty($filters['date_from'])) {
-            // Bu tarihten SONRA biten tüm seyahatleri bul
             $travelsQuery->where('end_date', '>=', Carbon::parse($filters['date_from'])->startOfDay());
         }
-
-        // Tarih Aralığı Filtresi (Bitiş)
         if (!empty($filters['date_to'])) {
-            // Bu tarihten ÖNCE başlayan tüm seyahatleri bul
             $travelsQuery->where('start_date', '<=', Carbon::parse($filters['date_to'])->endOfDay());
         }
 
-        // 3. Yetki Filtreleri
-        $user = Auth::user();
+        // --- YETKİ FİLTRESİ ---
 
-        // Eğer global yönetici DEĞİLSE, sadece kendi seyahatlerini görsün
-        if (!$user->can('is-global-manager')) {
+        // Eğer "Tümünü Görme Yetkisi" YOKSA, sadece kendi seyahatlerini görsün
+        if (!$canViewAll) {
             $travelsQuery->where('user_id', $user->id);
-
-            // Eğer global yöneticiyse VE belirli bir kullanıcıyı filtrelediyse
-        } elseif ($filters['user_id'] !== 'all') {
+        }
+        // Eğer yetkisi varsa VE filtrede belirli bir kullanıcı seçildiyse ona göre süz
+        elseif ($filters['user_id'] !== 'all') {
             $travelsQuery->where('user_id', $filters['user_id']);
         }
 
-        // 4. Veriyi al ve sayfala
         $travels = $travelsQuery->orderBy('start_date', 'desc')
             ->paginate(20)
-            ->appends($filters); // Filtreleri sayfalama linklerine ekle
+            ->appends($filters);
 
-        // 5. Admin'in kullanıcıları filtreleyebilmesi için kullanıcı listesini al
-        $users = collect(); // Boş koleksiyon
-        if ($user->can('is-global-manager')) {
-            // Sadece seyahat oluşturan 'hizmet' departmanındakileri veya adminleri listele
+        // Kullanıcı Listesi (Filtreleme için)
+        $users = collect();
+        if ($canViewAll) {
+            // Seyahat oluşturma potansiyeli olan herkesi listele (Hizmet ve Adminler)
+            // Ulaştırma Müdürü de filtreleme yapabilsin diye bu listeyi görüyor
             $users = User::whereHas('department', fn($q) => $q->where('slug', 'hizmet'))
                 ->orWhere('role', 'admin')
                 ->orderBy('name')
                 ->get();
         }
 
-        // 6. View'a tüm verileri gönder
         return view('travels.index', compact('travels', 'filters', 'users'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
+        $user = Auth::user();
+        if ($user->role !== 'admin' && (!$user->department || $user->department->slug !== 'hizmet')) {
+            abort(403, 'Seyahat planı oluşturma yetkiniz bulunmamaktadır. Lütfen İdari İşler ile görüşün.');
+        }
         return view('travels.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        // 1. DÜZELTME: Validasyon güncellendi (eski 'details' alanları kaldırıldı)
+        // 1. Validasyon
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'status' => 'required|in:planned,completed',
-            // 'transportation_details' ve 'accommodation_details' buradan kaldırıldı.
+            'is_important' => 'nullable|boolean',
         ]);
 
-        // user_id'yi giriş yapan kullanıcı olarak ayarla
         $validatedData['user_id'] = Auth::id();
+        $validatedData['is_important'] = $request->has('is_important');
 
-        // 2. DÜZELTME: Oluşturulan seyahati bir $travel değişkenine ata
+        // 2. Kayıt
         $travel = Travel::create($validatedData);
 
-        // 3. DÜZELTME: $travel değişkenini 'route' fonksiyonuna parametre olarak ver
+        // 3. Bildirim Gönderme (Temiz Hali)
+        try {
+            // Bildirimi alacaklar: Adminler + Ulaştırma Müdürleri
+            $recipients = User::where(function ($query) {
+                $query->where('role', 'admin')
+                    ->orWhere(function ($q) {
+                        $q->where('role', 'müdür')
+                            ->whereHas('department', function ($d) {
+                                $d->where('slug', 'ulastirma');
+                            });
+                    });
+            })->get();
+
+            if ($recipients->count() > 0) {
+                Notification::send($recipients, new NewTravelPlanNotification($travel));
+            }
+        } catch (\Exception $e) {
+            // Sadece hata olursa loga yazsın, kullanıcıya yansıtmasın
+            Log::error("Seyahat bildirim hatası: " . $e->getMessage());
+        }
+
         return redirect()->route('travels.show', $travel)
-            ->with('success', 'Seyahat planı başarıyla oluşturuldu. Şimdi rezervasyonlarınızı ekleyebilirsiniz.');
+            ->with('success', 'Seyahat planı başarıyla oluşturuldu.');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Travel $travel)
     {
-        // Seyahat planına bağlı TÜM ilişkili verileri tek seferde yükle
+        $user = Auth::user();
+
+        // Görüntüleme Yetkisi: Oluşturan, Admin veya Ulaştırma Müdürü
+        $canView = $user->id === $travel->user_id ||
+            $user->can('is-global-manager') ||
+            $user->role === 'admin' ||
+            ($user->role === 'müdür' && $user->department && $user->department->slug === 'ulastirma');
+
+        if (!$canView) {
+            abort(403, 'Bu seyahati görüntüleme yetkiniz yok.');
+        }
+
         $travel->load([
-            'bookings.media',           // Rezervasyonlar VE bu rezervasyonlara bağlı medya dosyaları
-            'customerVisits.customer',  // Ziyaretler VE bu ziyaretlerin müşterileri
-            'customerVisits.event'      // Ziyaretler VE bu ziyaretlerin etkinlik detayları
+            'bookings.media',
+            'customerVisits.customer',
+            'customerVisits.event'
         ]);
         $travelActivities = $travel->activities()->latest()->get();
 
-        // $travel değişkenini tüm bu yüklenmiş verilerle birlikte view'a gönder
         return view('travels.show', compact('travel', 'travelActivities'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Travel $travel)
     {
-        // Sadece admin veya oluşturan kişi düzenleyebilir
-        if (Auth::id() !== $travel->user_id && !Auth::user()->can('is-global-manager')) {
+        // Düzenleme Yetkisi: SADECE Oluşturan veya Admin (Ulaştırma müdürü düzenleyemez, sadece görür)
+        if (Auth::id() !== $travel->user_id && !Auth::user()->can('is-global-manager') && Auth::user()->role !== 'admin') {
             abort(403, 'Bu eylemi gerçekleştirme yetkiniz yok.');
         }
 
         return view('travels.edit', compact('travel'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Travel $travel)
     {
-        // Sadece admin veya oluşturan kişi güncelleyebilir
-        if (Auth::id() !== $travel->user_id && !Auth::user()->can('is-global-manager')) {
+        if (Auth::id() !== $travel->user_id && !Auth::user()->can('is-global-manager') && Auth::user()->role !== 'admin') {
             abort(403, 'Bu eylemi gerçekleştirme yetkiniz yok.');
         }
 
@@ -166,28 +181,21 @@ class TravelController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'status' => 'required|in:planned,completed',
+            'is_important' => 'nullable|boolean',
         ]);
 
+        $validatedData['is_important'] = $request->has('is_important');
         $travel->update($validatedData);
 
         return redirect()->route('travels.index')
             ->with('success', 'Seyahat planı başarıyla güncellendi.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Travel $travel)
     {
-        // Sadece admin veya oluşturan kişi silebilir
-        if (Auth::id() !== $travel->user_id && !Auth::user()->can('is-global-manager')) {
+        if (Auth::id() !== $travel->user_id && !Auth::user()->can('is-global-manager') && Auth::user()->role !== 'admin') {
             abort(403, 'Bu eylemi gerçekleştirme yetkiniz yok.');
         }
-
-        // Not: Migration'da 'onDelete('set null')' tanımladığımız için,
-        // bu seyahati silmek, bağlı 'customer_visits' kayıtlarını silmez,
-        // sadece 'travel_id'lerini 'null' yapar (Bağımsız Ziyaret'e dönüştürür).
-        // Bu, istediğimiz ve güvenli olan davranıştır.
 
         $travel->delete();
 
