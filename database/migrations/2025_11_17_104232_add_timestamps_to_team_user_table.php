@@ -12,9 +12,11 @@ return new class extends Migration {
      */
     public function up()
     {
-        Schema::table('team_user', function (Blueprint $table) {
-            $table->timestamps();
-        });
+        if (!Schema::hasColumn('team_user', 'created_at')) {
+            Schema::table('team_user', function (Blueprint $table) {
+                $table->timestamps();
+            });
+        }
     }
 
     /**
