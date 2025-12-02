@@ -105,4 +105,9 @@ class Event extends Model
     {
         return $this->morphMany(File::class, 'fileable');
     }
+    // Yeni temiz ilişki
+    public function type()
+    {
+        return $this->belongsTo(EventType::class, 'event_type_id');
+    }
 }

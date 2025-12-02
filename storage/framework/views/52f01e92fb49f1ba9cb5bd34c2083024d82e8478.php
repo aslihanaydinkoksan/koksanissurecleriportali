@@ -396,17 +396,36 @@ unset($__errorArgs, $__bag); ?>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Butonu ve Checkbox'ı bul
-            const acceptBtn = document.getElementById('btn-kvkk-accept');
+            // Elementleri seç
             const checkbox = document.getElementById('kvkk_approval');
+            const acceptBtn = document.getElementById('btn-kvkk-accept');
+            const modalElement = document.getElementById('kvkkModal');
 
+            // Bootstrap 5 Modal instance'ını oluştur (Programatik olarak açmak için)
+            // Not: Projende bootstrap objesi global ise çalışır. Eğer hata alırsan fallback yazarız.
+            let kvkkModal;
+            if (window.bootstrap) {
+                kvkkModal = new bootstrap.Modal(modalElement);
+            }
+
+            // 1. Checkbox'a tıklanma olayı
+            if (checkbox) {
+                checkbox.addEventListener('click', function(e) {
+                    if (this.checked) {
+                        e.preventDefault();
+                        this.checked = false;
+                        if (kvkkModal) {
+                            kvkkModal.show();
+                        } else {
+                            const triggerBtn = document.querySelector('[data-bs-target="#kvkkModal"]');
+                            if (triggerBtn) triggerBtn.click();
+                        }
+                    }
+                });
+            }
             if (acceptBtn && checkbox) {
-                // Butona tıklanınca çalış
                 acceptBtn.addEventListener('click', function() {
-                    // Checkbox'ı işaretle
                     checkbox.checked = true;
-
-                    // (Opsiyonel) İşaretlendiğini hissettirmek için hafifçe parlatabiliriz
                     checkbox.focus();
                 });
             }

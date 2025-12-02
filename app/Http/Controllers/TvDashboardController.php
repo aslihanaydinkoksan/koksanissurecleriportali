@@ -41,41 +41,69 @@ class TvDashboardController extends Controller
     }
 
     /**
-     * 1. KPI VERİLERİNİ HESAPLA
+     * 1. KPI VERİLERİNİ HESAPLA 
      */
     private function getKpiData(Carbon $today): array
     {
+        $shipmentGroups = Shipment::whereDate('tahmini_varis_tarihi', $today)
+            ->select(['arac_tipi', DB::raw('count(*) as count')])
+            ->groupBy('arac_tipi')
+            ->get();
+
+        $totalShipment = $shipmentGroups->sum('count');
+
+        // Örn: "3 Gemi, 2 Kamyon" formatında string 
+        $shipmentDetails = $shipmentGroups->map(function ($item) {
+            $type = $item->arac_tipi ? Str::title($item->arac_tipi) : 'Diğer';
+            return "{$item->count} {$type}";
+        })->implode(', ');
+
+        $eventGroups = Event::whereDate('start_datetime', $today)
+            ->join('event_types', 'events.event_type_id', '=', 'event_types.id') // Tabloları birleştir
+            ->select(['event_types.name as type_name', DB::raw('count(*) as count')])
+            ->groupBy('event_types.name')
+            ->get();
+
+        $eventDetails = $eventGroups->map(function ($item) {
+            // Artık direkt veritabanındaki ismi alıyoruz
+            return "{$item->count} {$item->type_name}";
+        })->implode(', ');
+
         return [
-            'sevkiyat_sayisi' => Shipment::whereDate('tahmini_varis_tarihi', $today)->count(),
+            'sevkiyat_sayisi' => $totalShipment,
+            'sevkiyat_detay' => $shipmentDetails,
             'plan_sayisi' => ProductionPlan::whereDate('week_start_date', $today)->count(),
             'etkinlik_sayisi' => Event::whereDate('start_datetime', $today)->count(),
+            'etkinlik_detay' => $eventDetails,
             'arac_gorevi_sayisi' => VehicleAssignment::whereDate('start_time', $today)
                 ->whereIn('status', ['pending', 'in_progress'])->count(),
             'bakim_sayisi' => MaintenancePlan::whereDate('planned_start_date', $today)->count(),
-            'kullanici_sayisi' => User::count()
+            'kullanici_sayisi' => User::count(),
+            'seyahat_sayisi' => Travel::whereDate('start_date', $today)->count()
         ];
     }
 
     /**
-     * 2. ÖNEMLİ BİLDİRİMLERİ TOPLA
+     * 2. ÖNEMLİ BİLDİRİMLERİ TOPLA (GÜNCELLENDİ)
      */
     private function getImportantItems(Carbon $today): Collection
     {
         $items = collect();
 
-        // Helper fonksiyon kullanarak kodu sadeleştirdik
-        $items = $items->merge($this->fetchImportant(Shipment::class, 'tahmini_varis_tarihi', $today, 'kargo_icerigi', '🚚 Sevkiyat'));
-        $items = $items->merge($this->fetchImportant(ProductionPlan::class, 'week_start_date', $today, 'plan_title', '🏭 Üretim'));
-        $items = $items->merge($this->fetchImportant(Event::class, 'start_datetime', $today, 'title', '🎉 Etkinlik'));
-        $items = $items->merge($this->fetchImportant(VehicleAssignment::class, 'start_time', $today, 'task_description', '🚗 Görev'));
-        $items = $items->merge($this->fetchImportant(Travel::class, 'start_date', $today, 'name', '✈️ Seyahat'));
+        // fetchImportant fonksiyonuna artık başlığı 'category_title' olarak hazırlatacağız.
+        $items = $items->merge($this->fetchImportant(Shipment::class, 'tahmini_varis_tarihi', $today, 'kargo_icerigi', ' SEVKİYAT'));
+        $items = $items->merge($this->fetchImportant(ProductionPlan::class, 'week_start_date', $today, 'plan_title', ' ÜRETİM'));
+        $items = $items->merge($this->fetchImportant(Event::class, 'start_datetime', $today, 'title', ' ETKİNLİK'));
+        $items = $items->merge($this->fetchImportant(VehicleAssignment::class, 'start_time', $today, 'task_description', ' ARAÇ GÖREVİ'));
+        $items = $items->merge($this->fetchImportant(Travel::class, 'start_date', $today, 'name', ' SEYAHAT'));
 
-        // Bakım Planı (Priority mantığı farklı olduğu için manuel ekliyoruz)
+        // Bakım Planı (Manuel ekleme devam ediyor)
         $maintenance = MaintenancePlan::whereIn('priority', ['high', 'critical'])
             ->where('planned_start_date', '>=', $today)
             ->get()
             ->map(fn($i) => (object) [
-                'title' => '🔧 Bakım: ' . Str::limit($i->title, 25),
+                'category' => 'BAKIM', // Üst Başlık
+                'content' => $i->title, // Asıl İçerik
                 'date' => $i->planned_start_date,
                 'type' => 'maintenance'
             ]);
@@ -86,75 +114,116 @@ class TvDashboardController extends Controller
     }
 
     /**
-     * YARDIMCI: Modellerden standart veri çekme
+     * YARDIMCI: Modellerden standart veri çekme (GÜNCELLENDİ)
      */
-    private function fetchImportant($modelClass, $dateCol, $today, $titleCol, $prefix)
+    private function fetchImportant($modelClass, $dateCol, $today, $titleCol, $categoryLabel)
     {
         return $modelClass::where('is_important', true)
             ->where($dateCol, '>=', $today)
             ->get()
-            ->map(fn($i) => (object) [
-                'title' => $prefix . ': ' . Str::limit($i->$titleCol, 25),
-                'date' => $i->$dateCol,
-                'type' => strtolower(class_basename($modelClass))
-            ]);
+            ->map(function ($i) use ($dateCol, $titleCol, $categoryLabel, $modelClass) {
+
+                $finalCategory = $categoryLabel;
+
+                // ÖZEL DURUM: Eğer bu bir SEVKİYAT ise, türünü başlığa ekle (Örn: SEVKİYAT (GEMİ))
+                if ($modelClass === Shipment::class && !empty($i->arac_tipi)) {
+                    $finalCategory .= ' (' . Str::upper($i->arac_tipi) . ')';
+                }
+
+                // ÖZEL DURUM: Eğer bu bir ETKİNLİK ise, türünü ekleyebiliriz (İsteğe bağlı, şu an kapalı)
+                // if ($modelClass === Event::class && !empty($i->event_type)) { ... }
+    
+                return (object) [
+                    'category' => $finalCategory,       // Örn: "SEVKİYAT (GEMİ)"
+                    'content' => Str::limit($i->$titleCol, 30), // Örn: "Hammadde Transferi"
+                    'date' => $i->$dateCol,
+                    'type' => strtolower(class_basename($modelClass))
+                ];
+            });
     }
 
     /**
-     * 3. SANKEY GRAFİK VERİSİ
+     * 3. SANKEY GRAFİK VERİSİ 
      */
     private function getSankeyData(): array
     {
-        $chartData = [];
+        $data = [];
+        // Kök düğümde toplam sayıya gerek yok, sadece isim kalsın veya istersen ekle
+        $root = 'KÖKSAN';
 
-        // A) Lojistik
-        $logistics = Shipment::select(['kargo_icerigi', 'arac_tipi', DB::raw('COUNT(*) as weight')])
-            ->whereNotNull('kargo_icerigi')->whereNotNull('arac_tipi')
-            ->groupBy('kargo_icerigi', 'arac_tipi')->orderByDesc('weight')->limit(5)->get();
-        foreach ($logistics as $flow) {
-            $chartData[] = [Str::title(Str::limit($flow->kargo_icerigi, 15)), Str::upper($flow->arac_tipi), (int) $flow->weight];
-        }
+        // 1. LOJİSTİK AKIŞI
+        $logistics = Shipment::select(['arac_tipi', DB::raw('count(*) as count')])
+            ->groupBy('arac_tipi')->get();
 
-        // B) Üretim
-        $prodPlans = ProductionPlan::whereNotNull('plan_details')->latest()->take(10)->get();
-        $prodFlows = [];
-        foreach ($prodPlans as $plan) {
-            if (is_array($plan->plan_details)) {
-                foreach ($plan->plan_details as $detail) {
-                    $key = ($detail['machine'] ?? 'Bilinmiyor') . '|' . ($detail['product'] ?? 'Ürün');
-                    if (!isset($prodFlows[$key]))
-                        $prodFlows[$key] = 0;
-                    $prodFlows[$key] += (int) ($detail['quantity'] ?? 1);
-                }
+        if ($logistics->count() > 0) {
+            $total = $logistics->sum('count');
+            // İSMİ BURADA OLUŞTURUYORUZ: "LOJİSTİK (5)"
+            $logisticsLabel = 'LOJİSTİK (' . $total . ')';
+
+            $data[] = [$root, $logisticsLabel, (int) $total];
+
+            foreach ($logistics as $item) {
+                $subLabel = ($item->arac_tipi ? Str::upper($item->arac_tipi) : 'DİĞER') . ' (' . $item->count . ')';
+                // Kaynak olarak yukarıdaki $logisticsLabel değişkenini kullanıyoruz
+                $data[] = [$logisticsLabel, $subLabel, (int) $item->count];
             }
         }
-        foreach (collect($prodFlows)->sortDesc()->take(5) as $key => $weight) {
-            [$machine, $product] = explode('|', $key);
-            $chartData[] = [Str::limit($machine, 15), Str::limit($product, 15), $weight];
+
+        // 2. ÜRETİM AKIŞI
+        $productions = ProductionPlan::latest()->take(5)->get();
+        if ($productions->count() > 0) {
+            $prodLabel = 'ÜRETİM (' . $productions->count() . ')';
+            $data[] = [$root, $prodLabel, $productions->count()];
+
+            foreach ($productions as $plan) {
+                // Üretim detayında sayı genelde 1 olduğu için sayı yazmaya gerek yok, sadece isim
+                $name = Str::limit($plan->plan_title, 15);
+                $data[] = [$prodLabel, $name, 1];
+            }
         }
 
-        // C) Bakım
-        $maintenance = MaintenancePlan::with(['type', 'asset'])
-            ->select('maintenance_type_id', 'maintenance_asset_id', DB::raw('count(*) as total'))
-            ->groupBy('maintenance_type_id', 'maintenance_asset_id')->orderByDesc('total')->limit(5)->get();
-        foreach ($maintenance as $flow) {
-            if ($flow->type && $flow->asset)
-                $chartData[] = [$flow->type->name, $flow->asset->name, (int) $flow->total];
+        // 3. ETKİNLİK AKIŞI
+        $events = Event::join('event_types', 'events.event_type_id', '=', 'event_types.id')
+            ->select(['event_types.name', DB::raw('count(*) as count')])
+            ->groupBy('event_types.name')->get();
+
+        if ($events->count() > 0) {
+            $totalEvent = $events->sum('count');
+            $eventLabel = 'ETKİNLİK (' . $totalEvent . ')';
+            $data[] = [$root, $eventLabel, (int) $totalEvent];
+
+            foreach ($events as $event) {
+                $subLabel = $event->name . ' (' . $event->count . ')';
+                $data[] = [$eventLabel, $subLabel, (int) $event->count];
+            }
         }
 
-        // D) Araç
-        $vehicles = VehicleAssignment::with('vehicle')
-            ->select('vehicle_id', 'destination', DB::raw('count(*) as total'))
-            ->whereNotNull('destination')->groupBy('vehicle_id', 'destination')->orderByDesc('total')->limit(5)->get();
-        foreach ($vehicles as $flow) {
-            if ($flow->vehicle)
-                $chartData[] = [$flow->vehicle->plate_number, Str::limit($flow->destination, 15), (int) $flow->total];
+        // 4. SEYAHAT AKIŞI
+        $travels = Travel::whereDate('start_date', Carbon::today())->get();
+        if ($travels->count() > 0) {
+            $travelLabel = 'SEYAHAT (' . $travels->count() . ')';
+            $data[] = [$root, $travelLabel, $travels->count()];
+
+            foreach ($travels as $travel) {
+                $data[] = [$travelLabel, Str::limit($travel->name, 12), 1];
+            }
         }
 
-        if (empty($chartData))
-            $chartData[] = ['Sistem', 'Veri Bekleniyor', 1];
+        // 5. TEKNİK AKIŞI
+        $maintenances = MaintenancePlan::where('status', '!=', 'completed')->take(3)->get();
+        if ($maintenances->count() > 0) {
+            $techLabel = 'TEKNİK (' . $maintenances->count() . ')';
+            $data[] = [$root, $techLabel, $maintenances->count()];
+            foreach ($maintenances as $m) {
+                $data[] = [$techLabel, Str::limit($m->title, 15), 1];
+            }
+        }
 
-        return $chartData;
+        if (empty($data)) {
+            $data[] = [$root, 'Sistem Hazır', 1];
+        }
+
+        return $data;
     }
 
     /**

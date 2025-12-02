@@ -31,7 +31,7 @@ class VehicleAssignmentController extends Controller
      */
     public function index(Request $request): View
     {
-        $query = VehicleAssignment::with(['vehicle', 'createdBy', 'responsible'])
+        $query = VehicleAssignment::with(['vehicle', 'createdBy', 'responsible', 'files'])
             ->where('assignment_type', 'vehicle');
 
         $query->where(function ($q) {
@@ -113,7 +113,7 @@ class VehicleAssignmentController extends Controller
      */
     public function generalIndex(Request $request): View
     {
-        $query = VehicleAssignment::with(['createdBy', 'responsible'])
+        $query = VehicleAssignment::with(['createdBy', 'responsible', 'files'])
             ->where('assignment_type', 'general');
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
@@ -314,7 +314,8 @@ class VehicleAssignmentController extends Controller
             Log::error('Bildirim gönderilirken hata oluştu: ' . $e->getMessage());
         }
 
-        $redirectRoute = 'home'; // Hepsini ana sayfaya yönlendir
+        // Eğer araçlıysa araç listesine, genel ise genel listeye
+        $redirectRoute = ($assignmentType === 'vehicle') ? 'service.assignments.index' : 'service.general-tasks.index';
         return redirect()->route($redirectRoute)->with('success', $successMessage);
     }
     /**
@@ -365,45 +366,7 @@ class VehicleAssignmentController extends Controller
 
         return back()->with('success', 'Araç ataması başarıyla yapıldı ve ilgililere bildirildi.');
     }
-    /**
-     * Oturum açmış kullanıcıya atanmış görevleri listeler.
-     */
-    public function myAssignments(): View
-    {
-        $user = Auth::user();
 
-        // Kullanıcının üye olduğu takımların ID'leri
-        $teamIds = $user->teams()->pluck('teams.id');
-
-        $assignments = VehicleAssignment::with([
-            'vehicle',
-            'createdBy',
-            'responsible' => function (MorphTo $morphTo) {
-                $morphTo->morphWith([
-                        // Eğer responsible bir Team ise, Team'in 'users' ilişkisini yükle
-                    Team::class => ['users'],
-                        // Eğer responsible bir User ise, ek ilişki yükleme
-                    User::class => [],
-                ]);
-            }
-        ])
-            ->where(function ($query) use ($user, $teamIds) {
-                // 1. Kural: Kullanıcıya bireysel atanmış görevler
-                $query->where(function ($q) use ($user) {
-                    $q->where('responsible_type', User::class)
-                        ->where('responsible_id', $user->id);
-                })
-                    // 2. Kural: Kullanıcının üyesi olduğu takımlara atanmış görevler
-                    ->orWhere(function ($q) use ($teamIds) {
-                    $q->where('responsible_type', Team::class)
-                        ->whereIn('responsible_id', $teamIds);
-                });
-            })
-            ->latest('start_time')
-            ->paginate(15);
-
-        return view('service.assignments.my_assignments', compact('assignments'));
-    }
     public function show(VehicleAssignment $assignment): View
     {
         $assignment->load(['vehicle', 'createdBy', 'responsible', 'files.uploader']);
@@ -506,10 +469,6 @@ class VehicleAssignmentController extends Controller
         $assignment->title = $request->input('title', $assignment->title);
         $assignment->task_description = $request->input('task_description', $assignment->task_description);
         $assignment->status = $validatedData['status'];
-
-        // Opsiyonel Alanlar (?? null kullanarak hata almayı engelliyoruz)
-        // Not: Eğer input disabled ise $request->input null dönebilir, bu durumda eski veriyi korumak daha güvenlidir.
-        // Ancak bu alanlar düzenlenebilir olduğu için direkt alıyoruz.
         if ($request->has('destination')) {
             $assignment->destination = $validatedData['destination'];
         }
@@ -578,7 +537,13 @@ class VehicleAssignmentController extends Controller
             }
         }
 
-        return redirect()->route('service.general-tasks.index')
+        // 6. YÖNLENDİRME AYARI
+        // Görev türüne göre ilgili listeye yönlendirme
+        $redirectRoute = $assignment->assignment_type === 'vehicle'
+            ? 'service.assignments.index'      // Araçlı ise Araç Atama Listesi
+            : 'service.general-tasks.index';   // Genel ise Genel Görevler Listesi
+
+        return redirect()->route($redirectRoute)
             ->with('success', 'Görev başarıyla güncellendi.');
     }
 
@@ -598,33 +563,70 @@ class VehicleAssignmentController extends Controller
     }
 
     /**
-     * Giriş yapan kullanıcının sorumlu olduğu görevleri listeler.
+     * KULLANICININ GÖREVLERİ (Bana Atananlar)
+     * Kişisel + Takım Görevleri + Filtreleme + Akıllı Sıralama
      */
-    public function myTasks(): View
+    public function myAssignments(Request $request)
     {
         $user = Auth::user();
 
-        // Kullanıcının üye olduğu takımların ID'leri
+        // Kullanıcının takımlarını al
         $teamIds = $user->teams()->pluck('teams.id');
 
-        // Görevleri çek
-        $tasks = VehicleAssignment::with(['vehicle', 'createdBy'])
-            ->where(function ($query) use ($user, $teamIds) {
-                // Doğrudan kullanıcıya atanan görevler
-                $query->where(function ($q) use ($user) {
-                    $q->where('responsible_type', User::class)
-                        ->where('responsible_id', $user->id);
-                })
-                    // VEYA Kullanıcının takımlarına atanan görevler
-                    ->orWhere(function ($q) use ($teamIds) {
-                    $q->where('responsible_type', Team::class)
-                        ->whereIn('responsible_id', $teamIds);
-                });
-            })
-            ->orderBy('start_time', 'desc')
-            ->paginate(20);
+        // Temel Sorgu
+        // İptal edilenleri varsayılan olarak gizle (ama filtrede seçilirse gelebilir opsiyonu da eklenebilir)
+        // Şimdilik sadece aktif işler odağımız olsun.
+        $query = VehicleAssignment::with([
+            'vehicle',
+            'createdBy',
+            'responsible' => function ($morphTo) {
+                $morphTo->morphWith([
+                    \App\Models\Team::class => ['users', 'files'], // Takım üyelerini de yükle (Blade'de kullanıyoruz)
+                ]);
+            }
+        ])
+            ->where('status', '<>', 'cancelled');
 
-        return view('service.assignments.my_tasks', compact('tasks'));
+        // 1. YETKİ SORGUSU
+        $query->where(function ($q) use ($user, $teamIds) {
+            // A. Doğrudan kullanıcıya atananlar
+            $q->where(function ($sub) use ($user) {
+                $sub->where('responsible_type', User::class)
+                    ->where('responsible_id', $user->id);
+            })
+                // B. Veya üyesi olduğu takıma atananlar
+                ->orWhere(function ($sub) use ($teamIds) {
+                    if ($teamIds->isNotEmpty()) {
+                        $sub->where('responsible_type', \App\Models\Team::class)
+                            ->whereIn('responsible_id', $teamIds);
+                    }
+                });
+        });
+
+        // 2. FİLTRELER
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        if ($request->filled('type')) { // Araçlı mı Genel mi?
+            $query->where('assignment_type', $request->input('type'));
+        }
+
+        // 3. SIRALAMA
+        // Acil işler (Süren, Bekleyen) en üste, Bitenler en alta
+        $tasks = $query->orderByRaw("CASE 
+                        WHEN status = 'in_progress' THEN 1 
+                        WHEN status = 'pending' THEN 2 
+                        WHEN status = 'waiting_assignment' THEN 3 
+                        ELSE 4 END")
+            ->orderBy('start_time', 'asc')
+            ->paginate(15);
+
+        // Sayfalama yaparken mevcut query string parametrelerini koru
+        $tasks->appends($request->query());
+
+        // Blade dosyasına 'tasks' değişkeniyle gönderiyoruz
+        return view('service.assignments.my_assignments', compact('tasks'));
     }
     /**
      * Görev durumunu günceller (AJAX)
@@ -743,14 +745,14 @@ class VehicleAssignmentController extends Controller
     }
 
     /**
-     * CSV OLARAK DIŞA AKTAR 
+     * CSV OLARAK DIŞA AKTAR
      */
     public function export()
     {
         $fileName = 'arac-gorevleri-' . date('d-m-Y') . '.csv';
 
-        // Verileri Çek
-        $assignments = VehicleAssignment::with(['vehicle', 'createdBy', 'responsibleUser'])->latest()->get();
+        // DÜZELTME BURADA: 'responsibleUser' YERİNE 'responsible' YAZIYORUZ
+        $assignments = VehicleAssignment::with(['vehicle', 'createdBy', 'responsible'])->latest()->get();
 
         $headers = [
             "Content-type" => "text/csv; charset=utf-8",
@@ -763,10 +765,10 @@ class VehicleAssignmentController extends Controller
         $callback = function () use ($assignments) {
             $file = fopen('php://output', 'w');
 
-            // Türkçe karakter sorunu olmasın diye BOM (Byte Order Mark) ekliyoruz
+            // Türkçe karakter sorunu olmasın diye BOM ekliyoruz
             fputs($file, "\xEF\xBB\xBF");
 
-            // 1. Satır: Başlıklar (Noktalı virgül kullanıyoruz ki Excel sütunları tanısın)
+            // 1. Satır: Başlıklar
             fputcsv($file, [
                 'ID',
                 'Görev Başlığı',
@@ -776,21 +778,27 @@ class VehicleAssignmentController extends Controller
                 'Başlangıç',
                 'Bitiş',
                 'Durum',
-                'Yakıt (TL)'
+                'Yakıt Maliyeti (TL)'
             ], ';');
 
             // 2. Satır ve sonrası: Veriler
             foreach ($assignments as $task) {
-                // Sorumlu adını bul
+                // Sorumlu adını bul (Eager Loading ile gelen 'responsible' verisini kullanıyoruz)
                 $sorumlu = 'Bilinmiyor';
-                if ($task->responsible_type === 'App\Models\User' && $task->responsibleUser) {
-                    $sorumlu = $task->responsibleUser->name;
-                } elseif ($task->responsible_type === 'App\Models\Team') {
-                    $sorumlu = 'Takım ID: ' . $task->responsible_id;
+
+                if ($task->responsible) {
+                    // Eğer sorumlu bir Takımsa yanına (Takım) yazalım
+                    if ($task->responsible_type === 'App\Models\Team') {
+                        $sorumlu = $task->responsible->name . ' (Takım)';
+                    } else {
+                        // Kullanıcıysa direkt ismini yazalım
+                        $sorumlu = $task->responsible->name;
+                    }
                 }
 
                 // Durumu Türkçeleştir
                 $durum = match ($task->status) {
+                    'waiting_assignment' => 'Atama Bekliyor',
                     'pending' => 'Bekliyor',
                     'in_progress' => 'Devam Ediyor',
                     'completed' => 'Tamamlandı',

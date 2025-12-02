@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', 'KÖKSAN Canlı İzleme Paneli')
 
-@push('styles')
+<?php $__env->startSection('title', 'KÖKSAN Canlı İzleme Paneli'); ?>
+
+<?php $__env->startPush('styles'); ?>
     <style>
         /* --- TV MODU STİLLERİ --- */
         nav.navbar,
@@ -169,12 +169,12 @@
             cursor: pointer;
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container-fluid d-flex flex-column" style="height: 95vh;">
 
-        {{-- ÜST BAŞLIK --}}
+        
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h1 class="fw-bold mb-0" style="font-size: 3rem; color: #2d3748; letter-spacing: -1px;">
@@ -185,24 +185,25 @@
             <div class="text-end">
                 <h1 class="fw-bold mb-0" id="live-clock" style="font-size: 4rem; font-family: monospace; color: #4a5568;">
                     --:--</h1>
-                <span class="text-muted fs-4">{{ \Carbon\Carbon::now()->translatedFormat('d F Y, l') }}</span>
+                <span class="text-muted fs-4"><?php echo e(\Carbon\Carbon::now()->translatedFormat('d F Y, l')); ?></span>
             </div>
         </div>
 
-        {{-- KPI KARTLARI --}}
+        
         <div class="row g-4 mb-4">
             <div class="col">
                 <div class="tv-card" style="border-bottom: 5px solid #667EEA;">
                     <div class="kpi-card-inner">
                         <div>
-                            <div class="kpi-value">{{ $kpiData['sevkiyat_sayisi'] }}</div>
+                            <div class="kpi-value"><?php echo e($kpiData['sevkiyat_sayisi']); ?></div>
                             <div class="kpi-label">Sevkiyat</div>
-                            @if (!empty($kpiData['sevkiyat_detay']))
+                            <?php if(!empty($kpiData['sevkiyat_detay'])): ?>
                                 <div style="font-size: 1.1rem; color: #718096; margin-top: 5px; font-weight: 500;">
                                     <i class="fa-solid fa-list-ul me-1" style="font-size: 0.9rem;"></i>
-                                    {{ $kpiData['sevkiyat_detay'] }}
+                                    <?php echo e($kpiData['sevkiyat_detay']); ?>
+
                                 </div>
-                            @endif
+                            <?php endif; ?>
                         </div>
                         <i class="fa-solid fa-truck-fast kpi-icon text-lojistik"></i>
                     </div>
@@ -212,7 +213,7 @@
                 <div class="tv-card" style="border-bottom: 5px solid #4FD1C5;">
                     <div class="kpi-card-inner">
                         <div>
-                            <div class="kpi-value">{{ $kpiData['plan_sayisi'] }}</div>
+                            <div class="kpi-value"><?php echo e($kpiData['plan_sayisi']); ?></div>
                             <div class="kpi-label">Üretim</div>
                         </div>
                         <i class="fa-solid fa-industry kpi-icon text-uretim"></i>
@@ -223,14 +224,15 @@
                 <div class="tv-card" style="border-bottom: 5px solid #F093FB;">
                     <div class="kpi-card-inner">
                         <div>
-                            <div class="kpi-value">{{ $kpiData['etkinlik_sayisi'] }}</div>
+                            <div class="kpi-value"><?php echo e($kpiData['etkinlik_sayisi']); ?></div>
                             <div class="kpi-label">Etkinlik</div>
-                            @if (!empty($kpiData['etkinlik_detay']))
+                            <?php if(!empty($kpiData['etkinlik_detay'])): ?>
                                 <div style="font-size: 1.1rem; color: #718096; margin-top: 5px; font-weight: 500;">
                                     <i class="fa-solid fa-list-ul me-1" style="font-size: 0.9rem;"></i>
-                                    {{ $kpiData['etkinlik_detay'] }}
+                                    <?php echo e($kpiData['etkinlik_detay']); ?>
+
                                 </div>
-                            @endif
+                            <?php endif; ?>
                         </div>
                         <i class="fa-solid fa-calendar-day kpi-icon text-hizmet"></i>
                     </div>
@@ -240,7 +242,7 @@
                 <div class="tv-card" style="border-bottom: 5px solid #E53E3E;">
                     <div class="kpi-card-inner">
                         <div>
-                            <div class="kpi-value">{{ $kpiData['seyahat_sayisi'] }}</div>
+                            <div class="kpi-value"><?php echo e($kpiData['seyahat_sayisi']); ?></div>
                             <div class="kpi-label">Seyahat</div>
                         </div>
                         <i class="fa-solid fa-plane-departure kpi-icon text-seyahat"></i>
@@ -251,7 +253,7 @@
                 <div class="tv-card" style="border-bottom: 5px solid #F6E05E;">
                     <div class="kpi-card-inner">
                         <div>
-                            <div class="kpi-value">{{ $kpiData['arac_gorevi_sayisi'] }}</div>
+                            <div class="kpi-value"><?php echo e($kpiData['arac_gorevi_sayisi']); ?></div>
                             <div class="kpi-label">Araç</div>
                         </div>
                         <i class="fa-solid fa-car-side kpi-icon text-arac"></i>
@@ -262,7 +264,7 @@
                 <div class="tv-card" style="border-bottom: 5px solid #ED8936;">
                     <div class="kpi-card-inner">
                         <div>
-                            <div class="kpi-value">{{ $kpiData['bakim_sayisi'] }}</div>
+                            <div class="kpi-value"><?php echo e($kpiData['bakim_sayisi']); ?></div>
                             <div class="kpi-label">Bakım</div>
                         </div>
                         <i class="fa-solid fa-screwdriver-wrench kpi-icon text-bakim"></i>
@@ -271,24 +273,24 @@
             </div>
         </div>
 
-        {{-- ALT BÖLÜM --}}
+        
         <div class="row g-4 flex-grow-1">
-            {{-- SOL: BİLDİRİMLER --}}
+            
             <div class="col-md-4 h-100">
                 <div class="tv-card" style="justify-content: flex-start;">
                     <h3 class="fw-bold mb-4 text-danger border-bottom pb-3">
                         <i class="fas fa-bell fa-shake me-3"></i>Önemli Bildirimler
                     </h3>
-                    @if ($importantItems->isEmpty())
+                    <?php if($importantItems->isEmpty()): ?>
                         <div
                             class="d-flex flex-column align-items-center justify-content-center h-100 text-muted opacity-50">
                             <i class="fa-regular fa-circle-check fa-5x mb-3"></i>
                             <span class="fs-3">Her şey yolunda.</span>
                         </div>
-                    @else
+                    <?php else: ?>
                         <div class="d-flex flex-column gap-3">
-                            @foreach ($importantItems as $item)
-                                @php
+                            <?php $__currentLoopData = $importantItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php
                                     $borderColor = '#CBD5E0';
                                     $icon = 'fa-circle-info';
                                     switch ($item->type) {
@@ -317,37 +319,38 @@
                                             $icon = 'fa-plane';
                                             break;
                                     }
-                                @endphp
+                                ?>
                                 <div class="important-item"
-                                    style="border-left: 5px solid {{ $borderColor }}; padding: 10px 15px;">
+                                    style="border-left: 5px solid <?php echo e($borderColor); ?>; padding: 10px 15px;">
                                     <div class="me-3 d-flex align-items-center justify-content-center" style="width: 40px;">
-                                        <i class="fa-solid {{ $icon }} fa-xl"
-                                            style="color: {{ $borderColor }}; opacity: 0.8;"></i>
+                                        <i class="fa-solid <?php echo e($icon); ?> fa-xl"
+                                            style="color: <?php echo e($borderColor); ?>; opacity: 0.8;"></i>
                                     </div>
                                     <div class="flex-grow-1 d-flex flex-column justify-content-center">
                                         <span class="fw-bold text-uppercase"
-                                            style="font-size: 0.75rem; color: {{ $borderColor }};">{{ $item->category }}</span>
+                                            style="font-size: 0.75rem; color: <?php echo e($borderColor); ?>;"><?php echo e($item->category); ?></span>
                                         <span class="fw-bold text-dark mt-1"
-                                            style="font-size: 1.1rem; line-height: 1.2;">{{ $item->content }}</span>
+                                            style="font-size: 1.1rem; line-height: 1.2;"><?php echo e($item->content); ?></span>
                                     </div>
                                     <div class="text-end ps-3 border-start" style="min-width: 80px;">
-                                        @if ($item->type == 'travel')
+                                        <?php if($item->type == 'travel'): ?>
                                             <span class="badge bg-light text-secondary border"
                                                 style="font-size: 0.75rem;">PLANLI</span>
-                                        @else
-                                            <div class="fw-bold fs-5 text-dark">{{ $item->date->format('H:i') }}</div>
-                                        @endif
-                                        <div class="text-muted" style="font-size: 0.8rem;">{{ $item->date->format('d.m') }}
+                                        <?php else: ?>
+                                            <div class="fw-bold fs-5 text-dark"><?php echo e($item->date->format('H:i')); ?></div>
+                                        <?php endif; ?>
+                                        <div class="text-muted" style="font-size: 0.8rem;"><?php echo e($item->date->format('d.m')); ?>
+
                                         </div>
                                     </div>
                                 </div>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
 
-            {{-- SAĞ: SANKEY GRAFİĞİ --}}
+            
             <div class="col-md-8 h-100">
                 <div class="tv-card">
                     <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
@@ -361,22 +364,22 @@
             </div>
         </div>
 
-        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
+        <form id="logout-form" action="<?php echo e(route('logout')); ?>" method="POST" style="display: none;"><?php echo csrf_field(); ?></form>
         <div onclick="document.getElementById('logout-form').submit();" class="emergency-exit-btn" title="Çıkış">
             <i class="fa-solid fa-power-off fa-3x"></i>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('page_scripts')
+<?php $__env->startSection('page_scripts'); ?>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
             // --- 1. VERİ GÜNCELLEME (Polling) ---
-            let currentHash = "{{ $currentDataHash }}";
+            let currentHash = "<?php echo e($currentDataHash); ?>";
             setInterval(() => {
-                fetch("{{ route('tv.check_updates') }}")
+                fetch("<?php echo e(route('tv.check_updates')); ?>")
                     .then(response => response.json())
                     .then(data => {
                         if (data.hash !== currentHash) {
@@ -438,7 +441,7 @@
                 data.addColumn('string', 'Hedef');
                 data.addColumn('number', 'Ağırlık');
 
-                var rawData = @json($chartData);
+                var rawData = <?php echo json_encode($chartData, 15, 512) ?>;
                 data.addRows(rawData);
 
                 var colors = ['#2d3748', '#667EEA', '#4FD1C5', '#F093FB', '#E53E3E', '#ED8936'];
@@ -475,4 +478,6 @@
             }
         });
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/tv/dashboard.blade.php ENDPATH**/ ?>

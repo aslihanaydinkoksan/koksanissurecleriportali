@@ -109,7 +109,8 @@ resources\views\service\assignments\assigned_by_me.blade.php:
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid rgba(0, 0, 0, 0.05);
             position: relative;
-            overflow: hidden;
+            z-index: 1;
+            overflow: visible !important;
         }
 
         /* Kartın solundaki şerit rengi */
@@ -120,15 +121,19 @@ resources\views\service\assignments\assigned_by_me.blade.php:
             top: 0;
             bottom: 0;
             width: 4px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
             transform: scaleY(0);
             transition: transform 0.3s ease;
+            border-top-left-radius: 16px;
+            border-bottom-left-radius: 16px;
+            z-index: 2;
         }
 
         .task-card:hover {
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
             transform: translateY(-4px);
             border-color: rgba(102, 126, 234, 0.3);
+            z-index: 100 !important;
         }
 
         .task-card:hover::before {
@@ -208,6 +213,11 @@ resources\views\service\assignments\assigned_by_me.blade.php:
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        .meta-value.allow-overflow {
+            overflow: visible !important;
+            white-space: normal !important;
         }
 
         .status-badge {
@@ -517,6 +527,60 @@ resources\views\service\assignments\assigned_by_me.blade.php:
                                     <span class="status-badge bg-{{ $assignment->status_badge }}">
                                         {{ $assignment->status_name }}
                                     </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon"
+                                style="{{ $assignment->files->count() > 0 ? 'background: rgba(79, 172, 254, 0.1); color: #4facfe;' : 'background: #f7fafc; color: #cbd5e0;' }}">
+                                <i class="fas fa-paperclip"></i>
+                            </div>
+                            <div class="meta-content">
+                                <div class="meta-label">Ekli Dosyalar</div>
+                                <div class="meta-value allow-overflow">
+                                    @if ($assignment->files->count() > 0)
+                                        <div class="dropdown">
+                                            <a href="#" class="text-decoration-none dropdown-toggle fw-bold"
+                                                style="color: #4facfe;" data-bs-toggle="dropdown" aria-expanded="false">
+                                                {{ $assignment->files->count() }} Dosya Görüntüle
+                                            </a>
+                                            <ul class="dropdown-menu shadow-lg border-0 p-2"
+                                                style="border-radius: 12px; min-width: 250px; z-index: 1050;">
+                                                <li class="dropdown-header fw-bold small py-1" style="color: #4facfe;">
+                                                    DOSYALAR</li>
+                                                <li>
+                                                    <hr class="dropdown-divider my-1">
+                                                </li>
+                                                @foreach ($assignment->files as $file)
+                                                    <li>
+                                                        <a class="dropdown-item d-flex align-items-center justify-content-between rounded-2 py-2"
+                                                            href="{{ route('files.download', $file->id) }}"
+                                                            target="_blank">
+                                                            <div class="d-flex align-items-center text-truncate me-2"
+                                                                style="max-width: 150px;">
+                                                                @if (Str::contains($file->mime_type, 'image'))
+                                                                    <i
+                                                                        class="fa-regular fa-file-image me-2 text-success"></i>
+                                                                @elseif(Str::contains($file->mime_type, 'pdf'))
+                                                                    <i class="fa-regular fa-file-pdf me-2 text-danger"></i>
+                                                                @else
+                                                                    <i class="fa-regular fa-file me-2 text-muted"></i>
+                                                                @endif
+                                                                <span
+                                                                    class="text-truncate">{{ $file->original_name }}</span>
+                                                            </div>
+                                                            <i
+                                                                class="fa-solid fa-download text-secondary small opacity-50"></i>
+                                                        </a>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    @else
+                                        <span class="text-muted" style="font-weight: 400; font-size: 0.9rem;">
+                                            Dosya Yok
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
                         </div>

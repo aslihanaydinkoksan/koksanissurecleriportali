@@ -37,7 +37,7 @@ class NewTravelPlanNotification extends Notification
             'color' => 'info', // Mavi renk
 
             // Tıklayınca seyahat detayına gitsin ki müdür detayları görüp araç atayabilsin
-            'link' => route('travels.index'),
+            'link' => route('travels.show', $this->travel->id),
         ];
     }
 }

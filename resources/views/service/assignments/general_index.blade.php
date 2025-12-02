@@ -111,7 +111,7 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid rgba(0, 0, 0, 0.05);
             position: relative;
-            overflow: hidden;
+            overflow: visible !important;
         }
 
         .task-card::before {
@@ -124,6 +124,8 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             transform: scaleY(0);
             transition: transform 0.3s ease;
+            border-top-left-radius: 16px;
+            border-bottom-left-radius: 16px;
         }
 
         .task-card:hover {
@@ -207,6 +209,12 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        .meta-value.allow-overflow {
+            overflow: visible !important;
+            white-space: normal !important;
+            /* Gerekirse alt satıra geçsin */
         }
 
         .status-badge {
@@ -617,6 +625,53 @@
                                     <span class="status-badge bg-{{ $assignment->status_badge }}">
                                         {{ $assignment->status_name }}
                                     </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon"
+                                style="{{ $assignment->files->count() > 0 ? 'background: rgba(102, 126, 234, 0.1); color: #667eea;' : 'background: #f7fafc; color: #cbd5e0;' }}">
+                                <i class="fas fa-paperclip"></i>
+                            </div>
+                            <div class="meta-content">
+                                <div class="meta-label">Ekli Dosyalar</div>
+                                <div class="meta-value allow-overflow">
+                                    @if ($assignment->files->count() > 0)
+                                        <div class="dropdown">
+                                            <a href="#"
+                                                class="text-decoration-none dropdown-toggle fw-bold text-primary"
+                                                data-bs-toggle="dropdown" aria-expanded="false">
+                                                {{ $assignment->files->count() }} Dosya Görüntüle
+                                            </a>
+                                            <ul class="dropdown-menu shadow-lg border-0 p-2"
+                                                style="border-radius: 12px; min-width: 250px;">
+                                                <li class="dropdown-header text-primary fw-bold small py-1">DOSYALAR</li>
+                                                <li>
+                                                    <hr class="dropdown-divider my-1">
+                                                </li>
+                                                @foreach ($assignment->files as $file)
+                                                    <li>
+                                                        <a class="dropdown-item d-flex align-items-center justify-content-between rounded-2 py-2"
+                                                            href="{{ route('files.download', $file->id) }}"
+                                                            target="_blank">
+                                                            <div class="d-flex align-items-center text-truncate me-2"
+                                                                style="max-width: 150px;">
+                                                                <i class="fa-regular fa-file me-2 text-muted"></i>
+                                                                <span
+                                                                    class="text-truncate">{{ $file->original_name }}</span>
+                                                            </div>
+                                                            <i
+                                                                class="fa-solid fa-download text-secondary small opacity-50"></i>
+                                                        </a>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    @else
+                                        <span class="text-muted" style="font-weight: 400; font-size: 0.9rem;">
+                                            Dosya Yok
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
                         </div>

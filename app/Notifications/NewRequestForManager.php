@@ -24,7 +24,6 @@ class NewRequestForManager extends Notification
 
     /**
      * NAVBAR İÇİN ÖZEL VERİ YAPISI
-     * Senin mevcut dosyanı bozmadan, sadece arayüzün beklediği formatı buraya yazıyoruz.
      */
     public function toArray($notifiable)
     {
@@ -41,7 +40,7 @@ class NewRequestForManager extends Notification
             'message' => "{$requester}: {$desc}",
             'icon' => 'fa-car-side', // FontAwesome ikonu
             'color' => 'warning',     // Bootstrap rengi (text-warning)
-            'link' => route('home'), // Tıklayınca gideceği yer
+            'link' => route('service.assignments.edit', $this->assignment->id),// Tıklayınca gideceği yer
         ];
     }
 }

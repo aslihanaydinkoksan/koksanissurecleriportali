@@ -329,8 +329,15 @@
                                         <hr class="dropdown-divider">
                                     </li>
                                     <li><a class="dropdown-item" href="<?php echo e(route('service.assignments.created_by_me')); ?>"><i
-                                                class="fa-solid fa-share-from-square" style="color: #4258bb;"></i> Atadığım
+                                                class="fa-solid fa-cloud-arrow-up" style="color: #659ef4;"></i> Atadığım
                                             Görevler</a></li>
+                                    <li><a class="dropdown-item" href="<?php echo e(route('my-assignments.index')); ?>"><i
+                                                class="fa-solid fa-cloud-arrow-down" style="color: #4258bb;"></i> Bana
+                                            Atanan
+                                            Görevler</a></li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
                                     <li><a class="dropdown-item" href="<?php echo e(route('teams.index')); ?>"><i
                                                 class="fa-solid fa-people-group" style="color: #7a5ed1;"></i> Takım
                                             Yönetimi</a></li>
@@ -828,7 +835,7 @@
         });
         document.addEventListener('DOMContentLoaded', function() {
             // PERİYODİK KONTROL
-            // Sunucuyu yormamak için süreyi 10 saniye (30000 ms) yaptım
+            // Sunucuyu yormamak için süreyi 10 saniye (10000 ms) yaptım
             setInterval(checkNotifications, 10000);
 
             function checkNotifications() {

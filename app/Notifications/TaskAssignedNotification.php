@@ -37,7 +37,7 @@ class TaskAssignedNotification extends Notification
             'color' => 'success',            // Yeşil renk (text-success)
 
             // Tıklayınca gideceği link (Görevlerim sayfası)
-            'link' => route('service.general-tasks.index'),
+            'link' => route('service.assignments.show', $this->assignment->id),
         ];
     }
 }

@@ -70,6 +70,7 @@ class VehicleAssignmentCreated extends Notification implements ShouldQueue
             'starts_at' => $this->assignment->start_time->format('d.m.Y H:i'),
             'type' => $this->assignment->assignment_type,
             'message' => 'Size yeni bir araç görevi (' . $this->assignment->title . ') atanmıştır.',
+            'link' => route('service.assignments.edit', $this->assignment->id),
         ];
     }
 }

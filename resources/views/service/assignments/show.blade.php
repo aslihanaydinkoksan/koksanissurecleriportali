@@ -394,6 +394,14 @@
             animation: fadeInUp 0.6s ease 0.4s both;
         }
 
+        .info-box:nth-child(5) {
+            animation: fadeInUp 0.6s ease 0.5s both;
+        }
+
+        .info-box:nth-child(6) {
+            animation: fadeInUp 0.6s ease 0.6s both;
+        }
+
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -438,6 +446,7 @@
 
                         {{-- TEMEL GÖREV BİLGİLERİ --}}
                         <div class="row">
+                            {{-- 1. Atanan Araç --}}
                             <div class="col-md-6">
                                 <div class="info-box">
                                     <div class="info-label">
@@ -445,11 +454,13 @@
                                     </div>
                                     <p class="info-value">
                                         {{ $assignment->vehicle->plate_number ?? 'Araç Yok' }}
-                                        <small class="text-muted">({{ $assignment->vehicle->type ?? 'Genel' }})</small>
+                                        <small
+                                            class="text-muted">({{ $assignment->vehicle->type ?? 'Araçsız Görev' }})</small>
                                     </p>
                                 </div>
                             </div>
 
+                            {{-- 2. Sorumlu --}}
                             <div class="col-md-6">
                                 <div class="info-box">
                                     <div class="info-label">
@@ -470,6 +481,7 @@
                                 </div>
                             </div>
 
+                            {{-- 3. Sefer Zamanı --}}
                             <div class="col-md-6">
                                 <div class="info-box">
                                     <div class="info-label">
@@ -482,12 +494,38 @@
                                 </div>
                             </div>
 
+                            {{-- 4. Yer / Hedef --}}
                             <div class="col-md-6">
                                 <div class="info-box">
                                     <div class="info-label">
                                         <i class="fas fa-map-marker-alt"></i> Yer / Hedef
                                     </div>
                                     <p class="info-value">{{ $assignment->destination ?? 'Belirtilmedi' }}</p>
+                                </div>
+                            </div>
+
+                            {{-- 5. Oluşturan (YENİ EKLENDİ) --}}
+                            <div class="col-md-6">
+                                <div class="info-box">
+                                    <div class="info-label">
+                                        <i class="fas fa-user-circle"></i> Oluşturan
+                                    </div>
+                                    <p class="info-value">
+                                        {{ $assignment->createdBy->name ?? 'Bilinmiyor' }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {{-- 6. Oluşturulma Tarihi (YENİ EKLENDİ) --}}
+                            <div class="col-md-6">
+                                <div class="info-box">
+                                    <div class="info-label">
+                                        <i class="fas fa-calendar-alt"></i> Oluşturulma Tarihi
+                                    </div>
+                                    <p class="info-value">
+                                        {{ $assignment->created_at->format('d.m.Y') }}
+                                        <small class="text-muted">{{ $assignment->created_at->format('H:i') }}</small>
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -509,7 +547,7 @@
                     </div>
                 </div>
 
-                {{-- NAKLİYE (LOJİSTİK) DETAYLARI --}}ac
+                {{-- NAKLİYE (LOJİSTİK) DETAYLARI --}}
                 @if ($assignment->isLogistics())
                     <div class="logistics-section">
                         <h5>
@@ -609,21 +647,6 @@
                         </div>
                     </div>
                 @endif
-
-                {{-- ALT BİLGİ --}}
-                <div class="card-footer-info">
-                    <span>
-                        <i class="fas fa-user-circle me-2"></i>
-                        <strong>Oluşturan:</strong> {{ $assignment->createdBy->name ?? 'Bilinmiyor' }}
-                    </span>
-                    <span>
-                        <i class="fas fa-calendar-alt me-2"></i>
-                        <strong>Oluşturulma Tarihi:</strong> {{ $assignment->created_at->format('d.m.Y') }}
-                        <strong>Saati:</strong> {{ $assignment->created_at->format('H:i') }}
-                    </span>
-
-
-                </div>
             </div>
 
             @php

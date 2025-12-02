@@ -394,6 +394,14 @@
             animation: fadeInUp 0.6s ease 0.4s both;
         }
 
+        .info-box:nth-child(5) {
+            animation: fadeInUp 0.6s ease 0.5s both;
+        }
+
+        .info-box:nth-child(6) {
+            animation: fadeInUp 0.6s ease 0.6s both;
+        }
+
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -438,6 +446,7 @@
 
                         
                         <div class="row">
+                            
                             <div class="col-md-6">
                                 <div class="info-box">
                                     <div class="info-label">
@@ -446,11 +455,13 @@
                                     <p class="info-value">
                                         <?php echo e($assignment->vehicle->plate_number ?? 'Araç Yok'); ?>
 
-                                        <small class="text-muted">(<?php echo e($assignment->vehicle->type ?? 'Genel'); ?>)</small>
+                                        <small
+                                            class="text-muted">(<?php echo e($assignment->vehicle->type ?? 'Araçsız Görev'); ?>)</small>
                                     </p>
                                 </div>
                             </div>
 
+                            
                             <div class="col-md-6">
                                 <div class="info-box">
                                     <div class="info-label">
@@ -472,6 +483,7 @@
                                 </div>
                             </div>
 
+                            
                             <div class="col-md-6">
                                 <div class="info-box">
                                     <div class="info-label">
@@ -485,12 +497,40 @@
                                 </div>
                             </div>
 
+                            
                             <div class="col-md-6">
                                 <div class="info-box">
                                     <div class="info-label">
                                         <i class="fas fa-map-marker-alt"></i> Yer / Hedef
                                     </div>
                                     <p class="info-value"><?php echo e($assignment->destination ?? 'Belirtilmedi'); ?></p>
+                                </div>
+                            </div>
+
+                            
+                            <div class="col-md-6">
+                                <div class="info-box">
+                                    <div class="info-label">
+                                        <i class="fas fa-user-circle"></i> Oluşturan
+                                    </div>
+                                    <p class="info-value">
+                                        <?php echo e($assignment->createdBy->name ?? 'Bilinmiyor'); ?>
+
+                                    </p>
+                                </div>
+                            </div>
+
+                            
+                            <div class="col-md-6">
+                                <div class="info-box">
+                                    <div class="info-label">
+                                        <i class="fas fa-calendar-alt"></i> Oluşturulma Tarihi
+                                    </div>
+                                    <p class="info-value">
+                                        <?php echo e($assignment->created_at->format('d.m.Y')); ?>
+
+                                        <small class="text-muted"><?php echo e($assignment->created_at->format('H:i')); ?></small>
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -509,86 +549,134 @@
                             </h6>
                             <p><?php echo e($assignment->notes ?? 'Ek not bulunmuyor.'); ?></p>
                         </div>
-
-                        
-                        <?php if($assignment->isLogistics()): ?>
-                            <div class="logistics-section">
-                                <h5>
-                                    <i class="fas fa-truck"></i> Nakliye / Lojistik Kayıtları
-                                </h5>
-
-                                <div class="table-responsive">
-                                    <table class="table logistics-table mb-0">
-                                        <thead>
-                                            <tr>
-                                                <th>Detay</th>
-                                                <th>Başlangıç Değeri</th>
-                                                <th>Bitiş Değeri</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>Kilometre (KM)</td>
-                                                <td><?php echo e($assignment->start_km ?? '-'); ?></td>
-                                                <td><?php echo e($assignment->end_km ?? 'Bekleniyor'); ?></td>
-                                            </tr>
-                                            <tr>
-                                                <td>Yakıt Durumu</td>
-                                                <td><?php echo e($assignment->start_fuel_level ?? '-'); ?></td>
-                                                <td><?php echo e($assignment->end_fuel_level ?? 'Bekleniyor'); ?></td>
-                                            </tr>
-                                            <?php if($assignment->fuel_cost): ?>
-                                                <tr>
-                                                    <td colspan="2">Yakıt Maliyeti</td>
-                                                    <td class="fw-bold"><?php echo e(number_format($assignment->fuel_cost, 2)); ?> TL
-                                                    </td>
-                                                </tr>
-                                            <?php endif; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                <?php if($assignment->status !== 'completed'): ?>
-                                    <div class="alert-custom">
-                                        <i class="fas fa-exclamation-triangle me-2"></i>
-                                        Görevi tamamlamak için <strong>Bitiş KM</strong> ve <strong>Yakıt
-                                            Maliyeti</strong> alanlarını doldurmanız gerekebilir.
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        <?php endif; ?>
-
-                        
-                        <div class="card-footer-info">
-                            <span>
-                                <i class="fas fa-user-circle me-2"></i>
-                                <strong>Oluşturan:</strong> <?php echo e($assignment->createdBy->name ?? 'Bilinmiyor'); ?>
-
-                            </span>
-                            <span>
-                                <i class="fas fa-calendar-alt me-2"></i>
-                                <strong>Oluşturulma Tarihi:</strong> <?php echo e($assignment->created_at->format('d.m.Y')); ?>
-
-                                <strong>Saati:</strong> <?php echo e($assignment->created_at->format('H:i')); ?>
-
-                            </span>
-
-
-                        </div>
                     </div>
-
-                    
-                    <?php if(Gate::allows('manage-assignment', $assignment)): ?>
-                        <div class="action-footer text-end">
-                            <a href="<?php echo e(route('service.assignments.edit', $assignment->id)); ?>" class="btn btn-edit">
-                                <i class="fas fa-edit me-2"></i> Görevi Düzenle / Tamamla
-                            </a>
-                        </div>
-                    <?php endif; ?>
                 </div>
 
+                
+                <?php if($assignment->isLogistics()): ?>
+                    <div class="logistics-section">
+                        <h5>
+                            <i class="fas fa-truck"></i> Nakliye / Lojistik Kayıtları
+                        </h5>
+
+                        <div class="table-responsive">
+                            <table class="table logistics-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Detay</th>
+                                        <th>Başlangıç Değeri</th>
+                                        <th>Bitiş Değeri</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Kilometre (KM)</td>
+                                        <td><?php echo e($assignment->start_km ?? '-'); ?></td>
+                                        <td><?php echo e($assignment->end_km ?? 'Bekleniyor'); ?></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Yakıt Durumu</td>
+                                        <td><?php echo e($assignment->start_fuel_level ?? '-'); ?></td>
+                                        <td><?php echo e($assignment->end_fuel_level ?? 'Bekleniyor'); ?></td>
+                                    </tr>
+                                    <?php if($assignment->fuel_cost): ?>
+                                        <tr>
+                                            <td colspan="2">Yakıt Maliyeti</td>
+                                            <td class="fw-bold"><?php echo e(number_format($assignment->fuel_cost, 2)); ?> TL
+                                            </td>
+                                        </tr>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <?php if($assignment->status !== 'completed'): ?>
+                            <div class="alert-custom">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Görevi tamamlamak için <strong>Bitiş KM</strong> ve <strong>Yakıt
+                                    Maliyeti</strong> alanlarını doldurmanız gerekebilir.
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+
+                
+                <?php if($assignment->files && $assignment->files->count() > 0): ?>
+                    <div class="mt-5 pt-4 border-top">
+                        <div class="d-flex align-items-center mb-3">
+                            <h5 class="fw-bold mb-0 me-3 text-secondary">
+                                <i class="fa-solid fa-paperclip me-2"></i> Ekli Dosyalar
+                            </h5>
+                            <span class="badge bg-secondary rounded-pill"><?php echo e($assignment->files->count()); ?></span>
+                        </div>
+
+                        <div class="row g-3">
+                            <?php $__currentLoopData = $assignment->files; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $file): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="card h-100 border"
+                                        style="transition: transform 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                        <div class="card-body d-flex align-items-center p-3">
+                                            
+                                            <div class="me-3 fs-1 text-secondary">
+                                                <?php if(Str::contains($file->mime_type, 'image')): ?>
+                                                    <i class="fa-regular fa-file-image text-primary"></i>
+                                                <?php elseif(Str::contains($file->mime_type, 'pdf')): ?>
+                                                    <i class="fa-regular fa-file-pdf text-danger"></i>
+                                                <?php elseif(Str::contains($file->mime_type, 'excel') || Str::contains($file->mime_type, 'spreadsheet')): ?>
+                                                    <i class="fa-regular fa-file-excel text-success"></i>
+                                                <?php else: ?>
+                                                    <i class="fa-regular fa-file"></i>
+                                                <?php endif; ?>
+                                            </div>
+
+                                            <div class="flex-grow-1 overflow-hidden">
+                                                <h6 class="mb-1 text-truncate" title="<?php echo e($file->original_name); ?>"
+                                                    style="font-size: 0.95rem; font-weight: 600;">
+                                                    <?php echo e($file->original_name); ?>
+
+                                                </h6>
+                                                <div class="small text-muted" style="font-size: 0.75rem;">
+                                                    <?php echo e($file->uploader->name ?? 'Sistem'); ?> •
+                                                    <?php echo e($file->created_at->diffForHumans()); ?>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer bg-light border-top-0 p-2 text-end">
+                                            <a href="<?php echo e(route('files.download', $file->id)); ?>"
+                                                class="btn btn-sm btn-dark w-100" target="_blank">
+                                                <i class="fa-solid fa-download me-2"></i> İndir / Görüntüle
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
+
+            <?php
+                $user = Auth::user();
+                $canEdit =
+                    $user->id === $assignment->created_by ||
+                    $user->role === 'admin' ||
+                    $user->role === 'müdür' ||
+                    ($assignment->responsible_type === 'App\Models\User' && $assignment->responsible_id === $user->id);
+            ?>
+
+            
+            <?php if($canEdit): ?>
+                <div class="action-footer text-end">
+                    <a href="<?php echo e(route('service.assignments.edit', $assignment->id)); ?>" class="btn btn-edit">
+                        <i class="fas fa-edit me-2"></i> Görevi Düzenle / Tamamla
+                    </a>
+                </div>
+            <?php endif; ?>
         </div>
+
+    </div>
+    </div>
     </div>
 <?php $__env->stopSection(); ?>
 

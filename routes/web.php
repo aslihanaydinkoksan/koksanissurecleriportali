@@ -25,6 +25,9 @@ use App\Http\Controllers\LogisticsVehicleController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\Approvals\MaintenanceApprovalController;
+use App\Models\Event;
+use App\Models\EventType;
+
 
 // Ana sayfa yönlendirmesi
 Route::get('/', function () {
