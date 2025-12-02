@@ -228,9 +228,11 @@ class TvDashboardController extends Controller
 
     /**
      * 4. SİSTEM HASH (Değişiklik Kontrolü)
+     * Veritabanında bir hareket olup olmadığını kontrol eder.
      */
     private function getSystemDataHash()
     {
+        // Takip edilecek tüm tabloların en son güncellenme zamanını alıyoruz
         $timestamps = [
             Shipment::max('updated_at'),
             ProductionPlan::max('updated_at'),
@@ -239,6 +241,7 @@ class TvDashboardController extends Controller
             MaintenancePlan::max('updated_at'),
             Travel::max('updated_at'),
             User::max('updated_at'),
+            \App\Models\EventType::max('updated_at'),
         ];
         return md5(json_encode($timestamps));
     }

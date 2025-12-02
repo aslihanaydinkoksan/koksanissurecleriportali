@@ -657,80 +657,91 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        window.addEventListener('load', function() {
-            const loader = document.getElementById('global-loader');
-            setTimeout(function() {
-                loader.classList.add('loaded');
-            }, 150); // 150ms gecikme 
-        });
-        // 1. Scroll Efekti
-        window.addEventListener('scroll', function() {
-            const navbar = document.querySelector('.navbar');
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
-            }
-        });
-
-        // 2. Mobil Menü
-        document.querySelectorAll('.navbar-nav .nav-link:not(.dropdown-toggle)').forEach(link => {
-            link.addEventListener('click', function() {
-                if (window.innerWidth < 992) {
-                    const navbarCollapse = document.querySelector('.navbar-collapse');
-                    const bsCollapse = new bootstrap.Collapse(navbarCollapse, {
-                        toggle: false
-                    });
-                    bsCollapse.hide();
-                }
-            });
-        });
-
-        // 3. GLOBAL TOAST
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 4000,
-            timerProgressBar: true,
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer);
-                toast.addEventListener('mouseleave', Swal.resumeTimer);
-            }
-        });
-
-        // PHP Session Mesajları
-        <?php if(session('success')): ?>
-            Toast.fire({
-                icon: 'success',
-                title: '<?php echo e(session('success')); ?>'
-            });
-        <?php endif; ?>
-        <?php if(session('error')): ?>
-            Toast.fire({
-                icon: 'error',
-                title: '<?php echo e(session('error')); ?>'
-            });
-        <?php endif; ?>
-        <?php if(session('warning')): ?>
-            Toast.fire({
-                icon: 'warning',
-                title: '<?php echo e(session('warning')); ?>'
-            });
-        <?php endif; ?>
-
-        // JS İçinden Çağırmak İçin
-        window.showToast = function(message, type = 'success') {
-            Toast.fire({
-                icon: type,
-                title: message
-            });
-        }
-
-        // 4. AKILLI SİLME (MESAJ AYIKLAYICI)
         document.addEventListener('DOMContentLoaded', function() {
 
-            // Tarayıcının kendi confirm kutusunu iptal et
+            // --- 1. LOADER (YÜKLENİYOR EKRANI) ---
+            // Sayfa tamamen hazır olduğunda loader'ı kaldır
+            const loader = document.getElementById('global-loader');
+            if (loader) {
+                window.addEventListener('load', function() {
+                    setTimeout(function() {
+                        loader.classList.add('loaded');
+                    }, 150);
+                });
+                // Güvenlik önlemi: 3 saniye geçse bile loader gitmediyse zorla kaldır (Donmayı önler)
+                setTimeout(function() {
+                    if (!loader.classList.contains('loaded')) {
+                        loader.classList.add('loaded');
+                    }
+                }, 3000);
+            }
+
+            // --- 2. SCROLL EFEKTİ & MOBİL MENÜ ---
+            window.addEventListener('scroll', function() {
+                const navbar = document.querySelector('.navbar');
+                if (navbar) {
+                    if (window.scrollY > 50) navbar.classList.add('scrolled');
+                    else navbar.classList.remove('scrolled');
+                }
+            });
+
+            document.querySelectorAll('.navbar-nav .nav-link:not(.dropdown-toggle)').forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth < 992) {
+                        const navbarCollapse = document.querySelector('.navbar-collapse');
+                        if (navbarCollapse) {
+                            const bsCollapse = new bootstrap.Collapse(navbarCollapse, {
+                                toggle: false
+                            });
+                            bsCollapse.hide();
+                        }
+                    }
+                });
+            });
+
+            // --- 3. GLOBAL TOAST BİLDİRİMLERİ ---
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                }
+            });
+
+            // PHP Session Mesajlarını JS ile Tetikle
+            <?php if(session('success')): ?>
+                Toast.fire({
+                    icon: 'success',
+                    title: '<?php echo e(session('success')); ?>'
+                });
+            <?php endif; ?>
+            <?php if(session('error')): ?>
+                Toast.fire({
+                    icon: 'error',
+                    title: '<?php echo e(session('error')); ?>'
+                });
+            <?php endif; ?>
+            <?php if(session('warning')): ?>
+                Toast.fire({
+                    icon: 'warning',
+                    title: '<?php echo e(session('warning')); ?>'
+                });
+            <?php endif; ?>
+
+            // Global fonksiyon olarak dışarı açıyoruz
+            window.showToast = function(message, type = 'success') {
+                Toast.fire({
+                    icon: type,
+                    title: message
+                });
+            }
+
+            // --- 4. AKILLI SİLME (DELETE CONFIRMATION) ---
+            // Tarayıcının varsayılan confirm kutusunu iptal et
             document.querySelectorAll('form').forEach(form => {
                 if (form.getAttribute('onsubmit') && form.getAttribute('onsubmit').includes('confirm')) {
                     form.removeAttribute('onsubmit');
@@ -741,7 +752,7 @@
                 const form = e.target;
                 const methodInput = form.querySelector('input[name="_method"]');
 
-                // Sadece DELETE işlemleri
+                // Sadece DELETE metodlu formlarda çalış
                 if (form.tagName === 'FORM' && methodInput && methodInput.value.toUpperCase() ===
                     'DELETE') {
                     e.preventDefault();
@@ -769,49 +780,34 @@
                                     }
                                 })
                                 .then(async response => {
-                                    // 1. Eğer sunucu direkt 403 dönerse (Handler.php JSON dönerse)
                                     if (response.status === 403) {
                                         showToast(
                                             '⛔ Bu işlemi yapmaya yetkiniz bulunmamaktadır!',
                                             'error');
                                         return;
                                     }
-
-                                    // 2. Eğer sunucu 200 OK dönerse (Redirect back yaptıysa)
                                     if (response.ok) {
                                         const contentType = response.headers.get(
                                             "content-type");
-
                                         if (contentType && contentType.indexOf(
                                                 "application/json") !== -1) {
-                                            // JSON geldiyse (Başarılı API cevabı gibi)
                                             await Swal.fire('Silindi!',
                                                 'Kayıt başarıyla silindi.', 'success');
                                             window.location.reload();
                                         } else {
-                                            // HTML geldiyse (Sayfa redirect oldu demektir)
-                                            // Gelen HTML'in içindeki HATA mesajını okuyalım
+                                            // HTML döndüyse (redirect olduysa) hata kontrolü yap
                                             const htmlText = await response.text();
                                             const parser = new DOMParser();
                                             const doc = parser.parseFromString(htmlText,
                                                 'text/html');
-
-                                            // Gelen sayfada kırmızı alert var mı?
                                             const errorAlert = doc.querySelector(
                                                 '.alert-danger');
 
                                             if (errorAlert) {
-                                                // HATA VAR!
-                                                // Mesajı al, temizle ve Toast olarak bas
-                                                let errorMsg = errorAlert.innerText.trim();
-                                                // Simge veya kapatma butonu yazılarını temizle (isteğe bağlı)
-                                                errorMsg = errorMsg.replace('×', '').trim();
-
+                                                let errorMsg = errorAlert.innerText.trim()
+                                                    .replace('×', '').trim();
                                                 showToast(errorMsg, 'error');
-
-                                                // Sayfayı yenilemiyoruz! Kullanıcı listede kalsın.
                                             } else {
-                                                // Hata yok, demek ki başarılı silinmiş
                                                 await Swal.fire('Silindi!',
                                                     'Kayıt başarıyla silindi.',
                                                     'success');
@@ -823,6 +819,7 @@
                                     }
                                 })
                                 .catch(error => {
+                                    console.error(error);
                                     showToast('Sunucu hatası.', 'error');
                                 })
                                 .finally(() => {
@@ -832,55 +829,54 @@
                     });
                 }
             });
-        });
-        document.addEventListener('DOMContentLoaded', function() {
-            // PERİYODİK KONTROL
-            // Sunucuyu yormamak için süreyi 10 saniye (10000 ms) yaptım
-            setInterval(checkNotifications, 10000);
 
-            function checkNotifications() {
+            // --- 5. BİLDİRİM VE SİSTEM GÜNCELLEME KONTROLÜ ---
+            // İki ayrı setInterval yerine tek bir zamanlayıcı kullanmak daha performanslıdır, 
+            // ama yapıları farklı olduğu için bağımsız bırakıyoruz.
+
+            // A) Bildirim Kontrolü
+            setInterval(function() {
                 fetch("<?php echo e(route('notifications.check')); ?>")
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.json();
-                    })
+                    .then(res => res.ok ? res.json() : Promise.reject(res))
                     .then(data => {
-                        // 1. Badge (Sayı) Güncelleme
                         const badge = document.getElementById('notification-badge');
-                        if (badge) {
-                            if (data.count > 0) {
-                                badge.style.display = 'inline-block';
-                                badge.innerText = data.count;
-                            } else {
-                                badge.style.display = 'none';
-                            }
-                        }
-
-                        // 2. İkon Rengi Güncelleme
                         const icon = document.getElementById('notification-icon');
-                        if (icon) {
-                            // Varsa Kırmızı, Yoksa Mavi
-                            icon.style.color = data.count > 0 ? '#d11f1f' : '#0d6efd';
-                        }
-
-                        // 3. "Tümünü Oku" Linkini Gizle/Göster
                         const readAllLink = document.getElementById('mark-all-read');
-                        if (readAllLink) {
-                            readAllLink.style.display = data.count > 0 ? 'inline-block' : 'none';
-                        }
-
-                        // 4. Listeyi Güncelle
                         const list = document.getElementById('notification-list');
-                        if (list && list.innerHTML !== data.html) {
-                            list.innerHTML = data.html;
+
+                        if (badge) {
+                            badge.style.display = data.count > 0 ? 'inline-block' : 'none';
+                            badge.innerText = data.count;
                         }
+                        if (icon) icon.style.color = data.count > 0 ? '#d11f1f' : '#0d6efd';
+                        if (readAllLink) readAllLink.style.display = data.count > 0 ? 'inline-block' :
+                            'none';
+                        if (list && list.innerHTML !== data.html) list.innerHTML = data.html;
                     })
-                    .catch(error => {
-                        // Hata olursa sessizce logla (Kullanıcı görmesin)
-                        console.error('Bildirim hatası:', error);
-                    });
+                    .catch(err => console.error('Bildirim hatası:', err));
+            }, 10000);
+
+            // B) Global Akıllı Yenileme (Global Smart Refresh)
+            const initialHash = "<?php echo e($globalDataHash ?? ''); ?>";
+            if (initialHash) {
+                setInterval(function() {
+                    // Aktif olarak yazı yazılıyorsa yenileme yapma
+                    if (document.activeElement.tagName === 'INPUT' ||
+                        document.activeElement.tagName === 'TEXTAREA' ||
+                        document.activeElement.isContentEditable) {
+                        return;
+                    }
+
+                    fetch("<?php echo e(route('system.check_updates')); ?>")
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.hash && data.hash !== initialHash) {
+                                console.log('Sistem güncellendi, sayfa yenileniyor...');
+                                window.location.reload();
+                            }
+                        })
+                        .catch(err => console.error('Güncelleme kontrolü başarısız:', err));
+                }, 10000); // 10 saniyede bir kontrol
             }
         });
     </script>

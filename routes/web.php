@@ -288,3 +288,9 @@ Route::view('/kvkk-aydinlatma-metni', 'auth.kvkk')->name('kvkk.show');
 Route::post('/files/upload', [App\Http\Controllers\FileController::class, 'store'])->name('files.store');
 Route::delete('/files/{file}', [App\Http\Controllers\FileController::class, 'destroy'])->name('files.destroy');
 Route::get('/files/{file}/download', [App\Http\Controllers\FileController::class, 'download'])->name('files.download');
+
+// Sistem genelinde güncellemeleri kontrol eden rota
+Route::middleware(['auth'])->group(function () {
+    Route::get('/system/check-updates', [App\Http\Controllers\SystemController::class, 'checkUpdates'])
+        ->name('system.check_updates');
+});

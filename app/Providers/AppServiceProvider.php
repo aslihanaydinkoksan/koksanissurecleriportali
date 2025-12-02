@@ -7,6 +7,7 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
 use App\Models\MaintenancePlan;
+use App\Http\Controllers\SystemController;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,36 +30,44 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useBootstrap();
 
-        // Tüm view'lara 'globalPendingCount' değişkenini gönderir
+        // --- 1. AKILLI YENİLEME HASH'İ (OPTİMİZE EDİLDİ) ---
+        // Composer içine değil, direkt boot içine yazıyoruz.
+        // Böylece sayfa yüklenirken sadece 1 kere hesaplanır ve herkese dağıtılır.
+        try {
+            // Konsol komutlarında (migrate vb.) hata vermemesi için try-catch
+            if (!app()->runningInConsole()) {
+                $systemHash = \App\Http\Controllers\SystemController::calculateSystemHash();
+                View::share('globalDataHash', $systemHash);
+            }
+        } catch (\Exception $e) {
+            // Veritabanı henüz yoksa veya hata varsa boş geç
+            View::share('globalDataHash', '');
+        }
+
+
+        // --- 2. BİLDİRİM SAYILARI (Mevcut Kodun) ---
+        // Auth kontrolü gerektiği için bu mecburen composer içinde kalmalı.
+        // Ancak '*' yerine sadece ana layout'lara verirsek daha hızlı çalışır.
+        // Şimdilik '*' kalsın ama yavaşlık devam ederse 'layouts.app' yapacağız.
         View::composer('*', function ($view) {
             $totalPending = 0;
 
             if (Auth::check()) {
                 $user = Auth::user();
 
-                // 1. BAKIM SORGUSU (Henüz execute etmiyoruz, query hazırlıyoruz)
-                $maintenanceQuery = MaintenancePlan::where('status', 'pending_approval');
+                $maintenanceQuery = \App\Models\MaintenancePlan::where('status', 'pending_approval');
 
-                // EĞER ADMİN DEĞİLSE -> DEPARTMAN FİLTRESİ EKLE
                 if ($user->role !== 'admin') {
                     if ($user->isManagerOrDirector() && $user->department_id) {
-
-                        // Bakım: Oluşturanın departmanı yöneticininkiyle aynı mı?
                         $maintenanceQuery->whereHas('user', fn($q) => $q->where('department_id', $user->department_id));
-
-
                     } else {
-                        // Yönetici değilse veya departmanı yoksa 0 görsün (Sorguyu boşa yormayalım)
                         $maintenanceQuery->where('id', 0);
                     }
                 }
-
-                // Toplam Sayı = Bakım Sayısı + Sevkiyat Sayısı
                 $totalPending = $maintenanceQuery->count();
             }
 
-            // View tarafında $globalPendingCount olarak kullanacağız
-            View::share('globalPendingCount', $totalPending);
+            $view->with('globalPendingCount', $totalPending);
         });
     }
 }
