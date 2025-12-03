@@ -438,7 +438,8 @@
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown">
-                                        <i class="fa-solid fa-concierge-bell" style="color: #F093FB;"></i>
+                                        
+                                        <i class="fa-solid fa-concierge-bell" style="color: #d63384;"></i>
                                         <span>İdari İşler</span>
                                     </a>
 
@@ -448,13 +449,15 @@
                                         <?php if(Auth::user()->hasDepartment('İdari İşler')): ?>
                                             <li>
                                                 <a class="dropdown-item" href="<?php echo e(route('service.events.create')); ?>">
-                                                    <i class="fa-solid fa-calendar-plus" style="color: #667EEA;"></i>
+                                                    
+                                                    <i class="fa-solid fa-calendar-plus" style="color: #3B82F6;"></i>
                                                     Yeni Etkinlik
                                                 </a>
                                             </li>
                                             <li>
                                                 <a class="dropdown-item" href="<?php echo e(route('service.events.index')); ?>">
-                                                    <i class="fa-solid fa-calendar-days" style="color: #4FD1C5;"></i>
+                                                    
+                                                    <i class="fa-solid fa-calendar-days" style="color: #0EA5E9;"></i>
                                                     Etkinlik Listesi
                                                 </a>
                                             </li>
@@ -469,19 +472,21 @@
                                                 (Auth::user()->department && in_array(Auth::user()->department->slug, ['hizmet', 'ulastirma']))): ?>
                                             <li>
                                                 <a class="dropdown-item" href="<?php echo e(route('service.vehicles.index')); ?>">
-                                                    <i class="fa-solid fa-car" style="color: #FBD38D;"></i>
+                                                    
+                                                    <i class="fa-solid fa-car" style="color: #F59E0B;"></i>
                                                     Şirket Araçları
                                                 </a>
                                             </li>
                                             <li>
                                                 <a class="dropdown-item"
                                                     href="<?php echo e(route('service.logistics-vehicles.index')); ?>">
-                                                    <i class="fa-solid fa-truck" style="color: #f1b09e;"></i>
+                                                    
+                                                    <i class="fa-solid fa-truck" style="color: #EA580C;"></i>
                                                     Nakliye Araçları
                                                 </a>
                                             </li>
                                         <?php endif; ?>
-                                        
+
                                         
                                         <?php if(Auth::user()->role === 'admin' ||
                                                 (Auth::user()->department && in_array(Auth::user()->department->slug, ['hizmet', 'ulastirma']))): ?>
@@ -493,23 +498,46 @@
                                             <?php if(Auth::user()->role === 'admin' || (Auth::user()->department && Auth::user()->department->slug === 'hizmet')): ?>
                                                 <li>
                                                     <a class="dropdown-item" href="<?php echo e(route('travels.create')); ?>">
-                                                        <i class="fa-solid fa-route" style="color: #A78BFA;"></i> Yeni
+                                                        
+                                                        <i class="fa-solid fa-route" style="color: #8B5CF6;"></i> Yeni
                                                         Seyahat
                                                     </a>
                                                 </li>
                                             <?php endif; ?>
 
-                                            
                                             <li>
                                                 <a class="dropdown-item" href="<?php echo e(route('travels.index')); ?>">
+                                                    
                                                     <i class="fa-solid fa-list-check" style="color: #A78BFA;"></i> Seyahat
                                                     Listesi
                                                 </a>
                                             </li>
+
+                                            
+                                            <?php if(Auth::user()->role === 'admin' ||
+                                                    (Auth::user()->department && in_array(Auth::user()->department->slug, ['hizmet']))): ?>
+                                                <li>
+                                                    <hr class="dropdown-divider">
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item"
+                                                        href="<?php echo e(route('service.events.index', ['event_type' => 'fuar'])); ?>">
+                                                        
+                                                        <i class="fa-solid fa-tents" style="color: #10B981;"></i> Fuar
+                                                        Yönetimi
+                                                    </a>
+                                                </li>
+                                            <?php endif; ?>
+
+                                            
                                             <?php if(Auth::user()->role === 'admin' || (Auth::user()->department && Auth::user()->department->slug === 'hizmet')): ?>
                                                 <li>
+                                                    <hr class="dropdown-divider">
+                                                </li>
+                                                <li>
                                                     <a class="dropdown-item" href="<?php echo e(route('bookings.index')); ?>">
-                                                        <i class="fa-solid fa-book-bookmark" style="color: #A78BFA;"></i>
+                                                        
+                                                        <i class="fa-solid fa-book-bookmark" style="color: #EC4899;"></i>
                                                         Tüm Rezervasyonlar
                                                     </a>
                                                 </li>
@@ -523,7 +551,8 @@
                                                 </li>
                                                 <li>
                                                     <a class="dropdown-item" href="<?php echo e(route('customers.index')); ?>">
-                                                        <i class="fa-solid fa-users" style="color: #A78BFA;"></i> Müşteri
+                                                        
+                                                        <i class="fa-solid fa-users" style="color: #06B6D4;"></i> Müşteri
                                                         Yönetimi
                                                     </a>
                                                 </li>
@@ -532,6 +561,8 @@
                                     </ul>
                                 </li>
                             <?php endif; ?>
+
+                            
                             <li class="nav-item dropdown me-3">
                                 <?php
                                     $unreadCount = auth()->user()->unreadNotifications->count();

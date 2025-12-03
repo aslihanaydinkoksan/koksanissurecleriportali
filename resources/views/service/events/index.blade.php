@@ -2,575 +2,623 @@
 
 @push('styles')
     <style>
-        /* Ana içerik alanına (main) animasyonlu arka planı uygula */
-        #app>main.py-4 {
-            padding: 2.5rem 0 !important;
-            min-height: calc(100vh - 72px);
-            background: linear-gradient(-45deg, #dbe4ff, #fde2ff, #d9fcf7, #fff0d9);
-            background-size: 400% 400%;
-            animation: gradientWave 18s ease infinite;
-        }
-
-        /* Arka plan dalgalanma animasyonu */
-        @keyframes gradientWave {
-            0% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
-
-            100% {
-                background-position: 0% 50%;
-            }
-        }
-
-        /* Sayfa başlığı */
-        .page-header {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            padding: 1.25rem 1.5rem;
+        /* --- ORTAK SAYFA STİLLERİ (Travels/Bookings ile Birebir Aynı) --- */
+        .page-hero {
+            background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
             border-radius: 1rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            padding: 2rem;
+            color: white;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.25);
         }
 
-        .page-header h4 {
-            margin: 0;
-            color: #2d3748;
-            font-weight: 700;
+        .page-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
         }
 
-        /* Filtre Kartı */
+        .page-hero::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -5%;
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+        }
+
+        .page-hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Filtre Alanı */
         .filter-card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
+            background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
             border-radius: 1rem;
             padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            margin-bottom: 2rem;
         }
 
-        .filter-header {
+        .section-title {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
             padding-bottom: 0.75rem;
-            border-bottom: 2px solid #e9ecef;
+            border-bottom: 1px solid #e9ecef;
         }
 
-        .filter-header i {
-            color: #667EEA;
+        .section-title i {
             font-size: 1.2rem;
+            background: linear-gradient(135deg, #667EEA, #764BA2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        .filter-header h6 {
+        .section-title h5 {
             margin: 0;
-            font-weight: 700;
-            color: #2d3748;
-        }
-
-        .filter-card .form-label {
-            font-size: 0.875rem;
             font-weight: 600;
-            color: #495057;
-            margin-bottom: 0.5rem;
-        }
-
-        .filter-card .form-control,
-        .filter-card .form-select {
-            border-radius: 0.5rem;
-            border: 1px solid #dee2e6;
-            padding: 0.5rem 0.75rem;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-        }
-
-        .filter-card .form-control:focus,
-        .filter-card .form-select:focus {
-            border-color: #667EEA;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
-        }
-
-        /* Tablo kartı */
-        .list-card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            border-radius: 1rem;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-
-        .list-card .card-header {
-            background: rgba(255, 255, 255, 0.5);
-            color: #2d3748;
-            font-weight: 700;
+            color: #4a5568;
             font-size: 1.1rem;
-            border-bottom: 2px solid #e9ecef;
-            padding: 1rem 1.5rem;
         }
 
-        /* Tablo iyileştirmeleri */
-        .table {
-            background-color: transparent;
-            margin-bottom: 0;
+        /* Kart ve Tablo Yapısı */
+        .content-card {
+            background: white;
+            border-radius: 1rem;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+            overflow: hidden;
         }
 
+        /* FUAR KARTLARI İÇİN STİL */
+        .travel-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .travel-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.12);
+            border-color: #667EEA;
+        }
+
+        /* TABLO STİLLERİ */
         .table thead th {
-            background: #f8f9fa;
-            color: #495057;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            color: #4a5568;
             font-weight: 600;
-            font-size: 0.875rem;
+            font-size: 0.85rem;
+            padding: 1rem;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 2px solid #dee2e6;
+            letter-spacing: 0.05em;
         }
 
-        .table tbody tr {
-            transition: all 0.2s;
+        .table tbody td {
+            padding: 1rem;
+            vertical-align: middle !important;
+            border-bottom: 1px solid #f0f0f0;
         }
 
         .table tbody tr:hover {
-            background-color: rgba(102, 126, 234, 0.05);
-            transform: scale(1.002);
+            background-color: #fcfcfc;
         }
 
-        .table-striped>tbody>tr:nth-of-type(odd)>* {
-            --bs-table-accent-bg: rgba(255, 255, 255, 0.4);
-        }
-
-        /* Önemli satır stilleri */
-        .row-important {
-            background: linear-gradient(90deg, rgba(255, 229, 236, 0.6), rgba(255, 244, 224, 0.6)) !important;
-            font-weight: 600;
-            box-shadow: inset 0 0 5px rgba(252, 98, 117, 0.1);
-            transition: all 0.2s ease-in-out;
-        }
-
-        .row-important:hover {
-            background: linear-gradient(90deg, rgba(255, 229, 236, 0.8), rgba(255, 244, 224, 0.8)) !important;
-            transform: translateY(-2px);
-            box-shadow: inset 0 0 8px rgba(252, 98, 117, 0.2), 0 2px 5px rgba(0, 0, 0, 0.05);
-        }
-
-        .row-important td {
-            color: #c0392b;
-        }
-
-        /* Badge iyileştirmeleri */
-        .badge {
+        /* Badge ve Butonlar */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
             padding: 0.4rem 0.8rem;
+            border-radius: 2rem;
             font-weight: 600;
             font-size: 0.8rem;
+        }
+
+        .status-badge.planned {
+            background: #e0f2fe;
+            color: #0284c7;
+        }
+
+        .status-badge.completed {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .status-badge.cancelled {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .status-badge.postponed {
+            background: #ffedd5;
+            color: #ea580c;
+        }
+
+        .type-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            margin: 0 auto;
+        }
+
+        .type-icon.fuar {
+            background: #f3e8ff;
+            color: #9333ea;
+        }
+
+        /* Mor */
+        .type-icon.toplanti {
+            background: #e0e7ff;
+            color: #4f46e5;
+        }
+
+        /* İndigo */
+        .type-icon.ziyaret {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        /* Mavi */
+        .type-icon.egitim {
+            background: #ffedd5;
+            color: #c2410c;
+        }
+
+        /* Turuncu */
+        .type-icon.diger {
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+
+        /* Gri */
+
+        .btn-gradient {
+            background: linear-gradient(135deg, #667EEA, #764BA2);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.5rem;
             border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
         }
 
-        /* Pastel badge'ler */
-        .badge-planned {
-            background: linear-gradient(135deg, #E3F2FD, #C9F0E8);
-            color: #2C5F5F;
-            border: 1px solid rgba(195, 240, 232, 0.5);
-        }
-
-        .badge-completed {
-            background: linear-gradient(135deg, #C9F0E8, #E3F2FD);
-            color: #2C5F5F;
-            border: 1px solid rgba(201, 240, 232, 0.5);
-        }
-
-        .badge-postponed {
-            background: linear-gradient(135deg, #FFE5EC, #FFF4E0);
-            color: #8B5E34;
-            border: 1px solid rgba(255, 229, 236, 0.5);
-        }
-
-        .badge-cancelled {
-            background: linear-gradient(135deg, #FFE5EC, #E8D5F2);
-            color: #8B2C5F;
-            border: 1px solid rgba(255, 229, 236, 0.5);
-        }
-
-        .badge-type {
-            background: linear-gradient(135deg, #E8D5F2, #E3F2FD);
-            color: #6B4C8A;
-            border: 1px solid rgba(232, 213, 242, 0.5);
-        }
-
-        /* Eylem butonları */
-        .action-btn-group {
-            display: inline-flex;
-            gap: 0.5rem;
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            color: white;
         }
 
         .btn-action {
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
             border-radius: 0.5rem;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border: 2px solid;
-            background: rgba(255, 255, 255, 0.9);
-            transition: all 0.2s ease;
-            padding: 0;
+            transition: all 0.2s;
+            border: 1px solid transparent;
         }
 
-        .btn-action i {
-            font-size: 0.9rem;
+        .btn-action:hover {
+            background-color: #f3f4f6;
+            border-color: #e5e7eb;
         }
 
-        .btn-action-edit {
-            border-color: #E8D5F2;
-            color: #6B4C8A;
+        .btn-action.edit {
+            color: #2563eb;
         }
 
-        .btn-action-edit:hover {
-            background: linear-gradient(135deg, #E8D5F2, #FFE5EC);
-            border-color: #E8D5F2;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(232, 213, 242, 0.4);
+        .btn-action.delete {
+            color: #dc2626;
         }
 
-        .btn-action-delete {
-            border-color: #FFE5EC;
-            color: #c0392b;
+        .btn-action.view {
+            color: #4b5563;
         }
 
-        .btn-action-delete:hover {
-            background: linear-gradient(135deg, #FFE5EC, #FFF4E0);
-            border-color: #FFE5EC;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(255, 229, 236, 0.4);
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #9ca3af;
         }
 
-        /* Modern buton stilleri */
-        .btn-animated-gradient {
-            background: linear-gradient(-45deg, #667EEA, #F093FB, #4FD1C5, #FBD38D);
-            background-size: 400% 400%;
-            animation: gradientWave 18s ease infinite;
-            border: none;
-            color: white;
-            font-weight: 600;
-            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-        }
-
-        .btn-animated-gradient:hover {
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn-outline-secondary {
-            border: 2px solid #6c757d;
-            color: #6c757d;
-            background: transparent;
-            font-weight: 600;
-        }
-
-        .btn-outline-secondary:hover {
-            background: #6c757d;
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        /* Divider çizgisi */
-        .filter-divider {
-            height: 1px;
-            background: linear-gradient(to right, transparent, #dee2e6, transparent);
-            margin: 1.25rem 0;
-        }
-
-        /* Alert iyileştirmeleri */
-        .alert {
-            border-radius: 0.75rem;
-            border: none;
-            backdrop-filter: blur(10px);
-        }
-
-        .alert-success {
-            background: rgba(201, 240, 232, 0.9);
-            color: #2C5F5F;
-        }
-
-        .alert-danger {
-            background: rgba(255, 229, 236, 0.9);
-            color: #c0392b;
-        }
-
-        .alert-warning {
-            background: rgba(255, 244, 224, 0.9);
-            color: #8B5E34;
+        .empty-state i {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
         }
     </style>
 @endpush
 
 @section('content')
-    <div class="container-fluid">
+    <div class="container py-4">
         <div class="row justify-content-center">
-            <div class="col-md-12">
+            <div class="col-lg-12">
 
-                <!-- Sayfa Başlığı -->
-                <div class="page-header">
-                    <h4>
-                        <i class="fa-solid fa-calendar-days me-2" style="color: #667EEA;"></i>
-                        Etkinlik Listesi
-                    </h4>
+                {{-- Hero Section --}}
+                <div class="page-hero">
+                    <div class="page-hero-content">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                @if (request('event_type') == 'fuar')
+                                    <h2 class="mb-1">🎟️ Fuar Yönetimi</h2>
+                                    <p class="mb-0 opacity-90">Planlanmış fuar organizasyonlarını ve rezervasyonları buradan
+                                        yönetebilirsiniz.</p>
+                                @else
+                                    <h2 class="mb-1">📅 Etkinlik Listesi</h2>
+                                    <p class="mb-0 opacity-90">Tüm toplantı, ziyaret ve organizasyon listesi.</p>
+                                @endif
+                            </div>
+                            <div class="text-end d-none d-md-block">
+                                <h1 class="mb-0 display-6 fw-bold">{{ $events->total() }}</h1>
+                                <span class="small opacity-75">Toplam Kayıt</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                {{-- Başarı/Hata Mesajları --}}
+                {{-- Alert Mesajları --}}
                 @if (session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fa-solid fa-circle-check me-2"></i>
-                        {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-                @if (session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fa-solid fa-circle-exclamation me-2"></i>
-                        {{ session('error') }}
+                    <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert"
+                        style="background: #dcfce7; color: #166534;">
+                        <i class="fa-solid fa-circle-check me-2"></i>{{ session('success') }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 @endif
 
-                {{-- Filtre Kartı --}}
-                <div class="filter-card">
-                    <div class="filter-header">
-                        <i class="fa-solid fa-filter"></i>
-                        <h6>Filtreleme Seçenekleri</h6>
+                {{-- 
+                    ==================================================
+                    MOD 1: FUAR YÖNETİMİ (Travels Tarzı Kartlar)
+                    Adres: /service/events?event_type=fuar
+                    ==================================================
+                --}}
+                @if (request('event_type') == 'fuar')
+
+                    <div class="d-flex justify-content-end mb-4">
+                        <a href="{{ route('service.events.create') }}" class="btn-gradient">
+                            <i class="fa-solid fa-plus me-2"></i> Yeni Fuar Ekle
+                        </a>
                     </div>
 
-                    <form method="GET" action="{{ route('service.events.index') }}">
-                        @php
-                            $isAdminOrManager = in_array(Auth::user()->role, ['admin', 'yönetici']);
-                        @endphp
+                    @if ($events->isEmpty())
+                        <div class="content-card empty-state">
+                            <i class="fa-solid fa-ticket"></i>
+                            <h4>Henüz Fuar Kaydı Yok</h4>
+                            <p>Planlanmış bir fuar bulunmuyor. Yeni ekleyerek başlayabilirsiniz.</p>
+                        </div>
+                    @else
+                        @foreach ($events as $event)
+                            <div class="travel-card">
+                                <div class="row align-items-center">
+                                    {{-- Önem Durumu --}}
+                                    <div class="col-md-1 text-center">
+                                        @if ($event->is_important)
+                                            <i class="fa-solid fa-star text-warning fs-5" title="Önemli"></i>
+                                        @else
+                                            <i class="fa-regular fa-star text-muted fs-5 opacity-50"></i>
+                                        @endif
+                                    </div>
 
-                        <div class="row g-3">
-                            {{-- Etkinlik Başlığı Filtresi --}}
-                            <div class="col-lg-3 col-md-6">
-                                <label for="title" class="form-label">
-                                    <i class="fa-solid fa-magnifying-glass me-1" style="color: #E8D5F2"></i> Etkinlik
-                                    Başlığı
-                                </label>
-                                <input type="text" class="form-control" id="title" name="title"
-                                    value="{{ $filters['title'] ?? '' }}" placeholder="Etkinlik başlığı girin...">
-                            </div>
+                                    {{-- Başlık ve Oluşturan --}}
+                                    <div class="col-md-3">
+                                        <div class="fw-bold text-dark fs-5">{{ $event->title }}</div>
+                                        <div class="text-muted small mt-1">
+                                            <i class="fa-solid fa-user-circle me-1"></i>
+                                            {{ $event->user->name ?? 'Bilinmiyor' }}
+                                        </div>
+                                    </div>
 
-                            {{-- Etkinlik Tipi Filtresi --}}
-                            <div class="col-lg-2 col-md-6">
-                                <label for="event_type" class="form-label">
-                                    <i class="fa-solid fa-list me-1" style="color: #FFE5EC"></i> Etkinlik Tipi
-                                </label>
-                                <select class="form-select" id="event_type" name="event_type">
-                                    <option value="all"
-                                        {{ ($filters['event_type'] ?? 'all') == 'all' ? 'selected' : '' }}>
-                                        Tümü
-                                    </option>
-                                    @foreach ($eventTypes as $key => $value)
-                                        <option value="{{ $key }}"
-                                            {{ ($filters['event_type'] ?? '') == $key ? 'selected' : '' }}>
-                                            {{ $value }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
+                                    {{-- Başlangıç --}}
+                                    <div class="col-md-2">
+                                        <div class="text-muted small"
+                                            style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            Başlangıç</div>
+                                        <div class="fw-bold text-dark">
+                                            {{ \Carbon\Carbon::parse($event->start_datetime)->format('d.m.Y') }}</div>
+                                        <div class="small text-muted">
+                                            {{ \Carbon\Carbon::parse($event->start_datetime)->format('H:i') }}</div>
+                                    </div>
 
-                            {{-- Müşteri Ziyaret Durumu --}}
-                            <div class="col-lg-2 col-md-6">
-                                <label for="visit_status" class="form-label">
-                                    <i class="fa-solid fa-circle-check me-1" style="color: #C9F0E8"></i> Ziyaret Durumu
-                                </label>
-                                <select class="form-select" id="visit_status" name="visit_status">
-                                    <option value="all"
-                                        {{ ($filters['visit_status'] ?? 'all') == 'all' ? 'selected' : '' }}>
-                                        Tümü
-                                    </option>
-                                    <option value="planlandi"
-                                        {{ ($filters['visit_status'] ?? '') == 'planlandi' ? 'selected' : '' }}>
-                                        Planlandı
-                                    </option>
-                                    <option value="gerceklesti"
-                                        {{ ($filters['visit_status'] ?? '') == 'gerceklesti' ? 'selected' : '' }}>
-                                        Gerçekleşti
-                                    </option>
-                                    <option value="ertelendi"
-                                        {{ ($filters['visit_status'] ?? '') == 'ertelendi' ? 'selected' : '' }}>
-                                        Ertelendi
-                                    </option>
-                                    <option value="iptal"
-                                        {{ ($filters['visit_status'] ?? '') == 'iptal' ? 'selected' : '' }}>
-                                        İptal Edildi
-                                    </option>
-                                </select>
-                            </div>
+                                    {{-- Bitiş --}}
+                                    <div class="col-md-2">
+                                        <div class="text-muted small"
+                                            style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            Bitiş</div>
+                                        <div class="fw-bold text-dark">
+                                            {{ \Carbon\Carbon::parse($event->end_datetime)->format('d.m.Y') }}</div>
+                                        <div class="small text-muted">
+                                            {{ \Carbon\Carbon::parse($event->end_datetime)->format('H:i') }}</div>
+                                    </div>
 
-                            {{-- Önem Durumu (Sadece Admin/Yönetici) --}}
-                            @if ($isAdminOrManager)
-                                <div class="col-lg-2 col-md-6">
-                                    <label for="is_important" class="form-label">
-                                        <i class="fa-solid fa-star me-1" style="color: #FFF4E0"></i> Önem Durumu
-                                    </label>
-                                    <select class="form-select" id="is_important" name="is_important">
-                                        <option value="all"
-                                            {{ ($filters['is_important'] ?? 'all') == 'all' ? 'selected' : '' }}>
-                                            Tümü
-                                        </option>
-                                        <option value="yes"
-                                            {{ ($filters['is_important'] ?? '') == 'yes' ? 'selected' : '' }}>
-                                            Önemliler
-                                        </option>
-                                        <option value="no"
-                                            {{ ($filters['is_important'] ?? '') == 'no' ? 'selected' : '' }}>
-                                            Normal
-                                        </option>
-                                    </select>
+                                    {{-- Durum Badge --}}
+                                    <div class="col-md-2">
+                                        @php
+                                            $statusClass = match ($event->visit_status) {
+                                                'planlandi' => 'planned',
+                                                'gerceklesti' => 'completed',
+                                                'iptal' => 'cancelled',
+                                                'ertelendi' => 'postponed',
+                                                default => 'secondary',
+                                            };
+                                            $statusIcon = match ($event->visit_status) {
+                                                'planlandi' => 'fa-clock',
+                                                'gerceklesti' => 'fa-check-circle',
+                                                'iptal' => 'fa-ban',
+                                                'ertelendi' => 'fa-hourglass-half',
+                                                default => 'fa-circle',
+                                            };
+                                        @endphp
+                                        <span class="status-badge {{ $statusClass }}">
+                                            <i class="fa-solid {{ $statusIcon }}"></i>
+                                            {{ ucfirst($event->visit_status) }}
+                                        </span>
+                                    </div>
+
+                                    {{-- Butonlar --}}
+                                    <div class="col-md-2 text-end">
+                                        <a href="{{ route('service.events.show', $event) }}"
+                                            class="btn btn-outline-primary w-100 rounded-pill fw-bold"
+                                            style="border: 2px solid; padding: 0.5rem;">
+                                            <i class="fa-solid fa-eye me-1"></i> Detaylar
+                                        </a>
+                                    </div>
                                 </div>
+                            </div>
+                        @endforeach
+
+                        <div class="d-flex justify-content-center mt-4">
+                            {{ $events->appends(request()->query())->links('pagination::bootstrap-5') }}
+                        </div>
+                    @endif
+
+                    {{-- 
+                    ==================================================
+                    MOD 2: STANDART ETKİNLİK LİSTESİ (Bookings Tarzı Tablo)
+                    Adres: /service/events
+                    ==================================================
+                --}}
+                @else
+                    {{-- 1. Filtre Açma Butonu --}}
+                    <div class="d-flex justify-content-end mb-3">
+                        <button class="btn btn-white border shadow-sm" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#eventFilters" aria-expanded="false" aria-controls="eventFilters">
+                            <i class="fa-solid fa-filter me-1 text-primary"></i> Filtreleme Seçenekleri
+
+                            {{-- Eğer aktif bir filtre varsa Badge göster --}}
+                            @if (request()->hasAny(['title', 'event_type', 'visit_status', 'date_from', 'date_to']))
+                                <span class="badge bg-primary ms-1">Aktif</span>
                             @endif
-
-                            {{-- Tarih Aralığı --}}
-                            <div class="col-lg-{{ $isAdminOrManager ? '1' : '2' }} col-md-6">
-                                <label for="date_from" class="form-label">
-                                    <i class="fa-solid fa-calendar-days me-1" style="color: #E3F2FD"></i> Başlangıç
-                                </label>
-                                <input type="date" class="form-control" id="date_from" name="date_from"
-                                    value="{{ $filters['date_from'] ?? '' }}">
-                            </div>
-
-                            <div class="col-lg-{{ $isAdminOrManager ? '1' : '2' }} col-md-6">
-                                <label for="date_to" class="form-label">
-                                    <i class="fa-solid fa-calendar-check me-1" style="color: #E3F2FD"></i> Bitiş
-                                </label>
-                                <input type="date" class="form-control" id="date_to" name="date_to"
-                                    value="{{ $filters['date_to'] ?? '' }}">
-                            </div>
-                        </div>
-
-                        {{-- Butonlar --}}
-                        <div class="row mt-4">
-                            <div class="col-12 d-flex justify-content-end gap-2">
-                                <a href="{{ route('service.events.index') }}"
-                                    class="btn btn-outline-secondary rounded-pill px-4">
-                                    <i class="fa-solid fa-rotate-right me-1"></i> Temizle
-                                </a>
-                                <button type="submit" class="btn btn-animated-gradient rounded-pill px-4">
-                                    <i class="fa-solid fa-filter me-1"></i> Filtrele
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
-                {{-- Etkinlik Listesi Kartı --}}
-                <div class="card list-card">
-                    <div class="card-header">
-                        <i class="fa-solid fa-list me-2"></i> Etkinlik Listesi
+                        </button>
                     </div>
 
-                    <div class="card-body p-0">
+                    {{-- 2. Filtre Alanı (Collapse içine alındı) --}}
+                    {{-- Eğer filtre varsa 'show' class'ı eklenir ve açık gelir --}}
+                    <div class="collapse @if (request()->hasAny(['title', 'event_type', 'visit_status', 'date_from', 'date_to'])) show @endif" id="eventFilters">
+                        <div class="filter-card">
+                            <div class="section-title">
+                                <i class="fa-solid fa-filter"></i>
+                                <h5>Filtreleme Seçenekleri</h5>
+                            </div>
+
+                            <form method="GET" action="{{ route('service.events.index') }}">
+                                <div class="row g-3">
+                                    <div class="col-lg-3 col-md-6">
+                                        <label class="form-label small fw-bold text-muted">Etkinlik Başlığı</label>
+                                        <input type="text" class="form-control" name="title"
+                                            value="{{ $filters['title'] ?? '' }}" placeholder="Ara...">
+                                    </div>
+                                    <div class="col-lg-2 col-md-6">
+                                        <label class="form-label small fw-bold text-muted">Etkinlik Tipi</label>
+                                        <select class="form-select" name="event_type">
+                                            <option value="all">Tümü</option>
+                                            @foreach ($eventTypes as $key => $value)
+                                                <option value="{{ $key }}"
+                                                    {{ ($filters['event_type'] ?? '') == $key ? 'selected' : '' }}>
+                                                    {{ $value }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-lg-2 col-md-6">
+                                        <label class="form-label small fw-bold text-muted">Durum</label>
+                                        <select class="form-select" name="visit_status">
+                                            <option value="all">Tümü</option>
+                                            <option value="planlandi"
+                                                {{ ($filters['visit_status'] ?? '') == 'planlandi' ? 'selected' : '' }}>
+                                                Planlandı</option>
+                                            <option value="gerceklesti"
+                                                {{ ($filters['visit_status'] ?? '') == 'gerceklesti' ? 'selected' : '' }}>
+                                                Gerçekleşti</option>
+                                            <option value="iptal"
+                                                {{ ($filters['visit_status'] ?? '') == 'iptal' ? 'selected' : '' }}>İptal
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="col-lg-2 col-md-6">
+                                        <label class="form-label small fw-bold text-muted">Başlangıç</label>
+                                        <input type="date" class="form-control" name="date_from"
+                                            value="{{ $filters['date_from'] ?? '' }}">
+                                    </div>
+                                    <div class="col-lg-2 col-md-6">
+                                        <label class="form-label small fw-bold text-muted">Bitiş</label>
+                                        <input type="date" class="form-control" name="date_to"
+                                            value="{{ $filters['date_to'] ?? '' }}">
+                                    </div>
+
+                                    {{-- Butonlar --}}
+                                    <div class="col-lg-1 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-primary w-100"
+                                            style="background-color: #667EEA; border-color: #667EEA;">
+                                            <i class="fa-solid fa-filter"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {{-- Temizle Butonu (Filtre varsa görünür) --}}
+                                @if (request()->hasAny(['title', 'event_type', 'visit_status', 'date_from', 'date_to']))
+                                    <div class="row mt-3">
+                                        <div class="col-12 text-end">
+                                            <a href="{{ route('service.events.index') }}" class="btn btn-sm text-muted">
+                                                <i class="fa-solid fa-rotate-right me-1"></i> Filtreleri Temizle
+                                            </a>
+                                        </div>
+                                    </div>
+                                @endif
+                            </form>
+                        </div>
+                    </div>
+
+                    {{-- Tablo Görünümü --}}
+                    <div class="content-card">
                         @if ($events->isEmpty())
-                            <div class="alert alert-warning m-3" role="alert">
-                                <i class="fa-solid fa-inbox fa-2x mb-2 d-block" style="opacity: 0.5;"></i>
-                                Filtrelere uygun etkinlik bulunamadı.
+                            <div class="empty-state">
+                                <i class="fa-solid fa-calendar-xmark"></i>
+                                <h5>Kayıt Bulunamadı</h5>
+                                <p class="mb-0">Arama kriterlerinize uygun etkinlik yok.</p>
                             </div>
                         @else
                             <div class="table-responsive">
-                                <table class="table table-hover mb-0">
+                                <table class="table mb-0">
                                     <thead>
                                         <tr>
-                                            <th scope="col" class="ps-3">Etkinlik Başlığı</th>
-                                            <th scope="col">Tipi</th>
-                                            <th scope="col">Etkinlik Durumu</th>
-                                            <th scope="col">Konum</th>
-                                            <th scope="col">Başlangıç</th>
-                                            <th scope="col">Bitiş</th>
-                                            <th scope="col" class="text-end pe-3">İşlemler</th>
+                                            <th class="text-center">Tip</th>
+                                            <th>Başlık</th>
+                                            <th>Durum</th>
+                                            <th>Konum</th>
+                                            <th>Zaman</th>
+                                            <th class="text-end pe-4">İşlemler</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach ($events as $event)
-                                            <tr class="{{ $event->is_important ? 'row-important' : '' }}">
-                                                <td class="ps-3">
-                                                    @if ($event->is_important)
-                                                        <i class="fa-solid fa-star text-danger me-1" title="Önemli"></i>
-                                                    @endif
-                                                    <strong>{{ $event->title }}</strong>
-                                                </td>
-                                                <td>
-                                                    <span class="badge badge-type">
-                                                        {{ $eventTypes[$event->event_type] ?? ucfirst($event->event_type) }}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    @switch($event->visit_status)
-                                                        @case('planlandi')
-                                                            <span class="badge badge-planned">⏳ Planlandı</span>
-                                                        @break
+                                            <td class="text-center align-middle">
+                                                @php
+                                                    $typeClass = match ($event->event_type) {
+                                                        'fuar' => 'fuar',
+                                                        'toplanti' => 'toplanti',
+                                                        'musteri_ziyareti' => 'ziyaret',
+                                                        'egitim' => 'egitim',
+                                                        default => 'diger',
+                                                    };
+                                                    $typeIcon = match ($event->event_type) {
+                                                        'fuar' => 'fa-ticket',
+                                                        'toplanti' => 'fa-briefcase',
+                                                        'musteri_ziyareti' => 'fa-handshake',
+                                                        'egitim' => 'fa-graduation-cap',
+                                                        default => 'fa-calendar',
+                                                    };
+                                                    $typeName =
+                                                        $eventTypes[$event->event_type] ?? ucfirst($event->event_type);
+                                                @endphp
 
-                                                        @case('gerceklesti')
-                                                            <span class="badge badge-completed">✅ Gerçekleşti</span>
-                                                        @break
-
-                                                        @case('ertelendi')
-                                                            <span class="badge badge-postponed">📅 Ertelendi</span>
-                                                        @break
-
-                                                        @case('iptal')
-                                                            <span class="badge badge-cancelled">❌ İptal</span>
-                                                        @break
-
-                                                        @default
-                                                            <span class="text-muted small">Bilinmiyor</span>
-                                                    @endswitch
-
-                                                </td>
-                                                <td>{{ $event->location ?? '-' }}</td>
-                                                <td>{{ $event->start_datetime ? \Carbon\Carbon::parse($event->start_datetime)->format('d.m.Y H:i') : '-' }}
-                                                </td>
-                                                <td>{{ $event->end_datetime ? \Carbon\Carbon::parse($event->end_datetime)->format('d.m.Y H:i') : '-' }}
-                                                </td>
-                                                <td class="text-end pe-3">
-                                                    <div class="action-btn-group">
-                                                        @if (!in_array(Auth::user()->role, ['izleyici']))
-                                                            <a href="{{ route('service.events.edit', $event) }}"
-                                                                class="btn btn-action btn-action-edit" title="Düzenle">
-                                                                <i class="fa-solid fa-pen"></i>
-                                                            </a>
-                                                        @endif
-
-                                                        @if (!in_array(Auth::user()->role, ['izleyici']))
-                                                            <form action="{{ route('service.events.destroy', $event) }}"
-                                                                method="POST" class="d-inline"
-                                                                onsubmit="return confirm('Bu etkinliği silmek istediğinizden emin misiniz?');">
-                                                                @csrf
-                                                                @method('DELETE')
-                                                                <button type="submit"
-                                                                    class="btn btn-action btn-action-delete"
-                                                                    title="Sil">
-                                                                    <i class="fa-solid fa-trash"></i>
-                                                                </button>
-                                                            </form>
-                                                        @endif
+                                                {{-- Flex Container: İkon ve Metni Yan Yana Koyar --}}
+                                                <div class="d-inline-flex align-items-center">
+                                                    {{-- İkon --}}
+                                                    <div class="type-icon {{ $typeClass }} me-2"
+                                                        title="{{ $typeName }}">
+                                                        <i class="fa-solid {{ $typeIcon }}"></i>
                                                     </div>
-                                                </td>
-                                            </tr>
+
+                                                    {{-- Metin --}}
+                                                    <span class="fw-bold text-dark small">
+                                                        {{ $typeName }}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="fw-bold text-dark">{{ $event->title }}</div>
+                                                <div class="small text-muted">{{ $event->user->name ?? 'Bilinmiyor' }}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @php
+                                                    $statusClass = match ($event->visit_status) {
+                                                        'planlandi' => 'planned',
+                                                        'gerceklesti' => 'completed',
+                                                        'iptal' => 'cancelled',
+                                                        'ertelendi' => 'postponed',
+                                                        default => 'secondary',
+                                                    };
+                                                @endphp
+                                                <span class="status-badge {{ $statusClass }}">
+                                                    {{ ucfirst($event->visit_status) }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @if ($event->location)
+                                                    <span class="text-dark"><i
+                                                            class="fa-solid fa-location-dot me-1 text-muted"></i>{{ Str::limit($event->location, 20) }}</span>
+                                                @else
+                                                    <span class="text-muted small">-</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <div class="fw-bold text-dark">
+                                                    {{ \Carbon\Carbon::parse($event->start_datetime)->format('d.m.Y') }}
+                                                </div>
+                                                <div class="small text-muted">
+                                                    {{ \Carbon\Carbon::parse($event->start_datetime)->format('H:i') }}
+                                                    -
+                                                    {{ \Carbon\Carbon::parse($event->end_datetime)->format('H:i') }}
+                                                </div>
+                                            </td>
+                                            <td class="text-end pe-4">
+                                                <div class="d-flex justify-content-end gap-2">
+                                                    <a href="{{ route('service.events.show', $event) }}"
+                                                        class="btn-action view" title="Görüntüle">
+                                                        <i class="fa-solid fa-eye"></i>
+                                                    </a>
+                                                    @if (!in_array(Auth::user()->role, ['izleyici']))
+                                                        <a href="{{ route('service.events.edit', $event) }}"
+                                                            class="btn-action edit" title="Düzenle">
+                                                            <i class="fa-solid fa-pen"></i>
+                                                        </a>
+                                                        <form action="{{ route('service.events.destroy', $event) }}"
+                                                            method="POST" class="d-inline"
+                                                            onsubmit="return confirm('Bu etkinliği silmek istediğinizden emin misiniz?');">
+                                                            @csrf @method('DELETE')
+                                                            <button type="submit" class="btn-action delete"
+                                                                title="Sil">
+                                                                <i class="fa-solid fa-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            </td>
                                         @endforeach
                                     </tbody>
                                 </table>
-
-                                {{-- Sayfalama --}}
-                                @if ($events->hasPages())
-                                    <div class="card-footer bg-transparent border-top-0 pt-3 pb-2 px-3">
-                                        {{ $events->appends($filters ?? [])->links('pagination::bootstrap-5') }}
-                                    </div>
-                                @endif
+                            </div>
+                            <div class="p-3 border-top">
+                                {{ $events->appends(request()->query())->links('pagination::bootstrap-5') }}
                             </div>
                         @endif
                     </div>
-                </div>
+                @endif
+
             </div>
         </div>
     </div>

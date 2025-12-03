@@ -1,5 +1,3 @@
-{{-- Bu dosya: resources/views/bookings/_form.blade.php --}}
-
 @if ($errors->any())
     <div class="alert alert-danger mb-3">
         <ul class="mb-0">

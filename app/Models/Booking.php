@@ -12,7 +12,8 @@ use App\Traits\Loggable;
  * App\Models\Booking
  *
  * @property int $id
- * @property int $travel_id
+ * @property int $bookable_id 
+ * @property string $bookable_type 
  * @property int $user_id
  * @property string $type
  * @property string|null $provider_name
@@ -27,11 +28,13 @@ use App\Traits\Loggable;
  * @property-read int|null $activities_count
  * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
  * @property-read int|null $media_count
- * @property-read \App\Models\Travel $travel
+ * @property-read Model|\Eloquent $bookable // DEĞİŞTİ: Artık travel değil, dinamik bookable
  * @property-read \App\Models\User $user
  * @method static \Illuminate\Database\Eloquent\Builder|Booking newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Booking newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Booking query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking whereBookableId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking whereBookableType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereConfirmationCode($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereCost($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereCreatedAt($value)
@@ -40,7 +43,6 @@ use App\Traits\Loggable;
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereNotes($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereProviderName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereStartDatetime($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Booking whereTravelId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereUserId($value)
@@ -50,22 +52,42 @@ use App\Traits\Loggable;
 class Booking extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia, Loggable;
+
     protected $fillable = [
-        'travel_id',
+        'bookable_id',
+        'bookable_type',
         'user_id',
         'type',
         'provider_name',
         'confirmation_code',
         'cost',
-        'start_datetime',
-        'end_datetime',
+        'start_datetime' => 'datetime',
+        'end_datetime' => 'datetime',
         'notes',
     ];
 
-    // Bu rezervasyonun ait olduğu seyahat
-    public function travel()
+    /**
+     * Polimorfik İlişki Tanımı
+     * Bu rezervasyon bir Travel'a DA ait olabilir, bir Event'e DE.
+     * $booking->bookable dediğinde otomatik olarak hangisiyse onu getirecek.
+     */
+    public function bookable()
     {
-        return $this->belongsTo(Travel::class);
+        return $this->morphTo();
+    }
+
+    /**
+     * Geriye Dönük Uyumluluk (Opsiyonel)
+     * Eğer kodunun başka yerlerinde hala $booking->travel diye çağırdığın yerler varsa
+     * patlamasın diye bu kısayolu bırakabilirsin. Ama doğrusu artık ->bookable kullanmaktır.
+     */
+    public function getTravelAttribute()
+    {
+        // Eğer bağlı olduğu model Travel ise onu döndür, değilse null dön.
+        if ($this->bookable_type === 'App\Models\Travel' || $this->bookable_type === 'App\Models\Event') {
+            return $this->bookable;
+        }
+        return null;
     }
 
     // Bu rezervasyonu ekleyen kullanıcı
@@ -73,9 +95,31 @@ class Booking extends Model implements HasMedia
     {
         return $this->belongsTo(User::class);
     }
+
     // Dosyalar İlişkisi
     public function files()
     {
         return $this->morphMany(File::class, 'fileable');
+    }
+    /**
+     * Rezervasyon düzenlenebilir durumda mı?
+     * Kural: Başlangıç tarihine 24 saatten az kaldıysa (veya tarih geçtiyse) düzenlenemez.
+     */
+    public function getIsEditableAttribute(): bool
+    {
+        // Başlangıç tarihi boşsa düzenlenebilir (Hata olmaması için)
+        if (!$this->start_datetime)
+            return true;
+
+        $start = \Carbon\Carbon::parse($this->start_datetime);
+        $limit = now()->addHours(24);
+
+        // Eğer başlangıç tarihi, (şu an + 24 saat)'ten küçükse
+        // Yani: 24 saatten az kaldıysa veya zamanı geçtiyse -> FALSE dön
+        if ($start->lt($limit)) {
+            return false;
+        }
+
+        return true;
     }
 }

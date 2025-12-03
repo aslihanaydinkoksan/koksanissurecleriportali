@@ -144,7 +144,7 @@ class EventController extends Controller
         // YETKİ KONTROLÜ
         $this->authorize('access-department', 'hizmet');
 
-        // VALIDASYON (HEM EVENT HEM DE CRM ALANLARI İÇİN)
+        // VALIDASYON
         $validatedData = $request->validate([
             // Ana Event Alanları
             'title' => 'required|string|max:255',
@@ -152,12 +152,13 @@ class EventController extends Controller
             'start_datetime' => 'required|date',
             'end_datetime' => 'required|date|after_or_equal:start_datetime',
             'location' => 'nullable|string|max:255',
+            // Not: eventTypes dizisinin anahtarlarının 'fuar', 'toplanti' gibi sluglar olduğunu varsayıyoruz
             'event_type' => ['required', Rule::in(array_keys($this->eventTypes))],
 
             // CRM Alanları
             'travel_id' => 'nullable|integer|exists:travels,id',
 
-            // Koşullu CRM Alanları (Sadece 'musteri_ziyareti' seçilirse zorunlu)
+            // Koşullu CRM Alanları
             'customer_id' => [
                 'nullable',
                 'integer',
@@ -176,8 +177,6 @@ class EventController extends Controller
             'cancellation_reason' => 'nullable|required_if:visit_status,iptal,ertelendi|string',
         ]);
 
-        // Veritabanı işlemini Transaction (bütünleşik işlem) içine alıyoruz.
-        // Eğer biri başarısız olursa, ikisi de geri alınır.
         try {
             DB::beginTransaction();
 
@@ -189,13 +188,14 @@ class EventController extends Controller
                 'start_datetime' => $validatedData['start_datetime'],
                 'end_datetime' => $validatedData['end_datetime'],
                 'location' => $validatedData['location'],
-                'event_type' => $validatedData['event_type'],
+                'event_type' => $validatedData['event_type'], // Buraya 'fuar' string değeri geliyor
                 'customer_id' => $validatedData['customer_id'] ?? null,
-                'visit_status' => $validatedData['visit_status'] ?? 'planlandi', // Varsayılan: planlandi
+                'visit_status' => $validatedData['visit_status'] ?? 'planlandi',
                 'cancellation_reason' => $validatedData['cancellation_reason'] ?? null,
             ]);
 
             // 2. Eğer tip 'Müşteri Ziyareti' ise, CustomerVisit kaydını oluştur
+            // Not: Veritabanındaki slug'ın 'musteri_ziyareti' olduğunu varsayıyoruz (ekran görüntüsünde 5. satır)
             if ($event->event_type === 'musteri_ziyareti') {
                 CustomerVisit::create([
                     'event_id' => $event->id,
@@ -206,17 +206,43 @@ class EventController extends Controller
                     'after_sales_notes' => $validatedData['after_sales_notes'] ?? null,
                 ]);
             }
+
             DB::commit();
+
+            // --- YÖNLENDİRME MANTIĞI ---
+
+            // Veritabanı tablosundaki 'slug' sütunu 'fuar' olduğu için küçük harfle kontrol ediyoruz.
+            if ($event->event_type === 'fuar') {
+                // Fuar ise detay sayfasına git (Rezervasyon eklemek için)
+                return redirect()->route('service.events.show', $event)
+                    ->with('success', 'Fuar etkinliği oluşturuldu. Aşağıdaki panelden Ulaşım ve Konaklama rezervasyonlarını ekleyebilirsiniz.');
+            }
+
+            // Diğer durumlar için listeye dön
+            return redirect()->route('service.events.index')
+                ->with('success', 'Yeni etkinlik başarıyla oluşturuldu!');
+
         } catch (\Exception $e) {
-            // Hata varsa, tüm işlemleri geri al
             DB::rollBack();
             return redirect()->back()
                 ->with('error', 'Etkinlik oluşturulurken bir hata oluştu: ' . $e->getMessage())
                 ->withInput();
         }
+    }
+    /**
+     * Display the specified resource.
+     */
+    public function show(Event $event)
+    {
+        // 1. Yetki Kontrolü (Hizmet birimi yetkisi)
+        $this->authorize('access-department', 'hizmet');
 
-        return redirect()->route('service.events.create')
-            ->with('success', 'Yeni etkinlik başarıyla oluşturuldu!');
+        // 2. İlişkileri Yükle (View dosyasında kullandığımız veriler)
+        // Performans için user, bookings ve customerVisit verilerini önceden yüklüyoruz.
+        $event->load(['user', 'bookings.media', 'customerVisit.customer']);
+
+        // 3. View'ı Döndür
+        return view('service.events.show', compact('event'));
     }
 
     /**

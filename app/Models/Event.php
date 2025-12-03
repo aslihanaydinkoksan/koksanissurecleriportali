@@ -88,6 +88,10 @@ class Event extends Model
     {
         return $this->belongsTo(User::class);
     }
+    public function bookings()
+    {
+        return $this->morphMany(Booking::class, 'bookable');
+    }
     public function customerVisit()
     {
         return $this->hasOne(CustomerVisit::class);

@@ -43,7 +43,7 @@
 
         .table tbody td {
             padding: 1rem;
-            vertical-align: middle;
+            vertical-align: middle !important;
             border-bottom: 1px solid #e9ecef;
         }
 
@@ -137,17 +137,21 @@
                         <div class="empty-state">
                             <i class="fa-solid fa-ticket fa-3x mb-3 text-muted opacity-50"></i>
                             <h4>Henüz hiç rezervasyon yok</h4>
-                            <p>Seyahat planlarına giderek yeni rezervasyonlar ekleyebilirsiniz.</p>
-                            <a href="<?php echo e(route('travels.index')); ?>" class="btn btn-primary mt-2">Seyahat Planlarına Git</a>
+                            <p>Seyahat veya Etkinlik planlarına giderek yeni rezervasyonlar ekleyebilirsiniz.</p>
+                            <div class="mt-3">
+                                <a href="<?php echo e(route('travels.index')); ?>" class="btn btn-primary me-2">Seyahat Planları</a>
+                                <a href="<?php echo e(route('service.events.index', ['event_type' => 'fuar'])); ?>"
+                                    class="btn btn-outline-primary">Fuar Yönetimi</a>
+                            </div>
                         </div>
                     <?php else: ?>
                         <div class="table-responsive">
                             <table class="table mb-0">
                                 <thead>
                                     <tr>
-                                        <th style="width: 50px;">Tip</th>
+                                        <th style="width: 50px;" class="text-center"</th>
                                         <th>Sağlayıcı / Kod</th>
-                                        <th>Bağlı Seyahat & Kişi</th>
+                                        <th>Bağlı Kayıt (Seyahat/Etkinlik) & Kişi</th> 
                                         <th>Tarih</th>
                                         <th>Tutar</th>
                                         <th class="text-end">İşlemler</th>
@@ -188,19 +192,63 @@
 
                                             
                                             <td>
-                                                <?php if($booking->travel): ?>
-                                                    <a href="<?php echo e(route('travels.show', $booking->travel)); ?>"
-                                                        class="text-decoration-none fw-semibold" style="color: #667EEA;">
-                                                        <?php echo e($booking->travel->name); ?>
+                                                <?php if($booking->bookable): ?>
+                                                    <?php
+                                                        $route = '#';
+                                                        $name = '-';
+                                                        $typeLabel = '';
+                                                        $badgeClass = 'bg-secondary';
+
+                                                        // SEYAHAT İSE
+                                                        if ($booking->bookable_type === 'App\Models\Travel') {
+                                                            $route = route('travels.show', $booking->bookable_id);
+                                                            $name = $booking->bookable->name;
+                                                            $typeLabel = 'Seyahat';
+                                                            $badgeClass = 'bg-info text-dark';
+                                                        }
+                                                        // ETKİNLİK (FUAR) İSE
+                                                        elseif ($booking->bookable_type === 'App\Models\Event') {
+                                                            // Rotayı 'service.' prefix'i ile çağırıyoruz
+    $route = route(
+        'service.events.show',
+        $booking->bookable_id,
+    );
+    $name = $booking->bookable->title;
+    $typeLabel = 'Etkinlik';
+    $badgeClass = 'bg-warning text-dark';
+                                                        }
+                                                    ?>
+
+                                                    <a href="<?php echo e($route); ?>" class="text-decoration-none fw-semibold"
+                                                        style="color: #667EEA;">
+                                                        <?php echo e(Str::limit($name, 40)); ?>
 
                                                     </a>
-                                                    <div class="small text-muted">
+
+                                                    <div class="small text-muted mt-1 d-flex align-items-center gap-2">
+                                                        
+                                                        <span class="badge <?php echo e($badgeClass); ?> border px-2 py-0"
+                                                            style="font-size: 0.7rem;">
+                                                            <?php echo e($typeLabel); ?>
+
+                                                        </span>
+
+                                                        
+                                                        <span>
+                                                            <i
+                                                                class="fa-regular fa-user me-1"></i><?php echo e($booking->user->name ?? 'Bilinmiyor'); ?>
+
+                                                        </span>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <span class="text-muted fst-italic">
+                                                        <i class="fa-solid fa-ban me-1"></i> Kayıt Silinmiş
+                                                    </span>
+                                                    <div class="small text-muted mt-1">
                                                         <i
                                                             class="fa-regular fa-user me-1"></i><?php echo e($booking->user->name ?? 'Bilinmiyor'); ?>
 
                                                     </div>
-                                                <?php else: ?>
-                                                    <span class="text-muted fst-italic">Silinmiş Seyahat</span>
                                                 <?php endif; ?>
                                             </td>
 
@@ -223,7 +271,7 @@
 
                                             
                                             <td>
-                                                <?php if($booking->cost): ?>
+                                                <?php if(isset($booking->cost) && $booking->cost > 0): ?>
                                                     <span class="badge bg-light text-dark border">
                                                         <?php echo e(number_format($booking->cost, 2)); ?> ₺
                                                     </span>
@@ -236,22 +284,30 @@
                                             <td class="text-end">
                                                 <div class="d-flex justify-content-end gap-1">
                                                     <?php if(Auth::id() == $booking->user_id || Auth::user()->can('is-global-manager')): ?>
-                                                        <a href="<?php echo e(route('bookings.edit', $booking)); ?>"
-                                                            class="btn btn-sm-modern text-primary" title="Düzenle">
-                                                            <i class="fa-solid fa-pen"></i>
-                                                        </a>
+                                                        
+                                                        <?php if($booking->is_editable || Auth::user()->can('is-global-manager')): ?>
+                                                            
+                                                            <a href="<?php echo e(route('bookings.edit', $booking)); ?>"
+                                                                class="btn btn-sm-modern text-primary" title="Düzenle">
+                                                                <i class="fa-solid fa-pen"></i>
+                                                            </a>
 
-                                                        <form action="<?php echo e(route('bookings.destroy', $booking)); ?>"
-                                                            method="POST"
-                                                            onsubmit="return confirm('Silmek istediğine emin misin?')"
-                                                            style="display:inline;">
-                                                            <?php echo csrf_field(); ?>
-                                                            <?php echo method_field('DELETE'); ?>
-                                                            <button type="submit" class="btn btn-sm-modern text-danger"
-                                                                title="Sil">
-                                                                <i class="fa-solid fa-trash"></i>
-                                                            </button>
-                                                        </form>
+                                                            
+                                                            <form action="<?php echo e(route('bookings.destroy', $booking)); ?>"
+                                                                method="POST" ...>
+                                                                
+                                                                <button type="submit" class="btn btn-sm-modern text-danger"
+                                                                    title="Sil">
+                                                                    <i class="fa-solid fa-trash"></i>
+                                                                </button>
+                                                            </form>
+                                                        <?php else: ?>
+                                                            
+                                                            <span class="text-muted d-inline-flex align-items-center px-2"
+                                                                title="24 saatten az kaldığı için işlem yapılamaz">
+                                                                <i class="fa-solid fa-lock me-1"></i> Kilitli
+                                                            </span>
+                                                        <?php endif; ?>
                                                     <?php endif; ?>
 
                                                     

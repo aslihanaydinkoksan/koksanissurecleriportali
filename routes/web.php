@@ -27,7 +27,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\Approvals\MaintenanceApprovalController;
 use App\Models\Event;
 use App\Models\EventType;
-
+use App\Models\Travel; // Travel modelini ekledik
 
 // Ana sayfa yönlendirmesi
 Route::get('/', function () {
@@ -126,6 +126,12 @@ Route::middleware(['auth'])->prefix('service')->name('service.')->group(function
     Route::get('/events/{event}/edit', [EventController::class, 'edit'])->name('events.edit');
     Route::put('/events/{event}', [EventController::class, 'update'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
+    Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show'); // Show rotası eklendi (Detay için)
+
+    // YENİ: Etkinlik Bazlı Rezervasyon Ekleme (Polimorfik)
+    Route::post('/events/{model}/bookings', [BookingController::class, 'store'])
+        ->defaults('model_type', Event::class)
+        ->name('events.bookings.store');
 
     // Araç Yönetimi
     Route::resource('vehicles', VehicleController::class);
@@ -166,6 +172,7 @@ Route::middleware(['auth'])->prefix('service')->name('service.')->group(function
     // Sefer Zamanları Yönetimi
     Route::resource('schedules', ServiceScheduleController::class);
 });
+
 // --- BAKIM BİRİMİ ROTALARI (YENİ) ---
 Route::middleware(['auth'])->prefix('maintenance')->name('maintenance.')->group(function () {
 
@@ -212,10 +219,16 @@ Route::middleware('auth')->group(function () {
         ->except(['index', 'show']);
     Route::get('/api/customers/{customer}/machines', [CustomerController::class, 'getMachinesJson'])
         ->name('api.customers.machines');
+
+    // Travel Rotaları
     Route::resource('travels', TravelController::class);
-    Route::resource('travels.bookings', BookingController::class)
-        ->shallow()
-        ->except(['index', 'show']);
+
+    // YENİ: Seyahat Bazlı Rezervasyon Ekleme (Polimorfik)
+    // Eski "travels.bookings" resource yerine bunu kullanıyoruz
+    Route::post('/travels/{model}/bookings', [BookingController::class, 'store'])
+        ->defaults('model_type', Travel::class)
+        ->name('travels.bookings.store');
+
     Route::get('/my-assignments', [VehicleAssignmentController::class, 'myAssignments'])
         ->name('my-assignments.index');
     Route::post('/customers/{customer}/activities', [CustomerController::class, 'storeActivity'])
@@ -295,7 +308,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('system.check_updates');
 });
 
+// --- GENEL REZERVASYON ROTALARI ---
+// create ve store hariç (onlar özel rotalarla yapılıyor), diğer tüm işlemler (index, edit, update, destroy) buradan geçer.
 Route::middleware(['auth'])->group(function () {
     Route::resource('bookings', BookingController::class)->except(['create', 'store']);
-
 });
