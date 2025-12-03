@@ -526,6 +526,14 @@
                                                     Listesi
                                                 </a>
                                             </li>
+                                            @if (Auth::user()->role === 'admin' || (Auth::user()->department && Auth::user()->department->slug === 'hizmet'))
+                                                <li>
+                                                    <a class="dropdown-item" href="{{ route('bookings.index') }}">
+                                                        <i class="fa-solid fa-book-bookmark" style="color: #A78BFA;"></i>
+                                                        Tüm Rezervasyonlar
+                                                    </a>
+                                                </li>
+                                            @endif
 
                                             {{-- Müşteri Yönetimi: Admin ve idari işler görsün --}}
                                             @if (Auth::user()->role === 'admin' ||

@@ -294,3 +294,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/system/check-updates', [App\Http\Controllers\SystemController::class, 'checkUpdates'])
         ->name('system.check_updates');
 });
+
+Route::middleware(['auth'])->group(function () {
+    Route::resource('bookings', BookingController::class)->except(['create', 'store']);
+
+});

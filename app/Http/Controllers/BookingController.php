@@ -17,7 +17,11 @@ class BookingController extends Controller
      */
     public function index()
     {
-        //
+        $bookings = Booking::with(['travel', 'user'])
+            ->orderBy('start_datetime', 'desc')
+            ->paginate(20); // Sayfa başına 20 kayıt
+
+        return response()->view('bookings.index', compact('bookings'));
     }
 
     /**
@@ -27,7 +31,7 @@ class BookingController extends Controller
      */
     public function create()
     {
-        //
+        return response()->view('bookings.create');
     }
 
     /**
@@ -39,7 +43,7 @@ class BookingController extends Controller
     public function store(Request $request, Travel $travel) // $travel'ı al
     {
         $validated = $request->validate([
-            'type' => 'required|string|in:flight,hotel,car_rental,train,other',
+            'type' => 'required|string|in:flight,bus,hotel,car_rental,train,other',
             'provider_name' => 'required|string|max:255',
             'confirmation_code' => 'nullable|string|max:255',
             'start_datetime' => 'required|date',
@@ -77,18 +81,18 @@ class BookingController extends Controller
      * Display the specified resource.
      *
      * @param  \App\Models\Booking  $booking
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\View
      */
     public function show(Booking $booking)
     {
-        //
+        return view('bookings.show', compact('booking'));
     }
 
     /**
      * Show the form for editing the specified resource.
      *
      * @param  \App\Models\Booking  $booking
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\Response
      */
     public function edit(Booking $booking)
     {
@@ -96,7 +100,7 @@ class BookingController extends Controller
             abort(403, 'Bu eylemi gerçekleştirme yetkiniz yok.');
         }
 
-        return view('bookings.edit', compact('booking'));
+        return response()->view('bookings.edit', compact('booking'));
     }
 
     /**

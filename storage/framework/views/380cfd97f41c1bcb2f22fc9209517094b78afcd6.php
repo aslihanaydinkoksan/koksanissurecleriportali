@@ -138,6 +138,11 @@
             transform: translateY(-2px);
         }
 
+        .btn-action-equal {
+            min-width: 180px;
+            text-align: center;
+        }
+
         .empty-state {
             text-align: center;
             padding: 3rem 2rem;
@@ -221,84 +226,104 @@
                     </div>
                 <?php endif; ?>
 
+                <div class="d-flex justify-content-end mb-3">
+                    <button class="btn btn-outline-modern" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+                        <i class="fa-solid fa-filter me-1"></i> Filtreleme Seçenekleri
+                        
+                    </button>
+                </div>
+
                 
-                <div class="filter-card">
-                    <div class="section-title">
-                        <i class="fa-solid fa-filter"></i>
-                        <h5 class="mb-0">Filtreleme Seçenekleri</h5>
-                    </div>
-
-                    <form method="GET" action="<?php echo e(route('travels.index')); ?>" autocomplete="off">
-                        <div class="row g-3">
-                            <div class="col-lg-4 col-md-6">
-                                <label for="name" class="form-label">Plan Adı</label>
-                                <input type="text" name="name" id="name" class="form-control"
-                                    placeholder="Plan adı girin..." value="<?php echo e($filters['name'] ?? ''); ?>" autocomplete="off">
-                            </div>
-
-                            <div class="col-lg-2 col-md-6">
-                                <label for="status" class="form-label">Durum</label>
-                                <select name="status" id="status" class="form-select">
-                                    <option value="all" <?php if(($filters['status'] ?? 'all') == 'all'): ?> selected <?php endif; ?>>Tümü</option>
-                                    <option value="planned" <?php if(($filters['status'] ?? '') == 'planned'): ?> selected <?php endif; ?>>Planlanan
-                                    </option>
-                                    <option value="completed" <?php if(($filters['status'] ?? '') == 'completed'): ?> selected <?php endif; ?>>Tamamlanan
-                                    </option>
-                                </select>
-                            </div>
-
-                            <div class="col-lg-2 col-md-6">
-                                <label for="is_important" class="form-label">Önem</label>
-                                <select name="is_important" id="is_important" class="form-select">
-                                    <option value="all" <?php if(($filters['is_important'] ?? 'all') == 'all'): ?> selected <?php endif; ?>>Tümü</option>
-                                    <option value="yes" <?php if(($filters['is_important'] ?? '') == 'yes'): ?> selected <?php endif; ?>>Önemli</option>
-                                    <option value="no" <?php if(($filters['is_important'] ?? '') == 'no'): ?> selected <?php endif; ?>>Normal</option>
-                                </select>
-                            </div>
-
-                            <div class="col-lg-2 col-md-6">
-                                <label for="date_from" class="form-label">Başlangıç</label>
-                                <input type="date" name="date_from" id="date_from" class="form-control"
-                                    value="<?php echo e($filters['date_from'] ?? ''); ?>" autocomplete="off">
-                            </div>
-
-                            <div class="col-lg-2 col-md-6">
-                                <label for="date_to" class="form-label">Bitiş</label>
-                                <input type="date" name="date_to" id="date_to" class="form-control"
-                                    value="<?php echo e($filters['date_to'] ?? ''); ?>" autocomplete="off">
-                            </div>
+                
+                <div class="collapse <?php if(request()->hasAny(['name', 'status', 'is_important', 'date_from', 'date_to', 'user_id'])): ?> show <?php endif; ?>" id="filterCollapse">
+                    <div class="filter-card">
+                        <div class="section-title">
+                            <i class="fa-solid fa-filter"></i>
+                            <h5 class="mb-0">Filtreleme Seçenekleri</h5>
                         </div>
 
-                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('is-global-manager')): ?>
-                            <div class="row g-3 mt-2">
+                        <form method="GET" action="<?php echo e(route('travels.index')); ?>" autocomplete="off">
+                            
+                            
+                            <div class="row g-3">
                                 <div class="col-lg-4 col-md-6">
-                                    <label for="user_id" class="form-label">Kullanıcı</label>
-                                    <select name="user_id" id="user_id" class="form-select">
-                                        <option value="all">Tüm Kullanıcılar</option>
-                                        <?php $__currentLoopData = $users; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                            <option value="<?php echo e($user->id); ?>"
-                                                <?php if(($filters['user_id'] ?? '') == $user->id): ?> selected <?php endif; ?>>
-                                                <?php echo e($user->name); ?>
+                                    <label for="name" class="form-label">Plan Adı</label>
+                                    <input type="text" name="name" id="name" class="form-control"
+                                        placeholder="Plan adı girin..." value="<?php echo e($filters['name'] ?? ''); ?>"
+                                        autocomplete="off">
+                                </div>
 
-                                            </option>
-                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                <div class="col-lg-2 col-md-6">
+                                    <label for="status" class="form-label">Durum</label>
+                                    <select name="status" id="status" class="form-select">
+                                        <option value="all" <?php if(($filters['status'] ?? 'all') == 'all'): ?> selected <?php endif; ?>>Tümü
+                                        </option>
+                                        <option value="planned" <?php if(($filters['status'] ?? '') == 'planned'): ?> selected <?php endif; ?>>Planlanan
+                                        </option>
+                                        <option value="completed" <?php if(($filters['status'] ?? '') == 'completed'): ?> selected <?php endif; ?>>
+                                            Tamamlanan
+                                        </option>
                                     </select>
                                 </div>
-                            </div>
-                        <?php endif; ?>
 
-                        <div class="row mt-4">
-                            <div class="col-12 d-flex justify-content-end gap-2">
-                                <a href="<?php echo e(route('travels.index')); ?>" class="btn btn-sm-modern btn-outline-modern">
-                                    <i class="fa-solid fa-rotate-right me-1"></i> Temizle
-                                </a>
-                                <button type="submit" class="btn-gradient">
-                                    <i class="fa-solid fa-filter me-1"></i> Filtrele
-                                </button>
+                                <div class="col-lg-2 col-md-6">
+                                    <label for="is_important" class="form-label">Önem</label>
+                                    <select name="is_important" id="is_important" class="form-select">
+                                        <option value="all" <?php if(($filters['is_important'] ?? 'all') == 'all'): ?> selected <?php endif; ?>>Tümü
+                                        </option>
+                                        <option value="yes" <?php if(($filters['is_important'] ?? '') == 'yes'): ?> selected <?php endif; ?>>Önemli
+                                        </option>
+                                        <option value="no" <?php if(($filters['is_important'] ?? '') == 'no'): ?> selected <?php endif; ?>>Normal
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div class="col-lg-2 col-md-6">
+                                    <label for="date_from" class="form-label">Başlangıç</label>
+                                    <input type="date" name="date_from" id="date_from" class="form-control"
+                                        value="<?php echo e($filters['date_from'] ?? ''); ?>" autocomplete="off">
+                                </div>
+
+                                <div class="col-lg-2 col-md-6">
+                                    <label for="date_to" class="form-label">Bitiş</label>
+                                    <input type="date" name="date_to" id="date_to" class="form-control"
+                                        value="<?php echo e($filters['date_to'] ?? ''); ?>" autocomplete="off">
+                                </div>
                             </div>
-                        </div>
-                    </form>
+
+                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('is-global-manager')): ?>
+                                <div class="row g-3 mt-2">
+                                    <div class="col-lg-4 col-md-6">
+                                        <label for="user_id" class="form-label">Kullanıcı</label>
+                                        <select name="user_id" id="user_id" class="form-select">
+                                            <option value="all">Tüm Kullanıcılar</option>
+                                            <?php $__currentLoopData = $users; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <option value="<?php echo e($user->id); ?>"
+                                                    <?php if(($filters['user_id'] ?? '') == $user->id): ?> selected <?php endif; ?>>
+                                                    <?php echo e($user->name); ?>
+
+                                                </option>
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                        </select>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="row mt-4">
+                                <div class="col-12 d-flex justify-content-end gap-2">
+                                    <a href="<?php echo e(route('travels.index')); ?>" class="btn btn-sm-modern btn-outline-modern">
+                                        <i class="fa-solid fa-rotate-right me-1"></i> Temizle
+                                    </a>
+                                    <button type="submit" class="btn-gradient">
+                                        <i class="fa-solid fa-filter me-1"></i> Filtrele
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
+
 
                 
                 <div class="section-title">
@@ -351,15 +376,18 @@
                                     <div class="action-buttons">
                                         <?php if(Auth::id() === $travel->user_id || Auth::user()->role === 'admin' || Auth::user()->can('is-global-manager')): ?>
                                             <a href="<?php echo e(route('travels.show', $travel)); ?>"
-                                                class="btn btn-light btn-sm rounded-3 shadow-sm border"
-                                                title="Detayları Görüntüle">
-                                                <i class="fa-solid fa-eye text-dark"></i>
+                                                class="btn btn-sm-modern btn-outline-modern btn-action-equal"
+                                                title="Detaylar & İşlemler">
+                                                <i class="fa-solid fa-eye"></i>
+                                                <span class="ms-1">Detaylar & İşlemler</span>
                                             </a>
                                         <?php endif; ?>
                                         <?php if(Auth::id() == $travel->user_id || Auth::user()->can('is-global-manager')): ?>
                                             <a href="<?php echo e(route('travels.edit', $travel)); ?>"
-                                                class="btn btn-sm-modern btn-outline-modern" title="Düzenle">
+                                                class="btn btn-sm-modern btn-outline-modern btn-action-equal"
+                                                title="Düzenle">
                                                 <i class="fa-solid fa-pen"></i>
+                                                <span class="ms-1">Düzenle</span>
                                             </a>
                                         <?php endif; ?>
                                     </div>

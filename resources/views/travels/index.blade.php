@@ -138,6 +138,11 @@
             transform: translateY(-2px);
         }
 
+        .btn-action-equal {
+            min-width: 180px;
+            text-align: center;
+        }
+
         .empty-state {
             text-align: center;
             padding: 3rem 2rem;
@@ -220,83 +225,105 @@
                     </div>
                 @endif
 
-                {{-- Filter Card --}}
-                <div class="filter-card">
-                    <div class="section-title">
-                        <i class="fa-solid fa-filter"></i>
-                        <h5 class="mb-0">Filtreleme Seçenekleri</h5>
-                    </div>
+                <div class="d-flex justify-content-end mb-3">
+                    <button class="btn btn-outline-modern" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+                        <i class="fa-solid fa-filter me-1"></i> Filtreleme Seçenekleri
+                        {{-- @if (request()->hasAny(['name', 'status', 'is_important', 'date_from', 'date_to', 'user_id']))
+                            <span class="badge bg-primary ms-1">Aktif</span>
+                        @endif --}}
+                    </button>
+                </div>
 
-                    <form method="GET" action="{{ route('travels.index') }}" autocomplete="off">
-                        <div class="row g-3">
-                            <div class="col-lg-4 col-md-6">
-                                <label for="name" class="form-label">Plan Adı</label>
-                                <input type="text" name="name" id="name" class="form-control"
-                                    placeholder="Plan adı girin..." value="{{ $filters['name'] ?? '' }}" autocomplete="off">
-                            </div>
-
-                            <div class="col-lg-2 col-md-6">
-                                <label for="status" class="form-label">Durum</label>
-                                <select name="status" id="status" class="form-select">
-                                    <option value="all" @if (($filters['status'] ?? 'all') == 'all') selected @endif>Tümü</option>
-                                    <option value="planned" @if (($filters['status'] ?? '') == 'planned') selected @endif>Planlanan
-                                    </option>
-                                    <option value="completed" @if (($filters['status'] ?? '') == 'completed') selected @endif>Tamamlanan
-                                    </option>
-                                </select>
-                            </div>
-
-                            <div class="col-lg-2 col-md-6">
-                                <label for="is_important" class="form-label">Önem</label>
-                                <select name="is_important" id="is_important" class="form-select">
-                                    <option value="all" @if (($filters['is_important'] ?? 'all') == 'all') selected @endif>Tümü</option>
-                                    <option value="yes" @if (($filters['is_important'] ?? '') == 'yes') selected @endif>Önemli</option>
-                                    <option value="no" @if (($filters['is_important'] ?? '') == 'no') selected @endif>Normal</option>
-                                </select>
-                            </div>
-
-                            <div class="col-lg-2 col-md-6">
-                                <label for="date_from" class="form-label">Başlangıç</label>
-                                <input type="date" name="date_from" id="date_from" class="form-control"
-                                    value="{{ $filters['date_from'] ?? '' }}" autocomplete="off">
-                            </div>
-
-                            <div class="col-lg-2 col-md-6">
-                                <label for="date_to" class="form-label">Bitiş</label>
-                                <input type="date" name="date_to" id="date_to" class="form-control"
-                                    value="{{ $filters['date_to'] ?? '' }}" autocomplete="off">
-                            </div>
+                {{-- DÜZENLENEN KISIM: Filter Card (Collapse içine alındı) --}}
+                {{-- Eğer URL'de bir filtre varsa 'show' class'ı eklenir, yoksa kapalı gelir --}}
+                <div class="collapse @if (request()->hasAny(['name', 'status', 'is_important', 'date_from', 'date_to', 'user_id'])) show @endif" id="filterCollapse">
+                    <div class="filter-card">
+                        <div class="section-title">
+                            <i class="fa-solid fa-filter"></i>
+                            <h5 class="mb-0">Filtreleme Seçenekleri</h5>
                         </div>
 
-                        @can('is-global-manager')
-                            <div class="row g-3 mt-2">
+                        <form method="GET" action="{{ route('travels.index') }}" autocomplete="off">
+                            {{-- ... Form içeriği aynen kalacak ... --}}
+                            {{-- Form içeriğini buraya aynen yapıştır --}}
+                            <div class="row g-3">
                                 <div class="col-lg-4 col-md-6">
-                                    <label for="user_id" class="form-label">Kullanıcı</label>
-                                    <select name="user_id" id="user_id" class="form-select">
-                                        <option value="all">Tüm Kullanıcılar</option>
-                                        @foreach ($users as $user)
-                                            <option value="{{ $user->id }}"
-                                                @if (($filters['user_id'] ?? '') == $user->id) selected @endif>
-                                                {{ $user->name }}
-                                            </option>
-                                        @endforeach
+                                    <label for="name" class="form-label">Plan Adı</label>
+                                    <input type="text" name="name" id="name" class="form-control"
+                                        placeholder="Plan adı girin..." value="{{ $filters['name'] ?? '' }}"
+                                        autocomplete="off">
+                                </div>
+
+                                <div class="col-lg-2 col-md-6">
+                                    <label for="status" class="form-label">Durum</label>
+                                    <select name="status" id="status" class="form-select">
+                                        <option value="all" @if (($filters['status'] ?? 'all') == 'all') selected @endif>Tümü
+                                        </option>
+                                        <option value="planned" @if (($filters['status'] ?? '') == 'planned') selected @endif>Planlanan
+                                        </option>
+                                        <option value="completed" @if (($filters['status'] ?? '') == 'completed') selected @endif>
+                                            Tamamlanan
+                                        </option>
                                     </select>
                                 </div>
-                            </div>
-                        @endcan
 
-                        <div class="row mt-4">
-                            <div class="col-12 d-flex justify-content-end gap-2">
-                                <a href="{{ route('travels.index') }}" class="btn btn-sm-modern btn-outline-modern">
-                                    <i class="fa-solid fa-rotate-right me-1"></i> Temizle
-                                </a>
-                                <button type="submit" class="btn-gradient">
-                                    <i class="fa-solid fa-filter me-1"></i> Filtrele
-                                </button>
+                                <div class="col-lg-2 col-md-6">
+                                    <label for="is_important" class="form-label">Önem</label>
+                                    <select name="is_important" id="is_important" class="form-select">
+                                        <option value="all" @if (($filters['is_important'] ?? 'all') == 'all') selected @endif>Tümü
+                                        </option>
+                                        <option value="yes" @if (($filters['is_important'] ?? '') == 'yes') selected @endif>Önemli
+                                        </option>
+                                        <option value="no" @if (($filters['is_important'] ?? '') == 'no') selected @endif>Normal
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div class="col-lg-2 col-md-6">
+                                    <label for="date_from" class="form-label">Başlangıç</label>
+                                    <input type="date" name="date_from" id="date_from" class="form-control"
+                                        value="{{ $filters['date_from'] ?? '' }}" autocomplete="off">
+                                </div>
+
+                                <div class="col-lg-2 col-md-6">
+                                    <label for="date_to" class="form-label">Bitiş</label>
+                                    <input type="date" name="date_to" id="date_to" class="form-control"
+                                        value="{{ $filters['date_to'] ?? '' }}" autocomplete="off">
+                                </div>
                             </div>
-                        </div>
-                    </form>
+
+                            @can('is-global-manager')
+                                <div class="row g-3 mt-2">
+                                    <div class="col-lg-4 col-md-6">
+                                        <label for="user_id" class="form-label">Kullanıcı</label>
+                                        <select name="user_id" id="user_id" class="form-select">
+                                            <option value="all">Tüm Kullanıcılar</option>
+                                            @foreach ($users as $user)
+                                                <option value="{{ $user->id }}"
+                                                    @if (($filters['user_id'] ?? '') == $user->id) selected @endif>
+                                                    {{ $user->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                            @endcan
+
+                            <div class="row mt-4">
+                                <div class="col-12 d-flex justify-content-end gap-2">
+                                    <a href="{{ route('travels.index') }}" class="btn btn-sm-modern btn-outline-modern">
+                                        <i class="fa-solid fa-rotate-right me-1"></i> Temizle
+                                    </a>
+                                    <button type="submit" class="btn-gradient">
+                                        <i class="fa-solid fa-filter me-1"></i> Filtrele
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
+
 
                 {{-- Travels List Section --}}
                 <div class="section-title">
@@ -349,15 +376,18 @@
                                     <div class="action-buttons">
                                         @if (Auth::id() === $travel->user_id || Auth::user()->role === 'admin' || Auth::user()->can('is-global-manager'))
                                             <a href="{{ route('travels.show', $travel) }}"
-                                                class="btn btn-light btn-sm rounded-3 shadow-sm border"
-                                                title="Detayları Görüntüle">
-                                                <i class="fa-solid fa-eye text-dark"></i>
+                                                class="btn btn-sm-modern btn-outline-modern btn-action-equal"
+                                                title="Detaylar & İşlemler">
+                                                <i class="fa-solid fa-eye"></i>
+                                                <span class="ms-1">Detaylar & İşlemler</span>
                                             </a>
                                         @endif
                                         @if (Auth::id() == $travel->user_id || Auth::user()->can('is-global-manager'))
                                             <a href="{{ route('travels.edit', $travel) }}"
-                                                class="btn btn-sm-modern btn-outline-modern" title="Düzenle">
+                                                class="btn btn-sm-modern btn-outline-modern btn-action-equal"
+                                                title="Düzenle">
                                                 <i class="fa-solid fa-pen"></i>
+                                                <span class="ms-1">Düzenle</span>
                                             </a>
                                         @endif
                                     </div>

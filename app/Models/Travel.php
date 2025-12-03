@@ -51,7 +51,9 @@ class Travel extends Model
         'user_id',
         'name',
         'start_date',
+        'start_time',
         'end_date',
+        'end_time',
         'status',
         'is_important',
     ];

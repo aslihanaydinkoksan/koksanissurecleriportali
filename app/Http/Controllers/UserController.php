@@ -19,7 +19,6 @@ class UserController extends Controller
     }
     public function create()
     {
-        // Formdaki select kutularını doldurmak için tüm verileri çekiyoruz
         $roles = Role::all();
         $departments = Department::all();
 

@@ -16,6 +16,9 @@
         <select name="type" id="type" class="form-select" required>
             {{-- $booking değişkeni 'edit' sayfasından, 'null' ise 'create' sayfasından gelir --}}
             <option value="flight" @if (old('type', $booking->type ?? '') == 'flight') selected @endif>✈️ Uçuş</option>
+            <option value="bus" {{ old('type', $booking->type ?? '') == 'bus' ? 'selected' : '' }}>
+                🚌 Otobüs
+            </option>
             <option value="hotel" @if (old('type', $booking->type ?? '') == 'hotel') selected @endif>🏨 Otel</option>
             <option value="car_rental" @if (old('type', $booking->type ?? '') == 'car_rental') selected @endif>🚗 Araç Kiralama</option>
             <option value="train" @if (old('type', $booking->type ?? '') == 'train') selected @endif>🚆 Tren</option>
@@ -29,7 +32,7 @@
             placeholder="Örn: Türk Hava Yolları, Hilton..." required>
     </div>
     <div class="col-md-4 mb-3">
-        <label for="confirmation_code" class="form-label">Rezervasyon Kodu (PNR vb.)</label>
+        <label for="confirmation_code" class="form-label">Rezervasyon Kodu (TK Numarası vb.)</label>
         <input type="text" name="confirmation_code" id="confirmation_code" class="form-control"
             value="{{ old('confirmation_code', $booking->confirmation_code ?? '') }}" placeholder="Örn: ABC123">
     </div>

@@ -506,6 +506,14 @@
                                                     Listesi
                                                 </a>
                                             </li>
+                                            <?php if(Auth::user()->role === 'admin' || (Auth::user()->department && Auth::user()->department->slug === 'hizmet')): ?>
+                                                <li>
+                                                    <a class="dropdown-item" href="<?php echo e(route('bookings.index')); ?>">
+                                                        <i class="fa-solid fa-book-bookmark" style="color: #A78BFA;"></i>
+                                                        Tüm Rezervasyonlar
+                                                    </a>
+                                                </li>
+                                            <?php endif; ?>
 
                                             
                                             <?php if(Auth::user()->role === 'admin' ||

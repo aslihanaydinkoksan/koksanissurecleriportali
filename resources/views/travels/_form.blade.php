@@ -17,31 +17,57 @@
                 @enderror
             </div>
 
-            {{-- Tarih Aralığı --}}
-            <div class="col-md-6">
-                <label for="start_date" class="form-label text-dark fw-bold">
-                    <i class="fa-regular fa-calendar me-2 text-success"></i> Başlangıç Tarihi
-                </label>
-                <input type="date" name="start_date" id="start_date"
-                    class="form-control @error('start_date') is-invalid @enderror"
-                    value="{{ old('start_date', isset($travel->start_date) ? $travel->start_date->format('Y-m-d') : '') }}"
-                    required>
-                @error('start_date')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
+            {{-- Tarih ve Saat Aralığı --}}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label text-dark fw-bold">
+                        <i class="fa-regular fa-calendar me-2 text-success"></i> Başlangıç Zamanı
+                    </label>
+                    <div class="input-group">
+                        {{-- Tarih Girişi --}}
+                        <input type="date" name="start_date" id="start_date"
+                            class="form-control @error('start_date') is-invalid @enderror"
+                            value="{{ old('start_date', isset($travel->start_date) ? \Carbon\Carbon::parse($travel->start_date)->format('Y-m-d') : '') }}"
+                            required>
 
-            <div class="col-md-6">
-                <label for="end_date" class="form-label text-dark fw-bold">
-                    <i class="fa-regular fa-calendar-check me-2 text-danger"></i> Bitiş Tarihi
-                </label>
-                <input type="date" name="end_date" id="end_date"
-                    class="form-control @error('end_date') is-invalid @enderror"
-                    value="{{ old('end_date', isset($travel->end_date) ? $travel->end_date->format('Y-m-d') : '') }}"
-                    required>
-                @error('end_date')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
+                        {{-- Saat Girişi --}}
+                        <input type="time" name="start_time" id="start_time"
+                            class="form-control @error('start_time') is-invalid @enderror" style="max-width: 130px;"
+                            value="{{ old('start_time', isset($travel->start_time) ? \Carbon\Carbon::parse($travel->start_time)->format('H:i') : '09:00') }}"
+                            required>
+                    </div>
+                    @error('start_date')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
+                    @error('start_time')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label text-dark fw-bold">
+                        <i class="fa-regular fa-calendar-check me-2 text-danger"></i> Bitiş Zamanı
+                    </label>
+                    <div class="input-group">
+                        {{-- Tarih Girişi --}}
+                        <input type="date" name="end_date" id="end_date"
+                            class="form-control @error('end_date') is-invalid @enderror"
+                            value="{{ old('end_date', isset($travel->end_date) ? \Carbon\Carbon::parse($travel->end_date)->format('Y-m-d') : '') }}"
+                            required>
+
+                        {{-- Saat Girişi --}}
+                        <input type="time" name="end_time" id="end_time"
+                            class="form-control @error('end_time') is-invalid @enderror" style="max-width: 130px;"
+                            value="{{ old('end_time', isset($travel->end_time) ? \Carbon\Carbon::parse($travel->end_time)->format('H:i') : '18:00') }}"
+                            required>
+                    </div>
+                    @error('end_date')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
+                    @error('end_time')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
             </div>
 
             {{-- Durum ve Önem Derecesi --}}

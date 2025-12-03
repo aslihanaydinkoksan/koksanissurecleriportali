@@ -344,7 +344,6 @@
 
 @section('page_scripts')
     <script>
-        // Basit şifre göster/gizle fonksiyonu (Create ile aynı)
         function togglePwd(id) {
             var input = document.getElementById(id);
             if (input.type === "password") {
