@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', 'Kullanıcıyı Düzenle')
 
-@push('styles')
+<?php $__env->startSection('title', 'Kullanıcıyı Düzenle'); ?>
+
+<?php $__env->startPush('styles'); ?>
     <style>
         /* --- 1. ARKA PLAN VE ANİMASYONLAR (Create Sayfasıyla Aynı) --- */
         #app>main.py-4 {
@@ -193,51 +193,51 @@
             border-radius: 10px;
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-9">
                 <div class="card user-edit-card">
                     <div class="card-header-custom">
                         <span>✏️ Kullanıcıyı Düzenle</span>
-                        <small class="text-muted fs-6 fw-normal">{{ $user->name }}</small>
+                        <small class="text-muted fs-6 fw-normal"><?php echo e($user->name); ?></small>
                     </div>
 
                     <div class="card-body p-5">
 
-                        {{-- Hatalar --}}
-                        @if ($errors->any())
+                        
+                        <?php if($errors->any()): ?>
                             <div class="alert alert-danger" style="border-radius: 1rem;">
                                 <ul class="mb-0">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
+                                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <li><?php echo e($error); ?></li>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </ul>
                             </div>
-                        @endif
+                        <?php endif; ?>
 
-                        <form method="POST" action="{{ route('users.update', $user->id) }}" autocomplete="off">
-                            @csrf
-                            @method('PUT')
+                        <form method="POST" action="<?php echo e(route('users.update', $user->id)); ?>" autocomplete="off">
+                            <?php echo csrf_field(); ?>
+                            <?php echo method_field('PUT'); ?>
 
-                            {{-- AD SOYAD --}}
+                            
                             <div class="mb-4">
                                 <label class="form-label text-muted fw-bold ms-1">Ad Soyad</label>
                                 <div class="custom-input-group">
                                     <input type="text" name="name" class="form-control"
-                                        value="{{ old('name', $user->name) }}" required>
+                                        value="<?php echo e(old('name', $user->name)); ?>" required>
                                     <span class="input-icon">👤</span>
                                 </div>
                             </div>
 
-                            {{-- EMAIL --}}
+                            
                             <div class="mb-4">
                                 <label class="form-label text-muted fw-bold ms-1">E-posta Adresi</label>
                                 <div class="custom-input-group">
                                     <input type="email" name="email" class="form-control"
-                                        value="{{ old('email', $user->email) }}" required>
+                                        value="<?php echo e(old('email', $user->email)); ?>" required>
                                     <span class="input-icon">✉️</span>
                                 </div>
                             </div>
@@ -251,7 +251,7 @@
                             </div>
 
                             <div class="row">
-                                {{-- ŞİFRE --}}
+                                
                                 <div class="col-md-6 mb-4">
                                     <label class="form-label text-muted fw-bold ms-1">Yeni Şifre</label>
                                     <div class="custom-input-group">
@@ -260,7 +260,7 @@
                                             onclick="togglePwd('password')">👁️</span>
                                     </div>
                                 </div>
-                                {{-- ŞİFRE ONAY --}}
+                                
                                 <div class="col-md-6 mb-4">
                                     <label class="form-label text-muted fw-bold ms-1">Yeni Şifre Tekrar</label>
                                     <div class="custom-input-group">
@@ -274,56 +274,61 @@
 
                             <hr class="my-4" style="opacity: 0.2">
 
-                            {{-- ROLLER (BUTON GÖRÜNÜMLÜ - ÇOKLU SEÇİM) --}}
+                            
                             <div class="mb-4">
                                 <label class="form-label text-muted fw-bold ms-1 d-block">Kullanıcı Rolleri</label>
 
                                 <div class="d-flex flex-wrap">
-                                    @foreach ($roles as $role)
+                                    <?php $__currentLoopData = $roles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $role): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <div>
-                                            {{-- 
-                                                Burada kullanıcının mevcut rollerini kontrol ediyoruz.
-                                                $user->roles bir ilişki ise collection döner, contains ile ID kontrolü yaparız.
-                                            --}}
-                                            <input type="checkbox" name="roles[]" id="role_{{ $role->id }}"
-                                                value="{{ $role->id }}" class="role-checkbox"
-                                                @if (in_array($role->id, old('roles', $user->roles->pluck('id')->toArray()))) checked @endif>
+                                            
+                                            <input type="checkbox" name="roles[]" id="role_<?php echo e($role->id); ?>"
+                                                value="<?php echo e($role->id); ?>" class="role-checkbox"
+                                                <?php if(in_array($role->id, old('roles', $user->roles->pluck('id')->toArray()))): ?> checked <?php endif; ?>>
 
-                                            <label for="role_{{ $role->id }}" class="role-label">
-                                                {{ $role->label ?? $role->name }}
+                                            <label for="role_<?php echo e($role->id); ?>" class="role-label">
+                                                <?php echo e($role->label ?? $role->name); ?>
+
                                             </label>
                                         </div>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </div>
-                                @error('roles')
-                                    <small class="text-danger">{{ $message }}</small>
-                                @enderror
+                                <?php $__errorArgs = ['roles'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <small class="text-danger"><?php echo e($message); ?></small>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                             </div>
 
-                            {{-- DEPARTMANLAR (LİSTE GÖRÜNÜMLÜ - ÇOKLU SEÇİM) --}}
+                            
                             <div class="mb-5">
                                 <label class="form-label text-muted fw-bold ms-1">Bağlı Olduğu Departmanlar</label>
 
                                 <div class="department-list-wrapper">
-                                    @if ($departments->count() > 0)
-                                        @foreach ($departments as $dept)
-                                            <label class="dept-item" for="dept_{{ $dept->id }}">
-                                                <input type="checkbox" name="departments[]" id="dept_{{ $dept->id }}"
-                                                    value="{{ $dept->id }}" class="dept-checkbox"
-                                                    @if (in_array($dept->id, old('departments', $user->departments->pluck('id')->toArray()))) checked @endif>
-                                                <span class="ms-2 text-dark">{{ $dept->name }}</span>
+                                    <?php if($departments->count() > 0): ?>
+                                        <?php $__currentLoopData = $departments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dept): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <label class="dept-item" for="dept_<?php echo e($dept->id); ?>">
+                                                <input type="checkbox" name="departments[]" id="dept_<?php echo e($dept->id); ?>"
+                                                    value="<?php echo e($dept->id); ?>" class="dept-checkbox"
+                                                    <?php if(in_array($dept->id, old('departments', $user->departments->pluck('id')->toArray()))): ?> checked <?php endif; ?>>
+                                                <span class="ms-2 text-dark"><?php echo e($dept->name); ?></span>
                                             </label>
-                                        @endforeach
-                                    @else
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                    <?php else: ?>
                                         <div class="p-3 text-center text-muted">Henüz departman eklenmemiş.</div>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
                             </div>
 
-                            {{-- BUTONLAR --}}
+                            
                             <div class="row">
                                 <div class="col-md-6 mb-2">
-                                    <a href="{{ route('users.index') }}" class="btn-cancel">
+                                    <a href="<?php echo e(route('users.index')); ?>" class="btn-cancel">
                                         ← İptal
                                     </a>
                                 </div>
@@ -340,9 +345,9 @@
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('page_scripts')
+<?php $__env->startSection('page_scripts'); ?>
     <script>
         // Basit şifre göster/gizle fonksiyonu (Create ile aynı)
         function togglePwd(id) {
@@ -354,4 +359,6 @@
             }
         }
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/users/edit.blade.php ENDPATH**/ ?>

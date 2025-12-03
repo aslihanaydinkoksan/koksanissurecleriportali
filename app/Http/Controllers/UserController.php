@@ -123,7 +123,7 @@ class UserController extends Controller
         // Departmanlar için sync (eğer boş gelirse tüm departmanları siler)
         $user->departments()->sync($request->departments ?? []);
 
-        return redirect()->route('home')->with('success', 'Kullanıcı bilgileri ve yetkileri güncellendi!');
+        return redirect()->route('users.index')->with('success', 'Kullanıcı bilgileri ve yetkileri güncellendi!');
     }
 
     // Profil güncelleme metodları aynı kalabilir, sadece rol kontrolü gerekirse hasRole ile değiştirilmeli.
