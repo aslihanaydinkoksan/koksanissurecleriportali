@@ -2,7 +2,7 @@
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 1.25rem; overflow: hidden;">
 
-            {{-- Modal Başlık --}}
+            
             <div class="modal-header border-0 position-relative"
                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem 2rem 1.5rem;">
                 <div>
@@ -15,14 +15,16 @@
                     aria-label="Kapat" style="filter: brightness(0) invert(1);"></button>
             </div>
 
-            {{-- Modal İçerik --}}
+            
             <div class="modal-body p-4 px-lg-5 py-lg-4"
                 style="font-size: 0.95rem; line-height: 1.8; color: #2d3748; background-color: #f8f9fa;">
 
                 <div class="bg-white rounded-3 shadow-sm p-4 mb-4">
                     <p class="mb-3">
                         <strong style="color: #667eea; font-size: 1.05rem;">Sayın Kullanıcımız,</strong><br>
-                        <span style="color: #4a5568;"></span>
+                        <span style="color: #4a5568;">Buraya avukatlarınızdan gelecek olan uzun metinleri
+                            yapıştıracaksınız.
+                            Bu dosya sadece metni ve modalı barındırır, login kodlarını bozmaz.</span>
                     </p>
                 </div>
 
@@ -50,7 +52,7 @@
 
             </div>
 
-            {{-- Modal Alt Kısım --}}
+            
             <div class="modal-footer border-0 pt-0 pb-4 px-4 px-lg-5" style="background-color: #f8f9fa;">
                 <button type="button" id="btn-kvkk-accept"
                     class="btn btn-lg text-white fw-semibold rounded-pill px-5 shadow-sm" data-bs-dismiss="modal"
@@ -64,3 +66,4 @@
         </div>
     </div>
 </div>
+<?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/auth/kvkk.blade.php ENDPATH**/ ?>
