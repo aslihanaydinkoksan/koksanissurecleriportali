@@ -22,7 +22,9 @@
                 <div class="bg-white rounded-3 shadow-sm p-4 mb-4">
                     <p class="mb-3">
                         <strong style="color: #667eea; font-size: 1.05rem;">Sayın Kullanıcımız,</strong><br>
-                        <span style="color: #4a5568;"></span>
+                        <span style="color: #4a5568;">Veri güvenliğiniz ve gizliliğiniz bizim için önceliklidir.
+                            Şeffaflık ilkemiz gereği, kişisel verilerinizin işlenmesi süreçleri hakkında sizi
+                            bilgilendirmek isteriz.</span>
                     </p>
                 </div>
 
@@ -31,9 +33,8 @@
                         <i class="fa-solid fa-file-lines me-2"></i>Aydınlatma Metni
                     </h6>
                     <p style="color: #4a5568;">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut
-                        labore
-                        et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+                        Kişisel verileriniz, 6698 sayılı KVKK’ya uygun olarak yalnızca hizmet sunumu amacıyla KÖKSAN
+                        tarafından güvenle saklanmakta ve işlenmektedir. Veri güvenliğiniz önceliğimizdir.
                     </p>
                 </div>
 
