@@ -250,6 +250,49 @@
             margin-bottom: 1rem;
             opacity: 0.5;
         }
+
+        .btn-action-with-text {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .btn-action-with-text i {
+            font-size: 14px;
+        }
+
+        .btn-action-with-text.view {
+            color: #6366f1;
+        }
+
+        .btn-action-with-text.view:hover {
+            background: #eef2ff;
+        }
+
+        .btn-action-with-text.edit {
+            color: #3b82f6;
+        }
+
+        .btn-action-with-text.edit:hover {
+            background: #dbeafe;
+        }
+
+        .btn-action-with-text.delete {
+            color: #ef4444;
+        }
+
+        .btn-action-with-text.delete:hover {
+            background: #fee2e2;
+        }
     </style>
 @endpush
 
@@ -513,101 +556,120 @@
                                     </thead>
                                     <tbody>
                                         @foreach ($events as $event)
-                                            <td class="text-center align-middle">
-                                                @php
-                                                    $typeClass = match ($event->event_type) {
-                                                        'fuar' => 'fuar',
-                                                        'toplanti' => 'toplanti',
-                                                        'musteri_ziyareti' => 'ziyaret',
-                                                        'egitim' => 'egitim',
-                                                        default => 'diger',
-                                                    };
-                                                    $typeIcon = match ($event->event_type) {
-                                                        'fuar' => 'fa-ticket',
-                                                        'toplanti' => 'fa-briefcase',
-                                                        'musteri_ziyareti' => 'fa-handshake',
-                                                        'egitim' => 'fa-graduation-cap',
-                                                        default => 'fa-calendar',
-                                                    };
-                                                    $typeName =
-                                                        $eventTypes[$event->event_type] ?? ucfirst($event->event_type);
-                                                @endphp
+                                            {{-- HATA ÇÖZÜMÜ: Satır etiketi (tr) eklendi ve hiza için class verildi --}}
+                                            <tr class="align-middle">
 
-                                                {{-- Flex Container: İkon ve Metni Yan Yana Koyar --}}
-                                                <div class="d-inline-flex align-items-center">
-                                                    {{-- İkon --}}
-                                                    <div class="type-icon {{ $typeClass }} me-2"
-                                                        title="{{ $typeName }}">
-                                                        <i class="fa-solid {{ $typeIcon }}"></i>
+                                                {{-- 1. TİP SÜTUNU --}}
+                                                <td class="text-center">
+                                                    @php
+                                                        $typeClass = match ($event->event_type) {
+                                                            'fuar' => 'fuar',
+                                                            'toplanti' => 'toplanti',
+                                                            'musteri_ziyareti' => 'ziyaret',
+                                                            'egitim' => 'egitim',
+                                                            default => 'diger',
+                                                        };
+                                                        $typeIcon = match ($event->event_type) {
+                                                            'fuar' => 'fa-ticket',
+                                                            'toplanti' => 'fa-briefcase',
+                                                            'musteri_ziyareti' => 'fa-handshake',
+                                                            'egitim' => 'fa-graduation-cap',
+                                                            default => 'fa-calendar',
+                                                        };
+                                                        $typeName =
+                                                            $eventTypes[$event->event_type] ??
+                                                            ucfirst($event->event_type);
+                                                    @endphp
+
+                                                    <div class="d-inline-flex align-items-center">
+                                                        <div class="type-icon {{ $typeClass }} me-2"
+                                                            title="{{ $typeName }}">
+                                                            <i class="fa-solid {{ $typeIcon }}"></i>
+                                                        </div>
+                                                        <span class="fw-bold text-dark small">
+                                                            {{ $typeName }}
+                                                        </span>
                                                     </div>
+                                                </td>
 
-                                                    {{-- Metin --}}
-                                                    <span class="fw-bold text-dark small">
-                                                        {{ $typeName }}
+                                                {{-- 2. BAŞLIK SÜTUNU --}}
+                                                <td>
+                                                    <div class="fw-bold text-dark">{{ $event->title }}</div>
+                                                    <div class="small text-muted">{{ $event->user->name ?? 'Bilinmiyor' }}
+                                                    </div>
+                                                </td>
+
+                                                {{-- 3. DURUM SÜTUNU --}}
+                                                <td>
+                                                    @php
+                                                        $statusClass = match ($event->visit_status) {
+                                                            'planlandi' => 'planned',
+                                                            'gerceklesti' => 'completed',
+                                                            'iptal' => 'cancelled',
+                                                            'ertelendi' => 'postponed',
+                                                            default => 'secondary',
+                                                        };
+                                                    @endphp
+                                                    <span class="status-badge {{ $statusClass }}">
+                                                        {{ ucfirst($event->visit_status) }}
                                                     </span>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="fw-bold text-dark">{{ $event->title }}</div>
-                                                <div class="small text-muted">{{ $event->user->name ?? 'Bilinmiyor' }}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                @php
-                                                    $statusClass = match ($event->visit_status) {
-                                                        'planlandi' => 'planned',
-                                                        'gerceklesti' => 'completed',
-                                                        'iptal' => 'cancelled',
-                                                        'ertelendi' => 'postponed',
-                                                        default => 'secondary',
-                                                    };
-                                                @endphp
-                                                <span class="status-badge {{ $statusClass }}">
-                                                    {{ ucfirst($event->visit_status) }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                @if ($event->location)
-                                                    <span class="text-dark"><i
-                                                            class="fa-solid fa-location-dot me-1 text-muted"></i>{{ Str::limit($event->location, 20) }}</span>
-                                                @else
-                                                    <span class="text-muted small">-</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                <div class="fw-bold text-dark">
-                                                    {{ \Carbon\Carbon::parse($event->start_datetime)->format('d.m.Y') }}
-                                                </div>
-                                                <div class="small text-muted">
-                                                    {{ \Carbon\Carbon::parse($event->start_datetime)->format('H:i') }}
-                                                    -
-                                                    {{ \Carbon\Carbon::parse($event->end_datetime)->format('H:i') }}
-                                                </div>
-                                            </td>
-                                            <td class="text-end pe-4">
-                                                <div class="d-flex justify-content-end gap-2">
-                                                    <a href="{{ route('service.events.show', $event) }}"
-                                                        class="btn-action view" title="Görüntüle">
-                                                        <i class="fa-solid fa-eye"></i>
-                                                    </a>
-                                                    @if (!in_array(Auth::user()->role, ['izleyici']))
-                                                        <a href="{{ route('service.events.edit', $event) }}"
-                                                            class="btn-action edit" title="Düzenle">
-                                                            <i class="fa-solid fa-pen"></i>
-                                                        </a>
-                                                        <form action="{{ route('service.events.destroy', $event) }}"
-                                                            method="POST" class="d-inline"
-                                                            onsubmit="return confirm('Bu etkinliği silmek istediğinizden emin misiniz?');">
-                                                            @csrf @method('DELETE')
-                                                            <button type="submit" class="btn-action delete"
-                                                                title="Sil">
-                                                                <i class="fa-solid fa-trash"></i>
-                                                            </button>
-                                                        </form>
+                                                </td>
+
+                                                {{-- 4. KONUM SÜTUNU --}}
+                                                <td>
+                                                    @if ($event->location)
+                                                        <span class="text-dark">
+                                                            <i class="fa-solid fa-location-dot me-1 text-muted"></i>
+                                                            {{ Str::limit($event->location, 20) }}
+                                                        </span>
+                                                    @else
+                                                        <span class="text-muted small">-</span>
                                                     @endif
-                                                </div>
-                                            </td>
-                                            </td>
+                                                </td>
+
+                                                {{-- 5. ZAMAN SÜTUNU --}}
+                                                <td>
+                                                    <div class="fw-bold text-dark">
+                                                        {{ \Carbon\Carbon::parse($event->start_datetime)->format('d.m.Y') }}
+                                                    </div>
+                                                    <div class="small text-muted">
+                                                        {{ \Carbon\Carbon::parse($event->start_datetime)->format('H:i') }}
+                                                        -
+                                                        {{ \Carbon\Carbon::parse($event->end_datetime)->format('H:i') }}
+                                                    </div>
+                                                </td>
+
+                                                {{-- 6. İŞLEMLER SÜTUNU --}}
+                                                <td class="text-end pe-4">
+                                                    <div class="d-flex justify-content-end gap-2">
+                                                        <a href="{{ route('service.events.show', $event) }}"
+                                                            class="btn-action-with-text view">
+                                                            <i class="fa-solid fa-eye"></i>
+                                                            <span>Görüntüle</span>
+                                                        </a>
+
+                                                        @if (!in_array(Auth::user()->role, ['izleyici']))
+                                                            <a href="{{ route('service.events.edit', $event) }}"
+                                                                class="btn-action-with-text edit">
+                                                                <i class="fa-solid fa-pen"></i>
+                                                                <span>Düzenle</span>
+                                                            </a>
+
+                                                            <form action="{{ route('service.events.destroy', $event) }}"
+                                                                method="POST" class="d-inline"
+                                                                onsubmit="return confirm('Bu etkinliği silmek istediğinizden emin misiniz?');">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit"
+                                                                    class="btn-action-with-text delete">
+                                                                    <i class="fa-solid fa-trash"></i>
+                                                                    <span>Sil</span>
+                                                                </button>
+                                                            </form>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                            </tr> {{-- HATA ÇÖZÜMÜ: Satır kapatıldı --}}
                                         @endforeach
                                     </tbody>
                                 </table>

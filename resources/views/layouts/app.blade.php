@@ -443,36 +443,40 @@
                                 </li>
                             @endif
 
-                            {{-- 
-    DROPDOWN BAŞLIĞI 
-    Admin, İdari İşler Müdürü veya Ulaştırma Müdürü ise menü açılır.
---}}
-                            @if (Auth::user()->hasDepartment('İdari İşler') || Auth::user()->hasDepartment('Ulaştırma'))
+                            {{-- İDARİ İŞLER MENÜSÜ --}}
+                            @php
+                                $user = Auth::user();
+                                $isAdmin = $user->role === 'admin';
+                                $deptSlug = Auth::user()->department ? trim(Auth::user()->department->slug) : null;
+
+                                // İdari İşler Ana Menüsünü Kimler Görebilir? (Hizmet + Ulaştırma + Admin)
+                                $canSeeParentMenu = $isAdmin || in_array($deptSlug, ['hizmet', 'ulastirma']);
+
+                                // İdari İşler Alt İşlemlerini Kimler Yapabilir?
+                                // NOT: Eğer 'ulastirma' departmanının da etkinlik, seyahat vs. görmesini istiyorsan
+                                // aşağıdaki diziye 'ulastirma'yı da eklemelisin. Şu an sadece 'hizmet' ve Admin görüyor.
+                                $isIdariIslerPersoneli = $isAdmin || $deptSlug === 'hizmet';
+                            @endphp
+                            @if ($canSeeParentMenu)
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown">
-                                        {{-- Ana İkon: Dikkat çekici ama yumuşak bir Macenta --}}
                                         <i class="fa-solid fa-concierge-bell" style="color: #d63384;"></i>
                                         <span>İdari İşler</span>
                                     </a>
 
                                     <ul class="dropdown-menu dropdown-menu-end">
 
-                                        {{-- 
-               1. ETKİNLİK YÖNETİMİ 
-               Tema: MAVİ (Güven ve Planlama)
-            --}}
-                                        @if (Auth::user()->hasDepartment('İdari İşler'))
+                                        {{-- 1. ETKİNLİK YÖNETİMİ --}}
+                                        @if ($isIdariIslerPersoneli)
                                             <li>
                                                 <a class="dropdown-item" href="{{ route('service.events.create') }}">
-                                                    {{-- Koyu Mavi --}}
-                                                    <i class="fa-solid fa-calendar-plus" style="color: #3B82F6;"></i>
-                                                    Yeni Etkinlik
+                                                    <i class="fa-solid fa-calendar-plus" style="color: #3B82F6;"></i> Yeni
+                                                    Etkinlik
                                                 </a>
                                             </li>
                                             <li>
                                                 <a class="dropdown-item" href="{{ route('service.events.index') }}">
-                                                    {{-- Açık Mavi / Turkuaz --}}
                                                     <i class="fa-solid fa-calendar-days" style="color: #0EA5E9;"></i>
                                                     Etkinlik Listesi
                                                 </a>
@@ -482,112 +486,78 @@
                                             </li>
                                         @endif
 
-
-                                        {{-- 
-               2. ARAÇ YÖNETİMİ
-               Tema: TURUNCU/SICAK (Hareket ve Dikkat)
-            --}}
-                                        @if (Auth::user()->role === 'admin' ||
-                                                (Auth::user()->department && in_array(Auth::user()->department->slug, ['hizmet', 'ulastirma'])))
+                                        {{-- 2. ARAÇ YÖNETİMİ --}}
+                                        {{-- Araçları Ulaştırma departmanı da görebilmeli, o yüzden buraya özel kontrol ekleyebiliriz --}}
+                                        @if ($isIdariIslerPersoneli || $deptSlug === 'ulastirma')
                                             <li>
                                                 <a class="dropdown-item" href="{{ route('service.vehicles.index') }}">
-                                                    {{-- Amber / Sarı --}}
-                                                    <i class="fa-solid fa-car" style="color: #F59E0B;"></i>
-                                                    Şirket Araçları
+                                                    <i class="fa-solid fa-car" style="color: #F59E0B;"></i> Şirket
+                                                    Araçları
                                                 </a>
                                             </li>
                                             <li>
                                                 <a class="dropdown-item"
                                                     href="{{ route('service.logistics-vehicles.index') }}">
-                                                    {{-- Kiremit / Koyu Turuncu --}}
-                                                    <i class="fa-solid fa-truck" style="color: #EA580C;"></i>
-                                                    Nakliye Araçları
+                                                    <i class="fa-solid fa-truck" style="color: #EA580C;"></i> Nakliye
+                                                    Araçları
                                                 </a>
                                             </li>
                                         @endif
 
-                                        {{-- Seyahat Yönetimi Menüsü --}}
-                                        @if (Auth::user()->role === 'admin' ||
-                                                (Auth::user()->department && in_array(Auth::user()->department->slug, ['hizmet', 'ulastirma'])))
+                                        {{-- 3. SEYAHAT YÖNETİMİ --}}
+                                        @if ($isIdariIslerPersoneli)
                                             <li>
                                                 <hr class="dropdown-divider">
                                             </li>
-
-                                            {{-- 
-                   Tema: MOR (Premium Hizmet / Yolculuk)
-                --}}
-                                            @if (Auth::user()->role === 'admin' || (Auth::user()->department && Auth::user()->department->slug === 'hizmet'))
-                                                <li>
-                                                    <a class="dropdown-item" href="{{ route('travels.create') }}">
-                                                        {{-- Canlı Mor --}}
-                                                        <i class="fa-solid fa-route" style="color: #8B5CF6;"></i> Yeni
-                                                        Seyahat
-                                                    </a>
-                                                </li>
-                                            @endif
-
+                                            <li>
+                                                <a class="dropdown-item" href="{{ route('travels.create') }}">
+                                                    <i class="fa-solid fa-route" style="color: #8B5CF6;"></i> Yeni Seyahat
+                                                </a>
+                                            </li>
                                             <li>
                                                 <a class="dropdown-item" href="{{ route('travels.index') }}">
-                                                    {{-- Açık Lila --}}
                                                     <i class="fa-solid fa-list-check" style="color: #A78BFA;"></i> Seyahat
                                                     Listesi
                                                 </a>
                                             </li>
-
-                                            {{-- 
-                   Fuar Yönetimi
-                   Tema: YEŞİL (Saha / Organizasyon)
-                --}}
-                                            @if (Auth::user()->role === 'admin' ||
-                                                    (Auth::user()->department && in_array(Auth::user()->department->slug, ['hizmet'])))
-                                                <li>
-                                                    <hr class="dropdown-divider">
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item"
-                                                        href="{{ route('service.events.index', ['event_type' => 'fuar']) }}">
-                                                        {{-- Zümrüt Yeşili --}}
-                                                        <i class="fa-solid fa-tents" style="color: #10B981;"></i> Fuar
-                                                        Yönetimi
-                                                    </a>
-                                                </li>
-                                            @endif
-
-                                            {{-- 
-                   Rezervasyon Yönetimi
-                   Tema: PEMBE/KIRMIZI (Önemli / Kayıt)
-                --}}
-                                            @if (Auth::user()->role === 'admin' || (Auth::user()->department && Auth::user()->department->slug === 'hizmet'))
-                                                <li>
-                                                    <hr class="dropdown-divider">
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item" href="{{ route('bookings.index') }}">
-                                                        {{-- Canlı Pembe --}}
-                                                        <i class="fa-solid fa-book-bookmark" style="color: #EC4899;"></i>
-                                                        Tüm Rezervasyonlar
-                                                    </a>
-                                                </li>
-                                            @endif
-
-                                            {{-- 
-                   Müşteri Yönetimi
-                   Tema: CYAN/TURKUAZ (İletişim / Kullanıcılar)
-                --}}
-                                            @if (Auth::user()->role === 'admin' ||
-                                                    (Auth::user()->department && in_array(Auth::user()->department->slug, ['hizmet'])))
-                                                <li>
-                                                    <hr class="dropdown-divider">
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item" href="{{ route('customers.index') }}">
-                                                        {{-- Camgöbeği --}}
-                                                        <i class="fa-solid fa-users" style="color: #06B6D4;"></i> Müşteri
-                                                        Yönetimi
-                                                    </a>
-                                                </li>
-                                            @endif
                                         @endif
+
+                                        {{-- 4. FUAR YÖNETİMİ --}}
+                                        @if ($isIdariIslerPersoneli)
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item"
+                                                    href="{{ route('service.events.index', ['event_type' => 'fuar']) }}">
+                                                    <i class="fa-solid fa-tents" style="color: #10B981;"></i> Fuar
+                                                    Yönetimi
+                                                </a>
+                                            </li>
+                                        @endif
+
+                                        {{-- 5. REZERVASYON & MÜŞTERİ YÖNETİMİ --}}
+                                        @if ($isIdariIslerPersoneli)
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{{ route('bookings.index') }}">
+                                                    <i class="fa-solid fa-book-bookmark" style="color: #EC4899;"></i> Tüm
+                                                    Rezervasyonlar
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{{ route('customers.index') }}">
+                                                    <i class="fa-solid fa-users" style="color: #06B6D4;"></i> Müşteri
+                                                    Yönetimi
+                                                </a>
+                                            </li>
+                                        @endif
+
                                     </ul>
                                 </li>
                             @endif

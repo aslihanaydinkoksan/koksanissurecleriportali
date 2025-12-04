@@ -283,9 +283,24 @@
                                             
                                             <td class="text-end">
                                                 <div class="d-flex justify-content-end gap-1">
-                                                    <?php if(Auth::id() == $booking->user_id || Auth::user()->can('is-global-manager')): ?>
+
+                                                    
+                                                    <?php
+                                                        // 1. Kullanıcı bu kaydın sahibi mi?
+                                                        $isOwner = Auth::id() == $booking->user_id;
+
+                                                        // 2. Kullanıcı yönetici yetkisine sahip mi?
+                                                        // (Veritabanına 'manage_bookings' adıyla kaydettiğimiz yetkiyi kontrol ediyoruz)
+                                                        $canManageAll =
+                                                            Auth::user()->can('manage_bookings') ||
+                                                            Auth::user()->can('is-global-manager');
+                                                    ?>
+
+                                                    
+                                                    <?php if($isOwner || $canManageAll): ?>
                                                         
-                                                        <?php if($booking->is_editable || Auth::user()->can('is-global-manager')): ?>
+                                                        
+                                                        <?php if($booking->is_editable): ?>
                                                             
                                                             <a href="<?php echo e(route('bookings.edit', $booking)); ?>"
                                                                 class="btn btn-sm-modern text-primary" title="Düzenle">
@@ -294,8 +309,11 @@
 
                                                             
                                                             <form action="<?php echo e(route('bookings.destroy', $booking)); ?>"
-                                                                method="POST" ...>
-                                                                
+                                                                method="POST"
+                                                                onsubmit="return confirm('Bu rezervasyonu silmek istediğinize emin misiniz?');"
+                                                                class="d-inline">
+                                                                <?php echo csrf_field(); ?>
+                                                                <?php echo method_field('DELETE'); ?>
                                                                 <button type="submit" class="btn btn-sm-modern text-danger"
                                                                     title="Sil">
                                                                     <i class="fa-solid fa-trash"></i>

@@ -35,35 +35,65 @@
             value="<?php echo e(old('confirmation_code', $booking->confirmation_code ?? '')); ?>" placeholder="Örn: ABC123">
     </div>
 </div>
+<?php
+    // Başlangıç tarihi için değer belirleme
+    $startValue = '';
+    if (old('start_datetime')) {
+        // Doğrulama hatası varsa eski değeri koru
+        $startValue = old('start_datetime');
+    } elseif (isset($booking) && $booking->start_datetime) {
+        // Booking varsa ve tarih doluysa, formatla
+        $startValue = \Carbon\Carbon::parse($booking->start_datetime)->format('Y-m-d\TH:i');
+    }
+
+    // Bitiş tarihi için değer belirleme
+    $endValue = '';
+    if (old('end_datetime')) {
+        $endValue = old('end_datetime');
+    } elseif (isset($booking) && $booking->end_datetime) {
+        $endValue = \Carbon\Carbon::parse($booking->end_datetime)->format('Y-m-d\TH:i');
+    }
+?>
 <div class="row">
     <div class="col-md-3 mb-3">
         <label for="start_datetime" class="form-label">Başlangıç / Kalkış (*)</label>
-        
-        <input type="datetime-local" name="start_datetime" id="start_datetime" class="form-control"
-            value="<?php echo e(old('start_datetime', isset($booking) && $booking->start_datetime ? \Carbon\Carbon::parse($booking->start_datetime)->format('Y-m-d\TH:i') : '')); ?>"
-            required>
+        <input type="datetime-local" name="start_datetime" class="form-control" value="<?php echo e($startValue); ?>">
     </div>
+
     <div class="col-md-3 mb-3">
         <label for="end_datetime" class="form-label">Bitiş / Varış</label>
-        <input type="datetime-local" name="end_datetime" id="end_datetime" class="form-control"
-            value="<?php echo e(old('end_datetime', isset($booking) && $booking->end_datetime ? \Carbon\Carbon::parse($booking->end_datetime)->format('Y-m-d\TH:i') : '')); ?>">
-    </div>
-    <div class="col-md-2 mb-3">
-        <label for="cost" class="form-label">Masraf (TL)</label>
-        <input type="number" step="0.01" name="cost" id="cost" class="form-control"
-            value="<?php echo e(old('cost', $booking->cost ?? '')); ?>" placeholder="0.00">
+        <input type="datetime-local" name="end_datetime" class="form-control" value="<?php echo e($endValue); ?>">
     </div>
     <div class="col-md-4 mb-3">
         <label for="booking_files" class="form-label">Bilet / Voucher (PDF, JPG...)</label>
         <input type="file" name="booking_files[]" id="booking_files" class="form-control" multiple>
         <small class="form-text text-muted">Yeni dosya seçmek, eskilerin üzerine eklenir (eskiler silinmez).</small>
     </div>
+    
+    <?php if(isset($booking)): ?>
+        <div class="col-md-6">
+            <label for="status" class="form-label fw-bold text-dark">
+                <i class="fa-solid fa-flag me-1 text-primary"></i> Rezervasyon Durumu
+            </label>
+            <select name="status" id="status" class="form-select">
+                <option value="planned" <?php echo e(old('status', $booking->status) == 'planned' ? 'selected' : ''); ?>>⏳ Planlandı
+                </option>
+                <option value="completed" <?php echo e(old('status', $booking->status) == 'completed' ? 'selected' : ''); ?>>✅
+                    Gerçekleşti</option>
+                <option value="cancelled" <?php echo e(old('status', $booking->status) == 'cancelled' ? 'selected' : ''); ?>>❌ İptal
+                    Edildi</option>
+                <option value="postponed" <?php echo e(old('status', $booking->status) == 'postponed' ? 'selected' : ''); ?>>📅
+                    Ertelendi</option>
+            </select>
+        </div>
+    <?php endif; ?>
 </div>
 <div class="mb-3">
     <label for="notes" class="form-label">Notlar</label>
     <textarea name="notes" id="notes" class="form-control" rows="2"
         placeholder="Örn: 1 adet kabin bagajı dahil..."><?php echo e(old('notes', $booking->notes ?? '')); ?></textarea>
 </div>
+
 
 
 <?php if(isset($booking) && $booking->exists): ?>

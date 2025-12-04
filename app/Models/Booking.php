@@ -53,6 +53,7 @@ class Booking extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia, Loggable;
 
+    // Hangi alanların veritabanına yazılabileceği (Sadece isimler)
     protected $fillable = [
         'bookable_id',
         'bookable_type',
@@ -61,9 +62,15 @@ class Booking extends Model implements HasMedia
         'provider_name',
         'confirmation_code',
         'cost',
+        'start_datetime',
+        'end_datetime',
+        'status',
+        'notes',
+    ];
+
+    protected $casts = [
         'start_datetime' => 'datetime',
         'end_datetime' => 'datetime',
-        'notes',
     ];
 
     /**
@@ -103,23 +110,23 @@ class Booking extends Model implements HasMedia
     }
     /**
      * Rezervasyon düzenlenebilir durumda mı?
-     * Kural: Başlangıç tarihine 24 saatten az kaldıysa (veya tarih geçtiyse) düzenlenemez.
+     * Kural: 24 saatten az kaldıysa veya tarih geçmişse FALSE döner.
      */
     public function getIsEditableAttribute(): bool
     {
-        // Başlangıç tarihi boşsa düzenlenebilir (Hata olmaması için)
+        // 1. Tarih yoksa (henüz belirlenmediyse) düzenlenebilir
         if (!$this->start_datetime)
             return true;
 
-        $start = \Carbon\Carbon::parse($this->start_datetime);
-        $limit = now()->addHours(24);
+        // 2. Kalan saati hesapla (Geçmiş zaman negatif çıkar)
+        $hoursRemaining = now()->diffInHours($this->start_datetime, false);
 
-        // Eğer başlangıç tarihi, (şu an + 24 saat)'ten küçükse
-        // Yani: 24 saatten az kaldıysa veya zamanı geçtiyse -> FALSE dön
-        if ($start->lt($limit)) {
+        // 3. KURAL: 24 saatten az kaldıysa (veya tarih geçmişse) ENGELLE
+        if ($hoursRemaining < 24) {
             return false;
         }
 
+        // Aksi halde izin ver
         return true;
     }
 }

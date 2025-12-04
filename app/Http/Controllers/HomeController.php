@@ -127,7 +127,7 @@ class HomeController extends Controller
         $welcomeTitle = "Hoş Geldiniz";
         $chartTitle = "Genel Bakış";
         $chartData = [];
-        $kpiData = [];
+        $kpiData = []; // KPI Verileri dizisi
 
         $todayItems = collect();
         $weeklyItems = collect();
@@ -141,7 +141,10 @@ class HomeController extends Controller
             $monthlyItems = (clone $query)->whereBetween('week_start_date', [$monthStart, $monthEnd])->get();
 
         } elseif ($departmentSlug === 'hizmet') {
+            // HİZMET DEPARTMANI İÇİN ÖZEL VERİLER
             list($welcomeTitle, $chartTitle, $dummyToday, $chartData) = $this->getServiceWelcomeData();
+
+            // Listeler (Etkinlik + Araç Görevleri)
             $eventQ = \App\Models\Event::query();
             $tEvents = (clone $eventQ)->whereDate('start_datetime', $today)->get();
             $wEvents = (clone $eventQ)->whereBetween('start_datetime', [$weekStart, $weekEnd])->get();
@@ -156,24 +159,39 @@ class HomeController extends Controller
             $weeklyItems = $wEvents->merge($wVehicle)->sortBy('start_datetime');
             $monthlyItems = $mEvents->merge($mVehicle)->sortBy('start_datetime');
 
+            // HİZMET KPI VERİLERİ (Blade'deki kutucuklar için)
+            $kpiData = [
+                // Gelecek etkinlikler (iptal olmayanlar)
+                'etkinlik_sayisi' => \App\Models\Event::whereDate('start_datetime', '>=', $today)
+                    ->where('visit_status', '!=', 'iptal')
+                    ->count(),
+
+                // Müşteri ziyareti olan etkinlikler
+                'musteri_ziyareti' => \App\Models\Event::has('customerVisit')->count(),
+
+                // Rezervasyon/Seyahat Sayısı (Bookings tablosu veya Event'e bağlı bookingler)
+                'rezervasyon_sayisi' => DB::table('bookings')->count(),
+
+                // Toplam Araç (Admin için görünmesi istenirse)
+                'toplam_arac' => \App\Models\Vehicle::count(),
+            ];
+
         } elseif ($departmentSlug === 'ulastirma') {
-            // Service'ten verileri çek
             list($welcomeTitle, $chartTitle, $dummyToday, $chartData) = $this->statsService->getUlastirmaWelcomeData();
 
-            // Listeleri Oluştur
             $query = \App\Models\VehicleAssignment::whereIn('status', ['pending', 'approved', 'in_progress']);
-
             $todayItems = (clone $query)->whereDate('start_time', $today)->orderBy('start_time')->get();
             $weeklyItems = (clone $query)->whereBetween('start_time', [$weekStart, $weekEnd])->orderBy('start_time')->get();
             $monthlyItems = (clone $query)->whereBetween('start_time', [$monthStart, $monthEnd])->orderBy('start_time')->get();
 
-            // KPI Kartları İçin Veri (Müdürün gördüğü sayılar)
+            // Ulaştırma KPI
             $kpiData = [
                 'aktif_gorev' => \App\Models\VehicleAssignment::where('status', 'in_progress')->count(),
                 'bekleyen_talep' => \App\Models\VehicleAssignment::where('status', 'pending')->count(),
                 'toplam_arac' => \App\Models\Vehicle::count(),
                 'bugunku_gorev' => $todayItems->count()
             ];
+
         } elseif ($departmentSlug === 'lojistik') {
             list($welcomeTitle, $chartTitle, $dummyToday, $chartData) = $this->getLogisticsWelcomeData();
             $query = \App\Models\Shipment::query();
@@ -620,24 +638,75 @@ class HomeController extends Controller
 
     private function getServiceWelcomeData()
     {
-        // Hizmet kısmı sankey için normalizasyon kullanmıyor, direkt veri çekiyor.
-        // O yüzden burası orijinal haliyle kalabilir ama kod tutarlılığı için buraya da ekledim.
-        $welcomeTitle = "Bugünkü Etkinlikler ve Araç Görevleri";
-        $chartTitle = "Araç -> Görev Yeri Akışı";
+        $welcomeTitle = "Hizmet ve Operasyon Yönetimi";
+        $chartTitle = "Etkinlik Durumu & Seyahat Dağılımı";
+
+        // --- LİSTELEME VERİLERİ (Aynen Kalıyor) ---
         $todayEvents = Event::whereDate('start_datetime', Carbon::today())->orderBy('start_datetime', 'asc')->get();
         $todayAssignments = VehicleAssignment::whereDate('start_time', Carbon::today())->with('vehicle')->orderBy('start_time', 'asc')->get();
         $todayTravels = Travel::whereDate('start_date', Carbon::today())->orderBy('start_date', 'asc')->get();
+
+        // Listede Bookings (Rezervasyonlar) da görünsün istersek buraya eklenebilir ama şimdilik takvim yapısı bozulmasın diye ellemiyorum.
         $todayItems = $todayEvents->merge($todayAssignments)->merge($todayTravels)->sortBy(fn($item) => $item->start_datetime ?? $item->start_time ?? $item->start_date);
 
+
+        // --- GRAFİK VERİSİ (SANKEY) ---
         $chartData = [];
-        $assignments = VehicleAssignment::with('vehicle')->whereNotNull('destination')->where('destination', '!=', '')->select(['vehicle_id', 'destination', DB::raw('COUNT(*) as weight')])->groupBy('vehicle_id', 'destination')->having('weight', '>', 0)->get();
-        foreach ($assignments as $flow) {
-            $vehicleName = $flow->vehicle?->plate_number ?? 'Bilinmeyen Araç';
-            $destination = trim($flow->destination);
-            $chartData[] = [strval($vehicleName), strval($destination), (int) $flow->weight];
+
+        // 1. AKIŞ: ETKİNLİKLER (Tip -> Durum)
+        // Eğer event_type veya status boşsa 'Belirsiz' olarak atayalım ki grafikte görünsün.
+        $eventStats = Event::select('event_type', 'visit_status', DB::raw('count(*) as total'))
+            ->groupBy('event_type', 'visit_status')
+            ->get();
+
+        foreach ($eventStats as $stat) {
+            // Kaynak: Etkinlik Tipi (Boşsa 'Genel Etkinlik' yazsın)
+            $source = $stat->event_type ? ucfirst($stat->event_type) : 'Diğer Etkinlikler';
+
+            // Hedef: Durum
+            $target = match ($stat->visit_status) {
+                'planlandi' => 'Planlandı',
+                'gerceklesti' => 'Gerçekleşti',
+                'iptal' => 'İptal',
+                'ertelendi' => 'Ertelendi',
+                default => 'Durum Belirsiz'
+            };
+
+            // Döngü olmaması için isim çakışmasını önle
+            if ($source === $target)
+                $target .= ' ';
+
+            $chartData[] = [strval($source), strval($target), (int) $stat->total];
         }
-        if (empty($chartData))
-            $chartData[] = ['Veri Yok', 'Henüz Görev Girilmedi', 1];
+
+        // 2. AKIŞ: SEYAHATLER / REZERVASYONLAR (Genel "Seyahat" -> Tür)
+        // Bookings tablosundaki verileri alalım (Uçak, Otel vb.)
+        $bookingStats = DB::table('bookings')
+            ->select('type', DB::raw('count(*) as total'))
+            ->groupBy('type')
+            ->get();
+
+        foreach ($bookingStats as $stat) {
+            // Kaynak: Sabit bir düğüm olsun
+            $source = 'Seyahat Planlaması';
+
+            // Hedef: Rezervasyon Tipi
+            $target = match ($stat->type) {
+                'flight' => 'Uçak Bileti',
+                'hotel' => 'Otel Konaklama',
+                'bus' => 'Otobüs/Transfer',
+                'car' => 'Araç Kiralama',
+                default => 'Diğer Rezervasyon'
+            };
+
+            $chartData[] = [$source, $target, (int) $stat->total];
+        }
+
+        // Eğer hala veri yoksa
+        if (empty($chartData)) {
+            $chartData[] = ['Veri Yok', 'Kayıt Bulunamadı', 1];
+        }
+
         return [$welcomeTitle, $chartTitle, $todayItems, $chartData];
     }
 

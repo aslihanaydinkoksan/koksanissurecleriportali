@@ -55,7 +55,8 @@ class BookingController extends Controller
             'end_datetime' => 'nullable|date|after_or_equal:start_datetime',
             'cost' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
-            'booking_files.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,msg,eml|max:10240' // 10MB limit
+            'booking_files.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,msg,eml|max:10240', // 10MB limit
+            'status' => 'nullable|string|in:planned,completed,cancelled,postponed',
         ]);
 
         // Seyahate bağlı rezervasyonu oluştur
@@ -64,7 +65,7 @@ class BookingController extends Controller
             'type' => $validated['type'],
             'provider_name' => $validated['provider_name'],
             'confirmation_code' => $validated['confirmation_code'],
-            'cost' => $validated['cost'],
+            'cost' => $validated['cost'] ?? null,
             'start_datetime' => $validated['start_datetime'],
             'end_datetime' => $validated['end_datetime'],
             'notes' => $validated['notes'],
@@ -102,9 +103,25 @@ class BookingController extends Controller
      */
     public function edit(Booking $booking)
     {
-        // 24 Saat Kontrolü
+
         if (!$booking->is_editable && !Auth::user()->can('is-global-manager')) {
-            return redirect()->back()->with('error', 'Başlangıç saatine 24 saatten az kaldığı için bu rezervasyon değiştirilemez!');
+            return redirect()->back()
+                ->with('error', 'Bu rezervasyona 24 saatten az kaldığı (veya tarihi geçtiği) için düzenlenemez!');
+        }
+        $isOwner = auth()->id() == $booking->user_id;
+
+        // 2. Kullanıcının özel yetkisi var mı? (Özgül Hanım vb.)
+        $canManage = auth()->user()->can('manage all bookings') || auth()->user()->can('is-global-manager');
+
+        // Eğer ne sahip ne de yönetici ise -> HATA VER
+        if (!$isOwner && !$canManage) {
+            abort(403, 'Bu rezervasyonu düzenleme yetkiniz yok.');
+        }
+
+        // Eğer sadece sahipse (yönetici değilse), 24 saat kuralına takılıyor mu?
+        // Yöneticiyse ($canManage) süreye takılmadan geçebilir.
+        if (!$canManage && !$booking->is_editable) {
+            abort(403, 'Düzenleme süresi (24 saat) dolmuştur.');
         }
         if (Auth::id() !== $booking->user_id && !Auth::user()->can('is-global-manager')) {
             abort(403, 'Bu eylemi gerçekleştirme yetkiniz yok.');
@@ -124,8 +141,25 @@ class BookingController extends Controller
     {
         // 24 Saat Kontrolü
         if (!$booking->is_editable && !Auth::user()->can('is-global-manager')) {
-            return redirect()->back()->with('error', 'Bu rezervasyonu güncellemek için süre doldu!');
+            return redirect()->back()
+                ->with('error', 'Süre dolduğu için güncelleme yapılamaz!');
         }
+        $isOwner = auth()->id() == $booking->user_id;
+
+        // 2. Kullanıcının özel yetkisi var mı? (Özgül Hanım vb.)
+        $canManage = auth()->user()->can('manage all bookings') || auth()->user()->can('is-global-manager');
+
+        // Eğer ne sahip ne de yönetici ise -> HATA VER
+        if (!$isOwner && !$canManage) {
+            abort(403, 'Bu rezervasyonu düzenleme yetkiniz yok.');
+        }
+
+        // Eğer sadece sahipse (yönetici değilse), 24 saat kuralına takılıyor mu?
+        // Yöneticiyse ($canManage) süreye takılmadan geçebilir.
+        if (!$canManage && !$booking->is_editable) {
+            abort(403, 'Düzenleme süresi (24 saat) dolmuştur.');
+        }
+
         if (Auth::id() !== $booking->user_id && !Auth::user()->can('is-global-manager')) {
             abort(403, 'Bu eylemi gerçekleştirme yetkiniz yok.');
         }
@@ -139,7 +173,8 @@ class BookingController extends Controller
             'end_datetime' => 'nullable|date|after_or_equal:start_datetime',
             'cost' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
-            'booking_files.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,msg,eml|max:10240'
+            'booking_files.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,msg,eml|max:10240',
+            'status' => 'nullable|string|in:planned,completed,cancelled,postponed',
         ]);
 
         // Rezervasyonu güncelle
@@ -152,9 +187,13 @@ class BookingController extends Controller
             }
         }
 
-        // Ana seyahat planının detay sayfasına geri yönlendir
-        return redirect()->route('travels.show', $booking->travel)
-            ->with('success', 'Rezervasyon kaydı başarıyla güncellendi!');
+        $model = $booking->bookable; // Travel veya Event modelini al
+
+        // Model tipine göre doğru rotayı belirle
+        $routePrefix = ($model instanceof \App\Models\Travel) ? 'travels' : 'service.events';
+
+        return redirect()->route($routePrefix . '.show', $model)
+            ->with('success', 'Rezervasyon durumu güncellendi!');
     }
 
     /**
@@ -169,6 +208,16 @@ class BookingController extends Controller
         // 24 Saat Kontrolü
         if (!$booking->is_editable && !Auth::user()->can('is-global-manager')) {
             return redirect()->back()->with('error', 'Bu rezervasyonu güncellemek için süre doldu!');
+        }
+        $isOwner = auth()->id() == $booking->user_id;
+        $canManage = auth()->user()->can('manage all bookings') || auth()->user()->can('is-global-manager');
+
+        if (!$isOwner && !$canManage) {
+            abort(403, 'Bu rezervasyonu silme yetkiniz yok.');
+        }
+
+        if (!$canManage && !$booking->is_editable) {
+            abort(403, 'Silme süresi (24 saat) dolmuştur.');
         }
         if (Auth::id() !== $booking->user_id && !Auth::user()->can('is-global-manager')) {
             abort(403, 'Bu eylemi gerçekleştirme yetkiniz yok.');

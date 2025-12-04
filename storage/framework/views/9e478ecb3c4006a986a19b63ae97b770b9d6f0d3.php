@@ -250,6 +250,49 @@
             margin-bottom: 1rem;
             opacity: 0.5;
         }
+
+        .btn-action-with-text {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .btn-action-with-text i {
+            font-size: 14px;
+        }
+
+        .btn-action-with-text.view {
+            color: #6366f1;
+        }
+
+        .btn-action-with-text.view:hover {
+            background: #eef2ff;
+        }
+
+        .btn-action-with-text.edit {
+            color: #3b82f6;
+        }
+
+        .btn-action-with-text.edit:hover {
+            background: #dbeafe;
+        }
+
+        .btn-action-with-text.delete {
+            color: #ef4444;
+        }
+
+        .btn-action-with-text.delete:hover {
+            background: #fee2e2;
+        }
     </style>
 <?php $__env->stopPush(); ?>
 
@@ -507,107 +550,127 @@
                                     </thead>
                                     <tbody>
                                         <?php $__currentLoopData = $events; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $event): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                            <td class="text-center align-middle">
-                                                <?php
-                                                    $typeClass = match ($event->event_type) {
-                                                        'fuar' => 'fuar',
-                                                        'toplanti' => 'toplanti',
-                                                        'musteri_ziyareti' => 'ziyaret',
-                                                        'egitim' => 'egitim',
-                                                        default => 'diger',
-                                                    };
-                                                    $typeIcon = match ($event->event_type) {
-                                                        'fuar' => 'fa-ticket',
-                                                        'toplanti' => 'fa-briefcase',
-                                                        'musteri_ziyareti' => 'fa-handshake',
-                                                        'egitim' => 'fa-graduation-cap',
-                                                        default => 'fa-calendar',
-                                                    };
-                                                    $typeName =
-                                                        $eventTypes[$event->event_type] ?? ucfirst($event->event_type);
-                                                ?>
+                                            
+                                            <tr class="align-middle">
 
                                                 
-                                                <div class="d-inline-flex align-items-center">
-                                                    
-                                                    <div class="type-icon <?php echo e($typeClass); ?> me-2"
-                                                        title="<?php echo e($typeName); ?>">
-                                                        <i class="fa-solid <?php echo e($typeIcon); ?>"></i>
-                                                    </div>
+                                                <td class="text-center">
+                                                    <?php
+                                                        $typeClass = match ($event->event_type) {
+                                                            'fuar' => 'fuar',
+                                                            'toplanti' => 'toplanti',
+                                                            'musteri_ziyareti' => 'ziyaret',
+                                                            'egitim' => 'egitim',
+                                                            default => 'diger',
+                                                        };
+                                                        $typeIcon = match ($event->event_type) {
+                                                            'fuar' => 'fa-ticket',
+                                                            'toplanti' => 'fa-briefcase',
+                                                            'musteri_ziyareti' => 'fa-handshake',
+                                                            'egitim' => 'fa-graduation-cap',
+                                                            default => 'fa-calendar',
+                                                        };
+                                                        $typeName =
+                                                            $eventTypes[$event->event_type] ??
+                                                            ucfirst($event->event_type);
+                                                    ?>
 
-                                                    
-                                                    <span class="fw-bold text-dark small">
-                                                        <?php echo e($typeName); ?>
+                                                    <div class="d-inline-flex align-items-center">
+                                                        <div class="type-icon <?php echo e($typeClass); ?> me-2"
+                                                            title="<?php echo e($typeName); ?>">
+                                                            <i class="fa-solid <?php echo e($typeIcon); ?>"></i>
+                                                        </div>
+                                                        <span class="fw-bold text-dark small">
+                                                            <?php echo e($typeName); ?>
+
+                                                        </span>
+                                                    </div>
+                                                </td>
+
+                                                
+                                                <td>
+                                                    <div class="fw-bold text-dark"><?php echo e($event->title); ?></div>
+                                                    <div class="small text-muted"><?php echo e($event->user->name ?? 'Bilinmiyor'); ?>
+
+                                                    </div>
+                                                </td>
+
+                                                
+                                                <td>
+                                                    <?php
+                                                        $statusClass = match ($event->visit_status) {
+                                                            'planlandi' => 'planned',
+                                                            'gerceklesti' => 'completed',
+                                                            'iptal' => 'cancelled',
+                                                            'ertelendi' => 'postponed',
+                                                            default => 'secondary',
+                                                        };
+                                                    ?>
+                                                    <span class="status-badge <?php echo e($statusClass); ?>">
+                                                        <?php echo e(ucfirst($event->visit_status)); ?>
 
                                                     </span>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="fw-bold text-dark"><?php echo e($event->title); ?></div>
-                                                <div class="small text-muted"><?php echo e($event->user->name ?? 'Bilinmiyor'); ?>
+                                                </td>
 
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <?php
-                                                    $statusClass = match ($event->visit_status) {
-                                                        'planlandi' => 'planned',
-                                                        'gerceklesti' => 'completed',
-                                                        'iptal' => 'cancelled',
-                                                        'ertelendi' => 'postponed',
-                                                        default => 'secondary',
-                                                    };
-                                                ?>
-                                                <span class="status-badge <?php echo e($statusClass); ?>">
-                                                    <?php echo e(ucfirst($event->visit_status)); ?>
+                                                
+                                                <td>
+                                                    <?php if($event->location): ?>
+                                                        <span class="text-dark">
+                                                            <i class="fa-solid fa-location-dot me-1 text-muted"></i>
+                                                            <?php echo e(Str::limit($event->location, 20)); ?>
 
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <?php if($event->location): ?>
-                                                    <span class="text-dark"><i
-                                                            class="fa-solid fa-location-dot me-1 text-muted"></i><?php echo e(Str::limit($event->location, 20)); ?></span>
-                                                <?php else: ?>
-                                                    <span class="text-muted small">-</span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td>
-                                                <div class="fw-bold text-dark">
-                                                    <?php echo e(\Carbon\Carbon::parse($event->start_datetime)->format('d.m.Y')); ?>
-
-                                                </div>
-                                                <div class="small text-muted">
-                                                    <?php echo e(\Carbon\Carbon::parse($event->start_datetime)->format('H:i')); ?>
-
-                                                    -
-                                                    <?php echo e(\Carbon\Carbon::parse($event->end_datetime)->format('H:i')); ?>
-
-                                                </div>
-                                            </td>
-                                            <td class="text-end pe-4">
-                                                <div class="d-flex justify-content-end gap-2">
-                                                    <a href="<?php echo e(route('service.events.show', $event)); ?>"
-                                                        class="btn-action view" title="Görüntüle">
-                                                        <i class="fa-solid fa-eye"></i>
-                                                    </a>
-                                                    <?php if(!in_array(Auth::user()->role, ['izleyici'])): ?>
-                                                        <a href="<?php echo e(route('service.events.edit', $event)); ?>"
-                                                            class="btn-action edit" title="Düzenle">
-                                                            <i class="fa-solid fa-pen"></i>
-                                                        </a>
-                                                        <form action="<?php echo e(route('service.events.destroy', $event)); ?>"
-                                                            method="POST" class="d-inline"
-                                                            onsubmit="return confirm('Bu etkinliği silmek istediğinizden emin misiniz?');">
-                                                            <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
-                                                            <button type="submit" class="btn-action delete"
-                                                                title="Sil">
-                                                                <i class="fa-solid fa-trash"></i>
-                                                            </button>
-                                                        </form>
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <span class="text-muted small">-</span>
                                                     <?php endif; ?>
-                                                </div>
-                                            </td>
-                                            </td>
+                                                </td>
+
+                                                
+                                                <td>
+                                                    <div class="fw-bold text-dark">
+                                                        <?php echo e(\Carbon\Carbon::parse($event->start_datetime)->format('d.m.Y')); ?>
+
+                                                    </div>
+                                                    <div class="small text-muted">
+                                                        <?php echo e(\Carbon\Carbon::parse($event->start_datetime)->format('H:i')); ?>
+
+                                                        -
+                                                        <?php echo e(\Carbon\Carbon::parse($event->end_datetime)->format('H:i')); ?>
+
+                                                    </div>
+                                                </td>
+
+                                                
+                                                <td class="text-end pe-4">
+                                                    <div class="d-flex justify-content-end gap-2">
+                                                        <a href="<?php echo e(route('service.events.show', $event)); ?>"
+                                                            class="btn-action-with-text view">
+                                                            <i class="fa-solid fa-eye"></i>
+                                                            <span>Görüntüle</span>
+                                                        </a>
+
+                                                        <?php if(!in_array(Auth::user()->role, ['izleyici'])): ?>
+                                                            <a href="<?php echo e(route('service.events.edit', $event)); ?>"
+                                                                class="btn-action-with-text edit">
+                                                                <i class="fa-solid fa-pen"></i>
+                                                                <span>Düzenle</span>
+                                                            </a>
+
+                                                            <form action="<?php echo e(route('service.events.destroy', $event)); ?>"
+                                                                method="POST" class="d-inline"
+                                                                onsubmit="return confirm('Bu etkinliği silmek istediğinizden emin misiniz?');">
+                                                                <?php echo csrf_field(); ?>
+                                                                <?php echo method_field('DELETE'); ?>
+                                                                <button type="submit"
+                                                                    class="btn-action-with-text delete">
+                                                                    <i class="fa-solid fa-trash"></i>
+                                                                    <span>Sil</span>
+                                                                </button>
+                                                            </form>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </td>
+                                            </tr> 
                                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </tbody>
                                 </table>

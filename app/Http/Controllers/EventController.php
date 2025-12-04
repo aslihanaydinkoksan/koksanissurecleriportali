@@ -14,11 +14,6 @@ use Illuminate\Support\Facades\DB;
 
 class EventController extends Controller
 {
-    /**
-     * Sabit etkinlik tiplerimiz. 
-     * Formlarda (create, edit) ve validasyonda (store, update)
-     * ve filtrelemede (index) bu listeyi kullanacağız.
-     */
     private $eventTypes = [
         'toplanti' => 'Toplantı',
         'egitim' => 'Eğitim',
@@ -28,40 +23,47 @@ class EventController extends Controller
         'misafir_karsilama' => 'Misafir Karşılama',
         'diger' => 'Diğer',
     ];
-    // **** YENİ EKLENECEK METOD BAŞLANGICI ****
-    /**
-     * Etkinlik tiplerini dizi olarak döndürür.
-     * HomeController gibi başka yerlerden erişmek için kullanılır.
-     *
-     * @return array
-     */
+
     public function getEventTypes(): array
     {
         return $this->eventTypes;
     }
-    // **** YENİ EKLENECEK METOD BİTİŞİ ****
 
     /**
-     * Etkinlikleri listeler ve filtreler.
+     * YARDIMCI METOD: Yetki Kontrolü
+     * authorize() yerine bunu kullanacağız çünkü gate tarafındaki hatayı baypas ediyoruz.
      */
+    private function checkAuth()
+    {
+        $user = Auth::user();
+        // 1. Slug'daki boşlukları temizle
+        $slug = $user->department ? trim($user->department->slug) : '';
+
+        // 2. Rolleri kontrol et (Hem 'yonetici' hem 'yönetici' ekledik ki hata olmasın)
+        $isAuthorizedRole = in_array($user->role, ['admin', 'yonetici', 'yönetici']);
+
+        // 3. Admin, Yönetici VEYA Hizmet departmanı girebilsin
+        if (!$isAuthorizedRole && $slug !== 'hizmet') {
+            abort(403, 'Bu sayfaya erişim yetkiniz bulunmamaktadır.');
+        }
+    }
+
     public function index(Request $request)
     {
-        // YETKİ KONTROLÜ: Sadece 'hizmet' birimi erişebilir
-        $this->authorize('access-department', 'hizmet');
+        // GÜNCEL YETKİ KONTROLÜ
+        $this->checkAuth();
 
         $query = Event::with('user');
-        $user = Auth::user(); // Giriş yapan kullanıcıyı al
+        $user = Auth::user();
         $isImportantFilter = $request->input('is_important', 'all');
 
-        // Bu filtreyi sadece admin veya yönetici ise uygula
-        if ($isImportantFilter !== 'all' && $user && in_array($user->role, ['admin', 'yönetici'])) {
-
+        // Rol kontrolünü güncelledik: 'yonetici' ve 'yönetici' ikisi de eklendi
+        if ($isImportantFilter !== 'all' && $user && in_array($user->role, ['admin', 'yonetici', 'yönetici'])) {
             if ($isImportantFilter === 'yes') {
                 $query->where('is_important', true);
             } elseif ($isImportantFilter === 'no') {
                 $query->where('is_important', false);
             }
-            // 'all' ise hiçbir şey yapma
         }
 
         // --- FİLTRELEME MANTIĞI ---
@@ -69,7 +71,6 @@ class EventController extends Controller
             $query->where('title', 'LIKE', '%' . $request->input('title') . '%');
         }
 
-        // Etkinlik tipi filtresi
         if ($request->filled('event_type') && $request->input('event_type') !== 'all') {
             $query->where('event_type', $request->input('event_type'));
         }
@@ -77,88 +78,63 @@ class EventController extends Controller
         if ($request->filled('date_from')) {
             try {
                 $dateFrom = Carbon::parse($request->input('date_from'))->startOfDay();
-                // Başlangıç veya Bitiş tarihi bu aralıkta olanlar
                 $query->where(
                     fn($q) =>
                     $q->where('start_datetime', '>=', $dateFrom)
                         ->orWhere('end_datetime', '>=', $dateFrom)
                 );
-            } catch (\Exception $e) { /* Geçersiz tarihi yoksay */
+            } catch (\Exception $e) {
             }
         }
 
         if ($request->filled('date_to')) {
             try {
                 $dateTo = Carbon::parse($request->input('date_to'))->endOfDay();
-                // Başlangıç veya Bitiş tarihi bu aralıkta olanlar
                 $query->where(
                     fn($q) =>
                     $q->where('start_datetime', '<=', $dateTo)
                         ->orWhere('end_datetime', '<=', $dateTo)
                 );
-            } catch (\Exception $e) { /* Geçersiz tarihi yoksay */
+            } catch (\Exception $e) {
             }
         }
         // --- FİLTRELEME SONU ---
 
-        $events = $query->orderBy('start_datetime', 'desc')
-            ->paginate(15);
-
+        $events = $query->orderBy('start_datetime', 'desc')->paginate(15);
         $filters = $request->only(['title', 'event_type', 'date_from', 'date_to', 'is_important']);
-
-        // Sabit listemizi view'a gönderiyoruz
         $eventTypes = $this->eventTypes;
 
         return view('service.events.index', compact('events', 'filters', 'eventTypes'));
     }
 
-    /**
-     * Yeni bir etkinlik oluşturma formunu gösterir.
-     */
     public function create()
     {
-        // YETKİ KONTROLÜ
-        $this->authorize('access-department', 'hizmet');
+        // GÜNCEL YETKİ KONTROLÜ
+        $this->checkAuth();
 
         $eventTypes = $this->eventTypes;
-
-        // YENİ EKLENEN VERİLER:
         $customers = Customer::orderBy('name')->get();
         $availableTravels = Travel::where('status', '!=', 'completed')
-            ->where('user_id', Auth::id()) // Sadece kendi seyahatleri
+            ->where('user_id', Auth::id())
             ->orderBy('start_date', 'desc')
             ->get();
 
-        return view('service.events.create', compact(
-            'eventTypes',
-            'customers',
-            'availableTravels'
-        ));
+        return view('service.events.create', compact('eventTypes', 'customers', 'availableTravels'));
     }
 
-    /**
-     * Yeni etkinliği veritabanında saklar.
-     */
     public function store(Request $request)
     {
-        // YETKİ KONTROLÜ
-        $this->authorize('access-department', 'hizmet');
+        // GÜNCEL YETKİ KONTROLÜ
+        $this->checkAuth();
 
-        // VALIDASYON
         $validatedData = $request->validate([
-            // Ana Event Alanları
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'start_datetime' => 'required|date',
             'end_datetime' => 'required|date|after_or_equal:start_datetime',
             'location' => 'nullable|string|max:255',
-            // Not: eventTypes dizisinin anahtarlarının 'fuar', 'toplanti' gibi sluglar olduğunu varsayıyoruz
             'event_type' => ['required', Rule::in(array_keys($this->eventTypes))],
-
-            // CRM Alanları
             'travel_id' => 'nullable|integer|exists:travels,id',
-
-            // Koşullu CRM Alanları
             'customer_id' => [
                 'nullable',
                 'integer',
@@ -170,7 +146,6 @@ class EventController extends Controller
                 Rule::in(['satis_sonrasi_hizmet', 'egitim', 'rutin_ziyaret', 'pazarlama', 'diger']),
                 Rule::requiredIf($request->event_type === 'musteri_ziyareti')
             ],
-
             'customer_machine_id' => 'nullable|integer|exists:customer_machines,id',
             'after_sales_notes' => 'nullable|string',
             'visit_status' => 'nullable|string|in:planlandi,gerceklesti,ertelendi,iptal',
@@ -180,7 +155,6 @@ class EventController extends Controller
         try {
             DB::beginTransaction();
 
-            // 1. Ana Etkinliği Oluştur
             $event = Event::create([
                 'user_id' => Auth::id(),
                 'title' => $validatedData['title'],
@@ -188,14 +162,12 @@ class EventController extends Controller
                 'start_datetime' => $validatedData['start_datetime'],
                 'end_datetime' => $validatedData['end_datetime'],
                 'location' => $validatedData['location'],
-                'event_type' => $validatedData['event_type'], // Buraya 'fuar' string değeri geliyor
+                'event_type' => $validatedData['event_type'],
                 'customer_id' => $validatedData['customer_id'] ?? null,
                 'visit_status' => $validatedData['visit_status'] ?? 'planlandi',
                 'cancellation_reason' => $validatedData['cancellation_reason'] ?? null,
             ]);
 
-            // 2. Eğer tip 'Müşteri Ziyareti' ise, CustomerVisit kaydını oluştur
-            // Not: Veritabanındaki slug'ın 'musteri_ziyareti' olduğunu varsayıyoruz (ekran görüntüsünde 5. satır)
             if ($event->event_type === 'musteri_ziyareti') {
                 CustomerVisit::create([
                     'event_id' => $event->id,
@@ -209,50 +181,38 @@ class EventController extends Controller
 
             DB::commit();
 
-            // --- YÖNLENDİRME MANTIĞI ---
-
-            // Veritabanı tablosundaki 'slug' sütunu 'fuar' olduğu için küçük harfle kontrol ediyoruz.
             if ($event->event_type === 'fuar') {
-                // Fuar ise detay sayfasına git (Rezervasyon eklemek için)
                 return redirect()->route('service.events.show', $event)
-                    ->with('success', 'Fuar etkinliği oluşturuldu. Aşağıdaki panelden Ulaşım ve Konaklama rezervasyonlarını ekleyebilirsiniz.');
+                    ->with('success', 'Fuar etkinliği oluşturuldu. Rezervasyonları ekleyebilirsiniz.');
             }
 
-            // Diğer durumlar için listeye dön
             return redirect()->route('service.events.index')
                 ->with('success', 'Yeni etkinlik başarıyla oluşturuldu!');
 
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()
-                ->with('error', 'Etkinlik oluşturulurken bir hata oluştu: ' . $e->getMessage())
+                ->with('error', 'Hata: ' . $e->getMessage())
                 ->withInput();
         }
     }
-    /**
-     * Display the specified resource.
-     */
+
     public function show(Event $event)
     {
-        // 1. Yetki Kontrolü (Hizmet birimi yetkisi)
-        $this->authorize('access-department', 'hizmet');
+        // GÜNCEL YETKİ KONTROLÜ
+        $this->checkAuth();
 
-        // 2. İlişkileri Yükle (View dosyasında kullandığımız veriler)
-        // Performans için user, bookings ve customerVisit verilerini önceden yüklüyoruz.
         $event->load(['user', 'bookings.media', 'customerVisit.customer']);
-
-        // 3. View'ı Döndür
         return view('service.events.show', compact('event'));
     }
 
-    /**
-     * Belirtilen etkinliği düzenleme formunu gösterir.
-     */
     public function edit(Event $event)
     {
-        // YETKİ KONTROLÜ
-        $this->authorize('access-department', 'hizmet');
-        if (Auth::id() !== $event->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
+        // GÜNCEL YETKİ KONTROLÜ
+        $this->checkAuth();
+
+        // Rol kontrolünü güncelledik (yonetici + yönetici)
+        if (Auth::id() !== $event->user_id && !in_array(Auth::user()->role, ['admin', 'yonetici', 'yönetici'])) {
             return redirect()->route('home')
                 ->with('error', 'Bu etkinliği sadece oluşturan kişi düzenleyebilir.');
         }
@@ -263,22 +223,21 @@ class EventController extends Controller
             ->where('user_id', Auth::id())
             ->get();
         $visitDetail = CustomerVisit::where('event_id', $event->id)->first();
+
         return view('service.events.edit', compact('event', 'eventTypes'));
     }
 
-    /**
-     * Veritabanındaki belirtilen etkinliği günceller.
-     */
     public function update(Request $request, Event $event)
     {
-        // YETKİ KONTROLÜ
-        $this->authorize('access-department', 'hizmet');
-        if (Auth::id() !== $event->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
+        // GÜNCEL YETKİ KONTROLÜ
+        $this->checkAuth();
+
+        // Rol kontrolünü güncelledik (yonetici + yönetici)
+        if (Auth::id() !== $event->user_id && !in_array(Auth::user()->role, ['admin', 'yonetici', 'yönetici'])) {
             return redirect()->route('home')
                 ->with('error', 'Bu etkinliği sadece oluşturan kişi düzenleyebilir.');
         }
 
-        // Validasyon (store ile aynı)
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -298,7 +257,7 @@ class EventController extends Controller
             'end_datetime' => $validatedData['end_datetime'],
             'location' => $validatedData['location'],
             'event_type' => $validatedData['event_type'],
-            'visit_status' => $validatedData['visit_status'] ?? $event->visit_status, // Değişmediyse eskisi kalsın
+            'visit_status' => $validatedData['visit_status'] ?? $event->visit_status,
             'cancellation_reason' => $validatedData['cancellation_reason'] ?? null,
             'customer_id' => $validatedData['customer_id'] ?? $event->customer_id,
         ]);
@@ -307,14 +266,13 @@ class EventController extends Controller
             ->with('success', 'Etkinlik başarıyla güncellendi.');
     }
 
-    /**
-     * Belirtilen etkinliği veritabanından siler.
-     */
     public function destroy(Event $event)
     {
-        // YETKİ KONTROLÜ (Adım 1): 'hizmet' birimi
-        $this->authorize('access-department', 'hizmet');
-        if (Auth::id() !== $event->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
+        // GÜNCEL YETKİ KONTROLÜ
+        $this->checkAuth();
+
+        // Rol kontrolünü güncelledik (yonetici + yönetici)
+        if (Auth::id() !== $event->user_id && !in_array(Auth::user()->role, ['admin', 'yonetici', 'yönetici'])) {
             return redirect()->route('home')
                 ->with('error', 'Bu etkinliği sadece oluşturan kişi silebilir.');
         }

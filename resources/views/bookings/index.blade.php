@@ -272,12 +272,27 @@
                                                 @endif
                                             </td>
 
-                                            {{-- İşlemler --}}
+                                            {{-- İŞLEMLER SÜTUNU --}}
                                             <td class="text-end">
                                                 <div class="d-flex justify-content-end gap-1">
-                                                    @if (Auth::id() == $booking->user_id || Auth::user()->can('is-global-manager'))
+
+                                                    {{-- YETKİ KONTROLÜ --}}
+                                                    @php
+                                                        // 1. Kullanıcı bu kaydın sahibi mi?
+                                                        $isOwner = Auth::id() == $booking->user_id;
+
+                                                        // 2. Kullanıcı yönetici yetkisine sahip mi?
+                                                        // (Veritabanına 'manage_bookings' adıyla kaydettiğimiz yetkiyi kontrol ediyoruz)
+                                                        $canManageAll =
+                                                            Auth::user()->can('manage_bookings') ||
+                                                            Auth::user()->can('is-global-manager');
+                                                    @endphp
+
+                                                    {{-- Eğer Sahibi veya Yönetici ise Butonları Göster --}}
+                                                    @if ($isOwner || $canManageAll)
                                                         {{-- 24 SAAT KURALI KONTROLÜ --}}
-                                                        @if ($booking->is_editable || Auth::user()->can('is-global-manager'))
+                                                        {{-- Yönetici de olsa düzenleyemez -- eklemek gerekirse: || $canManageAll --}}
+                                                        @if ($booking->is_editable)
                                                             {{-- Düzenle Butonu --}}
                                                             <a href="{{ route('bookings.edit', $booking) }}"
                                                                 class="btn btn-sm-modern text-primary" title="Düzenle">
@@ -286,8 +301,11 @@
 
                                                             {{-- Sil Butonu --}}
                                                             <form action="{{ route('bookings.destroy', $booking) }}"
-                                                                method="POST" ...>
-                                                                {{-- ... form içeriği ... --}}
+                                                                method="POST"
+                                                                onsubmit="return confirm('Bu rezervasyonu silmek istediğinize emin misiniz?');"
+                                                                class="d-inline">
+                                                                @csrf
+                                                                @method('DELETE')
                                                                 <button type="submit" class="btn btn-sm-modern text-danger"
                                                                     title="Sil">
                                                                     <i class="fa-solid fa-trash"></i>

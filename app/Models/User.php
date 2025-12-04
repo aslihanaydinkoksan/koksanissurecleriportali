@@ -251,5 +251,17 @@ class User extends Authenticatable
     {
         return in_array($this->role, ['yönetici', 'müdür']);
     }
+    // Kullanıcının rollerini kontrol et, istenen yetki var mı bak.
+    public function hasPermission($key)
+    {
+        // Kullanıcının rollerini çekiyoruz
+        foreach ($this->roles as $role) {
+            // O rolün yetkileri arasında bu 'key' var mı?
+            if ($role->permissions()->where('key', $key)->exists()) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 }
