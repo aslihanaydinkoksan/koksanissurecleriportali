@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Log;
 use App\Notifications\TaskStatusUpdatedNotification;
+use App\Services\CsvExporter;
 
 class VehicleAssignmentController extends Controller
 {
@@ -746,57 +747,62 @@ class VehicleAssignmentController extends Controller
 
     /**
      * CSV OLARAK DIŞA AKTAR
+     * URL Örnekleri:
+     * - /export (Hepsi)
+     * - /export?type=general (Sadece Araçsız/Genel)
+     * - /export?type=vehicle (Sadece Araçlı)
      */
-    public function export()
+    public function export(Request $request)
     {
-        $fileName = 'arac-gorevleri-' . date('d-m-Y') . '.csv';
+        // 1. İsteğe göre Dosya Adını ve Filtreyi Belirle
+        $filterType = $request->query('type'); // URL'den gelen ?type=... parametresi
 
-        // DÜZELTME BURADA: 'responsibleUser' YERİNE 'responsible' YAZIYORUZ
-        $assignments = VehicleAssignment::with(['vehicle', 'createdBy', 'responsible'])->latest()->get();
+        $filePrefix = match ($filterType) {
+            'general' => 'genel-gorevler-',     // Araçsız
+            'vehicle' => 'arac-gorevleri-',     // Araçlı
+            default => 'tum-gorevler-',       // Hepsi
+        };
 
+        $fileName = $filePrefix . date('d-m-Y') . '.csv';
+
+        // 2. Sorguyu Hazırla
+        $query = VehicleAssignment::with(['vehicle', 'createdBy', 'responsible'])
+            // Eğer URL'de ?type=general varsa sadece onları getir
+            ->when($filterType, function ($q) use ($filterType) {
+                return $q->where('assignment_type', $filterType);
+            })
+            ->latest();
+
+        // 3. Başlıklar
         $headers = [
-            "Content-type" => "text/csv; charset=utf-8",
-            "Content-Disposition" => "attachment; filename=$fileName",
-            "Pragma" => "no-cache",
-            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
-            "Expires" => "0"
+            'ID',
+            'Görev Tipi', // <-- Yeni Sütun: Karışıklık olmasın diye tipi de ekleyelim
+            'Görev Başlığı',
+            'Plaka',
+            'Sorumlu',
+            'Görevi Atayan',
+            'Başlangıç',
+            'Bitiş',
+            'Durum',
+            'Yakıt (TL)'
         ];
 
-        $callback = function () use ($assignments) {
-            $file = fopen('php://output', 'w');
+        // 4. Servisi Çağır
+        return CsvExporter::streamDownload(
+            query: $query,
+            headers: $headers,
+            fileName: $fileName,
+            rowMapper: function ($task) {
 
-            // Türkçe karakter sorunu olmasın diye BOM ekliyoruz
-            fputs($file, "\xEF\xBB\xBF");
-
-            // 1. Satır: Başlıklar
-            fputcsv($file, [
-                'ID',
-                'Görev Başlığı',
-                'Plaka',
-                'Sorumlu',
-                'Görevi Atayan',
-                'Başlangıç',
-                'Bitiş',
-                'Durum',
-                'Yakıt Maliyeti (TL)'
-            ], ';');
-
-            // 2. Satır ve sonrası: Veriler
-            foreach ($assignments as $task) {
-                // Sorumlu adını bul (Eager Loading ile gelen 'responsible' verisini kullanıyoruz)
+                // -- Sorumlu Mantığı --
                 $sorumlu = 'Bilinmiyor';
-
                 if ($task->responsible) {
-                    // Eğer sorumlu bir Takımsa yanına (Takım) yazalım
-                    if ($task->responsible_type === 'App\Models\Team') {
-                        $sorumlu = $task->responsible->name . ' (Takım)';
-                    } else {
-                        // Kullanıcıysa direkt ismini yazalım
-                        $sorumlu = $task->responsible->name;
-                    }
+                    $sorumlu = $task->responsible_type === 'App\Models\Team'
+                        ? $task->responsible->name . ' (Takım)'
+                        : $task->responsible->name;
                 }
 
-                // Durumu Türkçeleştir
+                // -- Durum Mantığı --
                 $durum = match ($task->status) {
                     'waiting_assignment' => 'Atama Bekliyor',
                     'pending' => 'Bekliyor',
@@ -806,22 +812,26 @@ class VehicleAssignmentController extends Controller
                     default => $task->status,
                 };
 
-                fputcsv($file, [
+                // -- Tip Türkçeleştirme --
+                $tip = match ($task->assignment_type) {
+                    'general' => 'Genel (Araçsız)',
+                    'vehicle' => 'Araç Görevi',
+                    default => $task->assignment_type
+                };
+
+                return [
                     $task->id,
+                    $tip, // Yeni eklediğimiz sütun
                     $task->title,
-                    $task->vehicle ? $task->vehicle->plate_number : 'Araçsız',
+                    $task->vehicle ? $task->vehicle->plate_number : '-', // Araçsızsa tire koy
                     $sorumlu,
                     $task->createdBy ? $task->createdBy->name : '-',
-                    \Carbon\Carbon::parse($task->start_time)->format('d.m.Y H:i'),
-                    \Carbon\Carbon::parse($task->end_time)->format('d.m.Y H:i'),
+                    $task->start_time ? Carbon::parse($task->start_time)->format('d.m.Y H:i') : '-',
+                    $task->end_time ? Carbon::parse($task->end_time)->format('d.m.Y H:i') : '-',
                     $durum,
                     $task->fuel_cost ?? '0'
-                ], ';');
+                ];
             }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        );
     }
 }

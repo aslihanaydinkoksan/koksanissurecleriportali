@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', 'Yeni Görev Oluştur')
 
-@push('styles')
+<?php $__env->startSection('title', 'Yeni Görev Oluştur'); ?>
+
+<?php $__env->startPush('styles'); ?>
     <style>
         #app>main.py-4 {
             padding: 2.5rem 0 !important;
@@ -318,16 +318,16 @@
             display: none !important;
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-9">
                 <div class="card create-assignment-card" x-data="{
-                    needsVehicle: '{{ old('needs_vehicle', '') }}',
-                    vehicleType: '{{ old('vehicle_type', '') }}',
-                    responsibleType: '{{ old('responsible_type', '') }}',
+                    needsVehicle: '<?php echo e(old('needs_vehicle', '')); ?>',
+                    vehicleType: '<?php echo e(old('vehicle_type', '')); ?>',
+                    responsibleType: '<?php echo e(old('responsible_type', '')); ?>',
                     currentStep: 1,
                 
                     get step1Complete() {
@@ -345,7 +345,7 @@
 
                     <div class="card-body px-4 py-3">
 
-                        {{-- ADIM GÖSTERGESİ --}}
+                        
                         <div class="step-indicator mb-4">
                             <div class="step-item"
                                 :class="{ 'active': currentStep === 1, 'completed': step1Complete && currentStep > 1 }">
@@ -369,21 +369,21 @@
                             </div>
                         </div>
 
-                        @if ($errors->any())
+                        <?php if($errors->any()): ?>
                             <div class="alert alert-danger">
                                 <strong>Hata!</strong> Lütfen aşağıdaki sorunları düzeltin:
                                 <ul class="mb-0 mt-2">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
+                                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <li><?php echo e($error); ?></li>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </ul>
                             </div>
-                        @endif
+                        <?php endif; ?>
 
-                        <form method="POST" action="{{ route('service.assignments.store') }}">
-                            @csrf
+                        <form method="POST" action="<?php echo e(route('service.assignments.store')); ?>">
+                            <?php echo csrf_field(); ?>
 
-                            {{-- ================== ADIM 1: GÖREV TİPİ ================== --}}
+                            
                             <div x-show="currentStep === 1" class="fade-in-up">
                                 <h5 class="mb-3">1️⃣ Bu görev için araç gerekli mi?</h5>
 
@@ -436,9 +436,9 @@
                                         </div>
                                     </label>
 
-                                    {{-- ========================================================= --}}
-                                    {{-- PULSE EFEKTLİ UYARI KUTUSU BURADA --}}
-                                    {{-- ========================================================= --}}
+                                    
+                                    
+                                    
                                     <div x-show="vehicleType === 'company'" class="warning-box fade-in-up">
                                         <div class="warning-box-content">
                                             <div class="icon-wrapper">
@@ -460,21 +460,21 @@
                                             </div>
                                         </div>
                                     </div>
-                                    {{-- ========================================================= --}}
+                                    
 
-                                    {{-- YÖNETİCİ OLMAYANLAR İÇİN ATAMA BEKLEYECEK UYARISI --}}
-                                    @if (!in_array(auth()->user()->role, ['müdür', 'admin', 'yönetici']))
-                                        {{-- 1. DIŞ KAPSAYICI: Sadece gizleme/gösterme işini yapar --}}
+                                    
+                                    <?php if(!in_array(auth()->user()->role, ['müdür', 'admin', 'yönetici'])): ?>
+                                        
                                         <div x-show="vehicleType !== ''" x-transition.opacity x-cloak class="mt-3">
 
-                                            {{-- 2. İÇ KUTU: Tasarım (d-flex, alert vb.) burada durur --}}
+                                            
                                             <div class="alert alert-info border-info d-flex align-items-center mb-0">
                                                 <div class="h2 me-3 mb-0">🅿️</div>
                                                 <div>
                                                     <h6 class="alert-heading fw-bold mb-1">Araç Ataması Onay Bekleyecek</h6>
                                                     <p class="mb-0 small">
                                                         Seçtiğiniz
-                                                        {{-- Metin mantığı: Şirket ise Şirket, değilse Nakliye --}}
+                                                        
                                                         <strong
                                                             x-text="vehicleType === 'company' ? 'Şirket Aracı' : 'Nakliye Aracı'"></strong>
                                                         türü için talep oluşturuyorsunuz. Detayları girip kaydettikten sonra
@@ -484,9 +484,9 @@
                                             </div>
                                         </div>
 
-                                        {{-- Boş vehicle_id gönderimi --}}
+                                        
                                         <input type="hidden" name="vehicle_id" value="">
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
 
                                 <div class="text-end mt-3">
@@ -497,7 +497,7 @@
                                 </div>
                             </div>
 
-                            {{-- ================== ADIM 2: SORUMLULAR ================== --}}
+                            
                             <div x-show="currentStep === 2" class="fade-in-up">
                                 <button type="button" class="btn btn-sm btn-outline-secondary mb-3"
                                     @click="currentStep = 1; vehicleType = ''; responsibleType = ''">← Geri</button>
@@ -523,9 +523,9 @@
                                         :required="responsibleType === 'user'"
                                         :disabled="responsibleType !== 'user'">
                                         <option value="">Kişi seçiniz...</option>
-                                        @foreach ($users as $user)
-                                            <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                        @endforeach
+                                        <?php $__currentLoopData = $users; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <option value="<?php echo e($user->id); ?>"><?php echo e($user->name); ?></option>
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </select>
                                     <div class="mt-2 text-end">
                                         <button type="button" class="btn btn-primary btn-sm"
@@ -553,11 +553,12 @@
                                             :required="responsibleType === 'team'"
                                             :disabled="responsibleType !== 'team'">
                                             <option value="">Takım seçiniz...</option>
-                                            @foreach ($teams as $team)
-                                                <option value="{{ $team->id }}">{{ $team->name }}
-                                                    ({{ $team->members_count }} kişi)
+                                            <?php $__currentLoopData = $teams; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $team): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <option value="<?php echo e($team->id); ?>"><?php echo e($team->name); ?>
+
+                                                    (<?php echo e($team->members_count); ?> kişi)
                                                 </option>
-                                            @endforeach
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </select>
                                         <button class="btn btn-outline-success" type="button" data-bs-toggle="modal"
                                             data-bs-target="#newTeamModal">
@@ -571,7 +572,7 @@
                                 </div>
                             </div>
 
-                            {{-- ================== ADIM 3: DETAYLAR ================== --}}
+                            
                             <div x-show="currentStep === 3" class="fade-in-up">
                                 <button type="button" class="btn btn-sm btn-outline-secondary mb-3"
                                     @click="currentStep = 2">← Geri</button>
@@ -581,29 +582,29 @@
                                 <div class="mb-4">
                                     <label class="form-label fw-bold">📢 Görev Başlığı *</label>
                                     <input type="text" name="title" class="form-control"
-                                        placeholder="Görevin kısa adı" required value="{{ old('title') }}">
+                                        placeholder="Görevin kısa adı" required value="<?php echo e(old('title')); ?>">
                                 </div>
                                 <div class="row mb-4">
                                     <div class="col-md-6">
                                         <label class="form-label fw-bold">📅 Planlanan Başlangıç *</label>
                                         <input type="datetime-local" name="start_time" class="form-control"
-                                            min="{{ now()->format('Y-m-d\TH:i') }}"
-                                            max="{{ now()->addMonth()->format('Y-m-d\TH:i') }}"
-                                            value="{{ old('start_time') }}" required>
+                                            min="<?php echo e(now()->format('Y-m-d\TH:i')); ?>"
+                                            max="<?php echo e(now()->addMonth()->format('Y-m-d\TH:i')); ?>"
+                                            value="<?php echo e(old('start_time')); ?>" required>
                                         <div class="form-text">En fazla 1 ay sonrasına kadar görev oluşturabilirsiniz.
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label fw-bold">🏁 Tahmini Bitiş *</label>
                                         <input type="datetime-local" name="end_time" class="form-control"
-                                            min="{{ now()->format('Y-m-d\TH:i') }}"
-                                            max="{{ now()->addMonth()->endOfDay()->format('Y-m-d\TH:i') }}"
-                                            value="{{ old('end_time') }}" required>
+                                            min="<?php echo e(now()->format('Y-m-d\TH:i')); ?>"
+                                            max="<?php echo e(now()->addMonth()->endOfDay()->format('Y-m-d\TH:i')); ?>"
+                                            value="<?php echo e(old('end_time')); ?>" required>
                                     </div>
                                 </div>
 
-                                {{-- YÖNETİCİ İSE ARAÇ SEÇİMİ GÖRÜNÜR --}}
-                                @if (in_array(auth()->user()->role, ['müdür', 'admin', 'yönetici']))
+                                
+                                <?php if(in_array(auth()->user()->role, ['müdür', 'admin', 'yönetici'])): ?>
                                     <div x-show="needsVehicle === 'yes'" class="mb-4">
                                         <label class="form-label fw-bold">
                                             <span
@@ -616,10 +617,10 @@
                                                 :required="needsVehicle === 'yes' && vehicleType === 'company'"
                                                 :disabled="vehicleType !== 'company'">
                                                 <option value="">Şirket aracı seçiniz...</option>
-                                                @foreach ($companyVehicles as $vehicle)
-                                                    <option value="{{ $vehicle->id }}">{{ $vehicle->plate_number }} -
-                                                        {{ $vehicle->brand_model }}</option>
-                                                @endforeach
+                                                <?php $__currentLoopData = $companyVehicles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $vehicle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                    <option value="<?php echo e($vehicle->id); ?>"><?php echo e($vehicle->plate_number); ?> -
+                                                        <?php echo e($vehicle->brand_model); ?></option>
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </select>
                                         </div>
 
@@ -628,15 +629,15 @@
                                                 :required="needsVehicle === 'yes' && vehicleType === 'logistics'"
                                                 :disabled="vehicleType !== 'logistics'">
                                                 <option value="">Nakliye aracı seçiniz...</option>
-                                                @foreach ($logisticsVehicles as $vehicle)
-                                                    <option value="{{ $vehicle->id }}">{{ $vehicle->plate_number }} -
-                                                        {{ $vehicle->brand }} {{ $vehicle->model }}</option>
-                                                @endforeach
+                                                <?php $__currentLoopData = $logisticsVehicles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $vehicle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                    <option value="<?php echo e($vehicle->id); ?>"><?php echo e($vehicle->plate_number); ?> -
+                                                        <?php echo e($vehicle->brand); ?> <?php echo e($vehicle->model); ?></option>
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </select>
                                         </div>
                                     </div>
 
-                                    {{-- NAKLİYE BAŞLANGIÇ DETAYLARI (Sadece Yöneticiler Girebilir) --}}
+                                    
                                     <div x-show="needsVehicle === 'yes' && vehicleType === 'logistics'"
                                         class="row mb-4 p-3 bg-light rounded border mx-1">
                                         <div class="col-12 mb-2">
@@ -660,11 +661,11 @@
                                             </select>
                                         </div>
                                     </div>
-                                @endif
+                                <?php endif; ?>
 
                                 <div class="mb-4">
                                     <label class="form-label fw-bold">📝 Görev Açıklaması *</label>
-                                    <textarea name="task_description" class="form-control" rows="3" required>{{ old('task_description') }}</textarea>
+                                    <textarea name="task_description" class="form-control" rows="3" required><?php echo e(old('task_description')); ?></textarea>
                                 </div>
 
                                 <div class="mb-4">
@@ -676,23 +677,24 @@
                                         }
                                     ">
                                         <option value="">Seçiniz...</option>
-                                        @foreach ($customers as $customer)
-                                            <option value="{{ $customer->id }}"
-                                                {{ old('customer_id') == $customer->id ? 'selected' : '' }}>
-                                                {{ $customer->name }}
+                                        <?php $__currentLoopData = $customers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $customer): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <option value="<?php echo e($customer->id); ?>"
+                                                <?php echo e(old('customer_id') == $customer->id ? 'selected' : ''); ?>>
+                                                <?php echo e($customer->name); ?>
+
                                             </option>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </select>
                                 </div>
 
                                 <div class="mb-4">
                                     <label class="form-label fw-bold">📍 Hedef Konum</label>
                                     <input type="text" name="destination" class="form-control"
-                                        value="{{ old('destination') }}">
+                                        value="<?php echo e(old('destination')); ?>">
                                 </div>
 
                                 <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-                                    <a href="{{ route('service.assignments.index') }}"
+                                    <a href="<?php echo e(route('service.assignments.index')); ?>"
                                         class="btn btn-outline-secondary">İptal</a>
                                     <button type="submit" class="btn btn-animated-gradient">✓ Görevi Oluştur</button>
                                 </div>
@@ -704,7 +706,7 @@
         </div>
     </div>
 
-    {{-- HIZLI TAKIM OLUŞTURMA MODALI --}}
+    
     <div class="modal fade" id="newTeamModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -712,17 +714,17 @@
                     <h5 class="modal-title">Hızlı Takım Oluştur</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form id="newTeamForm" action="{{ route('teams.store') }}" method="POST">
-                    @csrf
+                <form id="newTeamForm" action="<?php echo e(route('teams.store')); ?>" method="POST">
+                    <?php echo csrf_field(); ?>
                     <div class="modal-body">
                         <div id="newTeamErrors" class="alert alert-danger" style="display: none;"></div>
                         <div class="mb-3">
                             <label class="form-label fw-bold">Takımın İlk Üyesi/Yöneticisi *</label>
                             <select name="members[]" class="form-select" required>
                                 <option value="">Bir kullanıcı seçiniz...</option>
-                                @foreach ($users as $user)
-                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                @endforeach
+                                <?php $__currentLoopData = $users; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($user->id); ?>"><?php echo e($user->name); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -739,19 +741,19 @@
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('page_scripts')
-    {{-- 1. Alpine.js'i Güvenilir Kaynaktan ve Defer Olmadan Yükle --}}
+<?php $__env->startSection('page_scripts'); ?>
+    
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
 
-    {{-- 2. x-data Mantığını Buraya Taşıyoruz (HTML içi karışıklığı önler) --}}
+    
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('assignmentForm', () => ({
-                needsVehicle: '{{ old('needs_vehicle', '') }}',
-                vehicleType: '{{ old('vehicle_type', '') }}',
-                responsibleType: '{{ old('responsible_type', '') }}',
+                needsVehicle: '<?php echo e(old('needs_vehicle', '')); ?>',
+                vehicleType: '<?php echo e(old('vehicle_type', '')); ?>',
+                responsibleType: '<?php echo e(old('responsible_type', '')); ?>',
                 currentStep: 1,
 
                 // Getter'ları fonksiyon olarak tanımlayalım (daha güvenli)
@@ -766,11 +768,13 @@
         });
     </script>
 
-    {{-- Senin Mevcut Takım Oluşturma Scriptin --}}
+    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const newTeamForm = document.getElementById('newTeamForm');
             // ... (senin diğer kodların aynen kalacak)
         });
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/service/assignments/create.blade.php ENDPATH**/ ?>

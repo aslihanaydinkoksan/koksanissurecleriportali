@@ -303,6 +303,14 @@
                                             class="fa-solid fa-right-to-bracket"></i><span>Giriş Yap</span></a></li>
                             <?php endif; ?>
                         <?php else: ?>
+                            
+                            <?php
+                                $user = Auth::user();
+                                $isAdmin = $user->role === 'admin';
+                                // Slug kontrolünü güvenli hale getiriyoruz
+                                $deptSlug = $user->department ? trim($user->department->slug) : null;
+                            ?>
+
                             <li class="nav-item"><a class="nav-link" href="<?php echo e(route('general.calendar')); ?>"><i
                                         class="fa-solid fa-calendar-days" style="color: #667EEA;"></i><span>Genel
                                         Takvim</span></a></li>
@@ -310,6 +318,7 @@
                                             class="fa-solid fa-calendar-check"
                                         style="color: #4FD1C5;"></i><span>Takvimim</span></a></li> <?php endif; ?>
 
+                            
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" role="button"
                                     data-bs-toggle="dropdown"><i class="fa-solid fa-car-side"
@@ -345,9 +354,7 @@
                             </li>
 
                             
-
-                            <?php if(Auth::user()->hasRole('admin') || Auth::user()->hasDepartment('Lojistik')): ?>
-                                <li class="nav-item">
+                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('access-department', 'lojistik')): ?>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown"><i class="fa-solid fa-route"
@@ -364,7 +371,8 @@
                                 </li>
                             <?php endif; ?>
 
-                            <?php if(Auth::user()->hasRole('admin') || Auth::user()->hasDepartment('Üretim')): ?>
+                            
+                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('access-department', 'uretim')): ?>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown"><i class="fa-solid fa-industry"
@@ -382,7 +390,7 @@
                             <?php endif; ?>
 
                             
-                            <?php if(Auth::user()->hasRole('admin') || Auth::user()->hasDepartment('Bakım')): ?>
+                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('access-department', 'bakim')): ?>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown">
@@ -404,7 +412,7 @@
                                             </a>
                                         </li>
                                         
-                                        <?php if(Auth::user()->role === 'admin' || Auth::user()->isManagerOrDirector()): ?>
+                                        <?php if($user->role === 'admin' || $user->isManagerOrDirector()): ?>
                                             <li>
                                                 <hr class="dropdown-divider">
                                             </li>
@@ -434,20 +442,8 @@
                             <?php endif; ?>
 
                             
-                            <?php
-                                $user = Auth::user();
-                                $isAdmin = $user->role === 'admin';
-                                $deptSlug = Auth::user()->department ? trim(Auth::user()->department->slug) : null;
-
-                                // İdari İşler Ana Menüsünü Kimler Görebilir? (Hizmet + Ulaştırma + Admin)
-                                $canSeeParentMenu = $isAdmin || in_array($deptSlug, ['hizmet', 'ulastirma']);
-
-                                // İdari İşler Alt İşlemlerini Kimler Yapabilir?
-                                // NOT: Eğer 'ulastirma' departmanının da etkinlik, seyahat vs. görmesini istiyorsan
-                                // aşağıdaki diziye 'ulastirma'yı da eklemelisin. Şu an sadece 'hizmet' ve Admin görüyor.
-                                $isIdariIslerPersoneli = $isAdmin || $deptSlug === 'hizmet';
-                            ?>
-                            <?php if($canSeeParentMenu): ?>
+                            
+                            <?php if(Gate::check('access-department', 'hizmet') || Gate::check('access-department', 'ulastirma')): ?>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown">
@@ -458,7 +454,8 @@
                                     <ul class="dropdown-menu dropdown-menu-end">
 
                                         
-                                        <?php if($isIdariIslerPersoneli): ?>
+                                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('access-department', 'hizmet')): ?>
+                                            
                                             <li>
                                                 <a class="dropdown-item" href="<?php echo e(route('service.events.create')); ?>">
                                                     <i class="fa-solid fa-calendar-plus" style="color: #3B82F6;"></i> Yeni
@@ -478,7 +475,7 @@
 
                                         
                                         
-                                        <?php if($isIdariIslerPersoneli || $deptSlug === 'ulastirma'): ?>
+                                        <?php if(Gate::check('access-department', 'hizmet') || Gate::check('access-department', 'ulastirma')): ?>
                                             <li>
                                                 <a class="dropdown-item" href="<?php echo e(route('service.vehicles.index')); ?>">
                                                     <i class="fa-solid fa-car" style="color: #F59E0B;"></i> Şirket
@@ -495,7 +492,8 @@
                                         <?php endif; ?>
 
                                         
-                                        <?php if($isIdariIslerPersoneli): ?>
+                                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('access-department', 'hizmet')): ?>
+                                            
                                             <li>
                                                 <hr class="dropdown-divider">
                                             </li>
@@ -510,10 +508,8 @@
                                                     Listesi
                                                 </a>
                                             </li>
-                                        <?php endif; ?>
 
-                                        
-                                        <?php if($isIdariIslerPersoneli): ?>
+                                            
                                             <li>
                                                 <hr class="dropdown-divider">
                                             </li>
@@ -524,10 +520,8 @@
                                                     Yönetimi
                                                 </a>
                                             </li>
-                                        <?php endif; ?>
 
-                                        
-                                        <?php if($isIdariIslerPersoneli): ?>
+                                            
                                             <li>
                                                 <hr class="dropdown-divider">
                                             </li>
@@ -561,11 +555,9 @@
 
                                 <a class="nav-link position-relative" data-bs-toggle="dropdown" href="#"
                                     role="button">
-                                    
                                     <i class="fa-solid fa-bell fa-lg" id="notification-icon"
                                         style="color: <?php echo e($iconColor); ?>; transition: color 0.3s ease;"></i>
 
-                                    
                                     <span id="notification-badge"
                                         class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                                         style="display: <?php echo e($unreadCount > 0 ? 'inline-block' : 'none'); ?>;">
@@ -580,7 +572,6 @@
                                         style="border-radius: 1rem 1rem 0 0;">
                                         <h6 class="mb-0 fw-bold text-dark">Bildirimler</h6>
 
-                                        
                                         <a href="<?php echo e(route('notifications.readAll')); ?>" id="mark-all-read"
                                             class="text-decoration-none small fw-bold text-primary"
                                             style="display: <?php echo e($unreadCount > 0 ? 'inline-block' : 'none'); ?>;">
@@ -588,7 +579,6 @@
                                         </a>
                                     </div>
 
-                                    
                                     <div id="notification-list" class="list-group list-group-flush"
                                         style="max-height: 300px; overflow-y: auto;">
                                         <?php $__empty_1 = true; $__currentLoopData = auth()->user()->unreadNotifications; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $notification): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
@@ -637,7 +627,7 @@
                                                     class="fa-solid fa-user-plus" style="color: #667EEA;"></i> Kullanıcı
                                                 Ekle</a></li>
                                     <?php endif; ?>
-                                    <?php if(Auth::user()->role === 'admin'): ?>
+                                    <?php if($user->role === 'admin'): ?>
                                         <li><a class="dropdown-item" href="<?php echo e(route('users.index')); ?>"><i
                                                     class="fa-solid fa-list" style="color: #31317e;"></i>
                                                 Kullanıcıları
@@ -689,7 +679,6 @@
         document.addEventListener('DOMContentLoaded', function() {
 
             // --- 1. LOADER (YÜKLENİYOR EKRANI) ---
-            // Sayfa tamamen hazır olduğunda loader'ı kaldır
             const loader = document.getElementById('global-loader');
             if (loader) {
                 window.addEventListener('load', function() {
@@ -697,7 +686,6 @@
                         loader.classList.add('loaded');
                     }, 150);
                 });
-                // Güvenlik önlemi: 3 saniye geçse bile loader gitmediyse zorla kaldır (Donmayı önler)
                 setTimeout(function() {
                     if (!loader.classList.contains('loaded')) {
                         loader.classList.add('loaded');
@@ -741,7 +729,6 @@
                 }
             });
 
-            // PHP Session Mesajlarını JS ile Tetikle
             <?php if(session('success')): ?>
                 Toast.fire({
                     icon: 'success',
@@ -761,7 +748,6 @@
                 });
             <?php endif; ?>
 
-            // Global fonksiyon olarak dışarı açıyoruz
             window.showToast = function(message, type = 'success') {
                 Toast.fire({
                     icon: type,
@@ -770,7 +756,6 @@
             }
 
             // --- 4. AKILLI SİLME (DELETE CONFIRMATION) ---
-            // Tarayıcının varsayılan confirm kutusunu iptal et
             document.querySelectorAll('form').forEach(form => {
                 if (form.getAttribute('onsubmit') && form.getAttribute('onsubmit').includes('confirm')) {
                     form.removeAttribute('onsubmit');
@@ -781,7 +766,6 @@
                 const form = e.target;
                 const methodInput = form.querySelector('input[name="_method"]');
 
-                // Sadece DELETE metodlu formlarda çalış
                 if (form.tagName === 'FORM' && methodInput && methodInput.value.toUpperCase() ===
                     'DELETE') {
                     e.preventDefault();
@@ -824,7 +808,6 @@
                                                 'Kayıt başarıyla silindi.', 'success');
                                             window.location.reload();
                                         } else {
-                                            // HTML döndüyse (redirect olduysa) hata kontrolü yap
                                             const htmlText = await response.text();
                                             const parser = new DOMParser();
                                             const doc = parser.parseFromString(htmlText,
@@ -860,10 +843,6 @@
             });
 
             // --- 5. BİLDİRİM VE SİSTEM GÜNCELLEME KONTROLÜ ---
-            // İki ayrı setInterval yerine tek bir zamanlayıcı kullanmak daha performanslıdır, 
-            // ama yapıları farklı olduğu için bağımsız bırakıyoruz.
-
-            // A) Bildirim Kontrolü
             setInterval(function() {
                 fetch("<?php echo e(route('notifications.check')); ?>")
                     .then(res => res.ok ? res.json() : Promise.reject(res))
@@ -896,10 +875,23 @@
                         return;
                     }
 
-                    fetch("<?php echo e(route('system.check_updates')); ?>")
-                        .then(res => res.json())
+                    fetch("<?php echo e(route('system.check_updates')); ?>", {
+                            // BU KISIM EKLENDİ: Laravel'e bunun bir AJAX isteği olduğunu söylüyoruz
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                        .then(res => {
+                            // Eğer oturum düşmüşse (401 veya 419) yenileme yapma veya sessiz kal
+                            if (res.status === 401 || res.status === 419) {
+                                return null;
+                            }
+                            return res.json();
+                        })
                         .then(data => {
-                            if (data.hash && data.hash !== initialHash) {
+                            if (data && data.hash && data.hash !== initialHash) {
                                 console.log('Sistem güncellendi, sayfa yenileniyor...');
                                 window.location.reload();
                             }

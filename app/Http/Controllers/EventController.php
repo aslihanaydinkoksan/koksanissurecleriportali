@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Services\CsvExporter;
 
 class EventController extends Controller
 {
@@ -281,5 +282,90 @@ class EventController extends Controller
 
         return redirect()->route('service.events.index')
             ->with('success', 'Etkinlik başarıyla silindi.');
+    }
+    /**
+     * Etkinlik Listesini CSV olarak dışa aktar
+     */
+    public function export()
+    {
+        $fileName = 'etkinlik-listesi-' . date('d-m-Y') . '.csv';
+
+        // 1. SORGULAMA
+        // Modelindeki ilişki isimleri: 'user', 'customer', 'machine'
+        $query = Event::with(['user', 'customer', 'machine'])->latest();
+
+        // 2. BAŞLIKLAR
+        $headers = [
+            'ID',
+            'Başlık',
+            'Konum',
+            'Müşteri',
+            'İlgili Makine',
+            'Etkinlik Türü',
+            'Ziyaret Amacı',  // Modelde var, ekleyelim
+            'Başlangıç',
+            'Bitiş',
+            'Durum',
+            'Önem',
+            'Oluşturan',
+            'Oluşturulma Tarihi'
+        ];
+
+        // 3. EXPORT İŞLEMİ
+        return CsvExporter::streamDownload(
+            query: $query,
+            headers: $headers,
+            fileName: $fileName,
+            rowMapper: function ($event) {
+
+                // -- MÜŞTERİ BİLGİSİ --
+                $musteri = $event->customer ? $event->customer->name : '-';
+
+                // -- MAKİNE BİLGİSİ --
+                // Modeldeki ilişki adı: machine()
+                $makine = '-';
+                if ($event->machine) {
+                    // Makine modelinin name, code veya serial_number alanı olabilir.
+                    // Garantilemek için sırayla bakıyoruz.
+                    $makine = $event->machine->name
+                        ?? $event->machine->code
+                        ?? ('Makine #' . $event->customer_machine_id);
+                }
+
+                // -- DURUM TÜRKÇELEŞTİRME --
+                $durum = match ($event->visit_status) {
+                    'gerceklesti' => 'Gerçekleşti',
+                    'planlandi' => 'Planlandı',
+                    'iptal' => 'İptal Edildi',
+                    'ertelendi' => 'Ertelendi',
+                    default => ucfirst($event->visit_status ?? '-'),
+                };
+
+                // -- TÜR TÜRKÇELEŞTİRME --
+                $tur = match ($event->event_type) {
+                    'fuar' => 'Fuar',
+                    'toplanti' => 'Toplantı',
+                    'ziyaret' => 'Ziyaret',
+                    default => ucfirst($event->event_type ?? '-'),
+                };
+
+                // -- SATIR VERİSİ --
+                return [
+                    $event->id,
+                    $event->title,
+                    $event->location ?? '-',
+                    $musteri,
+                    $makine,
+                    $tur,
+                    $event->visit_purpose ?? '-',
+                    $event->start_datetime ? $event->start_datetime->format('d.m.Y H:i') : '-',
+                    $event->end_datetime ? $event->end_datetime->format('d.m.Y H:i') : '-',
+                    $durum,
+                    $event->is_important ? 'Önemli' : 'Normal',
+                    $event->user ? $event->user->name : 'Bilinmiyor',
+                    $event->created_at ? $event->created_at->format('d.m.Y H:i') : '-'
+                ];
+            }
+        );
     }
 }

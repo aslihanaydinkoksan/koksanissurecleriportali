@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
-
+use App\Services\CsvExporter;
 class MaintenanceController extends Controller
 {
     public function __construct()
@@ -467,5 +467,68 @@ class MaintenanceController extends Controller
             'action' => $action,
             'description' => $description
         ]);
+    }
+    /**
+     * Bakım Planlarını CSV olarak dışa aktar
+     */
+    public function export()
+    {
+        $fileName = 'bakim-planlari-' . date('d-m-Y') . '.csv';
+
+        // 1. SORGULAMA
+        // İlişkileri (type, asset, user) dahil ediyoruz.
+        $query = MaintenancePlan::with(['type', 'asset', 'user'])->latest();
+
+        // 2. BAŞLIKLAR
+        $headers = [
+            'ID',
+            'Başlık',
+            'Bakım Türü',
+            'Varlık/Ekipman',
+            'Öncelik',
+            'Durum',
+            'Planlanan Başlangıç',
+            'Planlanan Bitiş',
+            'Gerçekleşen Başlangıç',
+            'Gerçekleşen Bitiş',
+            'Sorumlu Kişi',
+            'Tamamlanma Notu',
+            'Oluşturulma Tarihi'
+        ];
+
+        // 3. EXPORT İŞLEMİ
+        return CsvExporter::streamDownload(
+            query: $query,
+            headers: $headers,
+            fileName: $fileName,
+            rowMapper: function ($plan) {
+
+                // -- ÖNCELİK (Priority) --
+                // Modelindeki 'priority_badge' bir array dönüyor: ['text' => 'Yüksek', 'class' => '...']
+                // Biz sadece metni alıyoruz.
+                $oncelik = $plan->priority_badge['text'] ?? ucfirst($plan->priority);
+
+                // -- DURUM (Status) --
+                // Modelindeki 'status_label' zaten Türkçeleştirilmiş metni veriyor.
+                $durum = $plan->status_label;
+
+                // -- SATIR VERİSİ --
+                return [
+                    $plan->id,
+                    $plan->title,
+                    $plan->type ? $plan->type->name : '-',     // İlişki: type()
+                    $plan->asset ? $plan->asset->name : '-',   // İlişki: asset()
+                    $oncelik,
+                    $durum,
+                    $plan->planned_start_date ? $plan->planned_start_date->format('d.m.Y H:i') : '-',
+                    $plan->planned_end_date ? $plan->planned_end_date->format('d.m.Y H:i') : '-',
+                    $plan->actual_start_date ? $plan->actual_start_date->format('d.m.Y H:i') : '-',
+                    $plan->actual_end_date ? $plan->actual_end_date->format('d.m.Y H:i') : '-',
+                    $plan->user ? $plan->user->name : 'Atanmamış',
+                    $plan->completion_note ?? '-',
+                    $plan->created_at ? $plan->created_at->format('d.m.Y H:i') : '-'
+                ];
+            }
+        );
     }
 }

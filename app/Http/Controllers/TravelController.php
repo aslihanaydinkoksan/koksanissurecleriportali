@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Log;
 use App\Notifications\NewTravelPlanNotification;
+use App\Services\CsvExporter;
 
 class TravelController extends Controller
 {
@@ -205,5 +206,84 @@ class TravelController extends Controller
 
         return redirect()->route('travels.index')
             ->with('success', 'Seyahat planı başarıyla silindi.');
+    }
+    /**
+     * Seyahat Listesini CSV olarak dışa aktar
+     */
+    public function export()
+    {
+        $fileName = 'seyahat-listesi-' . date('d-m-Y') . '.csv';
+
+        // 1. SORGULAMA
+        // User ilişkisini çekiyoruz.
+        $query = Travel::with('user')->latest();
+
+        // 2. BAŞLIKLAR
+        $headers = [
+            'ID',
+            'Seyahat Adı',
+            'Başlangıç Zamanı', // Tarih ve Saati birleştireceğiz
+            'Bitiş Zamanı',     // Tarih ve Saati birleştireceğiz
+            'Durum',
+            'Önem',
+            'Oluşturan Kişi',
+            'Oluşturulma Tarihi'
+        ];
+
+        // 3. SERVİSİ ÇAĞIR
+        return CsvExporter::streamDownload(
+            query: $query,
+            headers: $headers,
+            fileName: $fileName,
+            rowMapper: function ($travel) {
+
+                // -- TARİH VE SAAT BİRLEŞTİRME --
+                // Modelinde 'start_date' Carbon olarak tanımlı ama 'start_time' string.
+                // Format: "05.12.2025 09:00" veya saat yoksa sadece "05.12.2025"
+    
+                $baslangic = '-';
+                if ($travel->start_date) {
+                    $baslangic = $travel->start_date->format('d.m.Y');
+                    if (!empty($travel->start_time)) {
+                        // Veritabanından "09:00:00" gibi gelebilir, sondaki saniyeyi atmak için ilk 5 karakteri alıyoruz
+                        // veya Carbon ile parse edip formatlıyoruz:
+                        $baslangic .= ' ' . Carbon::parse($travel->start_time)->format('H:i');
+                    }
+                }
+
+                $bitis = '-';
+                if ($travel->end_date) {
+                    $bitis = $travel->end_date->format('d.m.Y');
+                    if (!empty($travel->end_time)) {
+                        $bitis .= ' ' . Carbon::parse($travel->end_time)->format('H:i');
+                    }
+                }
+
+                // -- DURUM TÜRKÇELEŞTİRME --
+                // Tabloda 'planned' gibi değerler görüyorum.
+                $durum = match ($travel->status) {
+                    'planned' => 'Planlandı',
+                    'completed' => 'Tamamlandı',
+                    'cancelled' => 'İptal Edildi',
+                    'ongoing' => 'Devam Ediyor',
+                    default => ucfirst($travel->status ?? '-'),
+                };
+
+                // -- ÖNEM DERECESİ --
+                $onem = $travel->is_important ? 'Önemli' : 'Normal';
+
+                // -- SATIR VERİSİ --
+                return [
+                    $travel->id,
+                    $travel->name,
+                    $baslangic,
+                    $bitis,
+                    $durum,
+                    $onem,
+                    $travel->user ? $travel->user->name : 'Bilinmiyor',
+                    $travel->created_at ? $travel->created_at->format('d.m.Y H:i') : '-'
+                ];
+            }
+        );
     }
 }

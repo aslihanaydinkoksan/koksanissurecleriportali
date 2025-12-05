@@ -652,10 +652,7 @@ class HomeController extends Controller
 
         // --- GRAFİK VERİSİ (SANKEY) ---
         $chartData = [];
-
-        // 1. AKIŞ: ETKİNLİKLER (Tip -> Durum)
-        // Eğer event_type veya status boşsa 'Belirsiz' olarak atayalım ki grafikte görünsün.
-        $eventStats = Event::select('event_type', 'visit_status', DB::raw('count(*) as total'))
+        $eventStats = Event::selectRaw('event_type, visit_status, count(*) as total')
             ->groupBy('event_type', 'visit_status')
             ->get();
 

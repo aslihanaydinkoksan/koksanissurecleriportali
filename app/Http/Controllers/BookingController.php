@@ -6,7 +6,10 @@ use App\Models\Booking;
 use Illuminate\Http\Request;
 use App\Models\Travel;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use App\Services\CsvExporter;
+
 
 class BookingController extends Controller
 {
@@ -226,5 +229,103 @@ class BookingController extends Controller
         $booking->delete();
 
         return redirect()->back()->with('success', 'Rezervasyon kaydı silindi.');
+    }
+    /**
+     * Rezervasyonları CSV olarak dışa aktar
+     */
+    public function export()
+    {
+        $fileName = 'rezervasyonlar-' . date('d-m-Y') . '.csv';
+
+        // 1. SORGULAMA
+        // 'bookable' ilişkisini çekiyoruz. Laravel otomatik olarak
+        // Travel ise Travel tablosuna, Event ise Event tablosuna gidip veriyi alacak.
+        $query = Booking::with(['user', 'bookable'])->latest();
+
+        // 2. BAŞLIKLAR
+        $headers = [
+            'ID',
+            'Tür',
+            'Sağlayıcı',
+            'Onay Kodu',
+            'Bağlı Olduğu Kayıt', // Örn: Seyahat: Ankara Gezisi
+            'Başlangıç',
+            'Bitiş',
+            'Maliyet',
+            'Durum',
+            'Notlar',
+            'Oluşturan',
+            'Kayıt Tarihi'
+        ];
+
+        // 3. SERVİSİ ÇAĞIR
+        return CsvExporter::streamDownload(
+            query: $query,
+            headers: $headers,
+            fileName: $fileName,
+            rowMapper: function ($booking) {
+
+                // -- POLİMORFİK VERİ ÇÖZÜMLEME --
+                // Rezervasyon neye bağlı? (Event mi Travel mı?)
+                $bagliKayit = 'Bağımsız / Silinmiş';
+
+                if ($booking->bookable) {
+                    // bookable_type genellikle "App\Models\Travel" şeklinde tam path döner.
+                    // Sondaki sınıf ismini almak için class_basename kullanabiliriz veya string kontrolü yaparız.
+    
+                    if ($booking->bookable_type === 'App\Models\Travel') {
+                        // Travel modelinde isim sütunu: 'name'
+                        $bagliKayit = '[Seyahat] ' . $booking->bookable->name;
+                    } elseif ($booking->bookable_type === 'App\Models\Event') {
+                        // Event modelinde isim sütunu: 'title'
+                        $bagliKayit = '[Etkinlik] ' . $booking->bookable->title;
+                    } else {
+                        // Bilinmeyen bir tür eklenirse
+                        $bagliKayit = '[' . class_basename($booking->bookable_type) . '] ID:' . $booking->bookable_id;
+                    }
+                }
+
+                // -- TÜR TÜRKÇELEŞTİRME --
+                $tur = match ($booking->type) {
+                    'flight' => 'Uçak Bileti',
+                    'hotel' => 'Otel',
+                    'car' => 'Araç Kiralama',
+                    'bus' => 'Otobüs',
+                    'transfer' => 'Transfer',
+                    default => ucfirst($booking->type ?? '-'),
+                };
+
+                // -- DURUM TÜRKÇELEŞTİRME --
+                $durum = match ($booking->status) {
+                    'planned' => 'Planlandı',
+                    'confirmed' => 'Onaylandı',
+                    'cancelled' => 'İptal',
+                    'completed' => 'Tamamlandı',
+                    default => ucfirst($booking->status ?? '-'),
+                };
+
+                // -- MALİYET FORMATLAMA --
+                // 10000.00 -> 10.000,00 TL
+                $maliyet = $booking->cost
+                    ? number_format($booking->cost, 2, ',', '.') . ' TL'
+                    : '-';
+
+                // -- SATIR VERİSİ --
+                return [
+                    $booking->id,
+                    $tur,
+                    $booking->provider_name ?? '-',
+                    $booking->confirmation_code ?? '-',
+                    $bagliKayit, // Hazırladığımız dinamik veri
+                    $booking->start_datetime ? $booking->start_datetime->format('d.m.Y H:i') : '-',
+                    $booking->end_datetime ? $booking->end_datetime->format('d.m.Y H:i') : '-',
+                    $maliyet,
+                    $durum,
+                    $booking->notes ?? '',
+                    $booking->user ? $booking->user->name : 'Bilinmiyor',
+                    $booking->created_at->format('d.m.Y H:i')
+                ];
+            }
+        );
     }
 }

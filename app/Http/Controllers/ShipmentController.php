@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use App\Services\CsvExporter;
 
 class ShipmentController extends Controller
 {
@@ -139,27 +140,16 @@ class ShipmentController extends Controller
      */
     public function export(Shipment $shipment)
     {
-        // YENİ EKLENDİ: Kullanıcının 'lojistik' birimine erişimi var mı?
-        //$this->authorize('access-department', 'lojistik');
+        // 1. Yetki Kontrolü (İsteğe bağlı, kodunda yorum satırıydı)
+        // $this->authorize('access-department', 'lojistik');
+
         $fileName = 'sevkiyat_detay_' . $shipment->id . '.csv';
 
-        $headers = [
-            'Content-type' => 'text/csv; charset=utf-8',
-            'Content-Disposition' => "attachment; filename=\"$fileName\"",
-            'Pragma' => 'no-cache',
-            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires' => '0'
-        ];
-        $sevkiyatTuruTurkce = match ($shipment->shipment_type) {
-            'export' => 'İhracat',
-            'import' => 'İthalat',
-            default => $shipment->shipment_type
-        };
-
-        // --- DİNAMİK SÜTUN ve VERİ OLUŞTURMA ---
-        $ortakColumns = [
+        // 2. Dinamik Başlık Mantığını Hazırla
+        // Tüm senaryolardaki ortak başlık havuzu
+        $ortakBasliklar = [
             'ID',
-            'Araç Tipi',
+            'Araç Tipi', // Buradan kesip araya özel sütunları ekleyeceğiz
             'Kargo Yükü',
             'Kargo Tipi',
             'Kargo Miktarı',
@@ -168,53 +158,79 @@ class ShipmentController extends Controller
             'Açıklamalar',
             'İhracat/İthalat'
         ];
-        $ortakData = [
-            $shipment->id,
-            ucfirst($shipment->arac_tipi),
-            $shipment->kargo_icerigi,
-            $shipment->kargo_tipi,
-            $shipment->kargo_miktari,
-            Carbon::parse($shipment->cikis_tarihi)->format('d.m.Y H:i'),
-            Carbon::parse($shipment->tahmini_varis_tarihi)->format('d.m.Y H:i'),
-            $shipment->aciklamalar,
-            $sevkiyatTuruTurkce
-        ];
 
-        $ozelColumns = [];
-        $ozelData = [];
+        $ozelBasliklar = [];
 
-        if ($shipment->arac_tipi === 'tır' || $shipment->arac_tipi === 'kamyon') {
-            // YENİ SÜTUNLARI EKLE
-            $ozelColumns = ['Plaka', 'Dorse Plakası', 'Şoför Adı', 'Kalkış Noktası', 'Varış Noktası'];
-            $ozelData = [
-                $shipment->plaka,
-                $shipment->dorse_plakasi,
-                $shipment->sofor_adi,
-                $shipment->kalkis_noktasi, // <-- YENİ
-                $shipment->varis_noktasi   // <-- YENİ
-            ];
-
-            if ($shipment->arac_tipi === 'kamyon' && isset($ozelData[1])) {
-                $ozelData[1] = '';
-            }
+        // Araç tipine göre araya girecek başlıkları seç
+        if (in_array($shipment->arac_tipi, ['tır', 'kamyon'])) {
+            $ozelBasliklar = ['Plaka', 'Dorse Plakası', 'Şoför Adı', 'Kalkış Noktası', 'Varış Noktası'];
         } elseif ($shipment->arac_tipi === 'gemi') {
-            $ozelColumns = ['IMO Numarası', 'Gemi Adı', 'Kalkış Limanı', 'Varış Limanı'];
-            $ozelData = [$shipment->imo_numarasi, $shipment->gemi_adi, $shipment->kalkis_limani, $shipment->varis_limani];
+            $ozelBasliklar = ['IMO Numarası', 'Gemi Adı', 'Kalkış Limanı', 'Varış Limanı'];
         }
 
-        $finalColumns = array_merge(array_slice($ortakColumns, 0, 2), $ozelColumns, array_slice($ortakColumns, 2));
-        $finalData = array_merge(array_slice($ortakData, 0, 2), $ozelData, array_slice($ortakData, 2));
-        // --- DİNAMİK SÜTUN ve VERİ OLUŞTURMA SONU ---
+        // Başlıkları Birleştir: [İlk 2 Sütun] + [Özel Sütunlar] + [Kalan Sütunlar]
+        $finalHeaders = array_merge(
+            array_slice($ortakBasliklar, 0, 2),
+            $ozelBasliklar,
+            array_slice($ortakBasliklar, 2)
+        );
 
-        $callback = function () use ($finalColumns, $finalData) {
-            $file = fopen('php://output', 'w');
-            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
-            fputcsv($file, $finalColumns, ';');
-            fputcsv($file, $finalData, ';');
-            fclose($file);
-        };
+        // 3. Servisi Çağır
+        // Tek bir kayıt olsa bile standart yapı bozulmasın diye 'where' ile sorgu gibi gönderiyoruz.
+        return CsvExporter::streamDownload(
+            query: Shipment::where('id', $shipment->id),
+            headers: $finalHeaders,
+            fileName: $fileName,
+            rowMapper: function ($record) {
+                // Not: $record, burada $shipment'in veritabanından gelen kopyasıdır.
+    
+                $sevkiyatTuru = match ($record->shipment_type) {
+                    'export' => 'İhracat',
+                    'import' => 'İthalat',
+                    default => $record->shipment_type
+                };
 
-        return response()->stream($callback, 200, $headers);
+                // Ortak Veriler
+                $ortakData = [
+                    $record->id,
+                    ucfirst($record->arac_tipi),
+                    $record->kargo_icerigi,
+                    $record->kargo_tipi,
+                    $record->kargo_miktari,
+                    $record->cikis_tarihi ? Carbon::parse($record->cikis_tarihi)->format('d.m.Y H:i') : '-',
+                    $record->tahmini_varis_tarihi ? Carbon::parse($record->tahmini_varis_tarihi)->format('d.m.Y H:i') : '-',
+                    $record->aciklamalar,
+                    $sevkiyatTuru
+                ];
+
+                // Özel Veriler (Başlık sırasına sadık kalarak)
+                $ozelData = [];
+                if (in_array($record->arac_tipi, ['tır', 'kamyon'])) {
+                    $ozelData = [
+                        $record->plaka,
+                        // Kamyon ise Dorse Plakası boş string olsun
+                        $record->arac_tipi === 'kamyon' ? '' : $record->dorse_plakasi,
+                        $record->sofor_adi,
+                        $record->kalkis_noktasi,
+                        $record->varis_noktasi
+                    ];
+                } elseif ($record->arac_tipi === 'gemi') {
+                    $ozelData = [
+                        $record->imo_numarasi,
+                        $record->gemi_adi,
+                        $record->kalkis_limani,
+                        $record->varis_limani
+                    ];
+                }
+
+                // Verileri aynı mantıkla birleştirip döndür
+                return array_merge(
+                    array_slice($ortakData, 0, 2),
+                    $ozelData,
+                    array_slice($ortakData, 2)
+                );
+            }
+        );
     }
 
     public function destroy(Shipment $shipment)

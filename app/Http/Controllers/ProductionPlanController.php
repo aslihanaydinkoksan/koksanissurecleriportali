@@ -7,6 +7,7 @@ use App\Models\Birim;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Services\CsvExporter;
 
 class ProductionPlanController extends Controller
 {
@@ -150,5 +151,74 @@ class ProductionPlanController extends Controller
 
         return redirect()->route('production.plans.index')
             ->with('success', 'Üretim planı başarıyla silindi.');
+    }
+    /**
+     * Üretim Planlarını CSV olarak dışa aktar
+     */
+    public function export()
+    {
+        $fileName = 'uretim-planlari-' . date('d-m-Y') . '.csv';
+
+        // 1. Sorgu
+        // 'user' ilişkisi user_id üzerinden veriyi çeker.
+        $query = ProductionPlan::with('user')->latest();
+
+        // 2. Başlıklar
+        $headers = [
+            'ID',
+            'Plan Başlığı',
+            'Başlangıç Tarihi',
+            'Önem durumu',
+            'Oluşturan',
+            'Detaylar (Makine | Ürün | Miktar)', // JSON verisini buraya işleyeceğiz
+            'Oluşturulma Tarihi'
+        ];
+
+        // 3. Servisi Çağır
+        return CsvExporter::streamDownload(
+            query: $query,
+            headers: $headers,
+            fileName: $fileName,
+            rowMapper: function ($plan) {
+
+                // -- JSON PARSE İŞLEMİ --
+                // Veritabanındaki [{"machine":"...","product":"...","quantity":"..."}] yapısını okuyoruz
+                $detailsRaw = $plan->plan_details;
+
+                // Eğer veri string geliyorsa array'e çevir, zaten array ise öyle kalsın (Laravel cast özelliği varsa)
+                $detailsArray = is_string($detailsRaw) ? json_decode($detailsRaw, true) : $detailsRaw;
+
+                $detailsString = '';
+
+                if (is_array($detailsArray)) {
+                    foreach ($detailsArray as $item) {
+                        // JSON içindeki key'ler görüntüden anlaşıldığı kadarıyla: machine, product, quantity
+                        $makine = $item['machine'] ?? '-';
+                        $urun = $item['product'] ?? '-'; // Burası muhtemelen ID'dir
+                        $adet = $item['quantity'] ?? '0';
+
+                        // Excel hücresinde alt alta görünsün diye araya ayraç koyuyoruz
+                        // Örnek çıktı: [M:12345 - Ü:6789 - Adet:100] | [M:....]
+                        $detailsString .= "[Makine: $makine - Ürün: $urun - Miktar: $adet] | ";
+                    }
+                } else {
+                    $detailsString = 'Detay Yok';
+                }
+
+                // Sondaki fazlalık " | " işaretini temizleyelim
+                $detailsString = rtrim($detailsString, " | ");
+
+                // -- Satırı Döndür --
+                return [
+                    $plan->id,
+                    $plan->plan_title,
+                    $plan->week_start_date ? Carbon::parse($plan->week_start_date)->format('d.m.Y') : '-',
+                    $plan->is_important ? 'Önemli' : 'Normal',
+                    $plan->user ? $plan->user->name : 'Bilinmiyor',
+                    $detailsString, // Hazırladığımız detay metni
+                    $plan->created_at->format('d.m.Y H:i')
+                ];
+            }
+        );
     }
 }

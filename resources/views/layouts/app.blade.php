@@ -303,6 +303,14 @@
                                             class="fa-solid fa-right-to-bracket"></i><span>Giriş Yap</span></a></li>
                             @endif
                         @else
+                            {{-- GLOBAL DEĞİŞKENLER VE YETKİ HAZIRLIĞI --}}
+                            @php
+                                $user = Auth::user();
+                                $isAdmin = $user->role === 'admin';
+                                // Slug kontrolünü güvenli hale getiriyoruz
+                                $deptSlug = $user->department ? trim($user->department->slug) : null;
+                            @endphp
+
                             <li class="nav-item"><a class="nav-link" href="{{ route('general.calendar') }}"><i
                                         class="fa-solid fa-calendar-days" style="color: #667EEA;"></i><span>Genel
                                         Takvim</span></a></li>
@@ -310,6 +318,7 @@
                                             class="fa-solid fa-calendar-check"
                                         style="color: #4FD1C5;"></i><span>Takvimim</span></a></li> @endauth
 
+                            {{-- GÖREVLER & ATAMALAR (Herkes görebilir) --}}
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" role="button"
                                     data-bs-toggle="dropdown"><i class="fa-solid fa-car-side"
@@ -344,20 +353,8 @@
                                 </ul>
                             </li>
 
-                            {{-- @if (Auth::user()->hasDepartment('İdari İşler') || Auth::user()->role == 'admin')
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('my-assignments.index') }}">
-                                        <i class="fas fa-tasks" style="color: #df6060;"></i><span>Görevlerim</span>
-                                        @if (Auth::user()->pending_assignments_count > 0)
-                                            <span
-                                                class="badge bg-danger rounded-pill">{{ Auth::user()->pending_assignments_count }}</span>
-                                        @endif
-                                    </a>
-                                </li>
-                            @endif --}}
-
-                            @if (Auth::user()->hasRole('admin') || Auth::user()->hasDepartment('Lojistik'))
-                                <li class="nav-item">
+                            {{-- LOJİSTİK MENÜSÜ --}}
+                            @can('access-department', 'lojistik')
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown"><i class="fa-solid fa-route"
@@ -372,9 +369,10 @@
                                                 Listesi</a></li>
                                     </ul>
                                 </li>
-                            @endif
+                            @endcan
 
-                            @if (Auth::user()->hasRole('admin') || Auth::user()->hasDepartment('Üretim'))
+                            {{-- ÜRETİM MENÜSÜ --}}
+                            @can('access-department', 'uretim')
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown"><i class="fa-solid fa-industry"
@@ -389,10 +387,10 @@
                                                 Listesi</a></li>
                                     </ul>
                                 </li>
-                            @endif
+                            @endcan
 
                             {{-- BAKIM DEPARTMANI MENÜSÜ --}}
-                            @if (Auth::user()->hasRole('admin') || Auth::user()->hasDepartment('Bakım'))
+                            @can('access-department', 'bakim')
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown">
@@ -414,7 +412,7 @@
                                             </a>
                                         </li>
                                         {{-- SADECE Admin, Yönetici veya Müdür ise bu menüyü görsün --}}
-                                        @if (Auth::user()->role === 'admin' || Auth::user()->isManagerOrDirector())
+                                        @if ($user->role === 'admin' || $user->isManagerOrDirector())
                                             <li>
                                                 <hr class="dropdown-divider">
                                             </li>
@@ -441,23 +439,11 @@
                                         </li>
                                     </ul>
                                 </li>
-                            @endif
+                            @endcan
 
                             {{-- İDARİ İŞLER MENÜSÜ --}}
-                            @php
-                                $user = Auth::user();
-                                $isAdmin = $user->role === 'admin';
-                                $deptSlug = Auth::user()->department ? trim(Auth::user()->department->slug) : null;
-
-                                // İdari İşler Ana Menüsünü Kimler Görebilir? (Hizmet + Ulaştırma + Admin)
-                                $canSeeParentMenu = $isAdmin || in_array($deptSlug, ['hizmet', 'ulastirma']);
-
-                                // İdari İşler Alt İşlemlerini Kimler Yapabilir?
-                                // NOT: Eğer 'ulastirma' departmanının da etkinlik, seyahat vs. görmesini istiyorsan
-                                // aşağıdaki diziye 'ulastirma'yı da eklemelisin. Şu an sadece 'hizmet' ve Admin görüyor.
-                                $isIdariIslerPersoneli = $isAdmin || $deptSlug === 'hizmet';
-                            @endphp
-                            @if ($canSeeParentMenu)
+                            {{-- 1. ADIM: Menü Başlığını Kim Görür? (Hizmet VEYA Ulaştırma VEYA Admin) --}}
+                            @if (Gate::check('access-department', 'hizmet') || Gate::check('access-department', 'ulastirma'))
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown">
@@ -467,8 +453,9 @@
 
                                     <ul class="dropdown-menu dropdown-menu-end">
 
-                                        {{-- 1. ETKİNLİK YÖNETİMİ --}}
-                                        @if ($isIdariIslerPersoneli)
+                                        {{-- 2. ADIM: Sadece 'Hizmet' (İdari İşler) Personeli ve Admin Görebilir --}}
+                                        @can('access-department', 'hizmet')
+                                            {{-- ETKİNLİK YÖNETİMİ --}}
                                             <li>
                                                 <a class="dropdown-item" href="{{ route('service.events.create') }}">
                                                     <i class="fa-solid fa-calendar-plus" style="color: #3B82F6;"></i> Yeni
@@ -484,11 +471,11 @@
                                             <li>
                                                 <hr class="dropdown-divider">
                                             </li>
-                                        @endif
+                                        @endcan
 
-                                        {{-- 2. ARAÇ YÖNETİMİ --}}
-                                        {{-- Araçları Ulaştırma departmanı da görebilmeli, o yüzden buraya özel kontrol ekleyebiliriz --}}
-                                        @if ($isIdariIslerPersoneli || $deptSlug === 'ulastirma')
+                                        {{-- 3. ADIM: Hem 'Hizmet' Hem 'Ulaştırma' Personeli (ve Admin) Görebilir --}}
+                                        {{-- Araçları her iki departman da yönetiyor --}}
+                                        @if (Gate::check('access-department', 'hizmet') || Gate::check('access-department', 'ulastirma'))
                                             <li>
                                                 <a class="dropdown-item" href="{{ route('service.vehicles.index') }}">
                                                     <i class="fa-solid fa-car" style="color: #F59E0B;"></i> Şirket
@@ -504,8 +491,9 @@
                                             </li>
                                         @endif
 
-                                        {{-- 3. SEYAHAT YÖNETİMİ --}}
-                                        @if ($isIdariIslerPersoneli)
+                                        {{-- 4. ADIM: Geri kalanlar yine sadece 'Hizmet' personeline özel --}}
+                                        @can('access-department', 'hizmet')
+                                            {{-- SEYAHAT YÖNETİMİ --}}
                                             <li>
                                                 <hr class="dropdown-divider">
                                             </li>
@@ -520,10 +508,8 @@
                                                     Listesi
                                                 </a>
                                             </li>
-                                        @endif
 
-                                        {{-- 4. FUAR YÖNETİMİ --}}
-                                        @if ($isIdariIslerPersoneli)
+                                            {{-- FUAR YÖNETİMİ --}}
                                             <li>
                                                 <hr class="dropdown-divider">
                                             </li>
@@ -534,10 +520,8 @@
                                                     Yönetimi
                                                 </a>
                                             </li>
-                                        @endif
 
-                                        {{-- 5. REZERVASYON & MÜŞTERİ YÖNETİMİ --}}
-                                        @if ($isIdariIslerPersoneli)
+                                            {{-- REZERVASYON & MÜŞTERİ --}}
                                             <li>
                                                 <hr class="dropdown-divider">
                                             </li>
@@ -556,7 +540,7 @@
                                                     Yönetimi
                                                 </a>
                                             </li>
-                                        @endif
+                                        @endcan
 
                                     </ul>
                                 </li>
@@ -571,11 +555,9 @@
 
                                 <a class="nav-link position-relative" data-bs-toggle="dropdown" href="#"
                                     role="button">
-                                    {{-- İKON: id="notification-icon" EKLENDİ --}}
                                     <i class="fa-solid fa-bell fa-lg" id="notification-icon"
                                         style="color: {{ $iconColor }}; transition: color 0.3s ease;"></i>
 
-                                    {{-- ROZET: id="notification-badge" EKLENDİ --}}
                                     <span id="notification-badge"
                                         class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                                         style="display: {{ $unreadCount > 0 ? 'inline-block' : 'none' }};">
@@ -589,7 +571,6 @@
                                         style="border-radius: 1rem 1rem 0 0;">
                                         <h6 class="mb-0 fw-bold text-dark">Bildirimler</h6>
 
-                                        {{-- TÜMÜNÜ OKU: id="mark-all-read" EKLENDİ (JS ile gizleyip açacağız) --}}
                                         <a href="{{ route('notifications.readAll') }}" id="mark-all-read"
                                             class="text-decoration-none small fw-bold text-primary"
                                             style="display: {{ $unreadCount > 0 ? 'inline-block' : 'none' }};">
@@ -597,7 +578,6 @@
                                         </a>
                                     </div>
 
-                                    {{-- LİSTE: id="notification-list" EKLENDİ --}}
                                     <div id="notification-list" class="list-group list-group-flush"
                                         style="max-height: 300px; overflow-y: auto;">
                                         @forelse (auth()->user()->unreadNotifications as $notification)
@@ -645,7 +625,7 @@
                                                     class="fa-solid fa-user-plus" style="color: #667EEA;"></i> Kullanıcı
                                                 Ekle</a></li>
                                     @endcan
-                                    @if (Auth::user()->role === 'admin')
+                                    @if ($user->role === 'admin')
                                         <li><a class="dropdown-item" href="{{ route('users.index') }}"><i
                                                     class="fa-solid fa-list" style="color: #31317e;"></i>
                                                 Kullanıcıları
@@ -697,7 +677,6 @@
         document.addEventListener('DOMContentLoaded', function() {
 
             // --- 1. LOADER (YÜKLENİYOR EKRANI) ---
-            // Sayfa tamamen hazır olduğunda loader'ı kaldır
             const loader = document.getElementById('global-loader');
             if (loader) {
                 window.addEventListener('load', function() {
@@ -705,7 +684,6 @@
                         loader.classList.add('loaded');
                     }, 150);
                 });
-                // Güvenlik önlemi: 3 saniye geçse bile loader gitmediyse zorla kaldır (Donmayı önler)
                 setTimeout(function() {
                     if (!loader.classList.contains('loaded')) {
                         loader.classList.add('loaded');
@@ -749,7 +727,6 @@
                 }
             });
 
-            // PHP Session Mesajlarını JS ile Tetikle
             @if (session('success'))
                 Toast.fire({
                     icon: 'success',
@@ -769,7 +746,6 @@
                 });
             @endif
 
-            // Global fonksiyon olarak dışarı açıyoruz
             window.showToast = function(message, type = 'success') {
                 Toast.fire({
                     icon: type,
@@ -778,7 +754,6 @@
             }
 
             // --- 4. AKILLI SİLME (DELETE CONFIRMATION) ---
-            // Tarayıcının varsayılan confirm kutusunu iptal et
             document.querySelectorAll('form').forEach(form => {
                 if (form.getAttribute('onsubmit') && form.getAttribute('onsubmit').includes('confirm')) {
                     form.removeAttribute('onsubmit');
@@ -789,7 +764,6 @@
                 const form = e.target;
                 const methodInput = form.querySelector('input[name="_method"]');
 
-                // Sadece DELETE metodlu formlarda çalış
                 if (form.tagName === 'FORM' && methodInput && methodInput.value.toUpperCase() ===
                     'DELETE') {
                     e.preventDefault();
@@ -832,7 +806,6 @@
                                                 'Kayıt başarıyla silindi.', 'success');
                                             window.location.reload();
                                         } else {
-                                            // HTML döndüyse (redirect olduysa) hata kontrolü yap
                                             const htmlText = await response.text();
                                             const parser = new DOMParser();
                                             const doc = parser.parseFromString(htmlText,
@@ -868,10 +841,6 @@
             });
 
             // --- 5. BİLDİRİM VE SİSTEM GÜNCELLEME KONTROLÜ ---
-            // İki ayrı setInterval yerine tek bir zamanlayıcı kullanmak daha performanslıdır, 
-            // ama yapıları farklı olduğu için bağımsız bırakıyoruz.
-
-            // A) Bildirim Kontrolü
             setInterval(function() {
                 fetch("{{ route('notifications.check') }}")
                     .then(res => res.ok ? res.json() : Promise.reject(res))
@@ -904,10 +873,23 @@
                         return;
                     }
 
-                    fetch("{{ route('system.check_updates') }}")
-                        .then(res => res.json())
+                    fetch("{{ route('system.check_updates') }}", {
+                            // BU KISIM EKLENDİ: Laravel'e bunun bir AJAX isteği olduğunu söylüyoruz
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                        .then(res => {
+                            // Eğer oturum düşmüşse (401 veya 419) yenileme yapma veya sessiz kal
+                            if (res.status === 401 || res.status === 419) {
+                                return null;
+                            }
+                            return res.json();
+                        })
                         .then(data => {
-                            if (data.hash && data.hash !== initialHash) {
+                            if (data && data.hash && data.hash !== initialHash) {
                                 console.log('Sistem güncellendi, sayfa yenileniyor...');
                                 window.location.reload();
                             }
