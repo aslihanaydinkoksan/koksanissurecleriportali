@@ -171,6 +171,26 @@
                 transform: translateY(0);
             }
         }
+
+        /* Yeşil Excel Butonu */
+        .btn-export-global {
+            background: linear-gradient(135deg, #28c76f 0%, #1e7e34 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 0.6rem 1.5rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .btn-export-global:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 199, 111, 0.3);
+            color: white;
+        }
     </style>
 <?php $__env->stopPush(); ?>
 
@@ -184,6 +204,9 @@
                 <p>İşletmenize ait makine parkuru, bölgeler ve tesisatların yönetimi.</p>
             </div>
             <div>
+                <a href="<?php echo e(route('maintenance.assets.export')); ?>" class="btn btn-export-global shadow-sm">
+                    <i class="fas fa-file-excel me-2"></i>Makine&Varlık Listesini Excel'e Aktar
+                </a>
                 <a href="<?php echo e(route('maintenance.assets.create')); ?>" class="btn btn-modern-add">
                     <i class="fas fa-plus me-2"></i> Yeni Makine/Varlık Ekle
                 </a>

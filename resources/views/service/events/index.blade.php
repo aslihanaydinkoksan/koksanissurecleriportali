@@ -1,8 +1,8 @@
 @extends('layouts.app')
+@section('title', 'Etkinlik Listesi')
 
 @push('styles')
     <style>
-        /* --- ORTAK SAYFA STİLLERİ (Travels/Bookings ile Birebir Aynı) --- */
         .page-hero {
             background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
             border-radius: 1rem;
@@ -293,6 +293,28 @@
         .btn-action-with-text.delete:hover {
             background: #fee2e2;
         }
+
+        /* Excel Export Buton Stili */
+        .btn-export-global {
+            background: linear-gradient(135deg, #28c76f 0%, #1e7e34 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 0.6rem 1.5rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            /* Butonlar arası boşluk */
+        }
+
+        .btn-export-global:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 199, 111, 0.3);
+            color: white;
+        }
     </style>
 @endpush
 
@@ -341,6 +363,9 @@
                 @if (request('event_type') == 'fuar')
 
                     <div class="d-flex justify-content-end mb-4">
+                        <a href="{{ route('service.events.export', request()->all()) }}" class="btn-export-global">
+                            <i class="fas fa-file-excel me-2"></i> Fuar Listesini Excel'e Aktar
+                        </a>
                         <a href="{{ route('service.events.create') }}" class="btn-gradient">
                             <i class="fa-solid fa-plus me-2"></i> Yeni Fuar Ekle
                         </a>
@@ -532,7 +557,11 @@
                             </form>
                         </div>
                     </div>
-
+                    <div class="mb-4 text-end">
+                        <a href="{{ route('service.events.export', request()->all()) }}" class="btn-export-global">
+                            <i class="fas fa-file-excel me-2"></i> Tüm Listeyi Excel'e Aktar
+                        </a>
+                    </div>
                     {{-- Tablo Görünümü --}}
                     <div class="content-card">
                         @if ($events->isEmpty())
@@ -654,6 +683,7 @@
                                                                 <i class="fa-solid fa-pen"></i>
                                                                 <span>Düzenle</span>
                                                             </a>
+
 
                                                             <form action="{{ route('service.events.destroy', $event) }}"
                                                                 method="POST" class="d-inline"

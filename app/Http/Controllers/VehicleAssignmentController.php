@@ -834,4 +834,62 @@ class VehicleAssignmentController extends Controller
             }
         );
     }
+    private function exportListLogic($request)
+    {
+        $filterType = $request->query('type');
+        $fileName = 'gorev-listesi-' . date('d.m.Y') . '.csv';
+
+        $query = VehicleAssignment::with(['vehicle', 'responsible'])->latest();
+        if ($filterType)
+            $query->where('assignment_type', $filterType);
+
+        return CsvExporter::streamDownload($query, [
+            'ID',
+            'Başlık',
+            'Plaka',
+            'Sorumlu',
+            'Durum'
+        ], function ($task) {
+            return [
+                $task->id,
+                $task->title,
+                $task->vehicle->plate_number ?? '-',
+                $task->responsible->name ?? '-',
+                $task->status
+            ];
+        }, $fileName);
+    }
+    /**
+     * 2. TEKİL GÖREV EMRİ (YENİ)
+     * Şoföre verilecek kağıt çıktı
+     */
+    public function exportDetail(VehicleAssignment $assignment)
+    {
+        $fileName = 'gorev-emri-' . $assignment->id . '.csv';
+
+        $callback = function () use ($assignment) {
+            $file = fopen('php://output', 'w');
+            fputs($file, "\xEF\xBB\xBF");
+
+            fputcsv($file, ['ARAÇ/GÖREV EMRİ'], ';');
+            fputcsv($file, [], ';');
+
+            fputcsv($file, ['Görev ID', $assignment->id], ';');
+            fputcsv($file, ['Görev Başlığı', $assignment->title], ';');
+            fputcsv($file, ['Atanan Araç', $assignment->vehicle->plate_number ?? 'Araçsız'], ';');
+            fputcsv($file, ['Sorumlu', $assignment->responsible->name ?? '-'], ';');
+            fputcsv($file, ['Çıkış KM', $assignment->start_km ?? '-'], ';');
+            fputcsv($file, ['Dönüş KM', $assignment->end_km ?? '-'], ';');
+
+            fputcsv($file, [], ';');
+            fputcsv($file, ['Açıklama', $assignment->task_description], ';');
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            "Content-type" => "text/csv; charset=utf-8",
+            "Content-Disposition" => "attachment; filename=$fileName"
+        ]);
+    }
 }

@@ -320,6 +320,11 @@
             color: white;
         }
 
+        .modern-btn-export {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+
         .empty-state {
             text-align: center;
             padding: 4rem 2rem;
@@ -517,6 +522,9 @@
                 <i class="fas fa-search"></i>
                 <input type="text" placeholder="Görev ara..." id="searchInput">
             </div>
+            <a href="<?php echo e(route('service.assignments.export', ['type' => 'general'])); ?>" class="modern-btn modern-btn-export">
+                <i class="fas fa-file-excel"></i>Excel'e Aktar
+            </a>
             <a href="<?php echo e(route('service.assignments.create')); ?>" class="modern-btn modern-btn-primary">
                 <i class="fas fa-plus"></i>
                 Yeni Görev Oluştur

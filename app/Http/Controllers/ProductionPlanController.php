@@ -153,72 +153,81 @@ class ProductionPlanController extends Controller
             ->with('success', 'Üretim planı başarıyla silindi.');
     }
     /**
-     * Üretim Planlarını CSV olarak dışa aktar
+     * 1. TOPLU LİSTE İNDİR (Excel)
+     * Rota: /production/plans/export-list
      */
-    public function export()
+    public function exportList()
     {
-        $fileName = 'uretim-planlari-' . date('d-m-Y') . '.csv';
-
-        // 1. Sorgu
-        // 'user' ilişkisi user_id üzerinden veriyi çeker.
-        $query = ProductionPlan::with('user')->latest();
-
-        // 2. Başlıklar
-        $headers = [
-            'ID',
-            'Plan Başlığı',
-            'Başlangıç Tarihi',
-            'Önem durumu',
-            'Oluşturan',
-            'Detaylar (Makine | Ürün | Miktar)', // JSON verisini buraya işleyeceğiz
-            'Oluşturulma Tarihi'
-        ];
-
-        // 3. Servisi Çağır
         return CsvExporter::streamDownload(
-            query: $query,
-            headers: $headers,
-            fileName: $fileName,
+            query: ProductionPlan::with(['user'])->latest(),
+            headers: ['ID', 'Başlık', 'Başlangıç', 'Önem', 'Oluşturan', 'Oluşturulma'],
+            fileName: 'tum-uretim-planlari-' . date('d-m-Y') . '.csv',
             rowMapper: function ($plan) {
-
-                // -- JSON PARSE İŞLEMİ --
-                // Veritabanındaki [{"machine":"...","product":"...","quantity":"..."}] yapısını okuyoruz
-                $detailsRaw = $plan->plan_details;
-
-                // Eğer veri string geliyorsa array'e çevir, zaten array ise öyle kalsın (Laravel cast özelliği varsa)
-                $detailsArray = is_string($detailsRaw) ? json_decode($detailsRaw, true) : $detailsRaw;
-
-                $detailsString = '';
-
-                if (is_array($detailsArray)) {
-                    foreach ($detailsArray as $item) {
-                        // JSON içindeki key'ler görüntüden anlaşıldığı kadarıyla: machine, product, quantity
-                        $makine = $item['machine'] ?? '-';
-                        $urun = $item['product'] ?? '-'; // Burası muhtemelen ID'dir
-                        $adet = $item['quantity'] ?? '0';
-
-                        // Excel hücresinde alt alta görünsün diye araya ayraç koyuyoruz
-                        // Örnek çıktı: [M:12345 - Ü:6789 - Adet:100] | [M:....]
-                        $detailsString .= "[Makine: $makine - Ürün: $urun - Miktar: $adet] | ";
-                    }
-                } else {
-                    $detailsString = 'Detay Yok';
-                }
-
-                // Sondaki fazlalık " | " işaretini temizleyelim
-                $detailsString = rtrim($detailsString, " | ");
-
-                // -- Satırı Döndür --
                 return [
                     $plan->id,
                     $plan->plan_title,
                     $plan->week_start_date ? Carbon::parse($plan->week_start_date)->format('d.m.Y') : '-',
                     $plan->is_important ? 'Önemli' : 'Normal',
-                    $plan->user ? $plan->user->name : 'Bilinmiyor',
-                    $detailsString, // Hazırladığımız detay metni
+                    $plan->user ? $plan->user->name : '-',
                     $plan->created_at->format('d.m.Y H:i')
                 ];
             }
         );
+    }
+
+    /**
+     * 2. TEKİL İŞ EMRİ FİŞİ İNDİR (Excel)
+     * Rota: /production/plans/{productionPlan}/export
+     */
+    public function export(ProductionPlan $productionPlan)
+    {
+        $fileName = 'is-emri-' . $productionPlan->id . '.csv';
+
+        // Detay fişi olduğu için başlıkları yan yana değil, form gibi alt alta yapıyoruz
+        // Bu yüzden callback içinde manuel yazacağız.
+        $headers = ['Content-Type' => 'text/csv; charset=utf-8', 'Content-Disposition' => "attachment; filename=$fileName"];
+
+        $callback = function () use ($productionPlan) {
+            $file = fopen('php://output', 'w');
+            fputs($file, "\xEF\xBB\xBF"); // BOM
+
+            // FİŞ BAŞLIĞI
+            fputcsv($file, ['ÜRETİM İŞ EMRİ DETAYI'], ';');
+            fputcsv($file, [], ';'); // Boş satır
+
+            // TEMEL BİLGİLER (Alt alta)
+            fputcsv($file, ['Plan ID', $productionPlan->id], ';');
+            fputcsv($file, ['Başlık', $productionPlan->plan_title], ';');
+            fputcsv($file, ['Başlangıç Tarihi', $productionPlan->week_start_date], ';');
+            fputcsv($file, ['Oluşturan', $productionPlan->user->name ?? '-'], ';');
+            fputcsv($file, ['Önem Derecesi', $productionPlan->is_important ? 'YÜKSEK' : 'Normal'], ';');
+
+            fputcsv($file, [], ';');
+            fputcsv($file, ['--- ÜRETİM DETAYLARI / REÇETE ---'], ';');
+
+            // JSON VERİSİNİ TABLO GİBİ YAZALIM
+            // Başlıklar
+            fputcsv($file, ['Makine', 'Ürün', 'Miktar'], ';');
+
+            $details = is_string($productionPlan->plan_details)
+                ? json_decode($productionPlan->plan_details, true)
+                : $productionPlan->plan_details;
+
+            if ($details && is_array($details)) {
+                foreach ($details as $item) {
+                    fputcsv($file, [
+                        $item['machine'] ?? '-',
+                        $item['product'] ?? '-',
+                        $item['quantity'] ?? '0'
+                    ], ';');
+                }
+            } else {
+                fputcsv($file, ['Detay Yok'], ';');
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

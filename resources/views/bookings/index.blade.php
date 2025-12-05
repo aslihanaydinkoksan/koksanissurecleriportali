@@ -112,6 +112,26 @@
             text-align: center;
             color: #6c757d;
         }
+
+        /* Yeşil Excel Butonu */
+        .btn-export-global {
+            background: linear-gradient(135deg, #28c76f 0%, #1e7e34 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 0.6rem 1.5rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .btn-export-global:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 199, 111, 0.3);
+            color: white;
+        }
     </style>
 
     <div class="container py-4">
@@ -129,6 +149,11 @@
                             <span class="small opacity-75">Toplam Kayıt</span>
                         </div>
                     </div>
+                </div>
+                <div class="d-flex justify-content-end mb-4">
+                    <a href="{{ route('bookings.export') }}" class="btn-export-global">
+                        <i class="fas fa-file-excel me-2"></i> Rezervasyon Listesini Excel'e Aktar
+                    </a>
                 </div>
 
                 {{-- Table Card --}}

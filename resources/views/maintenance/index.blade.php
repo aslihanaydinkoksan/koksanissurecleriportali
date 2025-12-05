@@ -306,6 +306,26 @@
             border-top: 1px solid rgba(0, 0, 0, 0.05) !important;
             padding: 1.5rem 2rem !important;
         }
+
+        /* Yeşil Excel Butonu */
+        .btn-export-global {
+            background: linear-gradient(135deg, #28c76f 0%, #1e7e34 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 0.6rem 1.5rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .btn-export-global:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 199, 111, 0.3);
+            color: white;
+        }
     </style>
 @endpush
 
@@ -321,6 +341,9 @@
                         <p>Bakım ve arıza planlarını görüntüleyin, yönetin ve takip edin.</p>
                     </div>
                     <div>
+                        <a href="{{ route('maintenance.export_list') }}" class="btn btn-export-global shadow-sm">
+                            <i class="fas fa-file-excel me-2"></i>Plan Listesini Excel'e Aktar
+                        </a>
                         <a href="{{ route('maintenance.create') }}" class="btn btn-apply-filter shadow-sm">
                             <i class="fas fa-plus me-2"></i> Yeni Bakım Planı
                         </a>

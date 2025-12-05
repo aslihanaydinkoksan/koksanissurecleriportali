@@ -167,7 +167,7 @@
             box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
         }
 
-        /* Filtre butonları */
+        /* Butonlar */
         .btn-apply-filter {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
@@ -199,6 +199,27 @@
             background: #f8f9fa;
             border-color: #dee2e6;
             transform: translateY(-2px);
+        }
+
+        /* YENİ: Global Export Butonu Stili */
+        .btn-export-global {
+            background: linear-gradient(135deg, #28c76f 0%, #1e7e34 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 2rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 199, 111, 0.3);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-export-global:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 199, 111, 0.4);
+            color: white;
         }
 
         /* Ana liste kartı */
@@ -309,6 +330,12 @@
             color: white;
         }
 
+        /* YENİ: Tablo İçi Yeşil Export Butonu */
+        .btn-action.btn-success {
+            background: linear-gradient(135deg, #28c76f 0%, #1e7e34 100%);
+            color: white;
+        }
+
         /* Pagination */
         .pagination {
             margin: 0;
@@ -377,14 +404,18 @@
                 height: 35px;
                 font-size: 0.8rem;
             }
+
+            .btn-export-global {
+                width: 100%;
+                justify-content: center;
+                margin-top: 10px;
+            }
         }
 
-        /* Smooth scroll */
         html {
             scroll-behavior: smooth;
         }
 
-        /* Loading animasyonu (isteğe bağlı) */
         @keyframes pulse {
 
             0%,
@@ -508,6 +539,13 @@
                 </div>
 
                 
+                <div class="mb-4 text-end">
+                    <a href="<?php echo e(route('production.plans.export_list')); ?>" class="btn-export-global">
+                        <i class="fas fa-file-excel me-2"></i> Tüm Plan Listesini Excel'e Aktar
+                    </a>
+                </div>
+
+                
                 <div class="card list-card">
                     <div class="card-header">
                         <i class="fas fa-list"></i>
@@ -558,19 +596,29 @@
 
                                                 </td>
                                                 <td class="text-end pe-3">
+                                                    
+                                                    <a href="<?php echo e(route('production.plans.export', $plan)); ?>"
+                                                        class="btn btn-success btn-sm text-white"
+                                                        title="İş Emri Fişini İndir">
+                                                        <i class="fas fa-file-excel me-1"></i> Planı Excel'e Aktar
+                                                    </a>
+
                                                     <?php if(!in_array(Auth::user()->role, ['izleyici'])): ?>
+                                                        
                                                         <a href="<?php echo e(route('production.plans.edit', $plan)); ?>"
-                                                            class="btn btn-action btn-primary" title="Düzenle">
-                                                            <i class="fas fa-edit"></i>
+                                                            class="btn btn-primary btn-sm text-white" title="Düzenle">
+                                                            <i class="fas fa-edit me-1"></i> Düzenle
                                                         </a>
+
+                                                        
                                                         <form action="<?php echo e(route('production.plans.destroy', $plan)); ?>"
                                                             method="POST" class="d-inline"
                                                             onsubmit="return confirm('Bu planı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.');">
                                                             <?php echo csrf_field(); ?>
                                                             <?php echo method_field('DELETE'); ?>
-                                                            <button type="submit" class="btn btn-action btn-danger"
-                                                                title="Sil">
-                                                                <i class="fas fa-trash"></i>
+                                                            <button type="submit"
+                                                                class="btn btn-danger btn-sm text-white" title="Sil">
+                                                                <i class="fas fa-trash me-1"></i> Sil
                                                             </button>
                                                         </form>
                                                     <?php endif; ?>

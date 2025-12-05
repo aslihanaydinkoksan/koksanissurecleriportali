@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', 'Seyahat Planı Listesi')
 
-@section('content')
+<?php $__env->startSection('title', 'Seyahat Planı Listesi'); ?>
+
+<?php $__env->startSection('content'); ?>
     <style>
         .page-hero {
             background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
@@ -229,7 +229,7 @@
     <div class="container py-4">
         <div class="row justify-content-center">
             <div class="col-lg-11">
-                {{-- Hero Section --}}
+                
                 <div class="page-hero">
                     <div class="page-hero-content">
                         <div class="d-flex justify-content-between align-items-start">
@@ -240,59 +240,58 @@
                                     Tüm seyahat planlarınızı buradan görüntüleyebilir ve yönetebilirsiniz
                                 </p>
                             </div>
-                            <a href="{{ route('travels.create') }}" class="btn-create">
+                            <a href="<?php echo e(route('travels.create')); ?>" class="btn-create">
                                 <i class="fa-solid fa-plus me-1"></i> Yeni Plan
                             </a>
                         </div>
                     </div>
                 </div>
 
-                {{-- Alerts --}}
-                @if (session('success'))
+                
+                <?php if(session('success')): ?>
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fa-solid fa-check-circle me-2"></i>{{ session('success') }}
+                        <i class="fa-solid fa-check-circle me-2"></i><?php echo e(session('success')); ?>
+
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
-                @endif
+                <?php endif; ?>
 
                 <div class="d-flex justify-content-end mb-3">
                     <button class="btn btn-outline-modern" type="button" data-bs-toggle="collapse"
                         data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
                         <i class="fa-solid fa-filter me-1"></i> Filtreleme Seçenekleri
-                        {{-- @if (request()->hasAny(['name', 'status', 'is_important', 'date_from', 'date_to', 'user_id']))
-                            <span class="badge bg-primary ms-1">Aktif</span>
-                        @endif --}}
+                        
                     </button>
                 </div>
 
-                {{-- DÜZENLENEN KISIM: Filter Card (Collapse içine alındı) --}}
-                {{-- Eğer URL'de bir filtre varsa 'show' class'ı eklenir, yoksa kapalı gelir --}}
-                <div class="collapse @if (request()->hasAny(['name', 'status', 'is_important', 'date_from', 'date_to', 'user_id'])) show @endif" id="filterCollapse">
+                
+                
+                <div class="collapse <?php if(request()->hasAny(['name', 'status', 'is_important', 'date_from', 'date_to', 'user_id'])): ?> show <?php endif; ?>" id="filterCollapse">
                     <div class="filter-card">
                         <div class="section-title">
                             <i class="fa-solid fa-filter"></i>
                             <h5 class="mb-0">Filtreleme Seçenekleri</h5>
                         </div>
 
-                        <form method="GET" action="{{ route('travels.index') }}" autocomplete="off">
-                            {{-- ... Form içeriği aynen kalacak ... --}}
-                            {{-- Form içeriğini buraya aynen yapıştır --}}
+                        <form method="GET" action="<?php echo e(route('travels.index')); ?>" autocomplete="off">
+                            
+                            
                             <div class="row g-3">
                                 <div class="col-lg-4 col-md-6">
                                     <label for="name" class="form-label">Plan Adı</label>
                                     <input type="text" name="name" id="name" class="form-control"
-                                        placeholder="Plan adı girin..." value="{{ $filters['name'] ?? '' }}"
+                                        placeholder="Plan adı girin..." value="<?php echo e($filters['name'] ?? ''); ?>"
                                         autocomplete="off">
                                 </div>
 
                                 <div class="col-lg-2 col-md-6">
                                     <label for="status" class="form-label">Durum</label>
                                     <select name="status" id="status" class="form-select">
-                                        <option value="all" @if (($filters['status'] ?? 'all') == 'all') selected @endif>Tümü
+                                        <option value="all" <?php if(($filters['status'] ?? 'all') == 'all'): ?> selected <?php endif; ?>>Tümü
                                         </option>
-                                        <option value="planned" @if (($filters['status'] ?? '') == 'planned') selected @endif>Planlanan
+                                        <option value="planned" <?php if(($filters['status'] ?? '') == 'planned'): ?> selected <?php endif; ?>>Planlanan
                                         </option>
-                                        <option value="completed" @if (($filters['status'] ?? '') == 'completed') selected @endif>
+                                        <option value="completed" <?php if(($filters['status'] ?? '') == 'completed'): ?> selected <?php endif; ?>>
                                             Tamamlanan
                                         </option>
                                     </select>
@@ -301,11 +300,11 @@
                                 <div class="col-lg-2 col-md-6">
                                     <label for="is_important" class="form-label">Önem</label>
                                     <select name="is_important" id="is_important" class="form-select">
-                                        <option value="all" @if (($filters['is_important'] ?? 'all') == 'all') selected @endif>Tümü
+                                        <option value="all" <?php if(($filters['is_important'] ?? 'all') == 'all'): ?> selected <?php endif; ?>>Tümü
                                         </option>
-                                        <option value="yes" @if (($filters['is_important'] ?? '') == 'yes') selected @endif>Önemli
+                                        <option value="yes" <?php if(($filters['is_important'] ?? '') == 'yes'): ?> selected <?php endif; ?>>Önemli
                                         </option>
-                                        <option value="no" @if (($filters['is_important'] ?? '') == 'no') selected @endif>Normal
+                                        <option value="no" <?php if(($filters['is_important'] ?? '') == 'no'): ?> selected <?php endif; ?>>Normal
                                         </option>
                                     </select>
                                 </div>
@@ -313,36 +312,37 @@
                                 <div class="col-lg-2 col-md-6">
                                     <label for="date_from" class="form-label">Başlangıç</label>
                                     <input type="date" name="date_from" id="date_from" class="form-control"
-                                        value="{{ $filters['date_from'] ?? '' }}" autocomplete="off">
+                                        value="<?php echo e($filters['date_from'] ?? ''); ?>" autocomplete="off">
                                 </div>
 
                                 <div class="col-lg-2 col-md-6">
                                     <label for="date_to" class="form-label">Bitiş</label>
                                     <input type="date" name="date_to" id="date_to" class="form-control"
-                                        value="{{ $filters['date_to'] ?? '' }}" autocomplete="off">
+                                        value="<?php echo e($filters['date_to'] ?? ''); ?>" autocomplete="off">
                                 </div>
                             </div>
 
-                            @can('is-global-manager')
+                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('is-global-manager')): ?>
                                 <div class="row g-3 mt-2">
                                     <div class="col-lg-4 col-md-6">
                                         <label for="user_id" class="form-label">Kullanıcı</label>
                                         <select name="user_id" id="user_id" class="form-select">
                                             <option value="all">Tüm Kullanıcılar</option>
-                                            @foreach ($users as $user)
-                                                <option value="{{ $user->id }}"
-                                                    @if (($filters['user_id'] ?? '') == $user->id) selected @endif>
-                                                    {{ $user->name }}
+                                            <?php $__currentLoopData = $users; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <option value="<?php echo e($user->id); ?>"
+                                                    <?php if(($filters['user_id'] ?? '') == $user->id): ?> selected <?php endif; ?>>
+                                                    <?php echo e($user->name); ?>
+
                                                 </option>
-                                            @endforeach
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </select>
                                     </div>
                                 </div>
-                            @endcan
+                            <?php endif; ?>
 
                             <div class="row mt-4">
                                 <div class="col-12 d-flex justify-content-end gap-2">
-                                    <a href="{{ route('travels.index') }}" class="btn btn-sm-modern btn-outline-modern">
+                                    <a href="<?php echo e(route('travels.index')); ?>" class="btn btn-sm-modern btn-outline-modern">
                                         <i class="fa-solid fa-rotate-right me-1"></i> Temizle
                                     </a>
                                     <button type="submit" class="btn-gradient">
@@ -354,94 +354,97 @@
                     </div>
                 </div>
                 <div class="d-flex justify-content-end mb-4">
-                    <a href="{{ route('travels.export', request()->all()) }}" class="btn-export-global">
+                    <a href="<?php echo e(route('travels.export', request()->all())); ?>" class="btn-export-global">
                         <i class="fas fa-file-excel me-2"></i> Seyahat Planı Listesini Excel'e Aktar
                     </a>
                 </div>
 
-                {{-- Travels List Section --}}
+                
                 <div class="section-title">
                     <i class="fa-solid fa-plane-departure"></i>
                     <h5 class="mb-0">Seyahat Planları <span
-                            class="badge bg-primary rounded-pill">{{ $travels->total() }}</span></h5>
+                            class="badge bg-primary rounded-pill"><?php echo e($travels->total()); ?></span></h5>
                 </div>
 
-                @if ($travels->isEmpty())
+                <?php if($travels->isEmpty()): ?>
                     <div class="empty-state">
                         <i class="fa-solid fa-inbox"></i>
                         <h5 class="text-muted">Henüz Seyahat Planı Yok</h5>
                         <p class="text-muted mb-0">Filtrelerinize uyan seyahat planı bulunamadı.</p>
                     </div>
-                @else
-                    @foreach ($travels as $travel)
+                <?php else: ?>
+                    <?php $__currentLoopData = $travels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $travel): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <div class="travel-card">
                             <div class="row align-items-center">
                                 <div class="col-md-1 text-center">
-                                    @if ($travel->is_important)
+                                    <?php if($travel->is_important): ?>
                                         <i class="fa-solid fa-star important-star active" title="Önemli"></i>
-                                    @else
+                                    <?php else: ?>
                                         <i class="fa-regular fa-star important-star inactive"></i>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
                                 <div class="col-md-3">
-                                    <strong style="font-size: 1.1rem;">{{ $travel->name }}</strong>
-                                    <div class="text-muted small">{{ $travel->user->name ?? 'Bilinmiyor' }}</div>
+                                    <strong style="font-size: 1.1rem;"><?php echo e($travel->name); ?></strong>
+                                    <div class="text-muted small"><?php echo e($travel->user->name ?? 'Bilinmiyor'); ?></div>
                                 </div>
                                 <div class="col-md-2">
                                     <div class="text-muted small">Başlangıç</div>
-                                    <strong>{{ \Carbon\Carbon::parse($travel->start_date)->format('d/m/Y') }}</strong>
+                                    <strong><?php echo e(\Carbon\Carbon::parse($travel->start_date)->format('d/m/Y')); ?></strong>
                                 </div>
                                 <div class="col-md-2">
                                     <div class="text-muted small">Bitiş</div>
-                                    <strong>{{ \Carbon\Carbon::parse($travel->end_date)->format('d/m/Y') }}</strong>
+                                    <strong><?php echo e(\Carbon\Carbon::parse($travel->end_date)->format('d/m/Y')); ?></strong>
                                 </div>
                                 <div class="col-md-2">
-                                    @if ($travel->status == 'planned')
+                                    <?php if($travel->status == 'planned'): ?>
                                         <span class="status-badge planned">
                                             <i class="fa-solid fa-clock"></i> Planlandı
                                         </span>
-                                    @else
+                                    <?php else: ?>
                                         <span class="status-badge completed">
                                             <i class="fa-solid fa-check-circle"></i> Tamamlandı
                                         </span>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
                                 <div class="col-md-2 text-end">
                                     <div class="action-buttons">
-                                        <a href="{{ route('travels.export', ['id' => $travel->id]) }}"
+                                        <a href="<?php echo e(route('travels.export', ['id' => $travel->id])); ?>"
                                             class="btn btn-sm-modern btn-outline-modern btn-action-equal"
                                             title="Excel İndir">
                                             <i class="fa-solid fa-file-excel"></i>
                                             <span class="ms-1">Excel İndir</span>
                                         </a>
-                                        @if (Auth::id() === $travel->user_id || Auth::user()->role === 'admin' || Auth::user()->can('is-global-manager'))
-                                            <a href="{{ route('travels.show', $travel) }}"
+                                        <?php if(Auth::id() === $travel->user_id || Auth::user()->role === 'admin' || Auth::user()->can('is-global-manager')): ?>
+                                            <a href="<?php echo e(route('travels.show', $travel)); ?>"
                                                 class="btn btn-sm-modern btn-outline-modern btn-action-equal"
                                                 title="Detaylar & İşlemler">
                                                 <i class="fa-solid fa-eye"></i>
                                                 <span class="ms-1">Detaylar & İşlemler</span>
                                             </a>
-                                        @endif
-                                        @if (Auth::id() == $travel->user_id || Auth::user()->can('is-global-manager'))
-                                            <a href="{{ route('travels.edit', $travel) }}"
+                                        <?php endif; ?>
+                                        <?php if(Auth::id() == $travel->user_id || Auth::user()->can('is-global-manager')): ?>
+                                            <a href="<?php echo e(route('travels.edit', $travel)); ?>"
                                                 class="btn btn-sm-modern btn-outline-modern btn-action-equal"
                                                 title="Düzenle">
                                                 <i class="fa-solid fa-pen"></i>
                                                 <span class="ms-1">Düzenle</span>
                                             </a>
-                                        @endif
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-                    {{-- Pagination --}}
+                    
                     <div class="d-flex justify-content-center mt-4">
-                        {{ $travels->links() }}
+                        <?php echo e($travels->links()); ?>
+
                     </div>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/travels/index.blade.php ENDPATH**/ ?>

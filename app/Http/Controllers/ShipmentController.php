@@ -232,6 +232,67 @@ class ShipmentController extends Controller
             }
         );
     }
+    /**
+     * TÜM SEVKİYAT LİSTESİNİ DIŞA AKTAR (Genel Rapor)
+     */
+    public function exportList(Request $request)
+    {
+        $fileName = 'tum-sevkiyatlar-' . date('d-m-Y') . '.csv';
+
+        // Filtreleme mantığın varsa buraya ekleyebilirsin.
+        // Şimdilik tüm listeyi son eklenen başta olacak şekilde çekiyoruz.
+        $query = Shipment::latest();
+
+        $headers = [
+            'ID',
+            'Tip',
+            'Müşteri/Firma', // Varsa
+            'Plaka / Gemi Adı', // Ortak Sütun
+            'Şoför / IMO',      // Ortak Sütun
+            'Çıkış Noktası',
+            'Varış Noktası',
+            'Yük İçeriği',
+            'Durum',
+            'Çıkış Tarihi'
+        ];
+
+        return CsvExporter::streamDownload(
+            query: $query,
+            headers: $headers,
+            fileName: $fileName,
+            rowMapper: function ($shipment) {
+
+                // Tipine göre verileri hazırla
+                $aracBilgisi = '-';
+                $soforBilgisi = '-';
+
+                if (in_array($shipment->arac_tipi, ['tır', 'kamyon'])) {
+                    $aracBilgisi = $shipment->plaka . ($shipment->dorse_plakasi ? ' / ' . $shipment->dorse_plakasi : '');
+                    $soforBilgisi = $shipment->sofor_adi;
+                } elseif ($shipment->arac_tipi === 'gemi') {
+                    $aracBilgisi = $shipment->gemi_adi;
+                    $soforBilgisi = 'IMO: ' . $shipment->imo_numarasi;
+                }
+
+                $cikisTarihi = $shipment->cikis_tarihi
+                    ? \Carbon\Carbon::parse($shipment->cikis_tarihi)->format('d.m.Y')
+                    : '-';
+
+                return [
+                    $shipment->id,
+                    ucfirst($shipment->arac_tipi),
+                    $shipment->musteri_adi ?? '-', // Veritabanında varsa
+                    $aracBilgisi,
+                    $soforBilgisi,
+                    $shipment->kalkis_noktasi ?? $shipment->kalkis_limani ?? '-',
+                    $shipment->varis_noktasi ?? $shipment->varis_limani ?? '-',
+                    $shipment->kargo_icerigi,
+                    $shipment->status ?? 'Aktif',
+                    $cikisTarihi
+                ];
+            }
+        );
+    }
 
     public function destroy(Shipment $shipment)
     {

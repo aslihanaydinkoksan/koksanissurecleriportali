@@ -514,7 +514,8 @@
                 <a href="<?php echo e(route('service.assignments.create')); ?>" class="modern-btn modern-btn-primary">
                     <i class="fas fa-plus"></i>Yeni Görev Oluştur
                 </a>
-                <a href="<?php echo e(route('service.assignments.export')); ?>" class="modern-btn modern-btn-export">
+                <a href="<?php echo e(route('service.assignments.export', ['type' => 'vehicle'])); ?>"
+                    class="modern-btn modern-btn-export">
                     <i class="fas fa-file-excel"></i>Excel'e Aktar
                 </a>
             </div>

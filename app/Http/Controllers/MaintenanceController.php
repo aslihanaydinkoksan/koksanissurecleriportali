@@ -469,66 +469,65 @@ class MaintenanceController extends Controller
         ]);
     }
     /**
-     * Bakım Planlarını CSV olarak dışa aktar
+     * 1. TOPLU LİSTE (exportList)
      */
-    public function export()
+    public function exportList()
     {
-        $fileName = 'bakim-planlari-' . date('d-m-Y') . '.csv';
-
-        // 1. SORGULAMA
-        // İlişkileri (type, asset, user) dahil ediyoruz.
-        $query = MaintenancePlan::with(['type', 'asset', 'user'])->latest();
-
-        // 2. BAŞLIKLAR
-        $headers = [
-            'ID',
-            'Başlık',
-            'Bakım Türü',
-            'Varlık/Ekipman',
-            'Öncelik',
-            'Durum',
-            'Planlanan Başlangıç',
-            'Planlanan Bitiş',
-            'Gerçekleşen Başlangıç',
-            'Gerçekleşen Bitiş',
-            'Sorumlu Kişi',
-            'Tamamlanma Notu',
-            'Oluşturulma Tarihi'
-        ];
-
-        // 3. EXPORT İŞLEMİ
         return CsvExporter::streamDownload(
-            query: $query,
-            headers: $headers,
-            fileName: $fileName,
+            query: MaintenancePlan::with(['type', 'asset', 'user'])->latest(),
+            headers: ['ID', 'Başlık', 'Varlık', 'Durum', 'Planlanan Başlangıç', 'Sorumlu'],
+            fileName: 'bakim-listesi-' . date('d-m-Y') . '.csv',
             rowMapper: function ($plan) {
-
-                // -- ÖNCELİK (Priority) --
-                // Modelindeki 'priority_badge' bir array dönüyor: ['text' => 'Yüksek', 'class' => '...']
-                // Biz sadece metni alıyoruz.
-                $oncelik = $plan->priority_badge['text'] ?? ucfirst($plan->priority);
-
-                // -- DURUM (Status) --
-                // Modelindeki 'status_label' zaten Türkçeleştirilmiş metni veriyor.
-                $durum = $plan->status_label;
-
-                // -- SATIR VERİSİ --
                 return [
                     $plan->id,
                     $plan->title,
-                    $plan->type ? $plan->type->name : '-',     // İlişki: type()
-                    $plan->asset ? $plan->asset->name : '-',   // İlişki: asset()
-                    $oncelik,
-                    $durum,
+                    $plan->asset ? $plan->asset->name : '-',
+                    $plan->status_label, // Modeldeki accessor
                     $plan->planned_start_date ? $plan->planned_start_date->format('d.m.Y H:i') : '-',
-                    $plan->planned_end_date ? $plan->planned_end_date->format('d.m.Y H:i') : '-',
-                    $plan->actual_start_date ? $plan->actual_start_date->format('d.m.Y H:i') : '-',
-                    $plan->actual_end_date ? $plan->actual_end_date->format('d.m.Y H:i') : '-',
-                    $plan->user ? $plan->user->name : 'Atanmamış',
-                    $plan->completion_note ?? '-',
-                    $plan->created_at ? $plan->created_at->format('d.m.Y H:i') : '-'
+                    $plan->user ? $plan->user->name : '-'
                 ];
             }
         );
+    }
+
+    /**
+     * 2. BAKIM İŞ EMRİ (export) - Tekil Fiş
+     */
+    public function export(MaintenancePlan $maintenancePlan)
+    {
+        $fileName = 'bakim-is-emri-' . $maintenancePlan->id . '.csv';
+
+        $callback = function () use ($maintenancePlan) {
+            $file = fopen('php://output', 'w');
+            fputs($file, "\xEF\xBB\xBF");
+
+            fputcsv($file, ['BAKIM İŞ EMRİ FORMU'], ';');
+            fputcsv($file, [], ';');
+
+            // Sol taraf Etiket, Sağ taraf Değer
+            fputcsv($file, ['İş Emri No', $maintenancePlan->id], ';');
+            fputcsv($file, ['Bakım Konusu', $maintenancePlan->title], ';');
+            fputcsv($file, ['Varlık/Makine', $maintenancePlan->asset->name ?? '-'], ';');
+            fputcsv($file, ['Bakım Türü', $maintenancePlan->type->name ?? '-'], ';');
+            fputcsv($file, ['Öncelik', $maintenancePlan->priority_badge['text'] ?? '-'], ';');
+            fputcsv($file, ['Durum', $maintenancePlan->status_label], ';');
+            fputcsv($file, [], ';');
+
+            fputcsv($file, ['--- ZAMANLAMA BİLGİLERİ ---'], ';');
+            fputcsv($file, ['Planlanan Başlangıç', $maintenancePlan->planned_start_date?->format('d.m.Y H:i')], ';');
+            fputcsv($file, ['Gerçekleşen Başlangıç', $maintenancePlan->actual_start_date?->format('d.m.Y H:i')], ';');
+            fputcsv($file, ['Tamamlanma Tarihi', $maintenancePlan->actual_end_date?->format('d.m.Y H:i')], ';');
+            fputcsv($file, [], ';');
+
+            fputcsv($file, ['--- SONUÇ ---'], ';');
+            fputcsv($file, ['Tamamlanma Notu', $maintenancePlan->completion_note ?? 'Not girilmemiş.'], ';');
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            "Content-type" => "text/csv; charset=utf-8",
+            "Content-Disposition" => "attachment; filename=$fileName"
+        ]);
     }
 }
