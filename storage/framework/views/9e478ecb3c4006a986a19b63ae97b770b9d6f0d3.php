@@ -360,7 +360,7 @@
 
                     <div class="d-flex justify-content-end mb-4">
                         <a href="<?php echo e(route('service.events.export', request()->all())); ?>" class="btn-export-global">
-                            <i class="fas fa-file-excel me-2"></i> Fuar Listesini Excel'e Aktar
+                            <i class="fas fa-file-excel me-2"></i> Listeyi Excel'e Aktar
                         </a>
                         <a href="<?php echo e(route('service.events.create')); ?>" class="btn-gradient">
                             <i class="fa-solid fa-plus me-2"></i> Yeni Fuar Ekle
@@ -553,7 +553,7 @@
                     </div>
                     <div class="mb-4 text-end">
                         <a href="<?php echo e(route('service.events.export', request()->all())); ?>" class="btn-export-global">
-                            <i class="fas fa-file-excel me-2"></i> Tüm Listeyi Excel'e Aktar
+                            <i class="fas fa-file-excel me-2"></i>Listeyi Excel'e Aktar
                         </a>
                     </div>
                     

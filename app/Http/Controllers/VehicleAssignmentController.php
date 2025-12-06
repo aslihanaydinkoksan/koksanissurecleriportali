@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Log;
 use App\Notifications\TaskStatusUpdatedNotification;
 use App\Services\CsvExporter;
+use App\Notifications\VehicleAssignedNotification;
 
 class VehicleAssignmentController extends Controller
 {
@@ -431,118 +432,109 @@ class VehicleAssignmentController extends Controller
     }
 
     /**
-     * Güncelleme
+     * Güncelleme Metodu (Final Versiyon)
      */
     public function update(Request $request, VehicleAssignment $assignment)
     {
-        $vehicleTypeInput = $request->input('vehicle_type');
-
         // 1. Validasyon Kuralları
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
             'task_description' => 'required|string',
             'status' => 'required|in:waiting_assignment,pending,in_progress,completed,cancelled',
-            // Aşağıdaki alanlar nullable (boş olabilir) ama kurallarda olmalı
             'destination' => 'nullable|string|max:255',
             'customer_id' => 'nullable|exists:customers,id',
             'notes' => 'nullable|string',
-            // Araç ve Yakıt Bilgileri
-            'vehicle_id' => 'nullable',
+            'vehicle_selection' => 'nullable|string', // Blade'den gelen birleşik veri
             'start_km' => 'nullable|numeric|min:0',
-            'final_km' => [
-                'nullable',
-                // Eğer durum completed ise ve araçlı görevse zorunlu olsun (İsteğe bağlı kural)
-                // Rule::requiredIf($assignment->assignment_type === 'vehicle' && $request->input('status') === 'completed'),
-                'numeric',
-                'gte:start_km' // Başlangıçtan büyük veya eşit olmalı
-            ],
+            'final_km' => ['nullable', 'numeric', 'gte:start_km'],
             'fuel_cost' => 'nullable|numeric|min:0',
             'start_fuel_level' => 'nullable|string',
             'final_fuel' => 'nullable|string',
         ]);
 
-        // 2. ESKİ DURUMU SAKLA (Bildirim için)
+        // 2. DEĞİŞİKLİK ÖNCESİ DURUMLARI SAKLA (Bildirimler İçin Kritik)
         $oldStatus = $assignment->status;
+        $oldVehicleId = $assignment->vehicle_id; // Araç yeni mi atandı kontrolü için
 
-        // 3. GÜNCELLEME İŞLEMİ
-
-        // Temel Bilgiler (Formdan gelmezse eski veriyi koru)
-        $assignment->title = $request->input('title', $assignment->title);
-        $assignment->task_description = $request->input('task_description', $assignment->task_description);
+        // 3. TEMEL BİLGİLERİ GÜNCELLE
+        $assignment->title = $validatedData['title'];
+        $assignment->task_description = $validatedData['task_description'];
         $assignment->status = $validatedData['status'];
-        if ($request->has('destination')) {
+
+        if ($request->has('destination'))
             $assignment->destination = $validatedData['destination'];
-        }
-
-        if ($request->has('customer_id')) {
+        if ($request->has('customer_id'))
             $assignment->customer_id = $validatedData['customer_id'];
-        }
-
-        if ($request->has('notes')) {
+        if ($request->has('notes'))
             $assignment->notes = $validatedData['notes'];
-        }
-
-        // 4. ARAÇ ve LOJİSTİK BİLGİLERİ
-        // Eğer araç seçimi yapıldıysa güncelle
-        if ($request->has('vehicle_id')) {
-            $assignment->vehicle_id = $validatedData['vehicle_id'];
-
-            // Araç tipini güncelle (Eğer input varsa)
-            if ($vehicleTypeInput) {
-                if ($vehicleTypeInput === 'logistics') {
-                    $assignment->vehicle_type = \App\Models\LogisticsVehicle::class;
-                } else {
-                    $assignment->vehicle_type = \App\Models\Vehicle::class;
-                }
-            }
-        }
 
         // KM ve Yakıt Bilgileri
         $assignment->start_km = $request->input('start_km', $assignment->start_km);
         $assignment->end_km = $request->input('final_km', $assignment->end_km);
         $assignment->start_fuel_level = $request->input('start_fuel_level', $assignment->start_fuel_level);
-        $assignment->end_fuel_level = $request->input('final_fuel', $assignment->end_fuel_level); // Blade'de name="final_fuel"
+        $assignment->end_fuel_level = $request->input('final_fuel', $assignment->end_fuel_level);
         $assignment->fuel_cost = $request->input('fuel_cost', $assignment->fuel_cost);
 
-        $assignment->save();
+        // 4. ARAÇ VE LOJİSTİK BİLGİLERİ (BİRLEŞİK VERİ ÇÖZÜMÜ)
+        // Blade'den gelen veri formatı: "company_31" veya "logistics_5"
+        $selection = $request->input('vehicle_selection');
 
-        // 5. BİLDİRİM MANTIĞI (DEBUG EKLENDİ)
-        if ($assignment->status !== $oldStatus) {
+        if (!empty($selection)) {
+            $parts = explode('_', $selection);
 
-            // Log'a yazalım: Ne oluyor?
-            Log::info('Durum Değişikliği Algılandı', [
-                'Görev ID' => $assignment->id,
-                'Eski Durum' => $oldStatus,
-                'Yeni Durum' => $assignment->status,
-                'Oluşturan ID (created_by)' => $assignment->assigned_by,
-                'Güncelleyen ID (auth)' => auth()->id()
-            ]);
+            if (count($parts) == 2) {
+                $typeKey = $parts[0]; // "company" veya "logistics"
+                $idVal = $parts[1];   // ID
 
-            try {
-                $creator = User::find($assignment->assigned_by);
+                // Model üzerine set et (Henüz save etmiyoruz)
+                $assignment->vehicle_id = $idVal;
 
-                if (!$creator) {
-                    Log::error('HATA: Görevi oluşturan kullanıcı veritabanında bulunamadı (created_by ID yok veya silinmiş).');
-                } elseif ($creator->id === auth()->id()) {
-                    Log::warning('UYARI: Kullanıcı kendi oluşturduğu görevi güncellediği için bildirim GÖNDERİLMEDİ.');
-
-                    // TEST İÇİN: Eğer testi tek kişi yapıyorsan aşağıdaki satırı yoruma al, bu bloğu pasif et.
-                    // Notification::send($creator, new \App\Notifications\TaskStatusUpdatedNotification($assignment, $oldStatus));
+                if ($typeKey === 'logistics') {
+                    $assignment->vehicle_type = 'App\Models\LogisticsVehicle';
                 } else {
-                    Notification::send($creator, new \App\Notifications\TaskStatusUpdatedNotification($assignment, $oldStatus));
-                    Log::info('BAŞARILI: Bildirim görevi oluşturan kişiye (' . $creator->name . ') gönderildi.');
+                    $assignment->vehicle_type = 'App\Models\Vehicle';
                 }
-
-            } catch (\Exception $e) {
-                Log::error('Bildirim Exception: ' . $e->getMessage());
             }
+        } else {
+            // Seçim boşsa veya temizlendiyse araç bağını kopar
+            $assignment->vehicle_id = null;
+            $assignment->vehicle_type = null;
         }
 
-        // 6. YÖNLENDİRME AYARI
-        // Görev türüne göre ilgili listeye yönlendirme
+        // 5. TÜM DEĞİŞİKLİKLERİ KAYDET
+        $assignment->save();
+
+        // 6. BİLDİRİM SİSTEMİ
+        try {
+            $creator = \App\Models\User::find($assignment->assigned_by);
+
+            // A) Yeni Araç Ataması Bildirimi
+            // Eğer eskiden araç yoktuysa (null) VE şimdi varsa -> Bildirim At
+            if (is_null($oldVehicleId) && !is_null($assignment->vehicle_id)) {
+                if ($creator && $creator->id !== auth()->id()) {
+                    $creator->notify(new VehicleAssignedNotification($assignment));
+                    Log::info("Araç atama bildirimi gönderildi. Görev ID: {$assignment->id}");
+                }
+            }
+
+            // B) Durum Değişikliği Bildirimi (Eski kodun)
+            if ($assignment->status !== $oldStatus) {
+                Log::info('Durum Değişikliği', ['Eski' => $oldStatus, 'Yeni' => $assignment->status]);
+
+                if ($creator && $creator->id !== auth()->id()) {
+                    $creator->notify(new TaskStatusUpdatedNotification($assignment, $oldStatus));
+                }
+            }
+
+        } catch (\Exception $e) {
+            // Bildirim hatası akışı bozmasın diye logluyoruz
+            Log::error('Bildirim Gönderim Hatası: ' . $e->getMessage());
+        }
+
+        // 7. YÖNLENDİRME
         $redirectRoute = $assignment->assignment_type === 'vehicle'
-            ? 'service.assignments.index'      // Araçlı ise Araç Atama Listesi
-            : 'service.general-tasks.index';   // Genel ise Genel Görevler Listesi
+            ? 'service.assignments.index'
+            : 'service.general-tasks.index';
 
         return redirect()->route($redirectRoute)
             ->with('success', 'Görev başarıyla güncellendi.');

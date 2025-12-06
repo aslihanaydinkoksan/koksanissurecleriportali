@@ -633,27 +633,33 @@
                                 <div class="meta-value"><?php echo e($assignment->createdBy->name ?? '-'); ?></div>
                             </div>
                         </div>
-                        <div class="meta-item">
-                            <div class="meta-icon"><i class="fas fa-car"></i></div>
-                            <div class="meta-content">
-                                <div class="meta-label">Araç</div>
-                                <div class="meta-value">
-                                    <?php if($assignment->status == 'waiting_assignment'): ?>
-                                        <span
-                                            class="text-warning fw-bold"><?php echo e($assignment->vehicle_type == 'App\Models\LogisticsVehicle' ? '🚚 Nakliye (Seçilmedi)' : '🚙 Şirket Aracı (Seçilmedi)'); ?></span>
-                                    <?php elseif($assignment->vehicle): ?>
-                                        <?php if($assignment->vehicle instanceof \App\Models\LogisticsVehicle): ?>
-                                            🚚 <?php echo e($assignment->vehicle->plate_number); ?> <small
-                                                class="text-muted">(<?php echo e($assignment->vehicle->brand); ?>)</small>
-                                        <?php else: ?>
-                                            🚙 <?php echo e($assignment->vehicle->plate_number); ?>
+                        <div class="meta-value">
+                            
+                            <?php if($assignment->vehicle): ?>
+                                <div class="meta-label">Atanan Araç</div>
+                                <?php if($assignment->vehicle instanceof \App\Models\LogisticsVehicle): ?>
+                                    
+                                    <span class="text-success fw-bold">
+                                        🚚 <?php echo e($assignment->vehicle->plate_number); ?>
 
-                                        <?php endif; ?>
-                                    <?php else: ?>
-                                        <span class="text-danger">Silinmiş/Yok</span>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
+                                    </span>
+                                    <small class="text-muted">(<?php echo e($assignment->vehicle->brand); ?>)</small>
+                                <?php else: ?>
+                                    
+                                    <span class="text-primary fw-bold">
+                                        🚙 <?php echo e($assignment->vehicle->plate_number); ?>
+
+                                    </span>
+                                <?php endif; ?>
+
+                                
+                            <?php else: ?>
+                                <span class="text-warning fw-bold" title="Ulaştırma biriminden araç bekleniyor">
+                                    <i class="fas fa-clock"></i> Araç Ataması Bekleniyor
+                                </span>
+                                
+                                <div class="small text-muted fst-italic">Ulaştırma onayı bekleniyor</div>
+                            <?php endif; ?>
                         </div>
                         <div class="meta-item">
                             <div class="meta-icon"><i class="fas fa-map-marker-alt"></i></div>

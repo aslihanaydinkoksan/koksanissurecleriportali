@@ -342,7 +342,7 @@
                     </div>
                     <div>
                         <a href="<?php echo e(route('maintenance.export_list')); ?>" class="btn btn-export-global shadow-sm">
-                            <i class="fas fa-file-excel me-2"></i>Plan Listesini Excel'e Aktar
+                            <i class="fas fa-file-excel me-2"></i>Listeyi Excel'e Aktar
                         </a>
                         <a href="<?php echo e(route('maintenance.create')); ?>" class="btn btn-apply-filter shadow-sm">
                             <i class="fas fa-plus me-2"></i> Yeni Bakım Planı

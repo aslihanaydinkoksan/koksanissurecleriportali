@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', 'Görev Atamasını Düzenle')
 
-@push('styles')
+<?php $__env->startSection('title', 'Görev Atamasını Düzenle'); ?>
+
+<?php $__env->startPush('styles'); ?>
     <style>
         /* --- STİLLER (AYNEN KORUNDU) --- */
         #app>main.py-4 {
@@ -183,10 +183,10 @@
             }
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
-    @php
+<?php $__env->startSection('content'); ?>
+    <?php
         $user = Auth::user();
 
         // --- YETKİ KONTROLLERİ ---
@@ -211,15 +211,15 @@
 
         // Eğer düzenleyemiyorsa disabled yap
         $disableInput = $canEditDetails ? '' : 'disabled';
-    @endphp
+    ?>
 
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-9">
                 <div class="card edit-assignment-card" x-data="{
-                    vehicleType: '{{ old('vehicle_type', $assignment->isLogistics() ? 'logistics' : 'company') }}',
-                    responsibleType: '{{ old('responsible_type', $assignment->responsible_type === App\Models\User::class ? 'user' : 'team') }}',
-                    status: '{{ old('status', $assignment->status) }}',
+                    vehicleType: '<?php echo e(old('vehicle_type', $assignment->isLogistics() ? 'logistics' : 'company')); ?>',
+                    responsibleType: '<?php echo e(old('responsible_type', $assignment->responsible_type === App\Models\User::class ? 'user' : 'team')); ?>',
+                    status: '<?php echo e(old('status', $assignment->status)); ?>',
                     isLogistics() { return this.vehicleType === 'logistics'; }
                 }" x-cloak>
 
@@ -229,38 +229,38 @@
                                 <h4 class="mb-1">✏️ Görev Düzenleme</h4>
                                 <p class="text-muted mb-0">Görev detaylarını ve durumunu güncelleyin</p>
                             </div>
-                            @if ($canEditDetails)
-                                <form method="POST" action="{{ route('service.assignments.destroy', $assignment->id) }}"
+                            <?php if($canEditDetails): ?>
+                                <form method="POST" action="<?php echo e(route('service.assignments.destroy', $assignment->id)); ?>"
                                     onsubmit="return confirm('Bu atamayı silmek istediğinizden emin misiniz?');">
-                                    @csrf
-                                    @method('DELETE')
+                                    <?php echo csrf_field(); ?>
+                                    <?php echo method_field('DELETE'); ?>
                                     <button type="submit" class="btn btn-danger btn-sm">
                                         <i class="fas fa-trash"></i> Görevi Sil
                                     </button>
                                 </form>
-                            @endif
+                            <?php endif; ?>
                         </div>
                     </div>
 
                     <div class="card-body px-4 py-3">
-                        @if ($errors->any())
+                        <?php if($errors->any()): ?>
                             <div class="alert alert-danger rounded-3">
                                 <strong>⚠️ Hata!</strong> Lütfen aşağıdaki sorunları düzeltin:
                                 <ul class="mb-0 mt-2">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
+                                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <li><?php echo e($error); ?></li>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </ul>
                             </div>
-                        @endif
+                        <?php endif; ?>
 
-                        <form method="POST" action="{{ route('service.assignments.update', $assignment->id) }}">
-                            @csrf
-                            @method('PUT')
-                            {{-- Araç tipi gizli olarak tutuluyor --}}
+                        <form method="POST" action="<?php echo e(route('service.assignments.update', $assignment->id)); ?>">
+                            <?php echo csrf_field(); ?>
+                            <?php echo method_field('PUT'); ?>
+                            
                             <input type="hidden" name="vehicle_type" :value="vehicleType">
 
-                            {{-- GÖREV DURUMU --}}
+                            
                             <div class="section-header">
                                 <div class="icon">🔄</div>
                                 <h5>Görev Durumu</h5>
@@ -269,60 +269,67 @@
                             <div class="row mb-4">
                                 <div class="col-md-12">
                                     <label for="status" class="form-label">Güncel Durum</label>
-                                    @if ($canUpdateStatus)
+                                    <?php if($canUpdateStatus): ?>
                                         <select name="status" id="status"
-                                            class="form-select form-select-lg @error('status') is-invalid @enderror"
+                                            class="form-select form-select-lg <?php $__errorArgs = ['status'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
                                             required>
                                             <option value="waiting_assignment"
-                                                {{ $assignment->status == 'waiting_assignment' ? 'selected' : '' }}>⏳ Atama
+                                                <?php echo e($assignment->status == 'waiting_assignment' ? 'selected' : ''); ?>>⏳ Atama
                                                 Bekliyor</option>
                                             <option value="pending"
-                                                {{ $assignment->status == 'pending' ? 'selected' : '' }}>🕒 Bekliyor /
+                                                <?php echo e($assignment->status == 'pending' ? 'selected' : ''); ?>>🕒 Bekliyor /
                                                 Planlandı</option>
                                             <option value="in_progress"
-                                                {{ $assignment->status == 'in_progress' ? 'selected' : '' }}>🔄 Başladım /
+                                                <?php echo e($assignment->status == 'in_progress' ? 'selected' : ''); ?>>🔄 Başladım /
                                                 Devam Ediyor</option>
                                             <option value="completed"
-                                                {{ $assignment->status == 'completed' ? 'selected' : '' }}>✅ Tamamlandı
+                                                <?php echo e($assignment->status == 'completed' ? 'selected' : ''); ?>>✅ Tamamlandı
                                             </option>
                                             <option value="cancelled"
-                                                {{ $assignment->status == 'cancelled' ? 'selected' : '' }}>❌ İptal Edildi
+                                                <?php echo e($assignment->status == 'cancelled' ? 'selected' : ''); ?>>❌ İptal Edildi
                                             </option>
                                         </select>
                                         <small class="text-muted">Görevi başlattığınızda veya bitirdiğinizde buradan durumu
                                             güncelleyiniz.</small>
-                                    @else
+                                    <?php else: ?>
                                         <div class="p-3 border rounded bg-light">
-                                            <strong>{{ ucfirst($assignment->status) }}</strong>
-                                            <input type="hidden" name="status" value="{{ $assignment->status }}">
+                                            <strong><?php echo e(ucfirst($assignment->status)); ?></strong>
+                                            <input type="hidden" name="status" value="<?php echo e($assignment->status); ?>">
                                         </div>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
                             </div>
 
-                            {{-- SORUMLU ATAMA --}}
+                            
                             <div class="section-header">
                                 <div class="icon">👥</div>
                                 <h5>Sorumlu Atama</h5>
-                                @if (!$canEditDetails)
+                                <?php if(!$canEditDetails): ?>
                                     <span class="ms-3 text-muted small">(Sadece Görevi Atayan Değiştirebilir)</span>
-                                @endif
+                                <?php endif; ?>
                             </div>
 
-                            {{-- DÜZELTME 1: Eğer yetki yoksa HIDDEN INPUTS ekle --}}
-                            @if (!$canEditDetails)
+                            
+                            <?php if(!$canEditDetails): ?>
                                 <input type="hidden" name="responsible_type"
-                                    value="{{ $assignment->responsible_type === App\Models\User::class ? 'user' : 'team' }}">
-                                <input type="hidden" name="responsible_user_id" value="{{ $assignment->responsible_id }}">
-                                <input type="hidden" name="responsible_team_id" value="{{ $assignment->responsible_id }}">
-                            @endif
+                                    value="<?php echo e($assignment->responsible_type === App\Models\User::class ? 'user' : 'team'); ?>">
+                                <input type="hidden" name="responsible_user_id" value="<?php echo e($assignment->responsible_id); ?>">
+                                <input type="hidden" name="responsible_team_id" value="<?php echo e($assignment->responsible_id); ?>">
+                            <?php endif; ?>
 
                             <div class="mb-3">
                                 <label class="form-label">Sorumlu Tipi</label>
                                 <div class="d-flex gap-2">
                                     <label class="selection-card flex-fill mb-0">
                                         <input type="radio" name="responsible_type" x-model="responsibleType"
-                                            value="user" {{ $disableInput }}>
+                                            value="user" <?php echo e($disableInput); ?>>
                                         <div class="card-content">
                                             <div class="card-icon">👤</div>
                                             <div class="card-text">
@@ -333,7 +340,7 @@
                                     </label>
                                     <label class="selection-card flex-fill mb-0">
                                         <input type="radio" name="responsible_type" x-model="responsibleType"
-                                            value="team" {{ $disableInput }}>
+                                            value="team" <?php echo e($disableInput); ?>>
                                         <div class="card-content">
                                             <div class="card-icon">👥</div>
                                             <div class="card-text">
@@ -347,31 +354,33 @@
 
                             <div x-show="responsibleType === 'user'" class="mb-4 fade-in">
                                 <label class="form-label">👤 Sorumlu Kişi *</label>
-                                <select name="responsible_user_id" class="form-select" {{ $disableInput }}>
+                                <select name="responsible_user_id" class="form-select" <?php echo e($disableInput); ?>>
                                     <option value="">Kişi seçiniz...</option>
-                                    @foreach ($users as $user)
-                                        <option value="{{ $user->id }}"
-                                            {{ old('responsible_id', $assignment->responsible_id) == $user->id && $assignment->responsible_type === App\Models\User::class ? 'selected' : '' }}>
-                                            {{ $user->name }}
+                                    <?php $__currentLoopData = $users; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($user->id); ?>"
+                                            <?php echo e(old('responsible_id', $assignment->responsible_id) == $user->id && $assignment->responsible_type === App\Models\User::class ? 'selected' : ''); ?>>
+                                            <?php echo e($user->name); ?>
+
                                         </option>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select>
                             </div>
 
                             <div x-show="responsibleType === 'team'" class="mb-4 fade-in">
                                 <label class="form-label">👥 Sorumlu Takım *</label>
-                                <select name="responsible_team_id" class="form-select" {{ $disableInput }}>
+                                <select name="responsible_team_id" class="form-select" <?php echo e($disableInput); ?>>
                                     <option value="">Takım seçiniz...</option>
-                                    @foreach ($teams as $team)
-                                        <option value="{{ $team->id }}"
-                                            {{ old('responsible_id', $assignment->responsible_id) == $team->id && $assignment->responsible_type === App\Models\Team::class ? 'selected' : '' }}>
-                                            {{ $team->name }}
+                                    <?php $__currentLoopData = $teams; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $team): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($team->id); ?>"
+                                            <?php echo e(old('responsible_id', $assignment->responsible_id) == $team->id && $assignment->responsible_type === App\Models\Team::class ? 'selected' : ''); ?>>
+                                            <?php echo e($team->name); ?>
+
                                         </option>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select>
                             </div>
 
-                            {{-- GÖREV BİLGİLERİ --}}
+                            
                             <div class="section-header">
                                 <div class="icon">📝</div>
                                 <h5>Görev Detayları</h5>
@@ -380,77 +389,78 @@
                             <div class="row mb-4">
                                 <div class="col-md-12 mb-3">
                                     <label for="title" class="form-label">📢 Görev Başlığı</label>
-                                    {{-- Eğer düzenleyemiyorsa HIDDEN olarak gönder --}}
+                                    
                                     <input type="text" class="form-control" name="title"
-                                        value="{{ old('title', $assignment->title) }}" {{ $disableInput }} required>
-                                    @if (!$canEditDetails)
-                                        <input type="hidden" name="title" value="{{ $assignment->title }}">
-                                    @endif
+                                        value="<?php echo e(old('title', $assignment->title)); ?>" <?php echo e($disableInput); ?> required>
+                                    <?php if(!$canEditDetails): ?>
+                                        <input type="hidden" name="title" value="<?php echo e($assignment->title); ?>">
+                                    <?php endif; ?>
                                 </div>
                                 <div class="col-md-12 mb-3">
                                     <label class="form-label">Açıklama</label>
-                                    <textarea name="task_description" class="form-control" rows="3" {{ $disableInput }}>{{ old('task_description', $assignment->task_description) }}</textarea>
-                                    @if (!$canEditDetails)
+                                    <textarea name="task_description" class="form-control" rows="3" <?php echo e($disableInput); ?>><?php echo e(old('task_description', $assignment->task_description)); ?></textarea>
+                                    <?php if(!$canEditDetails): ?>
                                         <input type="hidden" name="task_description"
-                                            value="{{ $assignment->task_description }}">
-                                    @endif
+                                            value="<?php echo e($assignment->task_description); ?>">
+                                    <?php endif; ?>
                                 </div>
                                 <div class="col-md-12">
                                     <label class="form-label">Notlar</label>
-                                    {{-- Notlar her zaman düzenlenebilir kalsın istiyorsan disable'ı kaldır, aksi halde buraya da hidden koy --}}
-                                    <textarea name="notes" class="form-control" rows="2">{{ old('notes', $assignment->notes) }}</textarea>
+                                    
+                                    <textarea name="notes" class="form-control" rows="2"><?php echo e(old('notes', $assignment->notes)); ?></textarea>
                                 </div>
                             </div>
-                            {{-- ARAÇ BİLGİLERİ --}}
+                            
                             <div class="section-header mt-4">
                                 <div class="icon">🚗</div>
                                 <h5>Araç Bilgileri</h5>
                             </div>
 
                             <div class="card-body border rounded p-3 mb-4 bg-light">
-                                @if ($canManageVehicle)
-                                    {{-- YÖNETİCİ GÖRÜNÜMÜ: ARAÇ SEÇİM KUTUSU --}}
+                                <?php if($canManageVehicle): ?>
+                                    
                                     <div class="mb-3">
                                         <label for="vehicle_selection" class="form-label fw-bold">Araç Ataması /
                                             Değişimi</label>
 
-                                        {{-- ÖNEMLİ: name="vehicle_selection" Controller ile eşleşmeli --}}
+                                        
                                         <select name="vehicle_selection" id="vehicle_selection"
                                             class="form-select select2">
                                             <option value="">-- Araç Yok / Atamayı Kaldır --</option>
 
-                                            {{-- GRUP 1: ŞİRKET ARAÇLARI --}}
+                                            
                                             <optgroup label="Şirket Araçları">
-                                                @foreach ($companyVehicles as $vehicle)
-                                                    @php
+                                                <?php $__currentLoopData = $companyVehicles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $vehicle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                    <?php
                                                         // Bu araç seçili mi?
                                                         $isSelected =
                                                             $assignment->vehicle_type === 'App\Models\Vehicle' &&
                                                             $assignment->vehicle_id == $vehicle->id;
-                                                    @endphp
-                                                    <option value="company_{{ $vehicle->id }}"
-                                                        {{ $isSelected ? 'selected' : '' }}>
-                                                        {{ $vehicle->plate_number }} -
-                                                        {{ $vehicle->brand_model ?? $vehicle->model }}
+                                                    ?>
+                                                    <option value="company_<?php echo e($vehicle->id); ?>"
+                                                        <?php echo e($isSelected ? 'selected' : ''); ?>>
+                                                        <?php echo e($vehicle->plate_number); ?> -
+                                                        <?php echo e($vehicle->brand_model ?? $vehicle->model); ?>
+
                                                     </option>
-                                                @endforeach
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </optgroup>
 
-                                            {{-- GRUP 2: LOJİSTİK ARAÇLARI --}}
+                                            
                                             <optgroup label="Lojistik (Nakliye) Araçları">
-                                                @foreach ($logisticsVehicles as $lVehicle)
-                                                    @php
+                                                <?php $__currentLoopData = $logisticsVehicles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $lVehicle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                    <?php
                                                         // Bu araç seçili mi?
                                                         $isSelected =
                                                             $assignment->vehicle_type ===
                                                                 'App\Models\LogisticsVehicle' &&
                                                             $assignment->vehicle_id == $lVehicle->id;
-                                                    @endphp
-                                                    <option value="logistics_{{ $lVehicle->id }}"
-                                                        {{ $isSelected ? 'selected' : '' }}>
-                                                        {{ $lVehicle->plate_number }} (Lojistik)
+                                                    ?>
+                                                    <option value="logistics_<?php echo e($lVehicle->id); ?>"
+                                                        <?php echo e($isSelected ? 'selected' : ''); ?>>
+                                                        <?php echo e($lVehicle->plate_number); ?> (Lojistik)
                                                     </option>
-                                                @endforeach
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </optgroup>
                                         </select>
                                         <div class="form-text text-muted">
@@ -458,29 +468,29 @@
                                             algılar.
                                         </div>
                                     </div>
-                                @else
-                                    {{-- PERSONEL GÖRÜNÜMÜ: SADECE BİLGİ --}}
-                                    @if ($assignment->vehicle)
+                                <?php else: ?>
+                                    
+                                    <?php if($assignment->vehicle): ?>
                                         <div class="alert alert-success d-flex align-items-center">
                                             <div class="h2 me-3 mb-0">✅</div>
                                             <div>
                                                 <h6 class="alert-heading fw-bold mb-0">Atanan Araç</h6>
-                                                <p class="mb-0">{{ $assignment->vehicle->plate_number }}</p>
-                                                @if ($assignment->vehicle_type == 'App\Models\LogisticsVehicle')
+                                                <p class="mb-0"><?php echo e($assignment->vehicle->plate_number); ?></p>
+                                                <?php if($assignment->vehicle_type == 'App\Models\LogisticsVehicle'): ?>
                                                     <small class="text-muted">(Lojistik Aracı)</small>
-                                                @endif
+                                                <?php endif; ?>
                                             </div>
                                         </div>
-                                        {{-- Mevcut aracı korumak için gizli input --}}
-                                        @php
+                                        
+                                        <?php
                                             $prefix =
                                                 $assignment->vehicle_type == 'App\Models\LogisticsVehicle'
                                                     ? 'logistics'
                                                     : 'company';
                                             $hiddenValue = $prefix . '_' . $assignment->vehicle_id;
-                                        @endphp
-                                        <input type="hidden" name="vehicle_selection" value="{{ $hiddenValue }}">
-                                    @else
+                                        ?>
+                                        <input type="hidden" name="vehicle_selection" value="<?php echo e($hiddenValue); ?>">
+                                    <?php else: ?>
                                         <div class="alert alert-warning d-flex align-items-center">
                                             <div class="h2 me-3 mb-0">⏳</div>
                                             <div>
@@ -488,32 +498,32 @@
                                                 <p class="mb-0 small">Ulaştırma birimi henüz araç ataması yapmadı.</p>
                                             </div>
                                         </div>
-                                    @endif
-                                @endif
+                                    <?php endif; ?>
+                                <?php endif; ?>
 
-                                {{-- KM TAKİBİ (HERKES GÖREBİLİR) --}}
+                                
                                 <div class="mt-3 pt-3 border-top">
                                     <h6 class="text-primary mb-3">⛽ Yakıt ve Kilometre Takibi</h6>
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Başlangıç KM</label>
                                             <input type="number" step="0.1" name="start_km" class="form-control"
-                                                value="{{ old('start_km', $assignment->start_km) }}"
-                                                {{ $canManageVehicle ? '' : 'readonly' }}>
+                                                value="<?php echo e(old('start_km', $assignment->start_km)); ?>"
+                                                <?php echo e($canManageVehicle ? '' : 'readonly'); ?>>
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Bitiş KM</label>
                                             <input type="number" step="0.1" name="final_km" class="form-control"
-                                                value="{{ old('final_km', $assignment->end_km) }}"
+                                                value="<?php echo e(old('final_km', $assignment->end_km)); ?>"
                                                 placeholder="Görevi bitirirken giriniz">
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {{-- AKSİYON --}}
+                            
                             <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
-                                <a href="{{ route('service.general-tasks.index') }}"
+                                <a href="<?php echo e(route('service.general-tasks.index')); ?>"
                                     class="btn btn-outline-secondary btn-lg">
                                     ← Listeye Dön
                                 </a>
@@ -522,7 +532,7 @@
                                 </button>
                             </div>
                         </form>
-                        {{-- DOSYA YÜKLEME ALANI --}}
+                        
                         <div class="section-header mt-5">
                             <div class="icon">📎</div>
                             <h5>Dosya ve Belgeler</h5>
@@ -530,69 +540,71 @@
 
                         <div class="card bg-light border-0 mb-4">
                             <div class="card-body">
-                                {{-- Yüklenmiş Dosyalar Listesi --}}
-                                @if ($assignment->files && $assignment->files->count() > 0)
+                                
+                                <?php if($assignment->files && $assignment->files->count() > 0): ?>
                                     <div class="list-group mb-3">
-                                        @foreach ($assignment->files as $file)
+                                        <?php $__currentLoopData = $assignment->files; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $file): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                             <div
                                                 class="list-group-item d-flex justify-content-between align-items-center bg-white border rounded mb-2">
                                                 <div class="d-flex align-items-center">
                                                     <div class="me-3 text-primary fs-4">
-                                                        @if (Str::contains($file->mime_type, 'image'))
+                                                        <?php if(Str::contains($file->mime_type, 'image')): ?>
                                                             <i class="fa-regular fa-image"></i>
-                                                        @elseif(Str::contains($file->mime_type, 'pdf'))
+                                                        <?php elseif(Str::contains($file->mime_type, 'pdf')): ?>
                                                             <i class="fa-regular fa-file-pdf text-danger"></i>
-                                                        @else
+                                                        <?php else: ?>
                                                             <i class="fa-regular fa-file"></i>
-                                                        @endif
+                                                        <?php endif; ?>
                                                     </div>
                                                     <div>
-                                                        <a href="{{ route('files.download', $file->id) }}"
+                                                        <a href="<?php echo e(route('files.download', $file->id)); ?>"
                                                             class="fw-bold text-dark text-decoration-none"
                                                             target="_blank">
-                                                            {{ $file->original_name }}
+                                                            <?php echo e($file->original_name); ?>
+
                                                         </a>
                                                         <div class="small text-muted">
-                                                            {{ $file->created_at->format('d.m.Y H:i') }} -
-                                                            {{ $file->uploader->name ?? '?' }}
+                                                            <?php echo e($file->created_at->format('d.m.Y H:i')); ?> -
+                                                            <?php echo e($file->uploader->name ?? '?'); ?>
+
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 <div class="d-flex gap-2">
-                                                    <a href="{{ route('files.download', $file->id) }}"
+                                                    <a href="<?php echo e(route('files.download', $file->id)); ?>"
                                                         class="btn btn-sm btn-outline-primary" title="İndir">
                                                         <i class="fa-solid fa-download"></i>
                                                     </a>
 
-                                                    {{-- Sadece yükleyen veya admin silebilir --}}
-                                                    @if (Auth::id() === $file->uploaded_by || Auth::user()->role === 'admin')
-                                                        <form action="{{ route('files.destroy', $file->id) }}"
+                                                    
+                                                    <?php if(Auth::id() === $file->uploaded_by || Auth::user()->role === 'admin'): ?>
+                                                        <form action="<?php echo e(route('files.destroy', $file->id)); ?>"
                                                             method="POST"
                                                             onsubmit="return confirm('Silmek istediğine emin misin?')">
-                                                            @csrf
-                                                            @method('DELETE')
+                                                            <?php echo csrf_field(); ?>
+                                                            <?php echo method_field('DELETE'); ?>
                                                             <button type="submit" class="btn btn-sm btn-outline-danger"
                                                                 title="Sil">
                                                                 <i class="fa-solid fa-trash"></i>
                                                             </button>
                                                         </form>
-                                                    @endif
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </div>
-                                @else
+                                <?php else: ?>
                                     <p class="text-muted text-center mb-3 small">Henüz dosya yüklenmemiş.</p>
-                                @endif
+                                <?php endif; ?>
 
-                                {{-- Yeni Dosya Yükleme Formu --}}
+                                
                                 <div class="border-top pt-3">
-                                    <form action="{{ route('files.store') }}" method="POST"
+                                    <form action="<?php echo e(route('files.store')); ?>" method="POST"
                                         enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
-                                        @csrf
+                                        <?php echo csrf_field(); ?>
                                         <input type="hidden" name="model_type" value="App\Models\VehicleAssignment">
-                                        <input type="hidden" name="model_id" value="{{ $assignment->id }}">
+                                        <input type="hidden" name="model_id" value="<?php echo e($assignment->id); ?>">
 
                                         <input type="file" name="file" class="form-control form-control-sm"
                                             required>
@@ -612,8 +624,10 @@
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('page_scripts')
+<?php $__env->startSection('page_scripts'); ?>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/service/assignments/edit.blade.php ENDPATH**/ ?>

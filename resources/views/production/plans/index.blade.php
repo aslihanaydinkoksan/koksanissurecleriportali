@@ -539,7 +539,7 @@
                 {{-- YENİ EKLENDİ: Global Excel Export Butonu --}}
                 <div class="mb-4 text-end">
                     <a href="{{ route('production.plans.export_list') }}" class="btn-export-global">
-                        <i class="fas fa-file-excel me-2"></i> Tüm Plan Listesini Excel'e Aktar
+                        <i class="fas fa-file-excel me-2"></i> Listeyi Excel'e Aktar
                     </a>
                 </div>
 

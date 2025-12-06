@@ -205,7 +205,7 @@
             </div>
             <div>
                 <a href="{{ route('maintenance.assets.export') }}" class="btn btn-export-global shadow-sm">
-                    <i class="fas fa-file-excel me-2"></i>Makine&Varlık Listesini Excel'e Aktar
+                    <i class="fas fa-file-excel me-2"></i>Listeyi Excel'e Aktar
                 </a>
                 <a href="{{ route('maintenance.assets.create') }}" class="btn btn-modern-add">
                     <i class="fas fa-plus me-2"></i> Yeni Makine/Varlık Ekle

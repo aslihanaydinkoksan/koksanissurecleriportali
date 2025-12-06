@@ -584,7 +584,7 @@ class HomeController extends Controller
     private function getLogisticsWelcomeData()
     {
         $welcomeTitle = "Yaklaşan Sevkiyatlar (Genel Bakış)";
-        $chartTitle = "Kargo İçeriği -> Araç Tipi Akışı (Tüm Zamanlar)";
+        $chartTitle = "Kargo İçeriği -> Araç Tipi Akışı ";
         $chartData = [];
         $todayItems = Shipment::whereBetween('tahmini_varis_tarihi', [Carbon::today()->startOfDay(), Carbon::today()->addDays(3)->endOfDay()])->orderBy('tahmini_varis_tarihi', 'asc')->get();
 

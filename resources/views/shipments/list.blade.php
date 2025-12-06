@@ -333,12 +333,13 @@
                         <i class="fas fa-filter me-2 text-primary"></i>Filtreleme Seçenekleri
                     </h5>
                     <button class="modern-btn modern-btn-secondary modern-btn-sm" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#filterCollapse" aria-expanded="true" aria-controls="filterCollapse">
+                        data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
                         <i class="fas fa-chevron-down"></i> Göster/Gizle
                     </button>
                 </div>
 
-                <div class="collapse show" id="filterCollapse">
+                <div class="collapse {{ request()->hasAny(['shipment_type', 'vehicle_type', 'cargo_content', 'date_from']) ? 'show' : '' }}"
+                    id="filterCollapse">
                     <form method="GET" action="{{ route('products.list') }}">
                         <div class="row g-3">
                             {{-- Sevkiyat Türü --}}
@@ -426,11 +427,11 @@
                                     <i class="fas fa-times"></i> Temizle
                                 </a>
                                 <button type="submit" class="modern-btn modern-btn-primary">
-                                    <i class="fas fa-filter"></i> Sonuçları Getir
+                                    <i class="fas fa-filter"></i> Filtrele
                                 </button>
                                 <button type="submit" formaction="{{ route('shipments.export_list') }}"
                                     class="modern-btn modern-btn-export">
-                                    <i class="fas fa-file-excel"></i> Sevkiyat Listesini Excel'e Aktar
+                                    <i class="fas fa-file-excel"></i> Listeyi Excel'e Aktar
                                 </button>
                             </div>
                         </div>
@@ -458,7 +459,8 @@
                                 <th scope="col">Varış</th>
                                 <th scope="col">Çıkış Tarihi</th>
                                 <th scope="col">Tahmini Varış</th>
-                                <th scope="col" class="text-end pe-4">İşlemler</th>
+                                <th scope="col" class="text-end pe-4" style="width: 1%; white-space: nowrap;">İşlemler
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -529,8 +531,9 @@
                                             @if (!in_array(Auth::user()->role, ['izleyici']))
                                                 {{-- Düzenle Butonu --}}
                                                 <a href="{{ route('shipments.edit', $shipment) }}"
-                                                    class="modern-btn modern-btn-edit modern-btn-sm" title="Düzenle">
-                                                    <i class="fas fa-edit"></i> Düzenle
+                                                    class="modern-btn modern-btn-edit modern-btn-sm d-inline-flex align-items-center justify-content-center"
+                                                    style="width: 135px;" {{-- SABİT GENİŞLİK --}} title="Düzenle">
+                                                    <i class="fas fa-edit me-2"></i> Düzenle
                                                 </a>
 
                                                 {{-- Sil Butonu --}}
@@ -540,16 +543,19 @@
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit"
-                                                        class="modern-btn modern-btn-danger modern-btn-sm" title="Sil">
-                                                        <i class="fas fa-trash"></i> Sil
+                                                        class="modern-btn modern-btn-danger modern-btn-sm d-inline-flex align-items-center justify-content-center"
+                                                        style="width: 135px;" {{-- SABİT GENİŞLİK --}} title="Sil">
+                                                        <i class="fas fa-trash me-2"></i> Sil
                                                     </button>
                                                 </form>
                                             @endif
 
                                             {{-- Excel Butonu --}}
                                             <a href="{{ route('shipments.export', $shipment->id) }}"
-                                                class="modern-btn modern-btn-export modern-btn-sm" title="Excel İndir">
-                                                <i class="fas fa-file-excel"></i> Detayı Excel'e Aktar
+                                                class="modern-btn modern-btn-export modern-btn-sm d-inline-flex align-items-center justify-content-center"
+                                                style="width: 135px;" {{-- SABİT GENİŞLİK --}} title="Excel İndir">
+                                                {{-- Metni biraz kısalttık ki butona sığsın --}}
+                                                <i class="fas fa-file-excel me-2"></i> Excel'e Aktar
                                             </a>
                                         </div>
                                     </td>

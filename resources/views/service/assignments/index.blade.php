@@ -630,26 +630,31 @@
                                 <div class="meta-value">{{ $assignment->createdBy->name ?? '-' }}</div>
                             </div>
                         </div>
-                        <div class="meta-item">
-                            <div class="meta-icon"><i class="fas fa-car"></i></div>
-                            <div class="meta-content">
-                                <div class="meta-label">Araç</div>
-                                <div class="meta-value">
-                                    @if ($assignment->status == 'waiting_assignment')
-                                        <span
-                                            class="text-warning fw-bold">{{ $assignment->vehicle_type == 'App\Models\LogisticsVehicle' ? '🚚 Nakliye (Seçilmedi)' : '🚙 Şirket Aracı (Seçilmedi)' }}</span>
-                                    @elseif ($assignment->vehicle)
-                                        @if ($assignment->vehicle instanceof \App\Models\LogisticsVehicle)
-                                            🚚 {{ $assignment->vehicle->plate_number }} <small
-                                                class="text-muted">({{ $assignment->vehicle->brand }})</small>
-                                        @else
-                                            🚙 {{ $assignment->vehicle->plate_number }}
-                                        @endif
-                                    @else
-                                        <span class="text-danger">Silinmiş/Yok</span>
-                                    @endif
-                                </div>
-                            </div>
+                        <div class="meta-value">
+                            {{-- DURUM 1: Araç Atanmışsa --}}
+                            @if ($assignment->vehicle)
+                                <div class="meta-label">Atanan Araç</div>
+                                @if ($assignment->vehicle instanceof \App\Models\LogisticsVehicle)
+                                    {{-- Lojistik Aracı --}}
+                                    <span class="text-success fw-bold">
+                                        🚚 {{ $assignment->vehicle->plate_number }}
+                                    </span>
+                                    <small class="text-muted">({{ $assignment->vehicle->brand }})</small>
+                                @else
+                                    {{-- Şirket Aracı --}}
+                                    <span class="text-primary fw-bold">
+                                        🚙 {{ $assignment->vehicle->plate_number }}
+                                    </span>
+                                @endif
+
+                                {{-- DURUM 2: Araç Henüz Atanmamışsa (Bekleme Durumu) --}}
+                            @else
+                                <span class="text-warning fw-bold" title="Ulaştırma biriminden araç bekleniyor">
+                                    <i class="fas fa-clock"></i> Araç Ataması Bekleniyor
+                                </span>
+                                {{-- İstersen altına ufak bir not düşebilirsin: --}}
+                                <div class="small text-muted fst-italic">Ulaştırma onayı bekleniyor</div>
+                            @endif
                         </div>
                         <div class="meta-item">
                             <div class="meta-icon"><i class="fas fa-map-marker-alt"></i></div>

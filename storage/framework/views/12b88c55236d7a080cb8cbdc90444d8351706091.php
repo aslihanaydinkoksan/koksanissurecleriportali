@@ -672,233 +672,467 @@
     </div>
 
     <?php echo $__env->yieldContent('page_scripts'); ?>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
+
+
             // --- 1. LOADER (YÜKLENİYOR EKRANI) ---
+
             const loader = document.getElementById('global-loader');
+
             if (loader) {
+
                 window.addEventListener('load', function() {
+
                     setTimeout(function() {
+
                         loader.classList.add('loaded');
+
                     }, 150);
+
                 });
+
                 setTimeout(function() {
+
                     if (!loader.classList.contains('loaded')) {
+
                         loader.classList.add('loaded');
+
                     }
+
                 }, 3000);
+
             }
+
+
 
             // --- 2. SCROLL EFEKTİ & MOBİL MENÜ ---
+
             window.addEventListener('scroll', function() {
+
                 const navbar = document.querySelector('.navbar');
+
                 if (navbar) {
+
                     if (window.scrollY > 50) navbar.classList.add('scrolled');
+
                     else navbar.classList.remove('scrolled');
+
                 }
+
             });
+
+
 
             document.querySelectorAll('.navbar-nav .nav-link:not(.dropdown-toggle)').forEach(link => {
+
                 link.addEventListener('click', function() {
+
                     if (window.innerWidth < 992) {
+
                         const navbarCollapse = document.querySelector('.navbar-collapse');
+
                         if (navbarCollapse) {
+
                             const bsCollapse = new bootstrap.Collapse(navbarCollapse, {
+
                                 toggle: false
+
                             });
+
                             bsCollapse.hide();
+
                         }
+
                     }
+
                 });
+
             });
+
+
 
             // --- 3. GLOBAL TOAST BİLDİRİMLERİ ---
+
             const Toast = Swal.mixin({
+
                 toast: true,
+
                 position: 'top-end',
+
                 showConfirmButton: false,
+
                 timer: 4000,
+
                 timerProgressBar: true,
+
                 didOpen: (toast) => {
+
                     toast.addEventListener('mouseenter', Swal.stopTimer);
+
                     toast.addEventListener('mouseleave', Swal.resumeTimer);
+
                 }
+
             });
+
+
 
             <?php if(session('success')): ?>
+
                 Toast.fire({
+
                     icon: 'success',
+
                     title: '<?php echo e(session('success')); ?>'
+
                 });
             <?php endif; ?>
+
             <?php if(session('error')): ?>
+
                 Toast.fire({
+
                     icon: 'error',
+
                     title: '<?php echo e(session('error')); ?>'
+
                 });
             <?php endif; ?>
+
             <?php if(session('warning')): ?>
+
                 Toast.fire({
+
                     icon: 'warning',
+
                     title: '<?php echo e(session('warning')); ?>'
+
                 });
             <?php endif; ?>
+
+
 
             window.showToast = function(message, type = 'success') {
+
                 Toast.fire({
+
                     icon: type,
+
                     title: message
+
                 });
+
             }
+
+
 
             // --- 4. AKILLI SİLME (DELETE CONFIRMATION) ---
+
             document.querySelectorAll('form').forEach(form => {
+
                 if (form.getAttribute('onsubmit') && form.getAttribute('onsubmit').includes('confirm')) {
+
                     form.removeAttribute('onsubmit');
+
                 }
+
             });
+
+
 
             document.addEventListener('submit', function(e) {
+
                 const form = e.target;
+
                 const methodInput = form.querySelector('input[name="_method"]');
 
+
+
                 if (form.tagName === 'FORM' && methodInput && methodInput.value.toUpperCase() ===
+
                     'DELETE') {
+
                     e.preventDefault();
 
+
+
                     Swal.fire({
+
                         title: 'Emin misiniz?',
+
                         text: "Bu kaydı silmek istediğinize emin misiniz?",
+
                         icon: 'warning',
+
                         showCancelButton: true,
+
                         confirmButtonColor: '#d33',
+
                         cancelButtonColor: '#3085d6',
+
                         confirmButtonText: 'Evet, Sil!',
+
                         cancelButtonText: 'İptal'
+
                     }).then((result) => {
+
                         if (result.isConfirmed) {
+
                             const btn = form.querySelector('button[type="submit"]');
+
                             if (btn) btn.disabled = true;
 
+
+
                             fetch(form.action, {
+
                                     method: 'POST',
+
                                     body: new FormData(form),
+
                                     headers: {
+
                                         'X-Requested-With': 'XMLHttpRequest',
+
                                         'Accept': 'application/json'
+
                                     }
+
                                 })
+
                                 .then(async response => {
+
                                     if (response.status === 403) {
+
                                         showToast(
+
                                             '⛔ Bu işlemi yapmaya yetkiniz bulunmamaktadır!',
+
                                             'error');
+
                                         return;
+
                                     }
+
                                     if (response.ok) {
+
                                         const contentType = response.headers.get(
+
                                             "content-type");
+
                                         if (contentType && contentType.indexOf(
+
                                                 "application/json") !== -1) {
+
                                             await Swal.fire('Silindi!',
+
                                                 'Kayıt başarıyla silindi.', 'success');
+
                                             window.location.reload();
+
                                         } else {
+
                                             const htmlText = await response.text();
+
                                             const parser = new DOMParser();
+
                                             const doc = parser.parseFromString(htmlText,
+
                                                 'text/html');
+
                                             const errorAlert = doc.querySelector(
+
                                                 '.alert-danger');
 
+
+
                                             if (errorAlert) {
+
                                                 let errorMsg = errorAlert.innerText.trim()
+
                                                     .replace('×', '').trim();
+
                                                 showToast(errorMsg, 'error');
+
                                             } else {
+
                                                 await Swal.fire('Silindi!',
+
                                                     'Kayıt başarıyla silindi.',
+
                                                     'success');
+
                                                 window.location.reload();
+
                                             }
+
                                         }
+
                                     } else {
+
                                         showToast('Bir hata oluştu.', 'error');
+
                                     }
+
                                 })
+
                                 .catch(error => {
+
                                     console.error(error);
+
                                     showToast('Sunucu hatası.', 'error');
+
                                 })
+
                                 .finally(() => {
+
                                     if (btn) btn.disabled = false;
+
                                 });
+
                         }
+
                     });
+
                 }
+
             });
 
+
+
             // --- 5. BİLDİRİM VE SİSTEM GÜNCELLEME KONTROLÜ ---
+
             setInterval(function() {
+
                 fetch("<?php echo e(route('notifications.check')); ?>")
+
                     .then(res => res.ok ? res.json() : Promise.reject(res))
+
                     .then(data => {
+
                         const badge = document.getElementById('notification-badge');
+
                         const icon = document.getElementById('notification-icon');
+
                         const readAllLink = document.getElementById('mark-all-read');
+
                         const list = document.getElementById('notification-list');
 
+
+
                         if (badge) {
+
                             badge.style.display = data.count > 0 ? 'inline-block' : 'none';
+
                             badge.innerText = data.count;
+
                         }
+
                         if (icon) icon.style.color = data.count > 0 ? '#d11f1f' : '#0d6efd';
+
                         if (readAllLink) readAllLink.style.display = data.count > 0 ? 'inline-block' :
+
                             'none';
+
                         if (list && list.innerHTML !== data.html) list.innerHTML = data.html;
+                        if (data.count > lastCount) {
+                            // Senin tanımladığın Toast nesnesini kullanıyoruz
+                            Toast.fire({
+                                icon: 'info',
+                                title: 'Yeni Bildirim',
+                                text: data.latest_message // Controller'dan gönderdiğimiz mesaj
+                            });
+                        }
+                        // Sayacı güncelle ki bir sonraki döngüde tekrar çalmasın
+                        lastCount = data.count;
+
                     })
+
                     .catch(err => console.error('Bildirim hatası:', err));
+
             }, 10000);
 
+
+
             // B) Global Akıllı Yenileme (Global Smart Refresh)
+
             const initialHash = "<?php echo e($globalDataHash ?? ''); ?>";
+
             if (initialHash) {
+
                 setInterval(function() {
+
                     // Aktif olarak yazı yazılıyorsa yenileme yapma
+
                     if (document.activeElement.tagName === 'INPUT' ||
+
                         document.activeElement.tagName === 'TEXTAREA' ||
+
                         document.activeElement.isContentEditable) {
+
                         return;
+
                     }
 
+
+
                     fetch("<?php echo e(route('system.check_updates')); ?>", {
+
                             // BU KISIM EKLENDİ: Laravel'e bunun bir AJAX isteği olduğunu söylüyoruz
+
                             headers: {
+
                                 'X-Requested-With': 'XMLHttpRequest',
+
                                 'Accept': 'application/json',
+
                                 'Content-Type': 'application/json'
+
                             }
+
                         })
+
                         .then(res => {
+
                             // Eğer oturum düşmüşse (401 veya 419) yenileme yapma veya sessiz kal
+
                             if (res.status === 401 || res.status === 419) {
+
                                 return null;
+
                             }
+
                             return res.json();
+
                         })
+
                         .then(data => {
+
                             if (data && data.hash && data.hash !== initialHash) {
+
                                 console.log('Sistem güncellendi, sayfa yenileniyor...');
+
                                 window.location.reload();
+
                             }
+
                         })
+
                         .catch(err => console.error('Güncelleme kontrolü başarısız:', err));
+
                 }, 10000); // 10 saniyede bir kontrol
+
             }
+
         });
     </script>
 </body>

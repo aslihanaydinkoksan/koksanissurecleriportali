@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use App\Services\CsvExporter;
+use App\Models\ShipmentsVehicleType;
 
 class ShipmentController extends Controller
 {
@@ -417,7 +418,7 @@ class ShipmentController extends Controller
 
         // Filtre dropdownları için seçenekleri al
         // distinct() null değerleri de getirebilir, filter() ile temizle
-        $vehicleTypes = Shipment::distinct()->pluck('arac_tipi')->filter()->sort()->values();
+        $vehicleTypes = ShipmentsVehicleType::pluck('name');
         $cargoContents = Shipment::distinct()->pluck('kargo_icerigi')->filter()->sort()->values();
 
         // İsteği de view'a gönderelim ki form tekrar doldurulabilsin

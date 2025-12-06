@@ -24,6 +24,9 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
         ]);
         $this->call(MaintenanceSeeder::class);
+        $this->call([
+            ShipmentsVehicleTypeSeeder::class,
+        ]);
 
     }
 }

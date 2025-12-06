@@ -454,7 +454,6 @@
                                     {{ $chartTitle ?? 'Veri Akışı' }}
                                 @endif
                             </h6>
-                            <span class="badge bg-light text-dark border">Canlı Veri</span>
                         </div>
                         <div class="card-body bg-white rounded-bottom">
                             <div class="sankey-container-wrapper">

@@ -355,7 +355,7 @@
                 </div>
                 <div class="d-flex justify-content-end mb-4">
                     <a href="<?php echo e(route('travels.export', request()->all())); ?>" class="btn-export-global">
-                        <i class="fas fa-file-excel me-2"></i> Seyahat Planı Listesini Excel'e Aktar
+                        <i class="fas fa-file-excel me-2"></i> Listeyi Excel'e Aktar
                     </a>
                 </div>
 
