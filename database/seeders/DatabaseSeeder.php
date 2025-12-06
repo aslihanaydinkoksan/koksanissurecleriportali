@@ -14,19 +14,20 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
+        $this->call(TransactionalDataCleanerSeeder::class);
         // \App\Models\User::factory(10)->create();
 
         // \App\Models\User::factory()->create([
         //     'name' => 'Test User',
         //     'email' => 'test@example.com',
         // ]);
-        $this->call([
-            AdminUserSeeder::class,
-        ]);
-        $this->call(MaintenanceSeeder::class);
-        $this->call([
-            ShipmentsVehicleTypeSeeder::class,
-        ]);
+        // $this->call([
+        //     AdminUserSeeder::class,
+        // ]);
+        // $this->call(MaintenanceSeeder::class);
+        // $this->call([
+        //     ShipmentsVehicleTypeSeeder::class,
+        // ]);
 
     }
 }
