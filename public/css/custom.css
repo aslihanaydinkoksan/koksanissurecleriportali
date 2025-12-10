@@ -1,0 +1,440 @@
+/* ============================================
+   MISAFIRHANE YÖNETİM SİSTEMİ - DESIGN SYSTEM
+   Write Once, Update Everywhere Prensibi
+   ============================================ */
+
+:root {
+    /* ===== ANA RENKLER ===== */
+    --primary-color: #2563eb;
+    /* Modern mavi */
+    --primary-dark: #1e40af;
+    --primary-light: #3b82f6;
+    --secondary-color: #64748b;
+    /* Nötr gri */
+    --accent-color: #06b6d4;
+    /* Cyan vurgu */
+
+    /* ===== DURUM RENKLERİ ===== */
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --info-color: #3b82f6;
+
+    /* ===== AÇIK/KOYU TONLAR ===== */
+    --success-light: #d1fae5;
+    --warning-light: #fef3c7;
+    --danger-light: #fee2e2;
+    --info-light: #dbeafe;
+
+    /* ===== ARKA PLAN RENKLERİ ===== */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-tertiary: #f1f5f9;
+    --bg-dark: #1e293b;
+
+    /* ===== BORDER RENKLERİ ===== */
+    --border-color: #e2e8f0;
+    --border-dark: #cbd5e1;
+
+    /* ===== METİN RENKLERİ ===== */
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --text-white: #ffffff;
+
+    /* ===== GÖLGELER (Minimalist) ===== */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+
+    /* ===== HOVER GÖLGE ===== */
+    --shadow-hover: 0 8px 16px -4px rgba(0, 0, 0, 0.15);
+
+    /* ===== BORDER RADIUS ===== */
+    --radius-sm: 0.375rem;
+    /* 6px */
+    --radius-md: 0.5rem;
+    /* 8px */
+    --radius-lg: 0.75rem;
+    /* 12px */
+    --radius-xl: 1rem;
+    /* 16px */
+
+    /* ===== BOŞLUKLAR ===== */
+    --spacing-xs: 0.5rem;
+    /* 8px */
+    --spacing-sm: 0.75rem;
+    /* 12px */
+    --spacing-md: 1rem;
+    /* 16px */
+    --spacing-lg: 1.5rem;
+    /* 24px */
+    --spacing-xl: 2rem;
+    /* 32px */
+    --spacing-2xl: 3rem;
+    /* 48px */
+
+    /* ===== FONT BOYUTLARI ===== */
+    --text-xs: 0.75rem;
+    /* 12px */
+    --text-sm: 0.875rem;
+    /* 14px */
+    --text-base: 1rem;
+    /* 16px */
+    --text-lg: 1.125rem;
+    /* 18px */
+    --text-xl: 1.25rem;
+    /* 20px */
+    --text-2xl: 1.5rem;
+    /* 24px */
+    --text-3xl: 1.875rem;
+    /* 30px */
+
+    /* ===== FONT WEIGHTS ===== */
+    --font-normal: 400;
+    --font-medium: 500;
+    --font-semibold: 600;
+    --font-bold: 700;
+
+    /* ===== TRANSİTİONS ===== */
+    --transition-fast: 150ms ease;
+    --transition-base: 200ms ease;
+    --transition-slow: 300ms ease;
+}
+
+/* ===== GLOBAL RESET & BASE STYLES ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: var(--text-base);
+    color: var(--text-primary);
+    background-color: var(--bg-secondary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== BOOTSTRAP ÖZELLEŞTİRMELERİ ===== */
+
+/* Container genişlikleri */
+.container-fluid {
+    padding-left: var(--spacing-lg);
+    padding-right: var(--spacing-lg);
+}
+
+/* Card modernizasyonu */
+.card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    transition: all var(--transition-base);
+    background-color: var(--bg-primary);
+    overflow: hidden;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    padding: var(--spacing-lg);
+    font-weight: var(--font-semibold);
+    color: var(--text-primary);
+}
+
+.card-body {
+    padding: var(--spacing-lg);
+}
+
+.card-footer {
+    background-color: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    padding: var(--spacing-md) var(--spacing-lg);
+}
+
+/* Button modernizasyonu */
+.btn {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--radius-md);
+    font-weight: var(--font-medium);
+    font-size: var(--text-sm);
+    transition: all var(--transition-fast);
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    text-decoration: none;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: var(--text-white);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    color: var(--text-white);
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    color: var(--text-white);
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    color: var(--text-white);
+}
+
+.btn-warning {
+    background-color: var(--warning-color);
+    color: var(--text-white);
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+    color: var(--text-white);
+}
+
+.btn-sm {
+    padding: calc(var(--spacing-xs) - 2px) var(--spacing-md);
+    font-size: var(--text-xs);
+}
+
+.btn-lg {
+    padding: var(--spacing-md) var(--spacing-xl);
+    font-size: var(--text-lg);
+}
+
+/* Table modernizasyonu */
+.table {
+    background-color: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+}
+
+.table thead {
+    background-color: var(--bg-secondary);
+    border-bottom: 2px solid var(--border-dark);
+}
+
+.table thead th {
+    font-weight: var(--font-semibold);
+    color: var(--text-primary);
+    padding: var(--spacing-md);
+    font-size: var(--text-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.table tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color var(--transition-fast);
+}
+
+.table tbody tr:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.table tbody td {
+    padding: var(--spacing-md);
+    vertical-align: middle;
+    color: var(--text-secondary);
+}
+
+/* Badge modernizasyonu */
+.badge {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    font-weight: var(--font-medium);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Alert modernizasyonu */
+.alert {
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    border-left-width: 4px;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Form modernizasyonu */
+.form-control,
+.form-select {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--text-sm);
+    transition: all var(--transition-fast);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    outline: none;
+}
+
+.form-label {
+    font-weight: var(--font-medium);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+    font-size: var(--text-sm);
+}
+
+/* ===== UTILITY CLASSES ===== */
+
+/* Text utilities */
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+.text-primary-custom {
+    color: var(--primary-color) !important;
+}
+
+.text-secondary-custom {
+    color: var(--text-secondary) !important;
+}
+
+/* Background utilities */
+.bg-light-custom {
+    background-color: var(--bg-secondary) !important;
+}
+
+.bg-tertiary {
+    background-color: var(--bg-tertiary) !important;
+}
+
+/* Spacing utilities */
+.gap-xs {
+    gap: var(--spacing-xs);
+}
+
+.gap-sm {
+    gap: var(--spacing-sm);
+}
+
+.gap-md {
+    gap: var(--spacing-md);
+}
+
+.gap-lg {
+    gap: var(--spacing-lg);
+}
+
+/* Border utilities */
+.border-custom {
+    border: 1px solid var(--border-color);
+}
+
+.border-radius-custom {
+    border-radius: var(--radius-lg);
+}
+
+/* Shadow utilities */
+.shadow-custom {
+    box-shadow: var(--shadow-card);
+}
+
+.shadow-hover-custom:hover {
+    box-shadow: var(--shadow-hover);
+}
+
+/* ===== RESPONSIVE UTILITIES ===== */
+@media (max-width: 768px) {
+    :root {
+        --spacing-lg: 1rem;
+        --spacing-xl: 1.5rem;
+    }
+
+    .container-fluid {
+        padding-left: var(--spacing-md);
+        padding-right: var(--spacing-md);
+    }
+
+    .card-body {
+        padding: var(--spacing-md);
+    }
+
+    .table thead th,
+    .table tbody td {
+        padding: var(--spacing-sm);
+        font-size: var(--text-xs);
+    }
+}
+
+/* ===== SCROLLBAR ÖZELLEŞTİRME ===== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-dark);
+    border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-color);
+}
+
+/* ===== ANIMASYONLAR ===== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn var(--transition-base) ease-out;
+}
+
+/* ===== LOADING STATE ===== */
+.skeleton {
+    background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-tertiary) 50%, var(--bg-secondary) 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s ease-in-out infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
