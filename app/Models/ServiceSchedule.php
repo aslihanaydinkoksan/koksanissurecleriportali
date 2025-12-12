@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Loggable;
+use App\Traits\HasBusinessUnit; // <--- 1. Use ekle
 
 /**
  * App\Models\ServiceSchedule
@@ -43,7 +44,7 @@ use App\Traits\Loggable;
  */
 class ServiceSchedule extends Model
 {
-    use HasFactory, SoftDeletes, Loggable;
+    use HasFactory, SoftDeletes, Loggable, HasBusinessUnit; // <--- 2. Trait ekle
     protected $fillable = [
         'name',
         'departure_time',

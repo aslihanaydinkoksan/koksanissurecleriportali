@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Traits\Loggable;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Traits\HasBusinessUnit; // <--- 1. Use ekle
 
 /**
  * App\Models\Travel
@@ -44,7 +45,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class Travel extends Model
 {
-    use HasFactory, Loggable;
+    use HasFactory, Loggable, HasBusinessUnit; // <--- 2. Trait ekle
 
     protected $table = 'travels';
     protected $fillable = [

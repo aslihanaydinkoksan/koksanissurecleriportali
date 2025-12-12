@@ -359,6 +359,99 @@
                     </div>
                 @endif
 
+                {{-- TO-DO WIDGET --}}
+                <div class="card shadow-sm border-0 mb-4" style="border-radius: 1rem; overflow: hidden;">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold text-primary"><i class="fas fa-check-square me-2"></i> Yapılacaklar</h6>
+                        <button class="btn btn-sm btn-light text-primary rounded-circle" data-bs-toggle="modal"
+                            data-bs-target="#addTodoModal">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        @php
+                            // Basitçe view içinde çekiyoruz (View Composer ile daha şık olur ama bu hızlı çözüm)
+                            $myTodos = \App\Models\Todo::forUser(auth()->user())
+                                ->where('user_id', auth()->id())
+                                ->where('is_completed', false)
+                                ->orderBy('priority', 'desc') // High -> Low
+                                ->orderBy('due_date', 'asc')
+                                ->take(5)
+                                ->get();
+                        @endphp
+
+                        <ul class="list-group list-group-flush" id="todo-list-widget">
+                            @forelse($myTodos as $todo)
+                                <li class="list-group-item d-flex align-items-center justify-content-between px-4 py-3"
+                                    id="todo-item-{{ $todo->id }}">
+                                    <div class="d-flex align-items-center">
+                                        <input class="form-check-input me-3 todo-checkbox" type="checkbox"
+                                            value="{{ $todo->id }}"
+                                            style="width: 1.2em; height: 1.2em; cursor: pointer;">
+                                        <div>
+                                            <div
+                                                class="fw-semibold text-dark {{ $todo->priority == 'high' ? 'text-danger' : '' }}">
+                                                {{ $todo->title }}
+                                            </div>
+                                            @if ($todo->due_date)
+                                                <small class="text-muted" style="font-size: 0.75rem">
+                                                    <i class="far fa-clock me-1"></i>
+                                                    {{ $todo->due_date->format('d.m H:i') }}
+                                                </small>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </li>
+                            @empty
+                                <li class="list-group-item text-center text-muted py-4">
+                                    <small>Harika! Yapılacak işin yok.</small>
+                                </li>
+                            @endforelse
+                        </ul>
+                    </div>
+                </div>
+
+                {{-- TO-DO EKLEME MODALI --}}
+                <div class="modal fade" id="addTodoModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg" style="border-radius: 1rem;">
+                            <form id="addTodoForm">
+                                <div class="modal-header border-0 pb-0">
+                                    <h5 class="modal-title fw-bold">Yeni Görev Ekle</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <input type="text" name="title" class="form-control form-control-lg"
+                                            placeholder="Ne yapılması gerekiyor?" required>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-6 mb-3">
+                                            <label class="small text-muted fw-bold">Son Tarih</label>
+                                            <input type="datetime-local" name="due_date" class="form-control">
+                                        </div>
+                                        <div class="col-6 mb-3">
+                                            <label class="small text-muted fw-bold">Öncelik</label>
+                                            <select name="priority" class="form-select">
+                                                <option value="medium">Orta</option>
+                                                <option value="high">Yüksek 🔥</option>
+                                                <option value="low">Düşük</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <textarea name="description" class="form-control" rows="2" placeholder="Detaylar (Opsiyonel)"></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-0 pt-0">
+                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">İptal</button>
+                                    <button type="submit" class="btn btn-primary px-4">Ekle</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
                 {{-- KPI KARTLARI (OPERASYON ÖZETİ) --}}
                 @if (isset($kpiData) && !empty($kpiData))
                     <div class="mb-4">
@@ -550,6 +643,51 @@
                     chartElement.innerHTML = '<p class="text-center text-danger">Grafik çizilemedi.</p>';
                 }
             }
+        });
+        // To-Do Ekleme
+        document.getElementById('addTodoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            let formData = new FormData(this);
+
+            fetch("{{ route('todos.store') }}", {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Sayfayı yenilemeden listeye eklemek JS ile yapılabilir ama
+                        // Şimdilik en temizi sayfayı yenilemek.
+                        window.location.reload();
+                    }
+                });
+        });
+
+        // To-Do Tamamlama (Checkbox)
+        document.querySelectorAll('.todo-checkbox').forEach(chk => {
+            chk.addEventListener('change', function() {
+                let id = this.value;
+                let item = document.getElementById('todo-item-' + id);
+
+                // Görsel efekt (Üstünü çiz ve kaybet)
+                item.style.opacity = '0.5';
+                item.style.textDecoration = 'line-through';
+
+                fetch(`/todos/${id}/toggle`, {
+                        method: "POST",
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(() => {
+                        setTimeout(() => item.remove(), 500); // Listeden sil
+                    });
+            });
         });
     </script>
 @endsection

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Loggable;
+use App\Traits\HasBusinessUnit; // <--- 1. Use ekle
 
 /**
  * App\Models\Shipment
@@ -80,7 +81,7 @@ use App\Traits\Loggable;
  */
 class Shipment extends Model
 {
-    use HasFactory, SoftDeletes, Loggable;
+    use HasFactory, SoftDeletes, Loggable, HasBusinessUnit; // <--- 2. Trait ekle
 
     protected $fillable = [
         'user_id',

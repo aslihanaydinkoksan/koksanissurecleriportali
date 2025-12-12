@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use App\Traits\Loggable;
+use App\Traits\HasBusinessUnit;
 
 /**
  * App\Models\Booking
@@ -51,7 +52,7 @@ use App\Traits\Loggable;
  */
 class Booking extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia, Loggable;
+    use HasFactory, InteractsWithMedia, Loggable, HasBusinessUnit;
 
     // Hangi alanların veritabanına yazılabileceği (Sadece isimler)
     protected $fillable = [

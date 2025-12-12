@@ -6,8 +6,15 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
-// Gate sınıfını buradan sildik, burası yetki yeri değil.
-
+use App\Observers\UserObserver;
+use App\Models\User;
+use App\Models\Shipment;
+use App\Models\ProductionPlan;
+use App\Models\Event;
+use App\Models\VehicleAssignment;
+use App\Models\Travel;
+use App\Models\MaintenancePlan;
+use App\Observers\BusinessUnitObserver;
 class AppServiceProvider extends ServiceProvider
 {
     public function register()
@@ -51,5 +58,12 @@ class AppServiceProvider extends ServiceProvider
             }
             $view->with('globalPendingCount', $totalPending);
         });
+        User::observe(UserObserver::class);
+        Shipment::observe(BusinessUnitObserver::class);
+        ProductionPlan::observe(BusinessUnitObserver::class);
+        Event::observe(BusinessUnitObserver::class);
+        VehicleAssignment::observe(BusinessUnitObserver::class);
+        Travel::observe(BusinessUnitObserver::class);
+        MaintenancePlan::observe(BusinessUnitObserver::class);
     }
 }

@@ -1040,7 +1040,7 @@
 
             function openUniversalModal(props) {
                 hardResetModalUI();
-                if (!props || !props.eventType) return;
+                if (!props || (!props.eventType && !props.model_type)) return;
 
                 const statusMap = {
                     'Critical': {
@@ -1148,6 +1148,20 @@
                 } else if (props.eventType === 'production') {
                     icon = 'fa-industry';
                     typeTitle = 'Üretim Bilgileri';
+                } else if (props.eventType === 'todo' || props.model_type === 'todo') {
+                    const todoNote = props.details['Not'] || props.details['Açıklama'];
+
+                    if (todoNote && todoNote !== 'Açıklama yok') {
+                        html += `<div class="p-3 bg-light rounded border mb-3">
+                    <h6 class="fw-bold text-primary mb-2"><i class="fas fa-sticky-note me-2"></i>Notlar</h6>
+                    <p class="mb-0 text-dark" style="white-space: pre-wrap;">${todoNote}</p>
+                 </div>`;
+                    }
+                    html += `<div class="text-center mt-3">
+                <button onclick="toggleTodoFromModal(${props.id})" class="btn btn-outline-success btn-sm w-100">
+                    <i class="fas fa-check me-2"></i> Durumu Değiştir (Tamamla/Geri Al)
+                </button>
+             </div>`;
                 }
 
                 html +=
@@ -1224,8 +1238,12 @@
                     modalExportButton.href = props.url;
                     modalExportButton.innerHTML = '<i class="fas fa-eye me-2"></i> Detaya Git';
                     modalExportButton.style.display = 'inline-block';
+                } else if (props.eventType === 'todo' || props.model_type === 'todo') {
+                    icon = 'fa-check-square';
+                    typeTitle = 'Yapılacak İş Detayı';
+                    // To-Do için özel buton veya işlem gerekirse buraya ekle
+                    // Örneğin "Tamamla" butonu eklenebilir ama widget'ta var zaten.
                 }
-
                 modalBody.innerHTML = html;
                 detailModal.show();
             }
@@ -1261,7 +1279,7 @@
                 eventSources: [{
                     url: calendarEventsUrl,
                     failure: () => alert('Veri hatası!')
-                }, {
+                }, , {
                     googleCalendarId: 'tr.turkish#holiday@group.v.calendar.google.com',
                     color: '#dc3545',
                     className: 'fc-event-holiday',
@@ -1269,8 +1287,10 @@
                 }],
                 eventClick: function(info) {
                     info.jsEvent.preventDefault();
-                    if (info.event.extendedProps && info.event.extendedProps.eventType)
-                        openUniversalModal(info.event.extendedProps);
+                    const props = info.event.extendedProps;
+                    if (props && (props.eventType || props.model_type)) {
+                        openUniversalModal(props);
+                    }
                 },
                 eventDidMount: function(info) {
                     if (info.event.extendedProps && info.event.extendedProps.is_important)
@@ -1422,5 +1442,35 @@
                 });
             }
         });
+        // Modal içinden To-Do durumunu değiştirme
+        window.toggleTodoFromModal = function(id) {
+            fetch(`/todos/${id}/toggle`, {
+                    method: "POST",
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Modalı kapat ve sayfayı yenile (veya takvimi güncelle)
+                        const modalEl = document.getElementById('detailModal');
+                        const modal = bootstrap.Modal.getInstance(modalEl);
+                        modal.hide();
+
+                        // Kullanıcıya bildirim ver
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Güncellendi',
+                            text: 'Görev durumu başarıyla değiştirildi.',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.reload(); // Listeyi ve takvimi yenile
+                        });
+                    }
+                });
+        }
     </script>
 @endsection

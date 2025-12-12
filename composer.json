@@ -16,7 +16,8 @@
         "laravel/tinker": "^2.7",
         "laravel/ui": "^4.6",
         "spatie/laravel-activitylog": "^4.7",
-        "spatie/laravel-medialibrary": "10.0"
+        "spatie/laravel-medialibrary": "10.0",
+        "spatie/laravel-permission": "^6.23"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^2.15",

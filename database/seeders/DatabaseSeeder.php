@@ -14,20 +14,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
+        // 1. Önce eski verileri temizle (Mevcut kodunda vardı, koruyoruz)
         $this->call(TransactionalDataCleanerSeeder::class);
-        // \App\Models\User::factory(10)->create();
 
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
-        // $this->call([
-        //     AdminUserSeeder::class,
-        // ]);
+        // 2. KRİTİK ADIM: Rolleri ve İzinleri Yükle (Spatie)
+        $this->call(RolePermissionSeeder::class);
+
+        // 3. Admin Kullanıcısı (Eğer AdminUserSeeder'ın varsa onu da açabilirsin)
+        // $this->call(AdminUserSeeder::class);
+
+        // 4. Diğer veriler...
         // $this->call(MaintenanceSeeder::class);
-        // $this->call([
-        //     ShipmentsVehicleTypeSeeder::class,
-        // ]);
-
+        // $this->call(ShipmentsVehicleTypeSeeder::class);
     }
 }

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Loggable;
 use Illuminate\Notifications\Notifiable;
+use App\Traits\HasBusinessUnit; // <--- 1. Use ekle
 
 /**
  * App\Models\Team
@@ -25,7 +26,7 @@ use Illuminate\Notifications\Notifiable;
  */
 class Team extends Model
 {
-    use HasFactory, SoftDeletes, Loggable;
+    use HasFactory, SoftDeletes, Loggable, HasBusinessUnit; // <--- 2. Trait ekle
 
     protected $fillable = [
         'name',

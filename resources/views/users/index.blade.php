@@ -306,21 +306,24 @@
                                         <td>
                                             @foreach ($user->roles as $role)
                                                 @php
+                                                    // Admin ise mor, değilse mavi badge rengi
                                                     $badgeClass =
-                                                        $role->slug == 'admin' ? 'badge-role-admin' : 'badge-role-user';
+                                                        $role->name == 'admin' ? 'badge-role-admin' : 'badge-role-user';
                                                 @endphp
+
                                                 <span class="badge-pill {{ $badgeClass }}">
-                                                    {{ $role->name }}
+                                                    {{-- DEĞİŞİKLİK BURADA: roles.php dosyasından çeviriyi çekiyoruz --}}
+                                                    {{ __('roles.' . $role->name) }}
                                                 </span>
                                             @endforeach
                                         </td>
                                         <td>
-                                            @if ($user->departments->count() > 0)
-                                                @foreach ($user->departments as $dept)
-                                                    <span class="badge-pill badge-dept">{{ $dept->name }}</span>
+                                            @if ($user->businessUnits->count() > 0)
+                                                @foreach ($user->businessUnits as $unit)
+                                                    <span class="badge bg-secondary">{{ $unit->name }}</span>
                                                 @endforeach
                                             @else
-                                                <span class="text-muted small fst-italic">Birim Yok</span>
+                                                <span class="text-muted fst-italic">Birim Yok</span>
                                             @endif
                                         </td>
                                         <td>

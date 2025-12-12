@@ -13,54 +13,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use App\Traits\Loggable;
 use Illuminate\Support\Str;
+use App\Models\BusinessUnit;
+use Spatie\Permission\Traits\HasRoles; // ✅ BU KALMALI
 
-/**
- * App\Models\User
- *
- * @property int $id
- * @property string $name
- * @property string $email
- * @property \Illuminate\Support\Carbon|null $email_verified_at
- * @property string $password
- * @property string $role
- * @property string|null $remember_token
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property int|null $department_id
- * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activities
- * @property-read int|null $activities_count
- * @property-read Department|null $department
- * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
- * @property-read int|null $notifications_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \Laravel\Sanctum\PersonalAccessToken> $tokens
- * @property-read int|null $tokens_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Travel> $travels
- * @property-read int|null $travels_count
- * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder|User newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|User newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|User onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|User query()
- * @method static \Illuminate\Database\Eloquent\Builder|User whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereDepartmentId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereEmail($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereEmailVerifiedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User wherePassword($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereRememberToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereRole($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User withTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|User withoutTrashed()
- * @mixin \Eloquent
- * @mixin IdeHelperUser
- */
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, Authorizable, Loggable;
+    // ✅ HasRoles trait'i buraya eklendi, artık roller buradan yönetiliyor
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, Authorizable, Loggable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -71,7 +30,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
+        'role', // Eski string rol sütunu (yedek olarak durabilir)
         'department_id',
     ];
 
@@ -93,6 +52,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
     /**
      * Kullanıcının ait olduğu birimi getirir.
      */
@@ -100,10 +60,12 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Department::class);
     }
+
     public function travels()
     {
         return $this->hasMany(Travel::class);
     }
+
     public function assignments()
     {
         return $this->morphMany(VehicleAssignment::class, 'responsible');
@@ -167,6 +129,7 @@ class User extends Authenticatable
     {
         return $this->createdTeams()->where('id', $teamId)->exists();
     }
+
     public function getPendingAssignmentsCountAttribute(): int
     {
         // Kullanıcının sorumlu olduğu bekleyen görevleri sayar
@@ -180,7 +143,6 @@ class User extends Authenticatable
                     // 2. Takım ataması
                     ->orWhere(function ($q) {
                     // Kullanıcının takımlarını al
-                    // Not: $this->teams() ilişkisinin user modelinde tanımlı olması gerekir (belongsToMany)
                     $teamIds = $this->teams()->pluck('teams.id');
 
                     $q->where('responsible_type', \App\Models\Team::class) // Team::class
@@ -191,33 +153,34 @@ class User extends Authenticatable
 
         return $count;
     }
+
     /**
-     * Kullanıcı Admin mi?
+     * Kullanıcı Admin mi? (GÜNCELLENDİ: Spatie Rol Kontrolü)
      */
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        // Hem eski 'role' sütununa bak (yedek) hem de yeni Spatie sistemine bak
+        return $this->role === 'admin' || $this->hasRole('admin');
     }
 
     /**
-     * Kullanıcı Yönetici mi?
+     * Kullanıcı Yönetici mi? (GÜNCELLENDİ)
      */
     public function isManager(): bool
     {
-        return $this->role === 'yönetici';
+        return $this->role === 'yönetici' || $this->hasRole('yonetici');
     }
-    public function roles()
-    {
-        return $this->belongsToMany(Role::class);
-    }
+
+
     public function departments()
     {
         return $this->belongsToMany(Department::class, 'department_user');
     }
+
     public function hasDepartment($departmentName)
     {
         // 1. Admin ise her yeri görsün
-        if ($this->role === 'admin') {
+        if ($this->isAdmin()) {
             return true;
         }
 
@@ -226,17 +189,10 @@ class User extends Authenticatable
             return true;
         }
 
-        // 3. Bulamazsa bir de SLUG ile kontrol et (Burası hayat kurtarır)
-        // Örnek: Kodda 'Bakım' gönderdin ama veritabanında slug 'bakim' ise bunu yakalarız.
-        // Türkçe karakterleri ve boşlukları temizleyip slug'a çeviriyoruz.
+        // 3. Bulamazsa bir de SLUG ile kontrol et
         $slug = Str::slug($departmentName);
 
         return $this->departments->contains('slug', $slug);
-    }
-    // YARDIMCI FONKSİYON: Kullanıcının belirli bir rolü var mı?
-    public function hasRole($roleSlug)
-    {
-        return $this->roles->contains('slug', $roleSlug) || $this->role === $roleSlug;
     }
 
     // YARDIMCI FONKSİYON: Kullanıcı belirli bir departmanda mı?
@@ -244,24 +200,47 @@ class User extends Authenticatable
     {
         return $this->departments->contains('slug', $deptSlug);
     }
+
     /**
-     * Kullanıcı Yönetici veya Müdür mü? (Onay yetkisi var mı?)
+     * Kullanıcı Yönetici veya Müdür mü?
      */
     public function isManagerOrDirector(): bool
     {
-        return in_array($this->role, ['yönetici', 'müdür']);
-    }
-    // Kullanıcının rollerini kontrol et, istenen yetki var mı bak.
-    public function hasPermission($key)
-    {
-        // Kullanıcının rollerini çekiyoruz
-        foreach ($this->roles as $role) {
-            // O rolün yetkileri arasında bu 'key' var mı?
-            if ($role->permissions()->where('key', $key)->exists()) {
-                return true;
-            }
-        }
-        return false;
+        // Eski yöntem + Yeni yöntem
+        if (in_array($this->role, ['yönetici', 'müdür']))
+            return true;
+        return $this->hasRole(['yonetici', 'mudur']);
     }
 
+    // MÜŞTEREK ÇALIŞMA (Many to Many)
+    // Bir kullanıcı birden fazla fabrikada yetkili olabilir.
+    public function businessUnits()
+    {
+        return $this->belongsToMany(BusinessUnit::class, 'business_unit_user')
+            ->withPivot('role_in_unit')
+
+            ->withTimestamps();
+    }
+    // Admin ise tüm birimleri getir, değilse sadece yetkili olduklarını.
+    public function getBusinessUnitsAttribute()
+    {
+        // Admin veya Global Yetkili ise TÜM aktif birimleri döndür
+        if ($this->hasRole('admin') || $this->can('view_all_business_units')) {
+            return \App\Models\BusinessUnit::where('is_active', true)->get();
+        }
+
+        // Değilse normal ilişkiyi döndür
+        return $this->getRelationValue('businessUnits');
+    }
+
+    // Yardımcı Metod: Kullanıcının şu birime yetkisi var mı?
+    public function hasAccessToUnit($unitId)
+    {
+        // Admin her yere girer
+        if ($this->hasRole('admin')) { // 'admin' küçük harf kullandık seeder'da
+            return true;
+        }
+
+        return $this->businessUnits->contains('id', $unitId);
+    }
 }

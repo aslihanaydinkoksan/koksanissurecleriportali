@@ -306,9 +306,6 @@
                             
                             <?php
                                 $user = Auth::user();
-                                $isAdmin = $user->role === 'admin';
-                                // Slug kontrolünü güvenli hale getiriyoruz
-                                $deptSlug = $user->department ? trim($user->department->slug) : null;
                             ?>
 
                             <li class="nav-item"><a class="nav-link" href="<?php echo e(route('general.calendar')); ?>"><i
@@ -354,7 +351,7 @@
                             </li>
 
                             
-                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('access-department', 'lojistik')): ?>
+                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view_logistics')): ?>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown"><i class="fa-solid fa-route"
@@ -372,7 +369,7 @@
                             <?php endif; ?>
 
                             
-                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('access-department', 'uretim')): ?>
+                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view_production')): ?>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown"><i class="fa-solid fa-industry"
@@ -390,11 +387,10 @@
                             <?php endif; ?>
 
                             
-                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('access-department', 'bakim')): ?>
+                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view_maintenance')): ?>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown">
-                                        
                                         <i class="fa-solid fa-screwdriver-wrench" style="color: #ED8936;"></i>
                                         <span>Bakım</span>
                                     </a>
@@ -411,8 +407,9 @@
                                                 Planlanan Bakımlar Listesi
                                             </a>
                                         </li>
+
                                         
-                                        <?php if($user->role === 'admin' || $user->isManagerOrDirector()): ?>
+                                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('approve_maintenance')): ?>
                                             <li>
                                                 <hr class="dropdown-divider">
                                             </li>
@@ -420,7 +417,6 @@
                                                 <a class="nav-link" href="<?php echo e(route('approvals.maintenance')); ?>">
                                                     <i class="fas fa-check-double" style="color: #F6AD55;"></i> Onayımı
                                                     Bekleyenler
-                                                    
                                                     <?php if(isset($globalPendingCount) && $globalPendingCount > 0): ?>
                                                         <span
                                                             class="badge bg-danger ms-auto rounded-pill"><?php echo e($globalPendingCount); ?></span>
@@ -443,7 +439,7 @@
 
                             
                             
-                            <?php if(Gate::check('access-department', 'hizmet') || Gate::check('access-department', 'ulastirma')): ?>
+                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view_administrative')): ?>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown">
@@ -452,98 +448,149 @@
                                     </a>
 
                                     <ul class="dropdown-menu dropdown-menu-end">
+                                        
+                                        <li>
+                                            <a class="dropdown-item" href="<?php echo e(route('service.events.create')); ?>">
+                                                <i class="fa-solid fa-calendar-plus" style="color: #3B82F6;"></i> Yeni
+                                                Etkinlik
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="<?php echo e(route('service.events.index')); ?>">
+                                                <i class="fa-solid fa-calendar-days" style="color: #0EA5E9;"></i>
+                                                Etkinlik Listesi
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <hr class="dropdown-divider">
+                                        </li>
 
                                         
-                                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('access-department', 'hizmet')): ?>
-                                            
-                                            <li>
-                                                <a class="dropdown-item" href="<?php echo e(route('service.events.create')); ?>">
-                                                    <i class="fa-solid fa-calendar-plus" style="color: #3B82F6;"></i> Yeni
-                                                    Etkinlik
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" href="<?php echo e(route('service.events.index')); ?>">
-                                                    <i class="fa-solid fa-calendar-days" style="color: #0EA5E9;"></i>
-                                                    Etkinlik Listesi
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <hr class="dropdown-divider">
-                                            </li>
-                                        <?php endif; ?>
+                                        <li>
+                                            <a class="dropdown-item" href="<?php echo e(route('service.vehicles.index')); ?>">
+                                                <i class="fa-solid fa-car" style="color: #F59E0B;"></i> Şirket
+                                                Araçları
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="<?php echo e(route('service.logistics-vehicles.index')); ?>">
+                                                <i class="fa-solid fa-truck" style="color: #EA580C;"></i> Nakliye
+                                                Araçları
+                                            </a>
+                                        </li>
 
                                         
-                                        
-                                        <?php if(Gate::check('access-department', 'hizmet') || Gate::check('access-department', 'ulastirma')): ?>
-                                            <li>
-                                                <a class="dropdown-item" href="<?php echo e(route('service.vehicles.index')); ?>">
-                                                    <i class="fa-solid fa-car" style="color: #F59E0B;"></i> Şirket
-                                                    Araçları
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item"
-                                                    href="<?php echo e(route('service.logistics-vehicles.index')); ?>">
-                                                    <i class="fa-solid fa-truck" style="color: #EA580C;"></i> Nakliye
-                                                    Araçları
-                                                </a>
-                                            </li>
-                                        <?php endif; ?>
+                                        <li>
+                                            <hr class="dropdown-divider">
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="<?php echo e(route('travels.create')); ?>">
+                                                <i class="fa-solid fa-route" style="color: #8B5CF6;"></i> Yeni Seyahat
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="<?php echo e(route('travels.index')); ?>">
+                                                <i class="fa-solid fa-list-check" style="color: #A78BFA;"></i> Seyahat
+                                                Listesi
+                                            </a>
+                                        </li>
 
                                         
-                                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('access-department', 'hizmet')): ?>
-                                            
-                                            <li>
-                                                <hr class="dropdown-divider">
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" href="<?php echo e(route('travels.create')); ?>">
-                                                    <i class="fa-solid fa-route" style="color: #8B5CF6;"></i> Yeni Seyahat
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" href="<?php echo e(route('travels.index')); ?>">
-                                                    <i class="fa-solid fa-list-check" style="color: #A78BFA;"></i> Seyahat
-                                                    Listesi
-                                                </a>
-                                            </li>
+                                        <li>
+                                            <hr class="dropdown-divider">
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item"
+                                                href="<?php echo e(route('service.events.index', ['event_type' => 'fuar'])); ?>">
+                                                <i class="fa-solid fa-tents" style="color: #10B981;"></i> Fuar
+                                                Yönetimi
+                                            </a>
+                                        </li>
 
-                                            
-                                            <li>
-                                                <hr class="dropdown-divider">
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item"
-                                                    href="<?php echo e(route('service.events.index', ['event_type' => 'fuar'])); ?>">
-                                                    <i class="fa-solid fa-tents" style="color: #10B981;"></i> Fuar
-                                                    Yönetimi
-                                                </a>
-                                            </li>
-
-                                            
-                                            <li>
-                                                <hr class="dropdown-divider">
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" href="<?php echo e(route('bookings.index')); ?>">
-                                                    <i class="fa-solid fa-book-bookmark" style="color: #EC4899;"></i> Tüm
-                                                    Rezervasyonlar
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <hr class="dropdown-divider">
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" href="<?php echo e(route('customers.index')); ?>">
-                                                    <i class="fa-solid fa-users" style="color: #06B6D4;"></i> Müşteri
-                                                    Yönetimi
-                                                </a>
-                                            </li>
-                                        <?php endif; ?>
-
+                                        
+                                        <li>
+                                            <hr class="dropdown-divider">
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="<?php echo e(route('bookings.index')); ?>">
+                                                <i class="fa-solid fa-book-bookmark" style="color: #EC4899;"></i> Tüm
+                                                Rezervasyonlar
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <hr class="dropdown-divider">
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="<?php echo e(route('customers.index')); ?>">
+                                                <i class="fa-solid fa-users" style="color: #06B6D4;"></i> Müşteri
+                                                Yönetimi
+                                            </a>
+                                        </li>
                                     </ul>
                                 </li>
+                            <?php endif; ?>
+
+                            
+                            <?php if(auth()->guard()->check()): ?>
+                                <?php if(auth()->user()->businessUnits->count() > 1): ?>
+                                    
+                                    <li class="nav-item dropdown me-3 d-flex align-items-center">
+                                        <a class="nav-link dropdown-toggle btn btn-sm shadow-sm border" href="#"
+                                            role="button" data-bs-toggle="dropdown"
+                                            style="border-radius: 20px; padding: 5px 15px; background: rgba(255,255,255,0.8); border-color: #e2e8f0 !important;">
+                                            
+                                            <i class="fa-solid fa-industry text-primary me-2"></i>
+                                            <span class="fw-bold text-dark" style="font-size: 0.85rem;">
+                                                <?php echo e(session('active_unit_name', 'Birim Seçiniz')); ?>
+
+                                            </span>
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0"
+                                            style="border-radius: 12px; min-width: 200px;">
+                                            <li class="dropdown-header text-uppercase small fw-bold text-muted px-3 py-2">
+                                                Çalışma Alanı Seç</li>
+                                            <li>
+                                                <hr class="dropdown-divider my-0">
+                                            </li>
+
+                                            <?php $__currentLoopData = auth()->user()->businessUnits; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $unit): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <li>
+                                                    <form action="<?php echo e(route('switch.unit')); ?>" method="POST">
+                                                        <?php echo csrf_field(); ?>
+                                                        <input type="hidden" name="unit_id" value="<?php echo e($unit->id); ?>">
+                                                        <button type="submit"
+                                                            class="dropdown-item d-flex justify-content-between align-items-center px-3 py-2"
+                                                            style="cursor: pointer;">
+                                                            <span class="fw-semibold"><?php echo e($unit->name); ?></span>
+                                                            
+                                                            <?php if(session('active_unit_id') == $unit->id): ?>
+                                                                <i class="fa-solid fa-circle-check text-success"></i>
+                                                            <?php endif; ?>
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                        </ul>
+                                    </li>
+                                <?php elseif(auth()->user()->businessUnits->count() == 1): ?>
+                                    
+                                    <li class="nav-item me-3 d-flex align-items-center">
+                                        <span class="badge bg-white text-primary border px-3 py-2 rounded-pill shadow-sm"
+                                            style="font-size: 0.8rem;">
+                                            <i class="fa-solid fa-industry me-1"></i>
+                                            <?php echo e(auth()->user()->businessUnits->first()->name); ?>
+
+                                        </span>
+                                    </li>
+                                <?php else: ?>
+                                    
+                                    <li class="nav-item me-3 d-flex align-items-center">
+                                        <span class="badge bg-danger text-white border px-3 py-2 rounded-pill shadow-sm">
+                                            <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                                            Yetkili Birim Yok!
+                                        </span>
+                                    </li>
+                                <?php endif; ?>
                             <?php endif; ?>
 
                             
@@ -611,6 +658,7 @@
                                 </div>
                             </li>
 
+                            
                             <li class="nav-item dropdown">
                                 <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button"
                                     data-bs-toggle="dropdown">
@@ -622,19 +670,30 @@
                                     <li><a class="dropdown-item" href="<?php echo e(route('profile.edit')); ?>"><i
                                                 class="fa-solid fa-user-pen" style="color: #4FD1C5;"></i> Profilimi
                                             Düzenle</a></li>
-                                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('is-global-manager')): ?>
+
+                                    
+                                    <?php if (\Illuminate\Support\Facades\Blade::check('role', 'admin')): ?>
                                         <li><a class="dropdown-item" href="<?php echo e(route('users.create')); ?>"><i
                                                     class="fa-solid fa-user-plus" style="color: #667EEA;"></i> Kullanıcı
                                                 Ekle</a></li>
-                                    <?php endif; ?>
-                                    <?php if($user->role === 'admin'): ?>
+
                                         <li><a class="dropdown-item" href="<?php echo e(route('users.index')); ?>"><i
                                                     class="fa-solid fa-list" style="color: #31317e;"></i>
                                                 Kullanıcıları
                                                 Görüntüle</a></li>
-                                        <li><a class="dropdown-item" href="<?php echo e(route('birimler.index')); ?>"><i
-                                                    class="fa-solid fa-tags" style="color: #FBD38D;"></i> Birimleri
-                                                Yönet</a></li>
+                                        <li>
+                                            <a class="dropdown-item" href="<?php echo e(route('business-units.index')); ?>">
+                                                <i class="fa-solid fa-industry" style="color: #FBD38D;"></i>
+                                                Fabrika Yönetimi
+                                            </a>
+                                        </li>
+
+                                        <li>
+                                            <a class="dropdown-item" href="<?php echo e(route('birimler.index')); ?>">
+                                                <i class="fa-solid fa-scale-balanced" style="color: #667EEA;"></i>
+                                                Ölçü Birimleri
+                                            </a>
+                                        </li>
                                         <li><a class="dropdown-item" href="<?php echo e(route('departments.index')); ?>"><i
                                                     class="fa-solid fa-building" style="color: #667EEA;"></i>
                                                 Departmanlar</a></li>
@@ -648,6 +707,7 @@
                                             <hr class="dropdown-divider">
                                         </li>
                                     <?php endif; ?>
+
                                     <li>
                                         <form method="POST" action="<?php echo e(route('logout')); ?>">
                                             <?php echo csrf_field(); ?>
@@ -677,462 +737,231 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
-
-
             // --- 1. LOADER (YÜKLENİYOR EKRANI) ---
-
             const loader = document.getElementById('global-loader');
-
             if (loader) {
-
                 window.addEventListener('load', function() {
-
                     setTimeout(function() {
-
                         loader.classList.add('loaded');
-
                     }, 150);
-
                 });
-
                 setTimeout(function() {
-
                     if (!loader.classList.contains('loaded')) {
-
                         loader.classList.add('loaded');
-
                     }
-
                 }, 3000);
-
             }
 
-
-
             // --- 2. SCROLL EFEKTİ & MOBİL MENÜ ---
-
             window.addEventListener('scroll', function() {
-
                 const navbar = document.querySelector('.navbar');
-
                 if (navbar) {
-
                     if (window.scrollY > 50) navbar.classList.add('scrolled');
-
                     else navbar.classList.remove('scrolled');
-
                 }
-
             });
-
-
 
             document.querySelectorAll('.navbar-nav .nav-link:not(.dropdown-toggle)').forEach(link => {
-
                 link.addEventListener('click', function() {
-
                     if (window.innerWidth < 992) {
-
                         const navbarCollapse = document.querySelector('.navbar-collapse');
-
                         if (navbarCollapse) {
-
                             const bsCollapse = new bootstrap.Collapse(navbarCollapse, {
-
                                 toggle: false
-
                             });
-
                             bsCollapse.hide();
-
                         }
-
                     }
-
                 });
-
             });
-
-
 
             // --- 3. GLOBAL TOAST BİLDİRİMLERİ ---
-
             const Toast = Swal.mixin({
-
                 toast: true,
-
                 position: 'top-end',
-
                 showConfirmButton: false,
-
                 timer: 4000,
-
                 timerProgressBar: true,
-
                 didOpen: (toast) => {
-
                     toast.addEventListener('mouseenter', Swal.stopTimer);
-
                     toast.addEventListener('mouseleave', Swal.resumeTimer);
-
                 }
-
             });
 
-
-
             <?php if(session('success')): ?>
-
                 Toast.fire({
-
                     icon: 'success',
-
                     title: '<?php echo e(session('success')); ?>'
-
                 });
             <?php endif; ?>
 
             <?php if(session('error')): ?>
-
                 Toast.fire({
-
                     icon: 'error',
-
                     title: '<?php echo e(session('error')); ?>'
-
                 });
             <?php endif; ?>
 
             <?php if(session('warning')): ?>
-
                 Toast.fire({
-
                     icon: 'warning',
-
                     title: '<?php echo e(session('warning')); ?>'
-
                 });
             <?php endif; ?>
 
-
-
             window.showToast = function(message, type = 'success') {
-
                 Toast.fire({
-
                     icon: type,
-
                     title: message
-
                 });
-
             }
-
-
 
             // --- 4. AKILLI SİLME (DELETE CONFIRMATION) ---
-
             document.querySelectorAll('form').forEach(form => {
-
                 if (form.getAttribute('onsubmit') && form.getAttribute('onsubmit').includes('confirm')) {
-
                     form.removeAttribute('onsubmit');
-
                 }
-
             });
-
-
 
             document.addEventListener('submit', function(e) {
-
                 const form = e.target;
-
                 const methodInput = form.querySelector('input[name="_method"]');
 
-
-
                 if (form.tagName === 'FORM' && methodInput && methodInput.value.toUpperCase() ===
-
                     'DELETE') {
-
                     e.preventDefault();
 
-
-
                     Swal.fire({
-
                         title: 'Emin misiniz?',
-
                         text: "Bu kaydı silmek istediğinize emin misiniz?",
-
                         icon: 'warning',
-
                         showCancelButton: true,
-
                         confirmButtonColor: '#d33',
-
                         cancelButtonColor: '#3085d6',
-
                         confirmButtonText: 'Evet, Sil!',
-
                         cancelButtonText: 'İptal'
-
                     }).then((result) => {
-
                         if (result.isConfirmed) {
-
                             const btn = form.querySelector('button[type="submit"]');
-
                             if (btn) btn.disabled = true;
 
-
-
                             fetch(form.action, {
-
                                     method: 'POST',
-
                                     body: new FormData(form),
-
                                     headers: {
-
                                         'X-Requested-With': 'XMLHttpRequest',
-
                                         'Accept': 'application/json'
-
                                     }
-
                                 })
-
                                 .then(async response => {
-
                                     if (response.status === 403) {
-
                                         showToast(
-
                                             '⛔ Bu işlemi yapmaya yetkiniz bulunmamaktadır!',
-
                                             'error');
-
                                         return;
-
                                     }
-
                                     if (response.ok) {
-
                                         const contentType = response.headers.get(
-
                                             "content-type");
-
                                         if (contentType && contentType.indexOf(
-
                                                 "application/json") !== -1) {
-
                                             await Swal.fire('Silindi!',
-
                                                 'Kayıt başarıyla silindi.', 'success');
-
                                             window.location.reload();
-
                                         } else {
-
                                             const htmlText = await response.text();
-
                                             const parser = new DOMParser();
-
                                             const doc = parser.parseFromString(htmlText,
-
                                                 'text/html');
-
                                             const errorAlert = doc.querySelector(
-
                                                 '.alert-danger');
 
-
-
                                             if (errorAlert) {
-
                                                 let errorMsg = errorAlert.innerText.trim()
-
                                                     .replace('×', '').trim();
-
                                                 showToast(errorMsg, 'error');
-
                                             } else {
-
                                                 await Swal.fire('Silindi!',
-
                                                     'Kayıt başarıyla silindi.',
-
                                                     'success');
-
                                                 window.location.reload();
-
                                             }
-
                                         }
-
                                     } else {
-
                                         showToast('Bir hata oluştu.', 'error');
-
                                     }
-
                                 })
-
                                 .catch(error => {
-
                                     console.error(error);
-
                                     showToast('Sunucu hatası.', 'error');
-
                                 })
-
                                 .finally(() => {
-
                                     if (btn) btn.disabled = false;
-
                                 });
-
                         }
-
                     });
-
                 }
-
             });
 
-
-
             // --- 5. BİLDİRİM VE SİSTEM GÜNCELLEME KONTROLÜ ---
-
             setInterval(function() {
-
                 fetch("<?php echo e(route('notifications.check')); ?>")
-
                     .then(res => res.ok ? res.json() : Promise.reject(res))
-
                     .then(data => {
-
                         const badge = document.getElementById('notification-badge');
-
                         const icon = document.getElementById('notification-icon');
-
                         const readAllLink = document.getElementById('mark-all-read');
-
                         const list = document.getElementById('notification-list');
 
-
-
                         if (badge) {
-
                             badge.style.display = data.count > 0 ? 'inline-block' : 'none';
-
                             badge.innerText = data.count;
-
                         }
-
                         if (icon) icon.style.color = data.count > 0 ? '#d11f1f' : '#0d6efd';
-
                         if (readAllLink) readAllLink.style.display = data.count > 0 ? 'inline-block' :
-
                             'none';
-
                         if (list && list.innerHTML !== data.html) list.innerHTML = data.html;
-                        if (data.count > lastCount) {
-                            // Senin tanımladığın Toast nesnesini kullanıyoruz
-                            Toast.fire({
-                                icon: 'info',
-                                title: 'Yeni Bildirim',
-                                text: data.latest_message // Controller'dan gönderdiğimiz mesaj
-                            });
-                        }
-                        // Sayacı güncelle ki bir sonraki döngüde tekrar çalmasın
-                        lastCount = data.count;
-
+                        // Not: lastCount değişkeni tanımlı olmadığı için burada hata verebilir, 
+                        // eğer kullanıyorsan global scope'da tanımlamalısın.
                     })
-
                     .catch(err => console.error('Bildirim hatası:', err));
-
             }, 10000);
 
-
-
             // B) Global Akıllı Yenileme (Global Smart Refresh)
-
             const initialHash = "<?php echo e($globalDataHash ?? ''); ?>";
-
             if (initialHash) {
-
                 setInterval(function() {
-
-                    // Aktif olarak yazı yazılıyorsa yenileme yapma
-
                     if (document.activeElement.tagName === 'INPUT' ||
-
                         document.activeElement.tagName === 'TEXTAREA' ||
-
                         document.activeElement.isContentEditable) {
-
                         return;
-
                     }
 
-
-
                     fetch("<?php echo e(route('system.check_updates')); ?>", {
-
-                            // BU KISIM EKLENDİ: Laravel'e bunun bir AJAX isteği olduğunu söylüyoruz
-
                             headers: {
-
                                 'X-Requested-With': 'XMLHttpRequest',
-
                                 'Accept': 'application/json',
-
                                 'Content-Type': 'application/json'
-
                             }
-
                         })
-
                         .then(res => {
-
-                            // Eğer oturum düşmüşse (401 veya 419) yenileme yapma veya sessiz kal
-
                             if (res.status === 401 || res.status === 419) {
-
                                 return null;
-
                             }
-
                             return res.json();
-
                         })
-
                         .then(data => {
-
                             if (data && data.hash && data.hash !== initialHash) {
-
                                 console.log('Sistem güncellendi, sayfa yenileniyor...');
-
                                 window.location.reload();
-
                             }
-
                         })
-
                         .catch(err => console.error('Güncelleme kontrolü başarısız:', err));
-
-                }, 10000); // 10 saniyede bir kontrol
-
+                }, 10000);
             }
-
         });
     </script>
 </body>

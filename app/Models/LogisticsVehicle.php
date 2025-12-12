@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany; // Polymorphic ilişki için gerekli
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Loggable; // Diğer modellerinde olduğu gibi loglama
+use App\Traits\HasBusinessUnit; // <--- 1. Use ekle
 
 /**
  * App\Models\LogisticsVehicle
@@ -27,7 +28,8 @@ use App\Traits\Loggable; // Diğer modellerinde olduğu gibi loglama
  */
 class LogisticsVehicle extends Model
 {
-    use HasFactory, SoftDeletes, Loggable;
+    use HasFactory, SoftDeletes, Loggable, HasBusinessUnit; // <--- 2. Trait ekle
+    public static $globalPermission = 'manage_fleet';
 
     protected $fillable = [
         'plate_number',

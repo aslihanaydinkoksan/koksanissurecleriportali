@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use App\Traits\Loggable;
+use App\Traits\HasBusinessUnit; // <--- 1. Use ekle
 
 /**
  * App\Models\Complaint
@@ -42,7 +43,7 @@ use App\Traits\Loggable;
  */
 class Complaint extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia, Loggable;
+    use HasFactory, InteractsWithMedia, Loggable, HasBusinessUnit;
     protected $fillable = ['customer_id', 'user_id', 'customer_machine_id', 'title', 'description', 'status'];
     public function customer()
     {

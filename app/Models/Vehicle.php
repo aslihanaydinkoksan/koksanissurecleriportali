@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany; // [YENİ] HasMany yerine MorphMany
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Loggable;
+use App\Traits\HasBusinessUnit; // <--- 1. Use ekle
 
 /**
  * * Bu model  SADECE "Şirket Araçlarını" (Company Vehicles) temsil eder.
@@ -24,7 +25,7 @@ use App\Traits\Loggable;
  */
 class Vehicle extends Model
 {
-    use HasFactory, SoftDeletes, Loggable;
+    use HasFactory, SoftDeletes, Loggable, HasBusinessUnit; // <--- 2. Trait ekle
 
     protected $fillable = [
         'plate_number',

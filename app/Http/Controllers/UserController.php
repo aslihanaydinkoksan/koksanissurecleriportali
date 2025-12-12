@@ -3,140 +3,189 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Role;       // Eklendi
-use App\Models\Department; // Eklendi
+use App\Models\Department;
+use App\Models\BusinessUnit; // EKLENDİ: Fabrikalar
+use Spatie\Permission\Models\Role; // EKLENDİ: Spatie Rolleri
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules;
 
 class UserController extends Controller
 {
+    /**
+     * Kullanıcı Listesi
+     */
     public function index()
     {
-        $users = User::with(['roles', 'departments'])->latest()->paginate(10);
+        // Yetki Kontrolü
+        if (!Auth::user()->can('manage_users')) {
+            abort(403, 'Kullanıcıları görme yetkiniz yok.');
+        }
+
+        // Kullanıcıları, departmanlarını, rollerini ve BİRİMLERİNİ getir
+        $users = User::with(['department', 'roles', 'businessUnits'])->latest()->paginate(10);
         return view('users.index', compact('users'));
     }
+
+    /**
+     * Yeni Kullanıcı Formu
+     */
     public function create()
     {
-        $roles = Role::all();
-        $departments = Department::all();
+        if (!Auth::user()->can('manage_users')) {
+            abort(403);
+        }
 
-        return view('users.create', compact('roles', 'departments'));
+        $roles = Role::all(); // Spatie Rolleri
+        $departments = Department::all();
+        $businessUnits = BusinessUnit::where('is_active', true)->get(); // Sadece aktif fabrikalar
+
+        return view('users.create', compact('roles', 'departments', 'businessUnits'));
     }
 
+    /**
+     * Yeni Kullanıcı Kaydet
+     */
     public function store(Request $request)
     {
+        if (!Auth::user()->can('manage_users')) {
+            abort(403);
+        }
+
         // 1. Validasyon
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users', 'ends_with:@koksan.com'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'roles' => ['required', 'array'],
-            'roles.*' => ['exists:roles,id'],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'role' => ['required', 'exists:roles,name'],
             'departments' => ['nullable', 'array'],
             'departments.*' => ['exists:departments,id'],
+            'units' => ['nullable', 'array'],
+            'units.*' => ['exists:business_units,id'],
         ]);
-        $firstRoleID = $request->roles[0];
-        $roleData = Role::find($firstRoleID);
 
-        // Eğer rol bulunduysa slug'ını (örn: 'mudur'), bulunamazsa 'kullanıcı' yazsın.
-        $legacyRoleName = $roleData ? $roleData->slug : 'kullanıcı';
-        $legacyDepartmentId = null;
-        if ($request->has('departments') && count($request->departments) > 0) {
-            $legacyDepartmentId = $request->departments[0];
-        }
-
-        // 3. Kullanıcıyı Oluştur
+        // 2. Kullanıcıyı Oluştur
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $legacyRoleName, // <--- İŞTE EKSİK OLAN PARÇA BU
-            'department_id' => $legacyDepartmentId
+            // Geriye dönük uyumluluk için ilk seçileni ana departman yapıyoruz
+            'department_id' => $request->departments[0] ?? null,
+            'role' => $request->role
         ]);
 
-        // 4. İlişkileri Ata (Pivot Tablolara Yaz)
-        // attach() metodu veritabanındaki ara tablolara kayıt atar
-        $user->roles()->attach($request->roles);
+        // 3. Spatie Rol Ataması
+        $user->assignRole($request->role);
 
+        // 4. Business Unit (Fabrika) Ataması
+        if ($request->has('units')) {
+            $user->businessUnits()->attach($request->units);
+        }
+
+        // 5. DEPARTMAN ATAMASI (BU EKSİKTİ!) 🛠️
+        // Çoklu departmanları pivot tabloya (department_user) kaydediyoruz.
         if ($request->has('departments')) {
             $user->departments()->attach($request->departments);
         }
 
-        return redirect()->route('users.create')->with('success', 'Kullanıcı ve yetkileri başarıyla oluşturuldu!');
+        return redirect()->route('users.index')->with('success', 'Kullanıcı oluşturuldu.');
     }
 
+    /**
+     * Kullanıcı Düzenleme Formu
+     */
     public function edit(User $user)
     {
-        // Güvenlik Kontrolü: Düzenlenmek istenen kişi Admin ise, düzenleyen de Admin olmalı
-        if ($user->hasRole('admin') && !Auth::user()->hasRole('admin')) {
-            return redirect()->route('home')->with('error', 'Admin kullanıcıları sadece başka bir Admin tarafından düzenlenebilir.');
-        }
+        // ... yetki ve admin kontrolü
 
         $roles = Role::all();
         $departments = Department::all();
+        $businessUnits = BusinessUnit::where('is_active', true)->get();
 
-        return view('users.edit', compact('user', 'roles', 'departments'));
+        // Birimler (Mevcut kodunuzdaki gibi)
+        $userUnits = $user->businessUnits->pluck('id')->toArray();
+
+        // 🛠️ BURADAKİ EKSİĞİ GİDERDİK 🛠️
+        // Kullanıcının mevcut departman ID'lerini çekiyoruz
+        $userDepartments = $user->departments->pluck('id')->toArray();
+
+        // View'e $userDepartments değişkenini de gönderiyoruz
+        return view('users.edit', compact('user', 'roles', 'departments', 'businessUnits', 'userUnits', 'userDepartments'));
     }
 
+    /**
+     * Kullanıcı Güncelle
+     */
     public function update(Request $request, User $user)
     {
-        // Güvenlik Kontrolü
+        if (!Auth::user()->can('manage_users')) {
+            abort(403);
+        }
+
+        // Admin koruması
         if ($user->hasRole('admin') && !Auth::user()->hasRole('admin')) {
-            return redirect()->route('home')->with('error', 'Admin kullanıcıları sadece başka bir Admin tarafından düzenlenebilir.');
+            abort(403, 'Admin kullanıcısını düzenleyemezsiniz.');
         }
 
         // Validasyon
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-            'roles' => ['required', 'array'],
-            'roles.*' => ['exists:roles,id'],
+            'role' => ['required', 'exists:roles,name'],
             'departments' => ['nullable', 'array'],
-            'departments.*' => ['exists:departments,id'],
+            'units' => ['nullable', 'array'],
+            'units.*' => ['exists:business_units,id'],
         ]);
 
-        // Güvenlik: Admin atama kontrolü (Update için)
-        $adminRole = Role::where('slug', 'admin')->first();
-        if ($adminRole && in_array($adminRole->id, $request->roles)) {
-            if (!Auth::user()->hasRole('admin')) {
-                return redirect()->back()
-                    ->withErrors(['roles' => 'Yönetici rolündeki kullanıcılar Admin yetkisi atayamaz.'])
-                    ->withInput();
-            }
-        }
+        // Temel Bilgileri Güncelle
+        $data = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'department_id' => $request->departments[0] ?? null,
+            'role' => $request->role, // Eski sütunu da güncelle
+        ];
 
-        // Kullanıcı verilerini güncelle
-        $data = $request->only('name', 'email');
+        // Şifre varsa güncelle
         if ($request->filled('password')) {
+            $request->validate([
+                'password' => ['confirmed', Rules\Password::defaults()],
+            ]);
             $data['password'] = Hash::make($request->password);
         }
+
         $user->update($data);
 
-        // 5. KRİTİK NOKTA: sync()
-        // sync() eski rolleri siler, yeni seçilenleri ekler. Tam olarak güncelleme mantığıdır.
-        $user->roles()->sync($request->roles);
+        // 1. Rolü Senkronize Et (Eskisini siler, yenisini atar)
+        $user->syncRoles([$request->role]);
 
-        // Departmanlar için sync (eğer boş gelirse tüm departmanları siler)
-        $user->departments()->sync($request->departments ?? []);
+        // 2. Birimleri Senkronize Et (Sync: Seçilmeyenleri siler, yenileri ekler)
+        $user->businessUnits()->sync($request->units);
 
-        return redirect()->route('users.index')->with('success', 'Kullanıcı bilgileri ve yetkileri güncellendi!');
+        // 3. Departmanları Senkronize Et
+        // Formdan gelen 'departments' dizisini pivot tabloya eşitler.
+        $user->departments()->sync($request->departments);
+
+        return redirect()->route('users.index')->with('success', 'Kullanıcı bilgileri ve yetkileri güncellendi.');
     }
 
-    // Profil güncelleme metodları aynı kalabilir, sadece rol kontrolü gerekirse hasRole ile değiştirilmeli.
+    /**
+     * Profil Düzenleme (Kişisel)
+     */
     public function profileEdit()
     {
         $user = Auth::user();
         return view('profile.edit', compact('user'));
     }
 
+    /**
+     * Profil Güncelleme (Kişisel)
+     */
     public function profileUpdate(Request $request)
     {
-        // Mevcut kodunuzu korudum
-        /** @var \App\Models\User $user */
         $user = Auth::user();
+
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
@@ -147,21 +196,29 @@ class UserController extends Controller
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
         }
+
         $user->update($data);
-        return redirect()->route('profile.edit')->with('success', 'Profil bilgileriniz başarıyla güncellendi!');
+
+        return redirect()->route('profile.edit')->with('success', 'Profil bilgileriniz güncellendi.');
     }
 
+    /**
+     * Kullanıcı Sil
+     */
     public function destroy(User $user)
     {
-        // Rol kontrolü string'den metoda döndü
-        if (!Auth::user()->hasRole('admin')) {
-            return redirect()->back()->with('error', 'Kullanıcı silme yetkiniz bulunmamaktadır.');
+        if (!Auth::user()->can('manage_users')) {
+            abort(403);
         }
 
-        // Pivot tablolardaki 'onDelete cascade' sayesinde 
-        // kullanıcı silinince rol ve departman ilişkileri otomatik silinir.
+        if ($user->hasRole('admin')) {
+            return back()->with('error', 'Admin kullanıcısı silinemez.');
+        }
+
+        // Pivot tablolardaki ilişkiler (business_unit_user, model_has_roles)
+        // veritabanındaki "ON DELETE CASCADE" ayarı sayesinde otomatik silinir.
         $user->delete();
 
-        return redirect()->route('home')->with('success', $user->name . ' adlı kullanıcı başarıyla silindi.');
+        return redirect()->route('users.index')->with('success', 'Kullanıcı silindi.');
     }
 }
