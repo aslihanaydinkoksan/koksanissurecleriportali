@@ -226,6 +226,12 @@
 
                                             {{-- Kontrol ve Aksiyon Bölgesi --}}
                                             @if ($isDirect)
+                                                <button type="button" class="btn btn-sm btn-link p-0 ms-2 text-primary"
+                                                    style="font-size: 0.8rem;" data-bs-toggle="modal"
+                                                    data-bs-target="#assignModal"
+                                                    onclick="document.querySelector('#assignModal select[name=service_type]').value = '{{ $key }}';">
+                                                    <i class="fa fa-edit"></i> Değiştir
+                                                </button>
                                                 {{-- 1. DOĞRUDAN ATAMA VARSA: Sadece Silme Butonu (Mevcut) --}}
                                                 <form action="{{ route('assignments.destroy', $isDirect->id) }}"
                                                     method="POST" class="d-inline delete-form"
