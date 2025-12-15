@@ -97,6 +97,7 @@ class UserController extends Controller
         }
 
         User::findOrFail($id)->delete();
-        return back()->with('success', 'Kullanıcı silindi.');
+        return redirect()->route('users.index')
+            ->with('success', 'Kullanıcı kaydı başarıyla silindi.');
     }
 }

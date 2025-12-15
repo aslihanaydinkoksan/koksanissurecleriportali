@@ -553,7 +553,7 @@
                                 <option value="">-- Rehberden Seçin --</option>
                                 @foreach (\App\Models\Contact::orderBy('name')->get() as $c)
                                     <option value="{{ $c->id }}">
-                                        {{ $c->name }} ({{ $c->profession }})
+                                        {{ $c->name }}
                                     </option>
                                 @endforeach
                             </select>

@@ -61,9 +61,23 @@
 
     {{-- 3. SON HAREKETLER TABLOSU --}}
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <div class="card-header bg-white border-bottom-0 pt-4 px-4 pb-0">
+        <div class="card-header bg-white border-bottom-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
             <h5 class="fw-bold text-dark mb-0"><i class="fa fa-history text-secondary me-2"></i>Son Hareketler</h5>
+
+            {{-- SADECE ADMIN GÖRSÜN: TÜMÜNÜ TEMİZLE BUTONU --}}
+            @if (auth()->user()->role == 'admin')
+                {{-- Burayı kendi admin kontrolüne göre düzenle --}}
+                <form action="{{ route('stays.clearAll') }}" method="POST"
+                    onsubmit="return confirm('Tüm geçmişi silmek istediğinize emin misiniz? Bu işlem geri alınamaz!');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                        <i class="fa fa-trash me-1"></i> Geçmişi Temizle
+                    </button>
+                </form>
+            @endif
         </div>
+
         <div class="card-body p-0 mt-3">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -74,6 +88,11 @@
                             <th class="text-secondary small fw-bold border-0">İŞLEM</th>
                             <th class="text-secondary small fw-bold border-0">ZAMAN</th>
                             <th class="pe-4 text-end text-secondary small fw-bold border-0">DURUM</th>
+                            {{-- ADMIN İÇİN EKSTRA SÜTUN --}}
+                            @if (auth()->user()->role == 'admin')
+                                <th class="text-end pe-4 text-secondary small fw-bold border-0" style="width: 50px;">SİL
+                                </th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
@@ -125,10 +144,26 @@
                                         <i class="fa fa-clock text-success animate-pulse"></i>
                                     @endif
                                 </td>
+
+                                {{-- SADECE ADMIN GÖRSÜN: TEKLİ SİLME BUTONU --}}
+                                @if (auth()->user()->role == 'admin')
+                                    <td class="pe-4 text-end">
+                                        <form action="{{ route('stays.destroy', $stay->id) }}" method="POST"
+                                            onsubmit="return confirm('Bu kaydı silmek istediğinize emin misiniz?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="btn btn-link p-0 text-secondary text-decoration-none"
+                                                title="Kaydı Sil">
+                                                <i class="fa fa-trash-can text-danger opacity-50 hover-opacity-100"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                @endif
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-5">
+                                <td colspan="{{ auth()->user()->role == 'admin' ? 6 : 5 }}" class="text-center py-5">
                                     <div class="text-muted small">Henüz hareket kaydı yok.</div>
                                 </td>
                             </tr>

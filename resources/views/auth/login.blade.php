@@ -60,6 +60,11 @@
                                 </span>
                                 <input type="password" name="password" class="form-control bg-light border-0 py-2"
                                     id="password" placeholder="••••••••" required>
+
+                                {{-- ŞİFRE GÖSTER/GİZLE BUTONU --}}
+                                <button class="btn bg-light border-0 text-muted pe-3" type="button" id="togglePassword">
+                                    <i class="fa fa-eye"></i>
+                                </button>
                             </div>
                         </div>
 
@@ -98,4 +103,25 @@
             color: var(--primary-color) !important;
         }
     </style>
+    <script>
+        const togglePassword = document.querySelector('#togglePassword');
+        const password = document.querySelector('#password');
+
+        togglePassword.addEventListener('click', function(e) {
+            // Şifre alanının tipini değiştir (password <-> text)
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+
+            // İkonu değiştir (göz <-> üstü çizili göz)
+            const icon = this.querySelector('i');
+
+            if (type === 'password') {
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            } else {
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            }
+        });
+    </script>
 @endsection

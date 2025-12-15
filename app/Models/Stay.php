@@ -8,7 +8,7 @@ use App\Traits\Loggable;
 
 class Stay extends Model
 {
-    use Loggable; // Silinmez, tarihçe olarak kalır o yüzden SoftDelete gerekmez
+    use Loggable, SoftDeletes;
     protected $guarded = [];
 
     // JSON verileri diziye çevir

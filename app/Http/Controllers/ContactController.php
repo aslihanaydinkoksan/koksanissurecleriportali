@@ -41,6 +41,7 @@ class ContactController extends Controller
     public function destroy($id)
     {
         Contact::findOrFail($id)->delete();
-        return back()->with('success', 'Kişi silindi.');
+        return redirect()->route('contacts.index')
+            ->with('success', 'Rehber kişisi başarıyla silindi.');
     }
 }

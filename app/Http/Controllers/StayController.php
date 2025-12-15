@@ -101,4 +101,26 @@ class StayController extends Controller
         return redirect()->route('locations.show', $stay->location_id)
             ->with('success', 'Personel çıkışı (Check-out) yapıldı. Oda artık müsait.');
     }
+    // Tek bir kaydı siler (SOFT DELETE YAPAR - Geri getirilebilir)
+    public function destroy($id)
+    {
+        $stay = \App\Models\Stay::findOrFail($id);
+        $stay->delete(); // Artık veritabanından silmiyor, gizliyor.
+
+        return back()->with('success', 'Hareket kaydı çöpe taşındı.');
+    }
+
+    // Tüm geçmişi temizler
+    public function clearAll()
+    {
+        // SEÇENEK A: Hepsini Soft Delete yap (Gizle ama veritabanında kalsın)
+        \App\Models\Stay::query()->delete();
+        return back()->with('success', 'Tüm geçmiş arşivlendi.');
+
+        // SEÇENEK B: Test verisi olduğu için gerçekten sil (Veritabanı şişmesin)
+        // Admin olduğun için bunu kullanman test aşamasında daha temiz olur.
+        // \App\Models\Stay::truncate();
+
+        // return back()->with('success', 'Tüm hareket geçmişi kalıcı olarak temizlendi.');
+    }
 }

@@ -70,7 +70,10 @@ Route::middleware(['auth'])->group(function () {
     // --- KULLANICI YÖNETİMİ ROTALARI ---
     Route::middleware(['auth', 'admin'])->group(function () {
         Route::resource('users', UserController::class);
-        // İlerde raporları da buraya alabilirsin
+        // Hareket Geçmişini Temizleme
+        Route::delete('/stays/clear-all', [StayController::class, 'clearAll'])->name('stays.clearAll');
+        // Tekli Hareket Silme
+        Route::delete('/stays/{id}', [StayController::class, 'destroy'])->name('stays.destroy');
 
     });
 

@@ -199,7 +199,8 @@ class LocationController extends Controller
         // Her şey temizse sil (Soft Delete)
         $location->delete();
 
-        return back()->with('success', 'Mekan başarıyla silindi (Çöp kutusuna taşındı).');
+        return redirect()->route('locations.index')
+            ->with('success', 'Mekan kaydı başarıyla silindi.');
     }
     /**
      * Düzenleme Formunu Göster

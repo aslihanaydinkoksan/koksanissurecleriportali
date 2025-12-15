@@ -93,7 +93,8 @@ class ResidentController extends Controller
         }
 
         $resident->delete();
-        return back()->with('success', 'Personel başarıyla silindi.');
+        return redirect()->route('residents.index')
+            ->with('success', 'Misafir başarıyla silindi.');
     }
     /**
      * AJAX ile hızlı personel ekleme (Check-in sayfası için)
