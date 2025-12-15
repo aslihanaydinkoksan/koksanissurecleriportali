@@ -367,7 +367,9 @@ class HomeController extends Controller
                     $color = '#ffc107';
             }
 
-            $extendedProps = ['eventType' => 'shipment', 'model_type' => 'shipment', 'id' => $shipment->id, 'is_important' => $shipment->is_important, 'title' => '🚚 ' . $shipment->kargo_icerigi, 'details' => []];
+            $onayUrl = $user->can('verify_shipment') ? route('shipments.verify', $shipment->id) : null;
+
+            $extendedProps = ['eventType' => 'shipment', 'model_type' => 'shipment', 'id' => $shipment->id, 'is_important' => $shipment->is_important, 'title' => '🚚 ' . $shipment->kargo_icerigi, 'onayUrl' => $onayUrl, 'details' => []];
 
             if ($cikisTarihi)
                 $events[] = ['title' => 'ÇIKIŞ: ' . $shipment->kargo_icerigi, 'start' => $cikisTarihi->toIso8601String(), 'color' => $color, 'extendedProps' => $extendedProps];
