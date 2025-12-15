@@ -189,6 +189,66 @@
             color: #2d3748;
         }
 
+        /* Modern Görüntüle Butonu */
+        .modern-btn-view {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 2px 8px rgba(66, 153, 225, 0.2);
+        }
+
+        .modern-btn-view:hover {
+            background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+            transform: translateY(-2px);
+            color: white;
+            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4);
+            text-decoration: none;
+        }
+
+        .modern-btn-view:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(66, 153, 225, 0.3);
+        }
+
+        /* Küçük boyut */
+        .modern-btn-view.modern-btn-sm {
+            padding: 0.3rem 0.7rem;
+            font-size: 0.8rem;
+            border-radius: 8px;
+        }
+
+        /* İkon ile birlikte kullanım */
+        .modern-btn-view i {
+            font-size: 0.9em;
+        }
+
+        /* Disabled durumu */
+        .modern-btn-view:disabled,
+        .modern-btn-view.disabled {
+            background: #cbd5e0;
+            color: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .modern-btn-view:disabled:hover,
+        .modern-btn-view.disabled:hover {
+            background: #cbd5e0;
+            transform: none;
+            box-shadow: none;
+        }
+
         /* Filtre Bölümü Stilleri */
         .filters-container {
             padding: 1.5rem;
@@ -451,8 +511,9 @@
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
-                            <tr>
-                                <th scope="col" class="ps-4">Sevkiyat Türü</th>
+                            {{-- align-middle: Başlıkları dikeyde ortalar --}}
+                            <tr class="text-center align-middle">
+                                <th scope="col">Sevkiyat Türü</th>
                                 <th scope="col">Kargo İçeriği</th>
                                 <th scope="col">Araç Tipi</th>
                                 <th scope="col">Kalkış</th>
@@ -465,8 +526,11 @@
                         </thead>
                         <tbody>
                             @foreach ($shipments as $shipment)
-                                <tr class="{{ $shipment->is_important ? 'row-important' : '' }}">
-                                    <td class="ps-4">
+                                {{-- align-middle: İçerikleri dikeyde ortalar, text-center: yatayda ortalar --}}
+                                <tr class="text-center align-middle {{ $shipment->is_important ? 'row-important' : '' }}">
+
+                                    {{-- 1. Sevkiyat Türü --}}
+                                    <td>
                                         @if ($shipment->shipment_type == 'import')
                                             <span
                                                 class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2">
@@ -481,9 +545,13 @@
                                             <span class="badge bg-secondary">-</span>
                                         @endif
                                     </td>
+
+                                    {{-- 2. Kargo İçeriği --}}
                                     <td class="fw-bold">{{ $shipment->kargo_icerigi }}</td>
+
+                                    {{-- 3. Araç Tipi --}}
                                     <td>
-                                        <div class="d-flex align-items-center gap-2">
+                                        <div class="d-flex align-items-center justify-content-center gap-2">
                                             <div class="icon-wrapper bg-light rounded-circle p-2 d-flex justify-content-center align-items-center"
                                                 style="width: 32px; height: 32px;">
                                                 @if ($shipment->arac_tipi == 'gemi')
@@ -499,63 +567,75 @@
                                             {{ ucfirst($shipment->arac_tipi) }}
                                         </div>
                                     </td>
+
+                                    {{-- 4. Kalkış --}}
                                     <td>{{ $shipment->arac_tipi == 'gemi' ? $shipment->kalkis_limani : $shipment->kalkis_noktasi }}
                                     </td>
+
+                                    {{-- 5. Varış --}}
                                     <td>{{ $shipment->arac_tipi == 'gemi' ? $shipment->varis_limani : $shipment->varis_noktasi }}
                                     </td>
+
+                                    {{-- 6. Çıkış Tarihi --}}
                                     <td>
                                         @if ($shipment->cikis_tarihi)
-                                            <div class="text-muted small"><i
-                                                    class="far fa-calendar-alt me-1"></i>{{ \Carbon\Carbon::parse($shipment->cikis_tarihi)->format('d.m.Y') }}
-                                            </div>
-                                            <div class="fw-bold small">
-                                                {{ \Carbon\Carbon::parse($shipment->cikis_tarihi)->format('H:i') }}</div>
+                                            {{ \Carbon\Carbon::parse($shipment->cikis_tarihi)->format('d.m.Y') }}
+                                            <br>
+                                            <span class="text-muted small">Saat:
+                                                {{ \Carbon\Carbon::parse($shipment->cikis_tarihi)->format('H:i') }}</span>
                                         @else
                                             -
                                         @endif
                                     </td>
+
+                                    {{-- 7. Tahmini Varış --}}
                                     <td>
                                         @if ($shipment->tahmini_varis_tarihi)
-                                            <div class="text-muted small"><i
-                                                    class="far fa-clock me-1"></i>{{ \Carbon\Carbon::parse($shipment->tahmini_varis_tarihi)->format('d.m.Y') }}
-                                            </div>
-                                            <div class="fw-bold small">
-                                                {{ \Carbon\Carbon::parse($shipment->tahmini_varis_tarihi)->format('H:i') }}
-                                            </div>
+                                            {{ \Carbon\Carbon::parse($shipment->tahmini_varis_tarihi)->format('d.m.Y') }}
+                                            <br>
+                                            <span class="text-muted small">Saat:
+                                                {{ \Carbon\Carbon::parse($shipment->tahmini_varis_tarihi)->format('H:i') }}</span>
                                         @else
                                             -
                                         @endif
                                     </td>
+
+                                    {{-- 8. İŞLEMLER (Sağa Yaslı) --}}
                                     <td class="text-end pe-4">
                                         <div class="d-flex justify-content-end gap-2">
                                             @if (!in_array(Auth::user()->role, ['izleyici']))
-                                                {{-- Düzenle Butonu --}}
+                                                {{-- Düzenle --}}
                                                 <a href="{{ route('shipments.edit', $shipment) }}"
                                                     class="modern-btn modern-btn-edit modern-btn-sm d-inline-flex align-items-center justify-content-center"
-                                                    style="width: 135px;" {{-- SABİT GENİŞLİK --}} title="Düzenle">
+                                                    style="width: 135px;" title="Düzenle">
                                                     <i class="fas fa-edit me-2"></i> Düzenle
                                                 </a>
 
-                                                {{-- Sil Butonu --}}
+                                                {{-- Sil --}}
                                                 <form action="{{ route('shipments.destroy', $shipment) }}" method="POST"
                                                     class="d-inline"
                                                     onsubmit="return confirm('Bu sevkiyatı silmek istediğinizden emin misiniz?');">
-                                                    @csrf
-                                                    @method('DELETE')
+                                                    @csrf @method('DELETE')
                                                     <button type="submit"
                                                         class="modern-btn modern-btn-danger modern-btn-sm d-inline-flex align-items-center justify-content-center"
-                                                        style="width: 135px;" {{-- SABİT GENİŞLİK --}} title="Sil">
+                                                        style="width: 135px;" title="Sil">
                                                         <i class="fas fa-trash me-2"></i> Sil
                                                     </button>
                                                 </form>
                                             @endif
 
-                                            {{-- Excel Butonu --}}
+                                            {{-- Excel --}}
                                             <a href="{{ route('shipments.export', $shipment->id) }}"
                                                 class="modern-btn modern-btn-export modern-btn-sm d-inline-flex align-items-center justify-content-center"
-                                                style="width: 135px;" {{-- SABİT GENİŞLİK --}} title="Excel İndir">
-                                                {{-- Metni biraz kısalttık ki butona sığsın --}}
-                                                <i class="fas fa-file-excel me-2"></i> Excel'e Aktar
+                                                style="width: 135px;" title="Excel İndir">
+                                                <i class="fas fa-file-excel me-2"></i> Excel
+                                            </a>
+
+                                            {{-- Görüntüle --}}
+                                            <a href="{{ route('shipments.show', $shipment->id) }}"
+                                                class="modern-btn modern-btn-view modern-btn-sm d-inline-flex align-items-center justify-content-center"
+                                                style="min-width: 100px;">
+                                                <i class="fas fa-eye me-2"></i> Görüntüle
                                             </a>
                                         </div>
                                     </td>

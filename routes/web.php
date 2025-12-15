@@ -128,22 +128,36 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // 2. LOJİSTİK YÖNETİMİ
-    // (Middleware olarak 'can:view_logistics' ekleyebilirsin ama Controller'da yaptık)
     Route::prefix('shipments')->name('shipments.')->group(function () {
+        Route::get('/', [ShipmentController::class, 'listAllFiltered'])->name('index');
+
+        // Standart CRUD İşlemleri
         Route::get('/create', [ShipmentController::class, 'create'])->name('create');
         Route::post('/', [ShipmentController::class, 'store'])->name('store');
+
+        // DÜZELTME 1: Başındaki '/shipments' kalktı, name sadece 'show' oldu.
+        // Sonuç URL: /shipments/{id} | Route Name: shipments.show
+        Route::get('/{id}', [ShipmentController::class, 'show'])->name('show');
+
         Route::get('/{shipment}/edit', [ShipmentController::class, 'edit'])->name('edit');
         Route::put('/{shipment}', [ShipmentController::class, 'update'])->name('update');
         Route::delete('/{shipment}', [ShipmentController::class, 'destroy'])->name('destroy');
 
-        // İşlemler
+        // DÜZELTME 2: Durak İşlemleri (Controller yolunu kısalttım, yukarıda use ekleyebilirsin veya böyle kalabilir)
+        // URL: /shipments/{id}/stops
+        Route::post('/{id}/stops', [App\Http\Controllers\ShipmentStopController::class, 'store'])->name('stops.store');
+
+        // URL: /shipments/stops/{id} (Burada shipment id değil, stop id silindiği için prefix mantıklı)
+        Route::delete('/stops/{id}', [App\Http\Controllers\ShipmentStopController::class, 'destroy'])->name('stops.destroy');
+
+        // Diğer İşlemler
         Route::get('/export-list', [ShipmentController::class, 'exportList'])->name('export_list');
         Route::get('/{shipment}/export', [ShipmentController::class, 'export'])->name('export');
         Route::post('/{shipment}/onayla', [ShipmentController::class, 'onayla'])->name('onayla');
         Route::post('/{shipment}/onayi-geri-al', [ShipmentController::class, 'onayiGeriAl'])->name('onayiGeriAl');
     });
 
-    // Ürün Listesi
+    // Ürün Listesi (Grup dışında kalmış, doğru)
     Route::get('/products/products', [ShipmentController::class, 'listAllFiltered'])->name('products.list');
 
 

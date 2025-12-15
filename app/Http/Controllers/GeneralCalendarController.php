@@ -71,11 +71,16 @@ class GeneralCalendarController extends Controller
                         }
                     }
 
+                    $onayUrl = ($user->hasRole('admin') || $user->hasRole('roles.lojistik_personeli'))
+                        ? route('shipments.onayla', $shipment->id)
+                        : null;
+
                     $extendedProps = [
                         'eventType' => 'shipment',
                         'model_type' => 'shipment',
                         'is_important' => $shipment->is_important,
                         'title' => '🚚 ' . $shipment->kargo_icerigi,
+                        'onayUrl' => $onayUrl,
                         'id' => $shipment->id,
                         'details' => [
                             'Araç' => $shipment->arac_tipi,

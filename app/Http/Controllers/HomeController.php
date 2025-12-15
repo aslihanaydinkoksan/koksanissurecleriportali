@@ -367,7 +367,9 @@ class HomeController extends Controller
                     $color = '#ffc107';
             }
 
-            $onayUrl = $user->can('verify_shipment') ? route('shipments.verify', $shipment->id) : null;
+            $onayUrl = ($user->hasRole('admin') || $user->hasRole('roles.lojistik_personeli'))
+                ? route('shipments.onayla', $shipment->id)
+                : null;
 
             $extendedProps = ['eventType' => 'shipment', 'model_type' => 'shipment', 'id' => $shipment->id, 'is_important' => $shipment->is_important, 'title' => '🚚 ' . $shipment->kargo_icerigi, 'onayUrl' => $onayUrl, 'details' => []];
 

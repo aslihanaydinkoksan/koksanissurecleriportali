@@ -327,8 +327,6 @@ class ShipmentController extends Controller
         return redirect()->route('home', ['open_modal' => $shipment->id])
             ->with('success', 'Sevkiyat başarıyla onaylandı.');
     }
-
-    // --- YENİ EKLENEN FONKSİYON ---
     /**
      * Sevkiyat onayını geri alır.
      */
@@ -354,7 +352,6 @@ class ShipmentController extends Controller
         return redirect()->route('home', ['open_modal' => $shipment->id])
             ->with('success', 'Sevkiyat onayı başarıyla geri alındı.');
     }
-    // --- YENİ FONKSİYON SONU ---
     /**
      * Sadece 'import' (İthalat) tipindeki sevkiyatları listeler.
      */
@@ -424,5 +421,14 @@ class ShipmentController extends Controller
         // İsteği de view'a gönderelim ki form tekrar doldurulabilsin
         $filters = $request->only(['shipment_type', 'vehicle_type', 'cargo_content', 'date_from', 'date_to', 'is_important']);
         return view('shipments.list', compact('shipments', 'vehicleTypes', 'cargoContents', 'filters'));
+    }
+    /*
+     *sevkiyat detaylarını gösteren fonksiyon
+     */
+    public function show($id)
+    {
+        $shipment = Shipment::with('stops')->findOrFail($id);
+
+        return view('shipments.show', compact('shipment'));
     }
 }

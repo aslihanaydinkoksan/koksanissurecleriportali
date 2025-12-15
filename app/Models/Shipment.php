@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Loggable;
-use App\Traits\HasBusinessUnit; // <--- 1. Use ekle
+use App\Traits\HasBusinessUnit;
 
 /**
  * App\Models\Shipment
@@ -128,5 +128,26 @@ class Shipment extends Model
     public function files()
     {
         return $this->morphMany(File::class, 'fileable');
+    }
+    // app/Models/Shipment.php
+
+    public function stops()
+    {
+        // Bir sevkiyatın çok durağı olur
+        // Durakları işlem tarihine göre sıralı getir ki hesap şaşmasın
+        return $this->hasMany(ShipmentStop::class, 'shipment_id')->orderBy('stop_date', 'asc');
+    }
+
+    // Helper: Kalan son yükü bulmak için pratik bir fonksiyon
+    public function getLatestRemainingAmountAttribute()
+    {
+        $lastStop = $this->stops->last();
+
+        if ($lastStop) {
+            return $lastStop->remaining_amount;
+        }
+
+        // Hiç durak yoksa kalan miktar = başlangıçtaki kargo_miktari
+        return $this->kargo_miktari;
     }
 }
