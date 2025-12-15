@@ -105,11 +105,11 @@
 
                             <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg"
                                 style="border-radius: var(--radius-lg);">
-                                <li>
+                                {{-- <li>
                                     <a class="dropdown-item py-2" href="#">
                                         <i class="fa fa-cog text-muted me-2"></i> Ayarlar
                                     </a>
-                                </li>
+                                </li> --}}
 
                                 @can('admin')
                                     <li>
