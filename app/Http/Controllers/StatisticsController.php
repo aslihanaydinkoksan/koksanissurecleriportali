@@ -77,6 +77,7 @@ class StatisticsController extends Controller
 
         // AKTİF FABRİKA BİLGİSİ (Başlık İçin)
         // Middleware tarafından session'a atılan veriyi alıyoruz
+        $activeUnitId = session('active_unit_id');
         $activeUnitName = session('active_unit_name', 'Tüm Fabrikalar');
 
         // Başlık Ayarı
@@ -107,22 +108,24 @@ class StatisticsController extends Controller
         try {
             switch ($departmentSlug) {
                 case 'lojistik':
-                    $statsData = $this->statsService->getLojistikStatsData($startDate, $endDate, $viewLevel)->toArray();
+                    // $activeUnitId parametresini ekledik
+                    $statsData = $this->statsService->getLojistikStatsData($startDate, $endDate, $viewLevel, $activeUnitId)->toArray();
                     break;
                 case 'uretim':
-                    $statsData = $this->statsService->getUretimStatsData($startDate, $endDate, $viewLevel)->toArray();
+                    $statsData = $this->statsService->getUretimStatsData($startDate, $endDate, $viewLevel, $activeUnitId)->toArray();
                     break;
                 case 'hizmet':
-                    $statsData = $this->statsService->getHizmetStatsData($startDate, $endDate, $viewLevel)->toArray();
+                    $statsData = $this->statsService->getHizmetStatsData($startDate, $endDate, $viewLevel, $activeUnitId)->toArray();
                     break;
                 case 'bakim':
-                    $statsData = $this->statsService->getBakimStatsData($startDate, $endDate, $viewLevel)->toArray();
+                    $statsData = $this->statsService->getBakimStatsData($startDate, $endDate, $viewLevel, $activeUnitId)->toArray();
                     break;
                 case 'ulastirma':
-                    $statsData = $this->statsService->getUlastirmaStatsData($startDate, $endDate, $viewLevel)->toArray();
+                    $statsData = $this->statsService->getUlastirmaStatsData($startDate, $endDate, $viewLevel, $activeUnitId)->toArray();
                     break;
                 case 'genel':
-                    $statsData = $this->statsService->getGenelBakisData($startDate, $endDate, $allowedDepartments)->toArray();
+                    // Genel bakış için de gönderiyoruz
+                    $statsData = $this->statsService->getGenelBakisData($startDate, $endDate, $allowedDepartments, $activeUnitId)->toArray();
                     break;
                 default:
                     $statsData = [];
@@ -146,7 +149,7 @@ class StatisticsController extends Controller
                 'allowedDepartments' => $allowedDepartments,
                 'viewLevel' => $viewLevel,
                 'isTvUser' => $isTvUser,
-                'activeUnitName' => $activeUnitName // View'de göstermek için
+                'activeUnitName' => $activeUnitName
             ],
             $statsData
         ));

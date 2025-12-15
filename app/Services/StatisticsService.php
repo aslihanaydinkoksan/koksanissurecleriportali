@@ -14,7 +14,7 @@ use App\Models\Vehicle;
 use App\Models\Department;
 use App\Data\StatisticsData;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth; // EKLENDİ
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Str;
@@ -25,26 +25,44 @@ class StatisticsService
     /**
      * GENEL BAKIŞ (Sadece Yöneticiler Görür)
      */
-    public function getGenelBakisData(Carbon $startDate, Carbon $endDate, Collection $allowedDepartments): StatisticsData
+    public function getGenelBakisData(Carbon $startDate, Carbon $endDate, Collection $allowedDepartments, $unitId = null): StatisticsData
     {
         $labels = [];
         $data = [];
-        $user = Auth::user(); // Aktif kullanıcı
+        $user = Auth::user();
 
         foreach ($allowedDepartments as $dept) {
             $slug = $dept->slug;
             $count = 0;
 
-            // ::forUser($user) ile filtrele!
+            // Her sorguya ->when($unitId...) eklendi
             if ($slug === 'lojistik') {
-                $count = Shipment::forUser($user)->whereBetween('created_at', [$startDate, $endDate])->count();
+                $count = Shipment::forUser($user)
+                    ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId))
+                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->count();
             } elseif ($slug === 'uretim') {
-                $count = ProductionPlan::forUser($user)->whereBetween('week_start_date', [$startDate, $endDate])->count();
+                $count = ProductionPlan::forUser($user)
+                    ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId))
+                    ->whereBetween('week_start_date', [$startDate, $endDate])
+                    ->count();
             } elseif ($slug === 'hizmet') {
-                $count = Event::forUser($user)->whereBetween('start_datetime', [$startDate, $endDate])->count()
-                    + Travel::forUser($user)->whereBetween('start_date', [$startDate, $endDate])->count();
+                $events = Event::forUser($user)
+                    ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId))
+                    ->whereBetween('start_datetime', [$startDate, $endDate])
+                    ->count();
+
+                $travels = Travel::forUser($user)
+                    ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId))
+                    ->whereBetween('start_date', [$startDate, $endDate])
+                    ->count();
+
+                $count = $events + $travels;
             } elseif ($slug === 'bakim') {
-                $count = MaintenancePlan::forUser($user)->whereBetween('planned_start_date', [$startDate, $endDate])->count();
+                $count = MaintenancePlan::forUser($user)
+                    ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId))
+                    ->whereBetween('planned_start_date', [$startDate, $endDate])
+                    ->count();
             }
 
             $labels[] = $dept->name;
@@ -76,13 +94,14 @@ class StatisticsService
     /**
      * LOJİSTİK VERİLERİ
      */
-    public function getLojistikStatsData(Carbon $startDate, Carbon $endDate, string $viewLevel = 'basic'): StatisticsData
+    public function getLojistikStatsData(Carbon $startDate, Carbon $endDate, string $viewLevel = 'basic', $unitId = null): StatisticsData
     {
         $chartData = [];
         $user = Auth::user();
 
-        // SCOPE EKLENDİ: forUser($user)
+        // Filtreleme eklendi
         $shipmentQuery = Shipment::forUser($user)
+            ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId))
             ->whereNotNull('cikis_tarihi')
             ->whereBetween('cikis_tarihi', [$startDate, $endDate]);
 
@@ -133,8 +152,9 @@ class StatisticsService
             ->map(fn($group) => $group->sum('count'));
         $chartData['pie'] = ['labels' => $vehicleTypeData->keys()->map(fn($tip) => $tip ?? 'Bilinmiyor')->all(), 'data' => $vehicleTypeData->values()->all(), 'title' => 'Araç Tipi Dağılımı'];
 
-        // 5. Filtreleme Listesi (Scope Eklendi)
+        // 5. Filtreleme Listesi
         $shipmentsForFiltering = Shipment::forUser($user)
+            ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId)) // Filtre Eklendi
             ->select(['arac_tipi', 'kargo_icerigi', 'shipment_type'])
             ->whereNotNull('cikis_tarihi')
             ->whereBetween('cikis_tarihi', [$startDate, $endDate])
@@ -157,13 +177,14 @@ class StatisticsService
     /**
      * ÜRETİM VERİLERİ
      */
-    public function getUretimStatsData(Carbon $startDate, Carbon $endDate, string $viewLevel = 'basic'): StatisticsData
+    public function getUretimStatsData(Carbon $startDate, Carbon $endDate, string $viewLevel = 'basic', $unitId = null): StatisticsData
     {
         $chartData = [];
         $user = Auth::user();
 
-        // SCOPE EKLENDİ: forUser($user)
+        // Filtre Eklendi
         $productionQuery = ProductionPlan::forUser($user)
+            ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId))
             ->whereBetween('week_start_date', [$startDate, $endDate])
             ->whereNotNull('week_start_date');
 
@@ -229,17 +250,18 @@ class StatisticsService
     /**
      * HİZMET (İDARİ İŞLER) VERİLERİ
      */
-    public function getHizmetStatsData(Carbon $startDate, Carbon $endDate, string $viewLevel = 'basic'): StatisticsData
+    public function getHizmetStatsData(Carbon $startDate, Carbon $endDate, string $viewLevel = 'basic', $unitId = null): StatisticsData
     {
         $eventTypesList = $this->getEventTypes();
-        // 1. Pasta Grafiği
-        $pieChartData = $this->getHizmetPieChartData($startDate, $endDate, $eventTypesList);
+
+        // Helper fonksiyonlara $unitId gönderiyoruz
+        $pieChartData = $this->getHizmetPieChartData($startDate, $endDate, $eventTypesList, $unitId);
 
         $chartData = [
             'event_type_pie' => $pieChartData,
         ];
-        // 2. Filtreleme Verileri
-        $eventsForFiltering = $this->getHizmetEventFilterData($startDate, $endDate, $eventTypesList);
+
+        $eventsForFiltering = $this->getHizmetEventFilterData($startDate, $endDate, $eventTypesList, $unitId);
 
         return new StatisticsData(
             chartData: $chartData,
@@ -253,12 +275,13 @@ class StatisticsService
     /**
      * BAKIM VERİLERİ
      */
-    public function getBakimStatsData(Carbon $startDate, Carbon $endDate, string $viewLevel = 'basic'): StatisticsData
+    public function getBakimStatsData(Carbon $startDate, Carbon $endDate, string $viewLevel = 'basic', $unitId = null): StatisticsData
     {
         $user = Auth::user();
 
-        // SCOPE EKLENDİ: forUser($user)
+        // Filtre Eklendi
         $maintenancePlans = MaintenancePlan::forUser($user)
+            ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId))
             ->whereBetween('planned_start_date', [$startDate, $endDate])->get();
 
         $maintenanceTypes = MaintenanceType::select('id', 'name')->orderBy('name')->get()->toArray();
@@ -322,14 +345,15 @@ class StatisticsService
     }
 
     /**
-     * ULAŞTIRMA DEPARTMANI VERİLERİ (DÜZELTİLMİŞ)
+     * ULAŞTIRMA DEPARTMANI VERİLERİ
      */
-    public function getUlastirmaStatsData(Carbon $startDate, Carbon $endDate, string $viewLevel = 'basic'): StatisticsData
+    public function getUlastirmaStatsData(Carbon $startDate, Carbon $endDate, string $viewLevel = 'basic', $unitId = null): StatisticsData
     {
         $user = Auth::user();
 
-        // 1. Araç Görev Verileri - SCOPE EKLENDİ
+        // Filtre Eklendi
         $assignments = VehicleAssignment::forUser($user)
+            ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId))
             ->with('vehicle')
             ->whereBetween('start_time', [$startDate, $endDate])
             ->get();
@@ -409,13 +433,15 @@ class StatisticsService
         );
     }
 
-    // --- YARDIMCI METODLAR (Scope Eklenmiş) ---
+    // --- YARDIMCI METODLAR ---
 
-    public function getHizmetPieChartData($startDate, $endDate, array $eventTypesList): array
+    public function getHizmetPieChartData($startDate, $endDate, array $eventTypesList, $unitId = null): array
     {
         $user = Auth::user();
-        // SCOPE EKLENDİ
+
+        // Filtre Eklendi
         $eventTypeCounts = Event::forUser($user)
+            ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId))
             ->select(['event_type', DB::raw('COUNT(*) as count')])
             ->whereNotNull('event_type')
             ->whereBetween('start_datetime', [$startDate, $endDate])
@@ -424,8 +450,9 @@ class StatisticsService
                 return [$eventTypesList[$key] ?? ucfirst($key) => $count];
             });
 
-        // SCOPE EKLENDİ
+        // Filtre Eklendi
         $travelCount = Travel::forUser($user)
+            ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId))
             ->whereBetween('start_date', [$startDate, $endDate])->count();
 
         if ($travelCount > 0) {
@@ -439,12 +466,13 @@ class StatisticsService
         ];
     }
 
-    public function getHizmetEventFilterData($startDate, $endDate, array $eventTypesList): array
+    public function getHizmetEventFilterData($startDate, $endDate, array $eventTypesList, $unitId = null): array
     {
         $user = Auth::user();
 
-        // SCOPE EKLENDİ
+        // Filtre Eklendi
         $eventsForFiltering = Event::forUser($user)
+            ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId))
             ->whereBetween('start_datetime', [$startDate, $endDate])
             ->get(['event_type', 'location'])
             ->map(function ($event) use ($eventTypesList) {
@@ -455,8 +483,9 @@ class StatisticsService
                 ];
             });
 
-        // SCOPE EKLENDİ
+        // Filtre Eklendi
         $travelsForFiltering = Travel::forUser($user)
+            ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId))
             ->whereBetween('start_date', [$startDate, $endDate])
             ->get(['name'])
             ->map(function ($travel) {
