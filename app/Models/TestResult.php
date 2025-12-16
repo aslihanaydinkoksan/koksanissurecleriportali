@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use App\Traits\Loggable;
-
+use App\Traits\HasBusinessUnit;
 /**
  * App\Models\TestResult
  *
@@ -42,8 +42,8 @@ use App\Traits\Loggable;
  */
 class TestResult extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia, Loggable; // 2. Ekle
-    protected $fillable = ['customer_id', 'user_id', 'customer_machine_id', 'test_name', 'test_date', 'summary'];
+    use HasFactory, InteractsWithMedia, Loggable, HasBusinessUnit; // 2. Ekle
+    protected $fillable = ['customer_id', 'user_id', 'customer_machine_id', 'test_name', 'test_date', 'summary', 'business_unit_id'];
     public function customer()
     {
         return $this->belongsTo(Customer::class);

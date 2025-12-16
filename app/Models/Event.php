@@ -70,6 +70,7 @@ class Event extends Model
         'cancellation_reason',
         'visit_purpose',
         'after_sales_notes',
+        'business_unit_id',
     ];
 
     /**

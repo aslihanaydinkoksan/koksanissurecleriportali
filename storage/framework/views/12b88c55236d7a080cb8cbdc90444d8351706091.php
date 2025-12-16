@@ -924,8 +924,6 @@
                         if (readAllLink) readAllLink.style.display = data.count > 0 ? 'inline-block' :
                             'none';
                         if (list && list.innerHTML !== data.html) list.innerHTML = data.html;
-                        // Not: lastCount değişkeni tanımlı olmadığı için burada hata verebilir, 
-                        // eğer kullanıyorsan global scope'da tanımlamalısın.
                     })
                     .catch(err => console.error('Bildirim hatası:', err));
             }, 10000);
@@ -960,7 +958,7 @@
                             }
                         })
                         .catch(err => console.error('Güncelleme kontrolü başarısız:', err));
-                }, 10000);
+                }, 1000000);
             }
         });
     </script>

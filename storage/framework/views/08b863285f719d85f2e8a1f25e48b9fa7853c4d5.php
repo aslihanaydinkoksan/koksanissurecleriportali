@@ -462,8 +462,6 @@
 
         
         <?php
-            // İstatistik verisi var mı kontrol ediyoruz.
-            // Boş değilse true, boşsa false döner.
             $hasStats = !empty($chartData);
         ?>
 
@@ -646,7 +644,7 @@
             </div>
         </div>
     </div>
-    <?php echo $__env->make('partials.calendar-modal', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+    
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('page_scripts'); ?>
@@ -1012,8 +1010,6 @@
                 }
             }
 
-            var detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
-
             function hardResetModalUI() {
                 const ids = ['modalEditButton', 'modalExportButton', 'modalOnayForm', 'modalOnayKaldirForm',
                     'modalDeleteForm', 'modalOnayBadge', 'modalImportantCheckboxContainer'
@@ -1033,9 +1029,18 @@
             }
 
             function openUniversalModal(props) {
-                hardResetModalUI();
-                if (!props || (!props.eventType && !props.model_type)) return;
+                // 1. HATA AYIKLAMA: Konsola gelen veriyi basar (F12 -> Console'dan kontrol edebilirsiniz)
+                console.log('Tıklanan Veri Paketi:', props);
 
+                hardResetModalUI();
+
+                // 2. Güvenlik Kontrolü
+                if (!props || (!props.eventType && !props.model_type)) {
+                    console.warn('Eksik veri: eventType veya model_type bulunamadı.');
+                    return;
+                }
+
+                // Renkli Badge Tanımları (Durumlar için)
                 const statusMap = {
                     'Critical': {
                         text: 'Kritik',
@@ -1061,12 +1066,25 @@
                         text: 'Beklemede',
                         class: 'bg-warning text-dark'
                     },
+                    'In_progress': {
+                        text: 'İşlemde',
+                        class: 'bg-primary text-white'
+                    },
+                    'Completed': {
+                        text: 'Tamamlandı',
+                        class: 'bg-success text-white'
+                    },
+                    'Cancelled': {
+                        text: 'İptal',
+                        class: 'bg-danger text-white'
+                    },
                     'Active': {
                         text: 'Aktif',
                         class: 'bg-success text-white'
                     }
                 };
 
+                // Elementleri Seç
                 const modalTitle = document.getElementById('modalTitle');
                 const modalBody = document.getElementById('modalDynamicBody');
                 const modalEditButton = document.getElementById('modalEditButton');
@@ -1077,27 +1095,30 @@
                 const modalOnayBadge = document.getElementById('modalOnayBadge');
                 const modalImportantContainer = document.getElementById('modalImportantCheckboxContainer');
                 const modalImportantCheckbox = document.getElementById('modalImportantCheckbox');
+
                 const calendarEl = document.getElementById('calendar');
 
+                // Yetki Kontrolleri
                 const currentUserId = parseInt(calendarEl.dataset.currentUserId, 10);
                 const currentUserDept = calendarEl.dataset.userDept;
                 const canMarkImportant = calendarEl.dataset.canMarkImportant === 'true';
+                const userRole = "<?php echo e(Auth::user()->role); ?>";
 
                 const eventOwnerId = props.user_id;
                 const eventDeptId = props.department_id;
 
                 let canModify = false;
-
-                if (currentUserRole === 'admin') {
+                if (userRole === 'admin') {
                     canModify = true;
                 } else if (eventOwnerId && eventOwnerId === currentUserId) {
                     canModify = true;
-                } else if (currentUserRole === 'yönetici') {
+                } else if (userRole === 'yönetici') {
                     if (!currentUserDept || (eventDeptId && String(currentUserDept) === String(eventDeptId))) {
                         canModify = true;
                     }
                 }
 
+                // "Önemli İşaretle" Checkbox Mantığı
                 if (modalImportantContainer) {
                     const isVehicleTask = (props.model_type === 'vehicle_assignment');
                     let shouldShowCheckbox = false;
@@ -1115,8 +1136,10 @@
                     }
                 }
 
+                // Başlık Ayarla
                 modalTitle.innerHTML = `<span>${props.title || 'Detaylar'}</span>`;
 
+                // Düzenle/Sil Butonları Göster/Gizle
                 if (canModify && props.editUrl && props.editUrl !== '#') {
                     modalEditButton.href = props.editUrl;
                     modalEditButton.style.display = 'inline-block';
@@ -1126,9 +1149,10 @@
                     modalDeleteForm.style.display = 'inline-block';
                 }
 
+                // İkon ve Başlık Belirleme
                 let html = '';
                 let icon = 'fa-info-circle';
-                let typeTitle = 'Etkinlik Detayları';
+                let typeTitle = 'Detaylar';
 
                 if (props.eventType === 'shipment') {
                     icon = 'fa-truck';
@@ -1142,72 +1166,128 @@
                 } else if (props.eventType === 'production') {
                     icon = 'fa-industry';
                     typeTitle = 'Üretim Bilgileri';
+                } else if (props.eventType === 'vehicle_assignment') {
+                    icon = 'fa-car';
+                    typeTitle = 'Araç Görev Bilgileri';
                 } else if (props.eventType === 'todo' || props.model_type === 'todo') {
-                    const todoNote = props.details['Not'] || props.details['Açıklama'];
+                    icon = 'fa-check-square';
+                    typeTitle = 'Yapılacak İş';
 
-                    if (todoNote && todoNote !== 'Açıklama yok') {
-                        html += `<div class="p-3 bg-light rounded border mb-3">
-                    <h6 class="fw-bold text-primary mb-2"><i class="fas fa-sticky-note me-2"></i>Notlar</h6>
-                    <p class="mb-0 text-dark" style="white-space: pre-wrap;">${todoNote}</p>
-                 </div>`;
-                    }
-                    html += `<div class="text-center mt-3">
-                <button onclick="toggleTodoFromModal(${props.id})" class="btn btn-outline-success btn-sm w-100">
-                    <i class="fas fa-check me-2"></i> Durumu Değiştir (Tamamla/Geri Al)
-                </button>
-             </div>`;
+                    // To-Do için özel "Durum Değiştir" butonu
+                    html += `<div class="text-center mb-3">
+                                <button onclick="toggleTodoFromModal(${props.id})" class="btn btn-outline-success btn-sm w-100">
+                                    <i class="fas fa-check me-2"></i> Durumu Değiştir (Tamamla/Geri Al)
+                                </button>
+                             </div>`;
                 }
 
+                // --- 1. TABLO OLUŞTURMA (GENEL DETAYLAR) ---
                 html +=
                     `<div class="modal-info-card"><h6 class="text-primary fw-bold mb-3 border-bottom pb-2"><i class="fas ${icon} me-2"></i>${typeTitle}</h6><div class="table-responsive"><table class="table table-borderless table-sm m-0 align-middle"><tbody>`;
 
+                // Tabloda GÖSTERİLMEYECEK anahtarlar (Bunlar özel alanlarda gösterilecek)
                 const excludeKeys = ['Açıklama', 'Notlar', 'Açıklamalar', 'Dosya Yolu', 'Plan Detayları',
-                    'Onay Durumu', 'Onaylayan'
+                    'Onay Durumu', 'Onaylayan', 'Sonuç Notu'
                 ];
+
                 if (props.details && typeof props.details === 'object') {
                     Object.entries(props.details).forEach(([key, value]) => {
+                        // 1. Hariç tutulanları atla
                         if (excludeKeys.includes(key)) return;
+
+                        // 2. Boş veya null değerleri atla (Ekranda boş satır olmasın)
                         if (value === null || value === undefined || value === '' || value === '-') return;
+
                         let displayValue = String(value).trim();
-                        if (value && typeof value === 'object' && value.is_badge) {
-                            displayValue =
-                                `<span class="badge ${value.class} px-3 py-2 rounded-pill fw-normal">${value.text}</span>`;
-                        } else if (statusMap[displayValue]) {
+
+                        // 3. Durumları Renkli Badge Yap (Pending, High vb.)
+                        if (statusMap[displayValue]) {
                             const mapItem = statusMap[displayValue];
                             displayValue =
                                 `<span class="badge ${mapItem.class} px-3 py-2 rounded-pill fw-normal">${mapItem.text}</span>`;
                         }
+                        // Veya İngilizce kelimeleri Türkçeleştirip Badge Yap
+                        else if (['Kritik', 'Yüksek', 'Orta', 'Düşük', 'Bekliyor', 'Tamamlandı'].includes(
+                                displayValue)) {
+                            let badgeClass = 'bg-secondary';
+                            if (displayValue === 'Kritik' || displayValue === 'Yüksek') badgeClass =
+                                'bg-danger';
+                            if (displayValue === 'Tamamlandı') badgeClass = 'bg-success';
+                            if (displayValue === 'Bekliyor') badgeClass = 'bg-warning text-dark';
+                            displayValue =
+                                `<span class="badge ${badgeClass} text-white px-2 py-1 rounded">${displayValue}</span>`;
+                        }
+
+                        // Satırı ekle
                         html +=
                             `<tr><td class="text-dark fw-bolder" style="width: 35%;">${key}:</td><td class="text-dark">${displayValue}</td></tr>`;
                     });
                 }
                 html += `</tbody></table></div></div>`;
 
-                if (props.eventType === 'production' && props.details['Plan Detayları']) {
-                    html +=
-                        '<div class="modal-info-card"><h6 class="text-primary fw-bold mb-2">Üretim Kalemleri</h6><table class="table table-sm table-striped"><thead><tr><th>Makine</th><th>Ürün</th><th>Adet</th></tr></thead><tbody>';
-                    props.details['Plan Detayları'].forEach(i => {
-                        html += `<tr><td>${i.machine}</td><td>${i.product}</td><td>${i.quantity}</td></tr>`;
-                    });
-                    html += '</tbody></table></div>';
+                // --- 2. ÖZEL ALANLAR (TABLO DIŞI) ---
+
+                // A. Üretim Kalemleri Tablosu
+                if (props.eventType === 'production' && props.details && props.details['Plan Detayları']) {
+                    let planItems = [];
+                    let rawData = props.details['Plan Detayları'];
+
+                    if (Array.isArray(rawData)) {
+                        planItems = rawData;
+                    } else if (typeof rawData === 'string') {
+                        try {
+                            planItems = JSON.parse(rawData);
+                        } catch (e) {}
+                    }
+
+                    if (planItems.length > 0) {
+                        html += '<div class="modal-info-card bg-light border mt-3">';
+                        html +=
+                            '<h6 class="text-primary fw-bold mb-2"><i class="fas fa-list-ol me-2"></i>Üretim Kalemleri</h6>';
+                        html +=
+                            '<div class="table-responsive"><table class="table table-sm table-striped table-hover bg-white rounded mb-0">';
+                        html +=
+                            '<thead class="table-light"><tr><th>Makine</th><th>Ürün</th><th class="text-end">Adet</th></tr></thead><tbody>';
+                        planItems.forEach(i => {
+                            html +=
+                                `<tr><td>${i.machine || '-'}</td><td>${i.product || '-'}</td><td class="text-end fw-bold">${i.quantity || 0}</td></tr>`;
+                        });
+                        html += '</tbody></table></div></div>';
+                    }
                 }
 
+                // B. Dosya Yolu
                 if (props.details && props.details['Dosya Yolu']) {
                     html +=
-                        `<div class="text-center mt-3 mb-3"><a href="${props.details['Dosya Yolu']}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="fas fa-paperclip me-2"></i> Dosyayı Görüntüle</a></div>`;
+                        `<div class="text-center mt-3 mb-3"><a href="${props.details['Dosya Yolu']}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="fas fa-paperclip me-2"></i> Ekli Dosyayı Görüntüle</a></div>`;
                 }
 
-                const aciklama = props.details['Açıklamalar'] || props.details['Notlar'] || props.details[
-                    'Açıklama'];
-                if (aciklama) {
-                    html +=
-                        `<div class="modal-notes-box mt-3 p-3 bg-light rounded border"><div class="modal-notes-title fw-bold mb-2 text-primary"><i class="fas fa-sticky-note me-1"></i> Açıklama / Notlar</div><p class="mb-0 text-secondary" style="white-space: pre-wrap;">${aciklama}</p></div>`;
+                // C. Açıklama / Notlar Kutusu
+                const aciklama = (props.details) ? (props.details['Açıklamalar'] || props.details['Notlar'] || props
+                    .details['Açıklama']) : null;
+                if (aciklama && aciklama !== 'Açıklama yok') {
+                    html += `<div class="modal-notes-box mt-3 p-3 bg-light rounded border">
+                                <div class="modal-notes-title fw-bold mb-2 text-primary"><i class="fas fa-sticky-note me-1"></i> Açıklama / Notlar</div>
+                                <p class="mb-0 text-secondary" style="white-space: pre-wrap;">${aciklama}</p>
+                             </div>`;
                 }
 
+                // D. Sonuç Notu (Bakım vb. için)
+                if (props.details && props.details['Sonuç Notu']) {
+                    html += `<div class="alert alert-success mt-3 border-0 shadow-sm">
+                                <div class="fw-bold mb-1"><i class="fas fa-check-circle me-1"></i> Tamamlanma Raporu</div>
+                                <div class="small">${props.details['Sonuç Notu']}</div>
+                             </div>`;
+                }
+
+                // --- 3. ALT BUTONLAR VE AKSİYONLAR ---
+
+                // Sevkiyat Onay Durumu
                 if (props.eventType === 'shipment') {
                     modalExportButton.href = props.exportUrl || '#';
                     modalExportButton.style.display = 'inline-block';
-                    if (props.details['Onay Durumu']) {
+
+                    if (props.details && props.details['Onay Durumu']) {
                         modalOnayBadge.style.display = 'block';
                         document.getElementById('modalOnayBadgeTarih').textContent = props.details['Onay Durumu'];
                         document.getElementById('modalOnayBadgeKullanici').textContent = props.details[
@@ -1222,25 +1302,246 @@
                             modalOnayForm.style.display = 'inline-block';
                         }
                     }
-                } else if (props.eventType === 'travel' && canModify && props.url) {
+                }
+                // Diğer Modeller için "Detaya Git" Butonu
+                else if ((props.eventType === 'travel' || props.eventType === 'maintenance') && canModify && props
+                    .url) {
                     if (modalOnayForm) modalOnayForm.style.display = 'none';
                     modalExportButton.href = props.url;
-                    modalExportButton.target = "_blank";
-                    modalExportButton.innerHTML = '<i class="fas fa-plane-departure me-2"></i> Detaya Git';
+                    modalExportButton.target = (props.eventType === 'travel') ? "_blank" : "_self";
+                    modalExportButton.innerHTML = '<i class="fas fa-external-link-alt me-2"></i> Detaya Git';
                     modalExportButton.style.display = 'inline-block';
-                } else if (props.eventType === 'maintenance' && canModify && props.url) {
-                    modalExportButton.href = props.url;
-                    modalExportButton.innerHTML = '<i class="fas fa-eye me-2"></i> Detaya Git';
-                    modalExportButton.style.display = 'inline-block';
-                } else if (props.eventType === 'todo' || props.model_type === 'todo') {
-                    icon = 'fa-check-square';
-                    typeTitle = 'Yapılacak İş Detayı';
-                    // To-Do için özel buton veya işlem gerekirse buraya ekle
-                    // Örneğin "Tamamla" butonu eklenebilir ama widget'ta var zaten.
                 }
+
+                // --- 4. MODALI GÖSTER ---
                 modalBody.innerHTML = html;
-                detailModal.show();
+
+                try {
+                    var modalElement = document.getElementById('detailModal');
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        var myModal = bootstrap.Modal.getOrCreateInstance(modalElement);
+                        myModal.show();
+                    } else if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
+                        $(modalElement).modal('show');
+                    } else {
+                        alert('Bootstrap yüklenemediği için modal açılamıyor.');
+                    }
+                } catch (e) {
+                    console.error('Modal hatası:', e);
+                }
             }
+
+            // function openUniversalModal(props) {
+            //     hardResetModalUI();
+            //     if (!props || (!props.eventType && !props.model_type)) return;
+
+            //     const statusMap = {
+            //         'Critical': {
+            //             text: 'Kritik',
+            //             class: 'bg-danger text-white'
+            //         },
+            //         'High': {
+            //             text: 'Yüksek',
+            //             class: 'bg-warning text-dark'
+            //         },
+            //         'Medium': {
+            //             text: 'Orta',
+            //             class: 'bg-info text-white'
+            //         },
+            //         'Low': {
+            //             text: 'Düşük',
+            //             class: 'bg-success text-white'
+            //         },
+            //         'Normal': {
+            //             text: 'Normal',
+            //             class: 'bg-secondary text-white'
+            //         },
+            //         'Pending': {
+            //             text: 'Beklemede',
+            //             class: 'bg-warning text-dark'
+            //         },
+            //         'Active': {
+            //             text: 'Aktif',
+            //             class: 'bg-success text-white'
+            //         }
+            //     };
+
+            //     const modalTitle = document.getElementById('modalTitle');
+            //     const modalBody = document.getElementById('modalDynamicBody');
+            //     const modalEditButton = document.getElementById('modalEditButton');
+            //     const modalExportButton = document.getElementById('modalExportButton');
+            //     const modalDeleteForm = document.getElementById('modalDeleteForm');
+            //     const modalOnayForm = document.getElementById('modalOnayForm');
+            //     const modalOnayKaldirForm = document.getElementById('modalOnayKaldirForm');
+            //     const modalOnayBadge = document.getElementById('modalOnayBadge');
+            //     const modalImportantContainer = document.getElementById('modalImportantCheckboxContainer');
+            //     const modalImportantCheckbox = document.getElementById('modalImportantCheckbox');
+            //     const calendarEl = document.getElementById('calendar');
+
+            //     const currentUserId = parseInt(calendarEl.dataset.currentUserId, 10);
+            //     const currentUserDept = calendarEl.dataset.userDept;
+            //     const canMarkImportant = calendarEl.dataset.canMarkImportant === 'true';
+
+            //     const eventOwnerId = props.user_id;
+            //     const eventDeptId = props.department_id;
+
+            //     let canModify = false;
+
+            //     if (currentUserRole === 'admin') {
+            //         canModify = true;
+            //     } else if (eventOwnerId && eventOwnerId === currentUserId) {
+            //         canModify = true;
+            //     } else if (currentUserRole === 'yönetici') {
+            //         if (!currentUserDept || (eventDeptId && String(currentUserDept) === String(eventDeptId))) {
+            //             canModify = true;
+            //         }
+            //     }
+
+            //     if (modalImportantContainer) {
+            //         const isVehicleTask = (props.model_type === 'vehicle_assignment');
+            //         let shouldShowCheckbox = false;
+            //         if (canMarkImportant) shouldShowCheckbox = true;
+            //         else if (isVehicleTask && canModify) shouldShowCheckbox = true;
+
+            //         if (shouldShowCheckbox) {
+            //             modalImportantContainer.style.display = 'flex';
+            //             modalImportantCheckbox.checked = props.is_important || false;
+            //             modalImportantCheckbox.disabled = false;
+            //             modalImportantCheckbox.dataset.modelType = props.model_type;
+            //             modalImportantCheckbox.dataset.modelId = props.id;
+            //         } else {
+            //             modalImportantContainer.style.setProperty('display', 'none', 'important');
+            //         }
+            //     }
+
+            //     modalTitle.innerHTML = `<span>${props.title || 'Detaylar'}</span>`;
+
+            //     if (canModify && props.editUrl && props.editUrl !== '#') {
+            //         modalEditButton.href = props.editUrl;
+            //         modalEditButton.style.display = 'inline-block';
+            //     }
+            //     if (canModify && props.deleteUrl && modalDeleteForm) {
+            //         modalDeleteForm.action = props.deleteUrl;
+            //         modalDeleteForm.style.display = 'inline-block';
+            //     }
+
+            //     let html = '';
+            //     let icon = 'fa-info-circle';
+            //     let typeTitle = 'Etkinlik Detayları';
+
+            //     if (props.eventType === 'shipment') {
+            //         icon = 'fa-truck';
+            //         typeTitle = 'Sevkiyat Bilgileri';
+            //     } else if (props.eventType === 'travel') {
+            //         icon = 'fa-plane';
+            //         typeTitle = 'Seyahat Bilgileri';
+            //     } else if (props.eventType === 'maintenance') {
+            //         icon = 'fa-screwdriver-wrench';
+            //         typeTitle = 'Bakım Bilgileri';
+            //     } else if (props.eventType === 'production') {
+            //         icon = 'fa-industry';
+            //         typeTitle = 'Üretim Bilgileri';
+            //     } else if (props.eventType === 'todo' || props.model_type === 'todo') {
+            //         const todoNote = props.details['Not'] || props.details['Açıklama'];
+
+            //         if (todoNote && todoNote !== 'Açıklama yok') {
+            //             html += `<div class="p-3 bg-light rounded border mb-3">
+        //         <h6 class="fw-bold text-primary mb-2"><i class="fas fa-sticky-note me-2"></i>Notlar</h6>
+        //         <p class="mb-0 text-dark" style="white-space: pre-wrap;">${todoNote}</p>
+        //      </div>`;
+            //         }
+            //         html += `<div class="text-center mt-3">
+        //     <button onclick="toggleTodoFromModal(${props.id})" class="btn btn-outline-success btn-sm w-100">
+        //         <i class="fas fa-check me-2"></i> Durumu Değiştir (Tamamla/Geri Al)
+        //     </button>
+        //  </div>`;
+            //     }
+
+            //     html +=
+            //         `<div class="modal-info-card"><h6 class="text-primary fw-bold mb-3 border-bottom pb-2"><i class="fas ${icon} me-2"></i>${typeTitle}</h6><div class="table-responsive"><table class="table table-borderless table-sm m-0 align-middle"><tbody>`;
+
+            //     const excludeKeys = ['Açıklama', 'Notlar', 'Açıklamalar', 'Dosya Yolu', 'Plan Detayları',
+            //         'Onay Durumu', 'Onaylayan'
+            //     ];
+            //     if (props.details && typeof props.details === 'object') {
+            //         Object.entries(props.details).forEach(([key, value]) => {
+            //             if (excludeKeys.includes(key)) return;
+            //             if (value === null || value === undefined || value === '' || value === '-') return;
+            //             let displayValue = String(value).trim();
+            //             if (value && typeof value === 'object' && value.is_badge) {
+            //                 displayValue =
+            //                     `<span class="badge ${value.class} px-3 py-2 rounded-pill fw-normal">${value.text}</span>`;
+            //             } else if (statusMap[displayValue]) {
+            //                 const mapItem = statusMap[displayValue];
+            //                 displayValue =
+            //                     `<span class="badge ${mapItem.class} px-3 py-2 rounded-pill fw-normal">${mapItem.text}</span>`;
+            //             }
+            //             html +=
+            //                 `<tr><td class="text-dark fw-bolder" style="width: 35%;">${key}:</td><td class="text-dark">${displayValue}</td></tr>`;
+            //         });
+            //     }
+            //     html += `</tbody></table></div></div>`;
+
+            //     if (props.eventType === 'production' && props.details['Plan Detayları']) {
+            //         html +=
+            //             '<div class="modal-info-card"><h6 class="text-primary fw-bold mb-2">Üretim Kalemleri</h6><table class="table table-sm table-striped"><thead><tr><th>Makine</th><th>Ürün</th><th>Adet</th></tr></thead><tbody>';
+            //         props.details['Plan Detayları'].forEach(i => {
+            //             html += `<tr><td>${i.machine}</td><td>${i.product}</td><td>${i.quantity}</td></tr>`;
+            //         });
+            //         html += '</tbody></table></div>';
+            //     }
+
+            //     if (props.details && props.details['Dosya Yolu']) {
+            //         html +=
+            //             `<div class="text-center mt-3 mb-3"><a href="${props.details['Dosya Yolu']}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="fas fa-paperclip me-2"></i> Dosyayı Görüntüle</a></div>`;
+            //     }
+
+            //     const aciklama = props.details['Açıklamalar'] || props.details['Notlar'] || props.details[
+            //         'Açıklama'];
+            //     if (aciklama) {
+            //         html +=
+            //             `<div class="modal-notes-box mt-3 p-3 bg-light rounded border"><div class="modal-notes-title fw-bold mb-2 text-primary"><i class="fas fa-sticky-note me-1"></i> Açıklama / Notlar</div><p class="mb-0 text-secondary" style="white-space: pre-wrap;">${aciklama}</p></div>`;
+            //     }
+
+            //     if (props.eventType === 'shipment') {
+            //         modalExportButton.href = props.exportUrl || '#';
+            //         modalExportButton.style.display = 'inline-block';
+            //         if (props.details['Onay Durumu']) {
+            //             modalOnayBadge.style.display = 'block';
+            //             document.getElementById('modalOnayBadgeTarih').textContent = props.details['Onay Durumu'];
+            //             document.getElementById('modalOnayBadgeKullanici').textContent = props.details[
+            //                 'Onaylayan'] || '';
+            //             if (modalOnayKaldirForm) {
+            //                 modalOnayKaldirForm.action = props.onayKaldirUrl;
+            //                 modalOnayKaldirForm.style.display = 'inline-block';
+            //             }
+            //         } else {
+            //             if (modalOnayForm) {
+            //                 modalOnayForm.action = props.onayUrl;
+            //                 modalOnayForm.style.display = 'inline-block';
+            //             }
+            //         }
+            //     } else if (props.eventType === 'travel' && canModify && props.url) {
+            //         if (modalOnayForm) modalOnayForm.style.display = 'none';
+            //         modalExportButton.href = props.url;
+            //         modalExportButton.target = "_blank";
+            //         modalExportButton.innerHTML = '<i class="fas fa-plane-departure me-2"></i> Detaya Git';
+            //         modalExportButton.style.display = 'inline-block';
+            //     } else if (props.eventType === 'maintenance' && canModify && props.url) {
+            //         modalExportButton.href = props.url;
+            //         modalExportButton.innerHTML = '<i class="fas fa-eye me-2"></i> Detaya Git';
+            //         modalExportButton.style.display = 'inline-block';
+            //     } else if (props.eventType === 'todo' || props.model_type === 'todo') {
+            //         icon = 'fa-check-square';
+            //         typeTitle = 'Yapılacak İş Detayı';
+            //         // To-Do için özel buton veya işlem gerekirse buraya ekle
+            //         // Örneğin "Tamamla" butonu eklenebilir ama widget'ta var zaten.
+            //     }
+            //     modalBody.innerHTML = html;
+            //     var modalEl = document.getElementById('detailModal');
+            //     var myModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            //     myModal.show();
+            // }
 
             var calendarEl = document.getElementById('calendar');
             var calendar = new FullCalendar.Calendar(calendarEl, {

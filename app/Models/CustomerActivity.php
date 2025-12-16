@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\HasBusinessUnit;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class CustomerActivity extends Model
 {
-    use HasFactory;
-    protected $fillable = ['customer_id', 'user_id', 'type', 'description', 'activity_date'];
+    use HasFactory, HasBusinessUnit;
+    protected $fillable = ['customer_id', 'user_id', 'type', 'description', 'activity_date', 'business_unit_id'];
 
     protected $casts = [
         'activity_date' => 'datetime',

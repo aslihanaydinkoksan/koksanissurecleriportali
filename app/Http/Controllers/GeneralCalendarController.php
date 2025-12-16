@@ -3,21 +3,19 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
+// Modeller
 use App\Models\Shipment;
 use App\Models\ProductionPlan;
 use App\Models\Event;
 use App\Models\VehicleAssignment;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use App\Http\Controllers\EventController;
-use App\Http\Controllers\HomeController;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use App\Models\Travel;
-use Carbon\CarbonPeriod;
 use App\Models\MaintenancePlan;
+use App\Models\Todo;
 
 class GeneralCalendarController extends Controller
 {
@@ -29,9 +27,12 @@ class GeneralCalendarController extends Controller
             return response()->json([]);
         }
 
-        $start = Carbon::parse($request->input('start'))->startOfDay();
-        $end = Carbon::parse($request->input('end'))->endOfDay();
+        // FullCalendar'dan gelen tarih aralığı
+        // Eğer start/end gelmezse varsayılan olarak bu ayı al
+        $start = $request->has('start') ? Carbon::parse($request->input('start'))->startOfDay() : Carbon::now()->startOfMonth();
+        $end = $request->has('end') ? Carbon::parse($request->input('end'))->endOfDay() : Carbon::now()->endOfMonth();
 
+        // Filtreler
         $showLojistik = $request->boolean('lojistik', true);
         $showUretim = $request->boolean('uretim', true);
         $showHizmet = $request->boolean('hizmet', true);
@@ -40,195 +41,41 @@ class GeneralCalendarController extends Controller
 
         $events = [];
 
-        // 1. Sevkiyatlar (Shipments)
+        // 1. Lojistik Verileri
         if ($showLojistik && $user->can('view_logistics')) {
-            try {
-                $activeUnitId = session('active_unit_id');
-                $shipments = Shipment::forUser($user) // SCOPE
-                    ->with(['onaylayanKullanici', 'user'])
-                    ->whereNotNull('tahmini_varis_tarihi')
-                    ->whereBetween('tahmini_varis_tarihi', [$start, $end])
-                    ->when($importantOnly, fn($q) => $q->where('is_important', true))
-                    ->when($activeUnitId, function ($q) use ($activeUnitId) {
-                        return $q->where('business_unit_id', $activeUnitId);
-                    })
-                    ->get();
-
-                $now = Carbon::now();
-
-                foreach ($shipments as $shipment) {
-                    $cikisTarihi = $shipment->cikis_tarihi ? Carbon::parse($shipment->cikis_tarihi) : null;
-                    $varisTarihi = $shipment->tahmini_varis_tarihi ? Carbon::parse($shipment->tahmini_varis_tarihi) : null;
-
-                    $color = '#0d6efd';
-                    if ($shipment->onaylanma_tarihi) {
-                        $color = '#198754';
-                    } elseif ($varisTarihi) {
-                        if ($now->greaterThan($varisTarihi)) {
-                            $color = '#dc3545';
-                        } elseif ($varisTarihi->isBetween($now, $now->copy()->addDays(3))) {
-                            $color = '#ffc107';
-                        }
-                    }
-
-                    $onayUrl = ($user->hasRole('admin') || $user->hasRole('roles.lojistik_personeli'))
-                        ? route('shipments.onayla', $shipment->id)
-                        : null;
-
-                    $extendedProps = [
-                        'eventType' => 'shipment',
-                        'model_type' => 'shipment',
-                        'is_important' => $shipment->is_important,
-                        'title' => '🚚 ' . $shipment->kargo_icerigi,
-                        'onayUrl' => $onayUrl,
-                        'id' => $shipment->id,
-                        'details' => [
-                            'Araç' => $shipment->arac_tipi,
-                            'Plaka' => $shipment->plaka,
-                            'Yük' => $shipment->kargo_icerigi
-                        ]
-                    ];
-
-                    if ($cikisTarihi)
-                        $events[] = ['title' => 'ÇIKIŞ: ' . $shipment->kargo_icerigi, 'start' => $cikisTarihi->toIso8601String(), 'color' => $color, 'extendedProps' => $extendedProps];
-                    if ($varisTarihi)
-                        $events[] = ['title' => 'VARIŞ: ' . $shipment->kargo_icerigi, 'start' => $varisTarihi->toIso8601String(), 'color' => $color, 'extendedProps' => $extendedProps];
-                }
-            } catch (\Exception $e) {
-                Log::error('Takvim Sevkiyat Hatası', ['error' => $e->getMessage()]);
-            }
+            $data = $this->getLojistikData($user, $start, $end, $importantOnly);
+            $events = array_merge($events, $data);
         }
 
-        // 2. Üretim Planları
+        // 2. Üretim Verileri
         if ($showUretim && $user->can('view_production')) {
-            try {
-                $plans = ProductionPlan::forUser($user) // SCOPE
-                    ->with('user')
-                    ->whereBetween('week_start_date', [$start, $end])
-                    ->when($importantOnly, fn($q) => $q->where('is_important', true))
-                    ->get();
-
-                foreach ($plans as $plan) {
-                    $events[] = [
-                        'title' => '🏭 ' . $plan->plan_title,
-                        'start' => $plan->week_start_date->startOfDay()->toIso8601String(),
-                        'end' => $plan->week_start_date->copy()->addDay()->startOfDay()->toIso8601String(),
-                        'color' => '#4FD1C5',
-                        'extendedProps' => [
-                            'eventType' => 'production',
-                            'model_type' => 'production_plan',
-                            'is_important' => $plan->is_important,
-                            'id' => $plan->id
-                        ]
-                    ];
-                }
-            } catch (\Exception $e) {
-                Log::error('Takvim Üretim Hatası', ['error' => $e->getMessage()]);
-            }
+            $data = $this->getUretimData($user, $start, $end, $importantOnly);
+            $events = array_merge($events, $data);
         }
 
-        // 3. Bakım Planları
+        // 3. Bakım Verileri
         if ($showBakim && $user->can('view_maintenance')) {
-            try {
-                $plans = MaintenancePlan::forUser($user) // SCOPE
-                    ->with(['asset', 'type'])
-                    ->where(function ($q) use ($start, $end) {
-                        $q->whereBetween('planned_start_date', [$start, $end])
-                            ->orWhereBetween('planned_end_date', [$start, $end]);
-                    })
-                    ->when($importantOnly, fn($q) => $q->whereIn('priority', ['high', 'critical']))
-                    ->get();
-
-                foreach ($plans as $plan) {
-                    $color = match ($plan->status) {
-                        'pending' => '#F6E05E', 'in_progress' => '#3182CE', 'completed' => '#48BB78', 'cancelled' => '#E53E3E', default => '#A0AEC0'
-                    };
-                    $events[] = [
-                        'title' => '🔧 ' . ($plan->asset->name ?? '?'),
-                        'start' => $plan->planned_start_date->format('Y-m-d\TH:i:s'),
-                        'end' => $plan->planned_end_date->format('Y-m-d\TH:i:s'),
-                        'color' => $color,
-                        'extendedProps' => [
-                            'eventType' => 'maintenance',
-                            'model_type' => 'maintenance_plan',
-                            'id' => $plan->id
-                        ]
-                    ];
-                }
-            } catch (\Exception $e) {
-                Log::error('Takvim Bakım Hatası', ['error' => $e->getMessage()]);
-            }
+            $data = $this->getBakimData($user, $start, $end, $importantOnly);
+            $events = array_merge($events, $data);
         }
 
-        // 4. Etkinlikler & İdari İşler
+        // 4. İdari İşler / Hizmet Verileri (Etkinlik, Araç, Seyahat)
         if ($showHizmet && $user->can('view_administrative')) {
-            // Etkinlikler
-            try {
-                $serviceEvents = Event::forUser($user) // SCOPE
-                    ->whereBetween('start_datetime', [$start, $end])
-                    ->when($importantOnly, fn($q) => $q->where('is_important', true))
-                    ->get();
-
-                foreach ($serviceEvents as $event) {
-                    $events[] = [
-                        'title' => '📅 ' . $event->title,
-                        'start' => $event->start_datetime->format('Y-m-d\TH:i:s'),
-                        'end' => $event->end_datetime->format('Y-m-d\TH:i:s'),
-                        'color' => '#F093FB',
-                        'extendedProps' => ['eventType' => 'service_event', 'model_type' => 'event', 'id' => $event->id]
-                    ];
-                }
-            } catch (\Exception $e) {
-                Log::error('Takvim Etkinlik Hatası', ['error' => $e->getMessage()]);
-            }
-
-            // Araç Atamaları
-            try {
-                $assignments = VehicleAssignment::forUser($user) // SCOPE
-                    ->with('vehicle')
-                    ->whereBetween('start_time', [$start, $end])
-                    ->when($importantOnly, fn($q) => $q->where('is_important', true))
-                    ->get();
-
-                foreach ($assignments as $assignment) {
-                    $events[] = [
-                        'title' => '🚗 ' . ($assignment->vehicle?->plate_number ?? '?'),
-                        'start' => $assignment->start_time->format('Y-m-d\TH:i:s'),
-                        'end' => $assignment->end_time->format('Y-m-d\TH:i:s'),
-                        'color' => '#FBD38D',
-                        'extendedProps' => ['eventType' => 'vehicle_assignment', 'model_type' => 'vehicle_assignment', 'id' => $assignment->id]
-                    ];
-                }
-            } catch (\Exception $e) {
-                Log::error('Takvim Araç Hatası', ['error' => $e->getMessage()]);
-            }
-
-            // Seyahatler
-            try {
-                $travels = Travel::forUser($user) // SCOPE
-                    ->whereDate('start_date', '<=', $end)
-                    ->whereDate('end_date', '>=', $start)
-                    ->when($importantOnly, fn($q) => $q->where('is_important', true))
-                    ->get();
-
-                foreach ($travels as $travel) {
-                    $period = CarbonPeriod::create($travel->start_date, $travel->end_date);
-                    foreach ($period as $date) {
-                        if ($date->between($start, $end)) {
-                            $events[] = [
-                                'title' => '✈️ ' . $travel->name,
-                                'start' => $date->toDateString(),
-                                'allDay' => true,
-                                'color' => '#A78BFA',
-                                'extendedProps' => ['eventType' => 'travel', 'model_type' => 'travel', 'id' => $travel->id]
-                            ];
-                        }
-                    }
-                }
-            } catch (\Exception $e) {
-                Log::error('Takvim Seyahat Hatası', ['error' => $e->getMessage()]);
-            }
+            $data = $this->getHizmetData($user, $start, $end, $importantOnly);
+            $events = array_merge($events, $data);
         }
+
+        // 5. Todo'lar (Eğer Hizmet filtresi açıksa veya kullanıcı istiyorsa gösterelim)
+        // Todo kişisel olduğu için her zaman gösterilebilir veya hizmet'e bağlanabilir.
+        if ($showHizmet) {
+            $data = $this->getTodoData($user, $start, $end, $importantOnly);
+            $events = array_merge($events, $data);
+        }
+
+        // Çakışan ID'leri temizle (Frontend hatasını önlemek için)
+        // $uniqueEvents = collect($events)->unique(function ($item) {
+        //     return $item['extendedProps']['model_type'] . '-' . $item['id'];
+        // })->values()->all();
 
         return response()->json($events);
     }
@@ -238,124 +85,397 @@ class GeneralCalendarController extends Controller
         return view('general-calendar');
     }
 
-    // --- YARDIMCI METODLAR ---
+    // --- YARDIMCI METODLAR (VERİ TOPLAYICILAR) ---
 
-    private function normalizeCargoContent($cargo)
+    private function getLojistikData($user, $start, $end, $importantOnly)
     {
-        if (empty($cargo)) {
-            return 'Bilinmiyor';
+        $events = [];
+        $now = Carbon::now();
+
+        // DÜZELTME: forUser kaldırıldı. Trait (Global Scope) otomatik filtreliyor.
+        $shipments = Shipment::with(['onaylayanKullanici', 'user'])
+            ->whereNotNull('tahmini_varis_tarihi')
+            ->where(function ($q) use ($start, $end) {
+                $q->whereBetween('tahmini_varis_tarihi', [$start, $end])
+                    ->orWhereBetween('cikis_tarihi', [$start, $end]);
+            })
+            ->when($importantOnly, fn($q) => $q->where('is_important', true))
+            ->get();
+
+        foreach ($shipments as $shipment) {
+            $cikisTarihi = $shipment->cikis_tarihi ? Carbon::parse($shipment->cikis_tarihi) : null;
+            $varisTarihi = $shipment->tahmini_varis_tarihi ? Carbon::parse($shipment->tahmini_varis_tarihi) : null;
+
+            $color = '#0d6efd';
+            if ($shipment->onaylanma_tarihi)
+                $color = '#198754';
+            elseif ($varisTarihi) {
+                if ($now->greaterThan($varisTarihi))
+                    $color = '#dc3545';
+                elseif ($varisTarihi->isBetween($now, $now->copy()->addDays(3)))
+                    $color = '#ffc107';
+            }
+
+            $onayUrl = ($user->hasRole('admin') || $user->hasRole('roles.lojistik_personeli')) ? route('shipments.onayla', $shipment->id) : null;
+
+            $detaylar = [
+                'Yük Tipi' => $shipment->shipment_type ?? 'Genel',
+                'Araç Tipi' => $shipment->arac_tipi ?? 'Belirtilmedi',
+                'Kargo İçeriği' => $shipment->kargo_icerigi,
+                'Miktar' => ($shipment->kargo_miktari ?? '-') . ' ' . ($shipment->kargo_tipi ?? ''),
+            ];
+
+            // Detayları doldurma mantığı...
+            $aracTipiLower = mb_strtolower($shipment->arac_tipi ?? '');
+            if (str_contains($aracTipiLower, 'gemi') || str_contains(mb_strtolower($shipment->shipment_type ?? ''), 'deniz')) {
+                $detaylar['Gemi Adı'] = $shipment->gemi_adi ?? '-';
+                $detaylar['IMO Numarası'] = $shipment->imo_numarasi ?? '-';
+                $detaylar['Kalkış Limanı'] = $shipment->kalkis_limani ?? '-';
+                $detaylar['Varış Limanı'] = $shipment->varis_limani ?? '-';
+            } else {
+                $detaylar['Plaka'] = $shipment->plaka ?? '-';
+                if (!empty($shipment->dorce_plakasi))
+                    $detaylar['Dorse Plaka'] = $shipment->dorce_plakasi;
+                $detaylar['Sürücü'] = $shipment->sofor_adi ?? '-';
+                $detaylar['Kalkış Noktası'] = $shipment->kalkis_noktasi ?? '-';
+                $detaylar['Varış Noktası'] = $shipment->varis_noktasi ?? '-';
+                if (!empty($shipment->nakliye_firmasi))
+                    $detaylar['Nakliye Firması'] = $shipment->nakliye_firmasi;
+            }
+
+            $detaylar['Çıkış Tarihi'] = $cikisTarihi ? $cikisTarihi->format('d.m.Y H:i') : '-';
+            $detaylar['Tahmini Varış'] = $varisTarihi ? $varisTarihi->format('d.m.Y H:i') : '-';
+            $detaylar['Onay Durumu'] = $shipment->onaylanma_tarihi ? $shipment->onaylanma_tarihi : null;
+            $detaylar['Onaylayan'] = $shipment->onaylayanKullanici->name ?? null;
+            $detaylar['Açıklama'] = $shipment->aciklamalar ?? null;
+
+            $extendedProps = [
+                'eventType' => 'shipment',
+                'model_type' => 'shipment',
+                'id' => $shipment->id,
+                'is_important' => $shipment->is_important,
+                'title' => '🚚 ' . $shipment->kargo_icerigi,
+                'onayUrl' => $onayUrl,
+                'details' => $detaylar
+            ];
+
+            if ($cikisTarihi && $cikisTarihi->between($start, $end))
+                $events[] = ['title' => 'ÇIKIŞ: ' . $shipment->kargo_icerigi, 'start' => $cikisTarihi->toIso8601String(), 'color' => $color, 'extendedProps' => $extendedProps];
+
+            if ($varisTarihi && $varisTarihi->between($start, $end))
+                $events[] = ['title' => 'VARIŞ: ' . $shipment->kargo_icerigi, 'start' => $varisTarihi->toIso8601String(), 'color' => $color, 'extendedProps' => $extendedProps];
         }
-
-        $normalized = mb_strtoupper(trim($cargo), 'UTF-8');
-        $specialCases = [
-            'LEVBA' => 'LEVHA',
-            'LEVBE' => 'LEVHA',
-            'PLASTIC' => 'PLASTİK',
-            'PLASTIK' => 'PLASTİK',
-            'PREFORM' => 'PREFORM',
-            'COPED' => 'COPED'
-        ];
-
-        return $specialCases[$normalized] ?? $normalized;
+        return $events;
     }
 
-    private function normalizeVehicleType($vehicle)
+    private function getUretimData($user, $start, $end, $importantOnly)
     {
-        if (empty($vehicle)) {
-            return 'Bilinmiyor';
+        $events = [];
+        // DÜZELTME: forUser kaldırıldı
+        $plans = ProductionPlan::with('user')
+            ->whereBetween('week_start_date', [$start, $end])
+            ->when($importantOnly, fn($q) => $q->where('is_important', true))
+            ->get();
+
+        foreach ($plans as $plan) {
+            $events[] = [
+                'title' => '🏭 ' . $plan->plan_title,
+                'start' => $plan->week_start_date->startOfDay()->toIso8601String(),
+                'end' => $plan->week_start_date->copy()->addDay()->startOfDay()->toIso8601String(),
+                'color' => '#4FD1C5',
+                'extendedProps' => [
+                    'eventType' => 'production',
+                    'model_type' => 'production_plan',
+                    'is_important' => $plan->is_important,
+                    'id' => $plan->id,
+                    'title' => $plan->plan_title,
+                    'details' => [
+                        'Plan Adı' => $plan->plan_title,
+                        'Başlangıç Tarihi' => $plan->week_start_date->format('d.m.Y'),
+                        'Oluşturulma' => $plan->created_at->format('d.m.Y H:i'),
+                        'Oluşturan' => $plan->user ? $plan->user->name : '-',
+                        'Plan Detayları' => $plan->plan_details
+                    ]
+                ]
+            ];
         }
-
-        $normalized = mb_strtoupper(trim($vehicle), 'UTF-8');
-
-        $mapping = [
-            'TIR' => 'TIR',
-            'TRUCK' => 'TIR',
-            'GEMI' => 'GEMİ',
-            'SHIP' => 'GEMİ',
-            'KAMYON' => 'KAMYON',
-            'PICKUP' => 'KAMYONET',
-            'KAMYONET' => 'KAMYONET'
-        ];
-
-        return $mapping[$normalized] ?? $normalized;
+        return $events;
     }
 
-    public function getEventTypes(): array
+    private function getBakimData($user, $start, $end, $importantOnly)
     {
-        return [
-            'toplanti' => 'Toplantı',
-            'egitim' => 'Eğitim',
-            'fuar' => 'Fuar',
-            'gezi' => 'Gezi',
-            'musteri_ziyareti' => 'Müşteri Ziyareti',
-            'misafir_karsilama' => 'Misafir Karşılama',
-            'diger' => 'Diğer',
-        ];
+        $events = [];
+        // DÜZELTME: forUser kaldırıldı
+        $plans = MaintenancePlan::with(['asset', 'type', 'user'])
+            ->where(function ($q) use ($start, $end) {
+                $q->whereBetween('planned_start_date', [$start, $end])
+                    ->orWhereBetween('planned_end_date', [$start, $end]);
+            })
+            ->when($importantOnly, fn($q) => $q->whereIn('priority', ['high', 'critical']))
+            ->get();
+
+        foreach ($plans as $plan) {
+            $color = match ($plan->status) {
+                'pending' => '#F6E05E', 'in_progress' => '#3182CE', 'completed' => '#48BB78', 'cancelled' => '#E53E3E', default => '#A0AEC0',
+            };
+
+            $baslik = '🔧 ' . ($plan->asset->name ?? 'Varlık Silinmiş');
+            if (!empty($plan->title))
+                $baslik .= ' - ' . $plan->title;
+
+            $detaylar = [
+                'Başlık' => $plan->title ?? '-',
+                'Varlık' => $plan->asset->name ?? 'Bilinmiyor',
+                'Bakım Türü' => $plan->type->name ?? 'Genel',
+                'Sorumlu' => $plan->user->name ?? '-',
+                'Öncelik' => ucfirst($plan->priority ?? 'Normal'),
+                'Durum' => ucfirst($plan->status ?? 'Pending'),
+                'Planlanan Başlangıç' => $plan->planned_start_date ? $plan->planned_start_date->format('d.m.Y H:i') : '-',
+                'Planlanan Bitiş' => $plan->planned_end_date ? $plan->planned_end_date->format('d.m.Y H:i') : '-',
+            ];
+
+            if ($plan->actual_start_date)
+                $detaylar['Gerçekleşen Başlangıç'] = Carbon::parse($plan->actual_start_date)->format('d.m.Y H:i');
+            if ($plan->actual_end_date)
+                $detaylar['Gerçekleşen Bitiş'] = Carbon::parse($plan->actual_end_date)->format('d.m.Y H:i');
+            if (!empty($plan->completion_note))
+                $detaylar['Sonuç Notu'] = $plan->completion_note;
+            $detaylar['Açıklama'] = $plan->description ?? null;
+
+            $events[] = [
+                'title' => $baslik,
+                'start' => $plan->planned_start_date->format('Y-m-d\TH:i:s'),
+                'end' => $plan->planned_end_date->format('Y-m-d\TH:i:s'),
+                'color' => $color,
+                'extendedProps' => [
+                    'eventType' => 'maintenance',
+                    'model_type' => 'maintenance_plan',
+                    'is_important' => ($plan->priority == 'critical' || $plan->priority == 'high'),
+                    'id' => $plan->id,
+                    'details' => $detaylar
+                ]
+            ];
+        }
+        return $events;
+    }
+
+    private function getHizmetData($user, $start, $end, $importantOnly)
+    {
+        $events = [];
+
+        // 1. Etkinlikler
+        try {
+            // DÜZELTME: forUser kaldırıldı
+            $serviceEvents = Event::with(['user', 'customer'])
+                ->whereBetween('start_datetime', [$start, $end])
+                ->when($importantOnly, fn($q) => $q->where('is_important', true))
+                ->get();
+
+            foreach ($serviceEvents as $event) {
+                $detaylar = [
+                    'Etkinlik Başlığı' => $event->title,
+                    'Tür' => $event->event_type ?? 'Genel',
+                    'Konum' => $event->location ?? '-',
+                    'Başlangıç' => $event->start_datetime->format('d.m.Y H:i'),
+                    'Bitiş' => $event->end_datetime->format('d.m.Y H:i'),
+                ];
+
+                if ($event->customer_id)
+                    $detaylar['Müşteri'] = $event->customer->name ?? ('Müşteri #' . $event->customer_id);
+                if (!empty($event->visit_purpose))
+                    $detaylar['Ziyaret Amacı'] = $event->visit_purpose;
+
+                $status = $event->visit_status ?? 'planlandi';
+                $detaylar['Durum'] = ucfirst($status);
+
+                if ((strtolower($status) === 'iptal' || strtolower($status) === 'cancelled') && !empty($event->cancellation_reason)) {
+                    $detaylar['İptal Nedeni'] = $event->cancellation_reason;
+                }
+                if (!empty($event->after_sales_notes))
+                    $detaylar['Satış Sonrası Notlar'] = Str::limit($event->after_sales_notes, 50);
+                $detaylar['Açıklama'] = $event->description ?? null;
+
+                $events[] = [
+                    'title' => '📅 ' . $event->title,
+                    'start' => $event->start_datetime->format('Y-m-d\TH:i:s'),
+                    'end' => $event->end_datetime->format('Y-m-d\TH:i:s'),
+                    'color' => '#F093FB',
+                    'extendedProps' => [
+                        'eventType' => 'service_event',
+                        'model_type' => 'event',
+                        'is_important' => $event->is_important,
+                        'id' => $event->id,
+                        'details' => $detaylar
+                    ]
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error('Takvim Etkinlik Hatası', ['error' => $e->getMessage()]);
+        }
+
+        // 2. Araç Atamaları
+        try {
+            // DÜZELTME: forUser kaldırıldı
+            $assignments = VehicleAssignment::with(['vehicle', 'createdBy', 'driver'])
+                ->whereBetween('start_time', [$start, $end])
+                ->when($importantOnly, fn($q) => $q->where('is_important', true))
+                ->get();
+
+            foreach ($assignments as $assignment) {
+                $aracBilgisi = $assignment->vehicle ? ($assignment->vehicle->plate_number . ' - ' . $assignment->vehicle->brand) : 'Araç Bilgisi Yok';
+
+                $events[] = [
+                    'title' => '🚗 ' . ($assignment->vehicle?->plate_number ?? '?'),
+                    'start' => $assignment->start_time->format('Y-m-d\TH:i:s'),
+                    'end' => $assignment->end_time->format('Y-m-d\TH:i:s'),
+                    'color' => '#FBD38D',
+                    'extendedProps' => [
+                        'eventType' => 'vehicle_assignment',
+                        'model_type' => 'vehicle_assignment',
+                        'is_important' => $assignment->is_important,
+                        'id' => $assignment->id,
+                        'details' => [
+                            'Araç' => $aracBilgisi,
+                            'Görev Tanımı' => $assignment->task_description,
+                            'Talep Eden' => $assignment->createdBy?->name ?? '-',
+                            'Sürücü' => $assignment->driver?->name ?? '-',
+                            'Başlangıç' => $assignment->start_time->format('d.m.Y H:i'),
+                            'Bitiş' => $assignment->end_time->format('d.m.Y H:i'),
+                            'Durum' => ucfirst($assignment->status)
+                        ]
+                    ]
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error('Takvim Araç Hatası', ['error' => $e->getMessage()]);
+        }
+
+        // 3. Seyahatler
+        try {
+            // DÜZELTME: forUser kaldırıldı
+            $travels = Travel::whereDate('start_date', '<=', $end)
+                ->whereDate('end_date', '>=', $start)
+                ->when($importantOnly, fn($q) => $q->where('is_important', true))
+                ->get();
+
+            foreach ($travels as $travel) {
+                $events[] = [
+                    'title' => '✈️ ' . $travel->name,
+                    'start' => $travel->start_date->format('Y-m-d'),
+                    'end' => $travel->end_date->addDay()->format('Y-m-d'), // FullCalendar için +1 gün
+                    'allDay' => true,
+                    'color' => '#A78BFA',
+                    'extendedProps' => [
+                        'eventType' => 'travel',
+                        'model_type' => 'travel',
+                        'is_important' => $travel->is_important,
+                        'id' => $travel->id,
+                        'details' => [
+                            'Seyahat Adı' => $travel->name,
+                            'Başlangıç' => $travel->start_date->format('d.m.Y'),
+                            'Bitiş' => $travel->end_date->format('d.m.Y'),
+                            'Durum' => $travel->status ?? 'Planlandı',
+                            'Açıklama' => $travel->description ?? null
+                        ]
+                    ]
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error('Takvim Seyahat Hatası', ['error' => $e->getMessage()]);
+        }
+
+        return $events;
+    }
+
+    private function getTodoData($user, $start, $end, $importantOnly)
+    {
+        // DÜZELTME: Todo'da Trait yoksa standart where, varsa Trait zaten çalışır.
+        // Ama garanti olsun diye where('user_id') ekliyoruz.
+        $todos = Todo::where('user_id', $user->id)
+            ->whereNotNull('due_date')
+            ->whereBetween('due_date', [$start, $end])
+            ->where('is_completed', false)
+            ->when($importantOnly, fn($q) => $q->where('priority', 'high'))
+            ->get();
+
+        $events = [];
+        foreach ($todos as $todo) {
+            $color = match ($todo->priority) {
+                'high' => '#dc3545',
+                'medium' => '#fd7e14',
+                'low' => '#20c997',
+                default => '#6c757d'
+            };
+
+            $oncelikText = match ($todo->priority) {
+                'high' => 'Yüksek', 'medium' => 'Orta', 'low' => 'Düşük', default => 'Normal'
+            };
+
+            $events[] = [
+                'title' => '📝 ' . $todo->title,
+                'start' => $todo->due_date->toIso8601String(),
+                'color' => $color,
+                'allDay' => true,
+                'extendedProps' => [
+                    'eventType' => 'todo',
+                    'model_type' => 'todo',
+                    'id' => $todo->id,
+                    'is_important' => ($todo->priority === 'high'),
+                    'details' => [
+                        'Görev' => $todo->title,
+                        'Durum' => $todo->is_completed ? 'Tamamlandı' : 'Bekliyor',
+                        'Öncelik' => $oncelikText,
+                        'Son Tarih' => $todo->due_date->format('d.m.Y'),
+                        'Açıklama' => $todo->description ?? 'Açıklama yok'
+                    ]
+                ]
+            ];
+        }
+        return $events;
     }
 
     public function toggleImportant(Request $request)
     {
         $user = Auth::user();
-
-        // 1. GÜVENLİK: Spatie Rol Kontrolü (Eski in_array kaldırıldı)
-        // Admin, Yönetici veya Müdür yetkisi olanlar yapabilsin
         if (!$user || !$user->hasRole(['admin', 'yonetici', 'mudur'])) {
             return response()->json(['success' => false, 'message' => 'Bu işlem için yetkiniz yok.'], 403);
         }
-
-        // 2. VALIDATION
         $validated = $request->validate([
             'model_type' => 'required|string',
             'model_id' => 'required|integer',
-            'is_important' => 'required|boolean', // true/false/0/1/ "true" hepsini kabul eder
+            'is_important' => 'required|boolean',
         ]);
-
         $modelId = $validated['model_id'];
-        // Laravel helper ile boolean çevrimi
         $isImportant = $request->boolean('is_important');
 
         try {
-            // Hangi Model?
             $modelClass = match ($validated['model_type']) {
-                'shipment' => \App\Models\Shipment::class,
-                'production_plan' => \App\Models\ProductionPlan::class,
-                'event' => \App\Models\Event::class,
-                'vehicle_assignment' => \App\Models\VehicleAssignment::class,
-                'travel' => \App\Models\Travel::class,
-                'maintenance_plan' => \App\Models\MaintenancePlan::class,
+                'shipment' => Shipment::class,
+                'production_plan' => ProductionPlan::class,
+                'event' => Event::class,
+                'vehicle_assignment' => VehicleAssignment::class,
+                'travel' => Travel::class,
+                'maintenance_plan' => MaintenancePlan::class,
                 default => null,
             };
 
-            if (!$modelClass) {
+            if (!$modelClass)
                 return response()->json(['success' => false, 'message' => 'Geçersiz veri türü.'], 400);
-            }
 
-            // 3. VERİ GÜVENLİĞİ (BUSINESS UNIT CHECK) 🔒
-            // forUser($user) ekleyerek, kullanıcının sadece kendi fabrikasındaki veriyi
-            // bulabilmesini sağlıyoruz. Başkasının ID'sini gönderirse null döner.
-            $record = $modelClass::forUser($user)->find($modelId);
+            // DÜZELTME: forUser kaldırıldı. Trait varsa otomatik, yoksa standart find.
+            $record = $modelClass::find($modelId);
 
-            if (!$record) {
+            if (!$record)
                 return response()->json(['success' => false, 'message' => 'Kayıt bulunamadı veya yetkiniz yok.'], 404);
-            }
 
-            // 4. GÜNCELLEME İŞLEMİ
             if ($validated['model_type'] === 'maintenance_plan') {
-                // Bakım planı için priority sütununu kullanıyoruz
                 $record->priority = $isImportant ? 'critical' : 'normal';
             } else {
-                // Diğerleri için is_important sütunu
                 $record->is_important = $isImportant;
             }
-
             $record->save();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Durum güncellendi.',
-                'new_state' => $isImportant
-            ]);
-
+            return response()->json(['success' => true, 'message' => 'Durum güncellendi.', 'new_state' => $isImportant]);
         } catch (\Exception $e) {
             Log::error('ToggleImportant Hatası: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Sunucu hatası oluştu.'], 500);

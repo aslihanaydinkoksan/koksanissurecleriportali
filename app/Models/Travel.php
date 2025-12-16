@@ -57,6 +57,7 @@ class Travel extends Model
         'end_time',
         'status',
         'is_important',
+        'business_unit_id',
     ];
     /**
      * @var array<string, string>

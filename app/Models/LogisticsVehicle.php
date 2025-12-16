@@ -39,6 +39,7 @@ class LogisticsVehicle extends Model
         'current_km',
         'fuel_type',
         'status', // active, maintenance, inactive
+        'business_unit_id',
     ];
 
     protected $casts = [

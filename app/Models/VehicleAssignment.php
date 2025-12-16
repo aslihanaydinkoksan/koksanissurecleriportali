@@ -57,6 +57,7 @@ class VehicleAssignment extends Model
         'is_important',
         'created_by_user_id',
         'customer_id',
+        'business_unit_id',
     ];
 
     protected $casts = [

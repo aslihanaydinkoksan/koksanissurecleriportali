@@ -33,6 +33,7 @@ class Vehicle extends Model
         'brand_model',
         'description',
         'is_active',
+        'business_unit_id',
     ];
 
     protected $casts = [

@@ -29,7 +29,6 @@ class HomeController extends Controller
     {
         $this->middleware('auth');
         $this->statsService = $statsService;
-
     }
 
     /**
@@ -39,15 +38,12 @@ class HomeController extends Controller
     {
         $user = Auth::user();
 
-        // Görünüm için departman bilgisi (Veri çekmek için değil, sadece başlık için)
+        // Görünüm için departman bilgisi
         $departmentSlug = $user->department ? strtolower(trim($user->department->slug)) : 'genel';
         $departmentName = $user->department?->name ?? 'Genel';
 
         $allEvents = [];
         $statsTitle = "Takvimim";
-
-        // NOT: Artık switch-case yerine YETKİ kontrolü yapıyoruz.
-        // Bir kişi hem Lojistik hem Üretim yetkisine sahipse ikisini de görebilir.
 
         // 1. Lojistik Verileri
         if ($user->can('view_logistics')) {
@@ -72,35 +68,56 @@ class HomeController extends Controller
             $data = $this->getHizmetIndexData($user);
             $allEvents = array_merge($allEvents, $data['events']);
         }
-        $todos = \App\Models\Todo::forUser($user) // Scope devrede!
-            ->where('user_id', $user->id) // Sadece benimkiler
+
+        // Todo modelinde Trait yoksa standart sorgu:
+        $todos = \App\Models\Todo::where('user_id', $user->id)
             ->whereNotNull('due_date')
             ->where('is_completed', false)
             ->get();
 
         foreach ($todos as $todo) {
+            // Renk Ataması
             $color = match ($todo->priority) {
-                'high' => '#dc3545', // Kırmızı
+                'high' => '#dc3545',   // Kırmızı
                 'medium' => '#fd7e14', // Turuncu
-                'low' => '#20c997', // Yeşil
-                default => '#6c757d'
+                'low' => '#20c997',    // Yeşil
+                default => '#6c757d'   // Gri
             };
+
+            // Öncelik Yazısı (Türkçeleştirme)
+            $oncelikText = match ($todo->priority) {
+                'high' => 'Yüksek',
+                'medium' => 'Orta',
+                'low' => 'Düşük',
+                default => 'Normal'
+            };
+
+            // Durum Yazısı
+            $durumText = $todo->is_completed ? 'Tamamlandı' : 'Bekliyor';
 
             $allEvents[] = [
                 'title' => '📝 ' . $todo->title,
                 'start' => $todo->due_date->toIso8601String(),
-                'color' => $color, // Görevler için farklı bir renk
-                'allDay' => true, // Genelde saatlik olmaz, gün boyu olur
+                'color' => $color,
+                'allDay' => true,
                 'extendedProps' => [
+                    'eventType' => 'todo',
                     'model_type' => 'todo',
                     'id' => $todo->id,
-                    'is_important' => false,
-                    'details' => ['Not' => $todo->description ?? 'Açıklama yok']
+                    'is_important' => ($todo->priority === 'high'),
+                    'details' => [
+                        'Görev' => $todo->title,
+                        'Durum' => $durumText,
+                        'Öncelik' => $oncelikText,
+                        'Son Tarih' => $todo->due_date->format('d.m.Y'),
+                        'Oluşturulma' => $todo->created_at ? $todo->created_at->format('d.m.Y H:i') : '-',
+                        'Açıklama' => $todo->description ?? null
+                    ]
                 ]
             ];
         }
 
-        // Kullanıcı Listesi (Sadece Yöneticiler İçin)
+        // Kullanıcı Listesi
         $users = collect();
         if ($user->hasRole(['admin', 'yonetici', 'mudur'])) {
             $users = User::with('department')->orderBy('name')->get();
@@ -117,7 +134,6 @@ class HomeController extends Controller
             'chartData' => [],
             'statsTitle' => $statsTitle
         ]);
-
     }
 
     /**
@@ -132,15 +148,13 @@ class HomeController extends Controller
         $importantItems = $allItems->take(4);
         $importantItemsCount = $allItems->count();
 
-        // Dashboard Tipini Belirle (Hangi grafikler gösterilecek?)
+        // Dashboard Tipini Belirle
         $departmentSlug = $user->department ? trim($user->department->slug) : null;
 
-        // Admin veya Yönetici ise, ve bir departman atanmamışsa "Genel/Admin" dashboard göster
         if ($user->hasRole(['admin', 'yonetici']) && !$departmentSlug) {
             $departmentSlug = 'admin';
         }
 
-        // TV Kullanıcısı kontrolü
         if ($user->email === 'tv@koksan.com') {
             $departmentSlug = 'admin';
         }
@@ -165,7 +179,8 @@ class HomeController extends Controller
 
         if ($departmentSlug === 'uretim') {
             list($welcomeTitle, $chartTitle, $dummyToday, $chartData) = $this->getProductionWelcomeData($user);
-            $query = ProductionPlan::forUser($user); // Scope Eklendi
+            // DÜZELTME: forUser kaldırıldı, query() kullanıldı
+            $query = ProductionPlan::query();
             $todayItems = (clone $query)->whereDate('week_start_date', $today)->get();
             $weeklyItems = (clone $query)->whereBetween('week_start_date', [$weekStart, $weekEnd])->get();
             $monthlyItems = (clone $query)->whereBetween('week_start_date', [$monthStart, $monthEnd])->get();
@@ -173,14 +188,14 @@ class HomeController extends Controller
         } elseif ($departmentSlug === 'hizmet') {
             list($welcomeTitle, $chartTitle, $dummyToday, $chartData) = $this->getServiceWelcomeData($user);
 
-            // Etkinlikler
-            $eventQ = Event::forUser($user); // Scope Eklendi
+            // DÜZELTME: forUser kaldırıldı
+            $eventQ = Event::query();
             $tEvents = (clone $eventQ)->whereDate('start_datetime', $today)->get();
             $wEvents = (clone $eventQ)->whereBetween('start_datetime', [$weekStart, $weekEnd])->get();
             $mEvents = (clone $eventQ)->whereBetween('start_datetime', [$monthStart, $monthEnd])->get();
 
-            // Araç Görevleri
-            $vehicleQ = VehicleAssignment::forUser($user)->whereIn('status', ['pending', 'in_progress', 'approved']); // Scope Eklendi
+            // Araç Görevleri (DÜZELTME: forUser kaldırıldı)
+            $vehicleQ = VehicleAssignment::whereIn('status', ['pending', 'in_progress', 'approved']);
             $tVehicle = (clone $vehicleQ)->whereDate('start_time', $today)->get();
             $wVehicle = (clone $vehicleQ)->whereBetween('start_time', [$weekStart, $weekEnd])->get();
             $mVehicle = (clone $vehicleQ)->whereBetween('start_time', [$monthStart, $monthEnd])->get();
@@ -189,50 +204,50 @@ class HomeController extends Controller
             $weeklyItems = $wEvents->merge($wVehicle)->sortBy('start_datetime');
             $monthlyItems = $mEvents->merge($mVehicle)->sortBy('start_datetime');
 
-            // Hizmet KPI
+            // Hizmet KPI (DÜZELTME: forUser kaldırıldı)
             $kpiData = [
-                'etkinlik_sayisi' => Event::forUser($user)->whereDate('start_datetime', '>=', $today)
+                'etkinlik_sayisi' => Event::whereDate('start_datetime', '>=', $today)
                     ->where('visit_status', '!=', 'iptal')->count(),
-                'musteri_ziyareti' => Event::forUser($user)->has('customerVisit')->count(),
-                'rezervasyon_sayisi' => DB::table('bookings')->count(), // Booking modeline geçtiğinde scope ekle
-                'toplam_arac' => \App\Models\Vehicle::count(), // Araçlar genelde globaldir
+                'musteri_ziyareti' => Event::has('customerVisit')->count(),
+                'rezervasyon_sayisi' => DB::table('bookings')->count(),
+                'toplam_arac' => \App\Models\Vehicle::count(),
             ];
 
         } elseif ($departmentSlug === 'ulastirma') {
-            // Ulaştırma KPI ve Verileri
-            // Not: statsService metodlarını da güncellemek gerekebilir, şimdilik manuel çekiyoruz
             $welcomeTitle = "Ulaştırma Yönetimi";
             $chartTitle = "Araç Görev Durumları";
 
-            $query = VehicleAssignment::forUser($user)->whereIn('status', ['pending', 'approved', 'in_progress']); // Scope Eklendi
+            // DÜZELTME: Scope otomatik çalıştığı için direkt where ile başlıyoruz
+            $query = VehicleAssignment::whereIn('status', ['pending', 'approved', 'in_progress']);
             $todayItems = (clone $query)->whereDate('start_time', $today)->orderBy('start_time')->get();
             $weeklyItems = (clone $query)->whereBetween('start_time', [$weekStart, $weekEnd])->orderBy('start_time')->get();
             $monthlyItems = (clone $query)->whereBetween('start_time', [$monthStart, $monthEnd])->orderBy('start_time')->get();
 
             $kpiData = [
-                'aktif_gorev' => VehicleAssignment::forUser($user)->where('status', 'in_progress')->count(),
-                'bekleyen_talep' => VehicleAssignment::forUser($user)->where('status', 'pending')->count(),
+                'aktif_gorev' => VehicleAssignment::where('status', 'in_progress')->count(),
+                'bekleyen_talep' => VehicleAssignment::where('status', 'pending')->count(),
                 'toplam_arac' => \App\Models\Vehicle::count(),
                 'bugunku_gorev' => $todayItems->count()
             ];
 
         } elseif ($departmentSlug === 'lojistik') {
             list($welcomeTitle, $chartTitle, $dummyToday, $chartData) = $this->getLogisticsWelcomeData($user);
-            $query = Shipment::forUser($user); // Scope Eklendi
+            // DÜZELTME: forUser kaldırıldı
+            $query = Shipment::query();
             $todayItems = (clone $query)->whereDate('tahmini_varis_tarihi', $today)->get();
             $weeklyItems = (clone $query)->whereBetween('tahmini_varis_tarihi', [$weekStart, $weekEnd])->get();
             $monthlyItems = (clone $query)->whereBetween('tahmini_varis_tarihi', [$monthStart, $monthEnd])->get();
 
         } elseif ($departmentSlug === 'bakim') {
             list($welcomeTitle, $chartTitle, $dummyToday, $chartData) = $this->getMaintenanceWelcomeData($user);
-            $query = MaintenancePlan::forUser($user)->with('asset'); // Scope Eklendi
+            // DÜZELTME: forUser kaldırıldı
+            $query = MaintenancePlan::with('asset');
             $todayItems = (clone $query)->whereDate('planned_start_date', $today)->get();
             $weeklyItems = (clone $query)->whereBetween('planned_start_date', [$weekStart, $weekEnd])->get();
             $monthlyItems = (clone $query)->whereBetween('planned_start_date', [$monthStart, $monthEnd])->get();
 
         } else {
             // ADMIN / GENEL DASHBOARD
-            // Admin bile olsa "Active Unit" ne ise onun verisini göstermeli
             $adminData = $this->getAdminDashboardData($user, $today, $weekStart, $weekEnd, $monthStart, $monthEnd);
             $welcomeTitle = $adminData['welcomeTitle'];
             $chartTitle = $adminData['chartTitle'];
@@ -267,25 +282,20 @@ class HomeController extends Controller
     {
         $user = Auth::user();
 
-        // 1. GÜVENLİK: Spatie Rol Kontrolü (Eski in_array kaldırıldı)
-        // Admin, Yönetici veya Müdür yetkisi olanlar yapabilsin
         if (!$user || !$user->hasRole(['admin', 'yonetici', 'mudur'])) {
             return response()->json(['success' => false, 'message' => 'Bu işlem için yetkiniz yok.'], 403);
         }
 
-        // 2. VALIDATION
         $validated = $request->validate([
             'model_type' => 'required|string',
             'model_id' => 'required|integer',
-            'is_important' => 'required|boolean', // true/false/0/1/ "true" hepsini kabul eder
+            'is_important' => 'required|boolean',
         ]);
 
         $modelId = $validated['model_id'];
-        // Laravel helper ile boolean çevrimi
         $isImportant = $request->boolean('is_important');
 
         try {
-            // Hangi Model?
             $modelClass = match ($validated['model_type']) {
                 'shipment' => \App\Models\Shipment::class,
                 'production_plan' => \App\Models\ProductionPlan::class,
@@ -300,21 +310,17 @@ class HomeController extends Controller
                 return response()->json(['success' => false, 'message' => 'Geçersiz veri türü.'], 400);
             }
 
-            // 3. VERİ GÜVENLİĞİ (BUSINESS UNIT CHECK) 🔒
-            // forUser($user) ekleyerek, kullanıcının sadece kendi fabrikasındaki veriyi
-            // bulabilmesini sağlıyoruz. Başkasının ID'sini gönderirse null döner.
-            $record = $modelClass::forUser($user)->find($modelId);
+            // DÜZELTME: forUser kaldırıldı. Trait (GlobalScope) sayesinde find() metodu
+            // sadece aktif fabrikanın verisini bulabilir. Diğer fabrikalara erişemez.
+            $record = $modelClass::find($modelId);
 
             if (!$record) {
                 return response()->json(['success' => false, 'message' => 'Kayıt bulunamadı veya yetkiniz yok.'], 404);
             }
 
-            // 4. GÜNCELLEME İŞLEMİ
             if ($validated['model_type'] === 'maintenance_plan') {
-                // Bakım planı için priority sütununu kullanıyoruz
                 $record->priority = $isImportant ? 'critical' : 'normal';
             } else {
-                // Diğerleri için is_important sütunu
                 $record->is_important = $isImportant;
             }
 
@@ -350,8 +356,8 @@ class HomeController extends Controller
     {
         $events = [];
         $now = Carbon::now();
-        // Sadece kullanıcının aktif birimine ait sevkiyatlar
-        $shipments = Shipment::forUser($user)->with('onaylayanKullanici')->get()->unique('id');
+        // DÜZELTME: forUser kaldırıldı, with() kullanıldı
+        $shipments = Shipment::with('onaylayanKullanici')->get()->unique('id');
 
         foreach ($shipments as $shipment) {
             $cikisTarihi = $shipment->cikis_tarihi ? Carbon::parse($shipment->cikis_tarihi) : null;
@@ -371,7 +377,41 @@ class HomeController extends Controller
                 ? route('shipments.onayla', $shipment->id)
                 : null;
 
-            $extendedProps = ['eventType' => 'shipment', 'model_type' => 'shipment', 'id' => $shipment->id, 'is_important' => $shipment->is_important, 'title' => '🚚 ' . $shipment->kargo_icerigi, 'onayUrl' => $onayUrl, 'details' => []];
+            $detaylar = [
+                'Yük Tipi' => $shipment->shipment_type ?? 'Genel',
+                'Araç Tipi' => $shipment->arac_tipi ?? 'Belirtilmedi',
+                'Kargo İçeriği' => $shipment->kargo_icerigi,
+                'Miktar' => ($shipment->kargo_miktari ?? '-') . ' ' . ($shipment->kargo_tipi ?? ''),
+            ];
+
+            $aracTipiLower = mb_strtolower($shipment->arac_tipi ?? '');
+            $shipmentTypeLower = mb_strtolower($shipment->shipment_type ?? '');
+
+            if (str_contains($aracTipiLower, 'gemi') || str_contains($shipmentTypeLower, 'deniz') || str_contains($aracTipiLower, 'ship')) {
+                $detaylar['Gemi Adı'] = $shipment->gemi_adi ?? '-';
+                $detaylar['IMO Numarası'] = $shipment->imo_numarasi ?? '-';
+                $detaylar['Kalkış Limanı'] = $shipment->kalkis_limani ?? '-';
+                $detaylar['Varış Limanı'] = $shipment->varis_limani ?? '-';
+            } else {
+                $detaylar['Plaka'] = $shipment->plaka ?? '-';
+                if (!empty($shipment->dorce_plakasi)) {
+                    $detaylar['Dorse Plaka'] = $shipment->dorce_plakasi;
+                }
+                $detaylar['Sürücü'] = $shipment->sofor_adi ?? '-';
+                $detaylar['Kalkış Noktası'] = $shipment->kalkis_noktasi ?? '-';
+                $detaylar['Varış Noktası'] = $shipment->varis_noktasi ?? '-';
+                if (!empty($shipment->nakliye_firmasi)) {
+                    $detaylar['Nakliye Firması'] = $shipment->nakliye_firmasi;
+                }
+            }
+
+            $detaylar['Çıkış Tarihi'] = $cikisTarihi ? $cikisTarihi->format('d.m.Y H:i') : '-';
+            $detaylar['Tahmini Varış'] = $varisTarihi ? $varisTarihi->format('d.m.Y H:i') : '-';
+            $detaylar['Onay Durumu'] = $shipment->onaylanma_tarihi ? $shipment->onaylanma_tarihi : null;
+            $detaylar['Onaylayan'] = $shipment->onaylayanKullanici->name ?? null;
+            $detaylar['Açıklama'] = $shipment->aciklamalar ?? null;
+
+            $extendedProps = ['eventType' => 'shipment', 'model_type' => 'shipment', 'id' => $shipment->id, 'is_important' => $shipment->is_important, 'title' => '🚚 ' . $shipment->kargo_icerigi, 'onayUrl' => $onayUrl, 'details' => $detaylar];
 
             if ($cikisTarihi)
                 $events[] = ['title' => 'ÇIKIŞ: ' . $shipment->kargo_icerigi, 'start' => $cikisTarihi->toIso8601String(), 'color' => $color, 'extendedProps' => $extendedProps];
@@ -384,17 +424,23 @@ class HomeController extends Controller
     private function getUretimIndexData($user)
     {
         $events = [];
-        $plans = ProductionPlan::forUser($user)->with('user')->get()->unique('id'); // Scope
+        // DÜZELTME: forUser kaldırıldı
+        $plans = ProductionPlan::with('user')->get()->unique('id');
 
         foreach ($plans as $plan) {
             $events[] = [
                 'title' => 'Üretim: ' . $plan->plan_title,
-                'model_type' => 'production_plan',
-                'is_important' => $plan->is_important,
                 'start' => $plan->week_start_date->startOfDay()->toIso8601String(),
                 'end' => $plan->week_start_date->copy()->addDay()->startOfDay()->toIso8601String(),
                 'color' => '#4FD1C5',
-                'extendedProps' => ['eventType' => 'production', 'id' => $plan->id, 'title' => $plan->plan_title, 'details' => ['Plan Detayları' => $plan->plan_details]]
+                'extendedProps' => [
+                    'eventType' => 'production',
+                    'model_type' => 'production_plan',
+                    'is_important' => $plan->is_important,
+                    'id' => $plan->id,
+                    'title' => $plan->plan_title,
+                    'details' => ['Plan Detayları' => $plan->plan_details]
+                ]
             ];
         }
         return ['events' => $events, 'chartData' => [], 'statsTitle' => "Üretim Takvimi"];
@@ -403,40 +449,130 @@ class HomeController extends Controller
     private function getHizmetIndexData($user)
     {
         $events = [];
-        $serviceEvents = Event::forUser($user)->with('user')->get()->unique('id'); // Scope
+        // DÜZELTME: forUser kaldırıldı
+        $serviceEvents = Event::with('user')->get()->unique('id');
+
         foreach ($serviceEvents as $event) {
+            $detaylar = [
+                'Etkinlik Başlığı' => $event->title,
+                'Tür' => $event->event_type ?? 'Genel',
+                'Konum' => $event->location ?? '-',
+                'Başlangıç' => $event->start_datetime->format('d.m.Y H:i'),
+                'Bitiş' => $event->end_datetime->format('d.m.Y H:i'),
+            ];
+
+            if ($event->customer_id) {
+                $detaylar['Müşteri'] = $event->customer->name ?? ('Müşteri #' . $event->customer_id);
+            }
+            if (!empty($event->visit_purpose)) {
+                $detaylar['Ziyaret Amacı'] = $event->visit_purpose;
+            }
+            $status = $event->visit_status ?? 'planlandi';
+            $detaylar['Durum'] = ucfirst($status);
+
+            if (strtolower($status) === 'iptal' || strtolower($status) === 'cancelled') {
+                if (!empty($event->cancellation_reason)) {
+                    $detaylar['İptal Nedeni'] = $event->cancellation_reason;
+                }
+            }
+            if (!empty($event->after_sales_notes)) {
+                $detaylar['Satış Sonrası Notlar'] = Str::limit($event->after_sales_notes, 50);
+            }
+            $detaylar['Açıklama'] = $event->description ?? null;
+
             $events[] = [
                 'title' => 'Etkinlik: ' . $event->title,
                 'start' => $event->start_datetime->format('Y-m-d\TH:i:s'),
                 'end' => $event->end_datetime->format('Y-m-d\TH:i:s'),
                 'color' => '#F093FB',
-                'extendedProps' => ['eventType' => 'service_event', 'model_type' => 'event', 'is_important' => $event->is_important, 'id' => $event->id, 'details' => ['Konum' => $event->location]]
+                'extendedProps' => [
+                    'eventType' => 'service_event',
+                    'model_type' => 'event',
+                    'is_important' => $event->is_important,
+                    'id' => $event->id,
+                    'details' => $detaylar
+                ]
             ];
         }
 
-        $assignments = VehicleAssignment::forUser($user)->with(['vehicle', 'createdBy'])->get(); // Scope
+        // DÜZELTME: forUser kaldırıldı
+        $assignments = VehicleAssignment::with(['vehicle', 'createdBy'])->get();
+
         foreach ($assignments as $assignment) {
+            $aracBilgisi = $assignment->vehicle
+                ? ($assignment->vehicle->plate_number . ' - ' . $assignment->vehicle->brand . ' ' . $assignment->vehicle->model)
+                : 'Araç Bilgisi Yok';
+
+            $gorevDetaylar = [
+                'Araç' => $aracBilgisi,
+                'Görev Tanımı' => $assignment->task_description,
+                'Talep Eden' => $assignment->createdBy?->name ?? '-',
+                'Sürücü' => $assignment->driver?->name ?? '-',
+                'Başlangıç' => $assignment->start_time->format('d.m.Y H:i'),
+                'Bitiş' => $assignment->end_time->format('d.m.Y H:i'),
+                'Durum' => ucfirst($assignment->status)
+            ];
+            if (!empty($assignment->start_km)) {
+                $gorevDetaylar['Başlangıç KM'] = $assignment->start_km;
+            }
+
             $events[] = [
-                'title' => 'Araç: ' . ($assignment->vehicle?->plate_number ?? '?') . ' - ' . $assignment->task_description,
+                'title' => 'Araç: ' . ($assignment->vehicle?->plate_number ?? '?') . ' - ' . Str::limit($assignment->task_description, 20),
                 'start' => $assignment->start_time->format('Y-m-d\TH:i:s'),
                 'end' => $assignment->end_time->format('Y-m-d\TH:i:s'),
                 'color' => '#FBD38D',
-                'extendedProps' => ['eventType' => 'vehicle_assignment', 'model_type' => 'vehicle_assignment', 'is_important' => $assignment->is_important, 'id' => $assignment->id, 'details' => ['Görev' => $assignment->task_description]]
+                'extendedProps' => [
+                    'eventType' => 'vehicle_assignment',
+                    'model_type' => 'vehicle_assignment',
+                    'is_important' => $assignment->is_important,
+                    'id' => $assignment->id,
+                    'details' => $gorevDetaylar
+                ]
             ];
         }
+
         return ['events' => $events, 'chartData' => [], 'statsTitle' => "İdari İşler Takvimi"];
     }
 
     private function getBakimIndexData($user)
     {
         $events = [];
-        $plans = MaintenancePlan::forUser($user)->with(['asset', 'type'])->get()->unique('id'); // Scope
+        // DÜZELTME: forUser kaldırıldı
+        $plans = MaintenancePlan::with(['asset', 'type'])->get()->unique('id');
+
         foreach ($plans as $plan) {
             $color = match ($plan->status) {
                 'pending' => '#F6E05E', 'in_progress' => '#3182CE', 'completed' => '#48BB78', 'cancelled' => '#E53E3E', default => '#A0AEC0',
             };
+            $baslik = 'Bakım: ' . ($plan->asset->name ?? 'Varlık Silinmiş');
+            if (!empty($plan->title)) {
+                $baslik .= ' - ' . $plan->title;
+            }
+
+            $detaylar = [
+                'Başlık' => $plan->title ?? '-',
+                'Varlık' => $plan->asset->name ?? 'Bilinmiyor',
+                'Bakım Türü' => $plan->type->name ?? 'Genel',
+                'Sorumlu' => $plan->user->name ?? '-',
+                'Öncelik' => ucfirst($plan->priority ?? 'Normal'),
+                'Durum' => ucfirst($plan->status ?? 'Pending'),
+                'Planlanan Başlangıç' => $plan->planned_start_date ? $plan->planned_start_date->format('d.m.Y H:i') : '-',
+                'Planlanan Bitiş' => $plan->planned_end_date ? $plan->planned_end_date->format('d.m.Y H:i') : '-',
+            ];
+
+            if ($plan->actual_start_date) {
+                $detaylar['Gerçekleşen Başlangıç'] = Carbon::parse($plan->actual_start_date)->format('d.m.Y H:i');
+            }
+            if ($plan->actual_end_date) {
+                $detaylar['Gerçekleşen Bitiş'] = Carbon::parse($plan->actual_end_date)->format('d.m.Y H:i');
+            }
+            if (!empty($plan->completion_note)) {
+                $detaylar['Sonuç Notu'] = $plan->completion_note;
+            }
+            $detaylar['Açıklama'] = $plan->description ?? null;
+
             $events[] = [
-                'title' => 'Bakım: ' . ($plan->asset->name ?? '?'),
+                'title' => $baslik,
                 'start' => $plan->planned_start_date->format('Y-m-d\TH:i:s'),
                 'end' => $plan->planned_end_date->format('Y-m-d\TH:i:s'),
                 'color' => $color,
@@ -445,7 +581,7 @@ class HomeController extends Controller
                     'model_type' => 'maintenance_plan',
                     'is_important' => ($plan->priority == 'critical' || $plan->priority == 'high'),
                     'id' => $plan->id,
-                    'details' => ['Varlık' => $plan->asset->name ?? '-', 'Durum' => $plan->status]
+                    'details' => $detaylar
                 ]
             ];
         }
@@ -458,15 +594,13 @@ class HomeController extends Controller
         $typeFilter = $request->input('type', 'all');
         $dateFrom = $request->input('date_from');
         $dateTo = $request->input('date_to');
-
-        // Departman filtresi (Admin panellerinden gelen istekler için)
         $deptFilter = $request->input('department_id', null);
 
         $allMappedItems = collect();
 
-        // 1. SEVKİYAT
+        // 1. SEVKİYAT (DÜZELTME: forUser kaldırıldı)
         if ($typeFilter == 'all' || $typeFilter == 'shipment') {
-            $query = Shipment::forUser($user)->where('is_important', true); // Scope
+            $query = Shipment::where('is_important', true);
             if ($dateFrom)
                 $query->where('tahmini_varis_tarihi', '>=', Carbon::parse($dateFrom)->startOfDay());
             if ($dateTo)
@@ -482,9 +616,9 @@ class HomeController extends Controller
             ]));
         }
 
-        // 2. ÜRETİM PLANI
+        // 2. ÜRETİM PLANI (DÜZELTME: forUser kaldırıldı)
         if ($typeFilter == 'all' || $typeFilter == 'production_plan') {
-            $query = ProductionPlan::forUser($user)->where('is_important', true); // Scope
+            $query = ProductionPlan::where('is_important', true);
             if ($dateFrom)
                 $query->where('week_start_date', '>=', Carbon::parse($dateFrom)->startOfDay());
             if ($dateTo)
@@ -500,9 +634,9 @@ class HomeController extends Controller
             ]));
         }
 
-        // 3. BAKIM PLANI
+        // 3. BAKIM PLANI (DÜZELTME: forUser kaldırıldı)
         if ($typeFilter == 'all' || $typeFilter == 'maintenance_plan') {
-            $query = MaintenancePlan::forUser($user)->whereIn('priority', ['high', 'critical']); // Scope
+            $query = MaintenancePlan::whereIn('priority', ['high', 'critical']);
             if ($dateFrom)
                 $query->where('planned_start_date', '>=', Carbon::parse($dateFrom)->startOfDay());
             if ($dateTo)
@@ -516,9 +650,9 @@ class HomeController extends Controller
             ]));
         }
 
-        // 4. ETKİNLİK
+        // 4. ETKİNLİK (DÜZELTME: forUser kaldırıldı)
         if ($typeFilter == 'all' || $typeFilter == 'event') {
-            $query = Event::forUser($user)->where('is_important', true); // Scope
+            $query = Event::where('is_important', true);
             if ($dateFrom)
                 $query->where('start_datetime', '>=', Carbon::parse($dateFrom)->startOfDay());
             if ($dateTo)
@@ -532,9 +666,9 @@ class HomeController extends Controller
             ]));
         }
 
-        // 5. ARAÇ GÖREVİ
+        // 5. ARAÇ GÖREVİ (DÜZELTME: forUser kaldırıldı)
         if ($typeFilter == 'all' || $typeFilter == 'vehicle_assignment') {
-            $query = VehicleAssignment::forUser($user)->where('is_important', true); // Scope
+            $query = VehicleAssignment::where('is_important', true);
             if ($dateFrom)
                 $query->where('start_time', '>=', Carbon::parse($dateFrom)->startOfDay());
             if ($dateTo)
@@ -548,9 +682,9 @@ class HomeController extends Controller
             ]));
         }
 
-        // 6. SEYAHAT
+        // 6. SEYAHAT (DÜZELTME: forUser kaldırıldı)
         if ($typeFilter == 'all' || $typeFilter == 'travel') {
-            $query = Travel::forUser($user)->where('is_important', true); // Scope
+            $query = Travel::where('is_important', true);
             if ($dateFrom)
                 $query->where('start_date', '>=', Carbon::parse($dateFrom)->startOfDay());
             if ($dateTo)
@@ -564,9 +698,8 @@ class HomeController extends Controller
             ]));
         }
 
-        // 7. GECİKEN GÖREVLER
-        $overdueQuery = VehicleAssignment::forUser($user) // Scope
-            ->where('start_time', '<', Carbon::today())
+        // 7. GECİKEN GÖREVLER (DÜZELTME: forUser kaldırıldı)
+        $overdueQuery = VehicleAssignment::where('start_time', '<', Carbon::today())
             ->whereIn('status', ['pending', 'in_progress']);
 
         $overdueItems = $overdueQuery->get()->map(fn($item) => (object) [
@@ -590,12 +723,12 @@ class HomeController extends Controller
         $chartTitle = "Kargo İçeriği -> Araç Tipi Akışı ";
         $chartData = [];
 
-        $todayItems = Shipment::forUser($user) // Scope
-            ->whereBetween('tahmini_varis_tarihi', [Carbon::today()->startOfDay(), Carbon::today()->addDays(3)->endOfDay()])
+        // DÜZELTME: forUser kaldırıldı
+        $todayItems = Shipment::whereBetween('tahmini_varis_tarihi', [Carbon::today()->startOfDay(), Carbon::today()->addDays(3)->endOfDay()])
             ->orderBy('tahmini_varis_tarihi', 'asc')->get();
 
-        $sankeyFlow = Shipment::forUser($user) // Scope
-            ->select(['kargo_icerigi', 'arac_tipi', DB::raw('COUNT(*) as weight')])
+        // DÜZELTME: forUser kaldırıldı
+        $sankeyFlow = Shipment::select(['kargo_icerigi', 'arac_tipi', DB::raw('COUNT(*) as weight')])
             ->whereNotNull('kargo_icerigi')
             ->whereNotNull('arac_tipi')
             ->groupBy('kargo_icerigi', 'arac_tipi')
@@ -603,7 +736,7 @@ class HomeController extends Controller
             ->get();
 
         foreach ($sankeyFlow as $flow) {
-            $normalizedKargo = $this->normalizeCargoContent($flow->kargo_icerigi); // Bu metodlar Controller içinde aşağıda olmalı
+            $normalizedKargo = $this->normalizeCargoContent($flow->kargo_icerigi);
             $normalizedArac = $this->normalizeVehicleType($flow->arac_tipi);
             $chartData[] = [strval($normalizedKargo), strval($normalizedArac), (int) $flow->weight];
         }
@@ -618,13 +751,13 @@ class HomeController extends Controller
         $chartTitle = "Makine -> Ürün Planlama Akışı (Toplam Adet)";
         $chartData = [];
 
-        $todayItems = ProductionPlan::forUser($user) // Scope
-            ->whereBetween('week_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
+        // DÜZELTME: forUser kaldırıldı
+        $todayItems = ProductionPlan::whereBetween('week_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
             ->orderBy('week_start_date', 'asc')->get();
 
-        $plans = ProductionPlan::forUser($user)->whereNotNull('plan_details')->get(); // Scope
+        // DÜZELTME: forUser kaldırıldı
+        $plans = ProductionPlan::whereNotNull('plan_details')->get();
 
-        // ... (Chart mantığı aynı kalacak) ...
         $flowCounts = [];
         foreach ($plans as $plan) {
             if (is_array($plan->plan_details)) {
@@ -659,17 +792,16 @@ class HomeController extends Controller
         $welcomeTitle = "Hizmet ve Operasyon Yönetimi";
         $chartTitle = "Etkinlik Durumu & Seyahat Dağılımı";
 
-        // Listeleme (Scope Eklendi)
-        $todayEvents = Event::forUser($user)->whereDate('start_datetime', Carbon::today())->orderBy('start_datetime', 'asc')->get();
-        $todayAssignments = VehicleAssignment::forUser($user)->whereDate('start_time', Carbon::today())->with('vehicle')->orderBy('start_time', 'asc')->get();
-        $todayTravels = Travel::forUser($user)->whereDate('start_date', Carbon::today())->orderBy('start_date', 'asc')->get();
+        // DÜZELTME: forUser kaldırıldı
+        $todayEvents = Event::whereDate('start_datetime', Carbon::today())->orderBy('start_datetime', 'asc')->get();
+        $todayAssignments = VehicleAssignment::whereDate('start_time', Carbon::today())->with('vehicle')->orderBy('start_time', 'asc')->get();
+        $todayTravels = Travel::whereDate('start_date', Carbon::today())->orderBy('start_date', 'asc')->get();
 
         $todayItems = $todayEvents->merge($todayAssignments)->merge($todayTravels)->sortBy(fn($item) => $item->start_datetime ?? $item->start_time ?? $item->start_date);
 
-        // Chart Verisi (Scope Eklendi)
+        // Chart Verisi (DÜZELTME: forUser kaldırıldı)
         $chartData = [];
-        $eventStats = Event::forUser($user)
-            ->selectRaw('event_type, visit_status, count(*) as total')
+        $eventStats = Event::selectRaw('event_type, visit_status, count(*) as total')
             ->groupBy('event_type', 'visit_status')
             ->get();
 
@@ -683,9 +815,6 @@ class HomeController extends Controller
             $chartData[] = [strval($source), strval($target), (int) $stat->total];
         }
 
-        // Rezervasyonlar (Bookings) - Scope eklenmeli (Eğer Booking modeli Trait'e sahipse)
-        // Eğer Booking modelin henüz hazır değilse DB::table kullanıyorsun, onu BusinessUnit'e göre manuel filtrelemen gerekebilir.
-        // Şimdilik varsayılan bırakıyorum.
         $bookingStats = DB::table('bookings')
             ->select('type', DB::raw('count(*) as total'))
             ->groupBy('type')
@@ -711,12 +840,13 @@ class HomeController extends Controller
         $chartTitle = "Bakım Türü -> Varlık Akışı";
         $chartData = [];
 
-        $todayItems = MaintenancePlan::forUser($user) // Scope
-            ->with(['asset', 'type'])
+        // DÜZELTME: forUser kaldırıldı
+        $todayItems = MaintenancePlan::with(['asset', 'type'])
             ->whereBetween('planned_start_date', [Carbon::today()->startOfDay(), Carbon::today()->addDays(2)->endOfDay()])
             ->orderBy('planned_start_date', 'asc')->get();
 
-        $plans = MaintenancePlan::forUser($user)->with(['type', 'asset'])->get(); // Scope
+        // DÜZELTME: forUser kaldırıldı
+        $plans = MaintenancePlan::with(['type', 'asset'])->get();
 
         $flowCounts = [];
         foreach ($plans as $plan) {
@@ -738,24 +868,25 @@ class HomeController extends Controller
 
         return [$welcomeTitle, $chartTitle, $todayItems, $chartData];
     }
+
     private function getAdminDashboardData($user, $today, $weekStart, $weekEnd, $monthStart, $monthEnd)
     {
-        // Admin Dashboard Verileri (Seçilen Birime Göre Filtreli)
+        // Admin Dashboard Verileri - DÜZELTME: forUser kaldırıldı
         $kpiData = [
-            'sevkiyat_sayisi' => Shipment::forUser($user)->whereDate('tahmini_varis_tarihi', $today)->count(),
-            'plan_sayisi' => ProductionPlan::forUser($user)->whereDate('week_start_date', $today)->count(),
-            'etkinlik_sayisi' => Event::forUser($user)->whereDate('start_datetime', $today)->count(),
-            'arac_gorevi_sayisi' => VehicleAssignment::forUser($user)->whereDate('start_time', $today)->count(),
-            'bakim_sayisi' => MaintenancePlan::forUser($user)->whereDate('planned_start_date', $today)->count(),
-            'kullanici_sayisi' => User::count() // Kullanıcılar globaldir
+            'sevkiyat_sayisi' => Shipment::whereDate('tahmini_varis_tarihi', $today)->count(),
+            'plan_sayisi' => ProductionPlan::whereDate('week_start_date', $today)->count(),
+            'etkinlik_sayisi' => Event::whereDate('start_datetime', $today)->count(),
+            'arac_gorevi_sayisi' => VehicleAssignment::whereDate('start_time', $today)->count(),
+            'bakim_sayisi' => MaintenancePlan::whereDate('planned_start_date', $today)->count(),
+            'kullanici_sayisi' => User::count()
         ];
 
-        // Chart Data (Tüm zamanlar)
+        // Chart Data - DÜZELTME: forUser kaldırıldı
         $chartData = [];
-        $allLojistik = Shipment::forUser($user)->count();
-        $allUretim = ProductionPlan::forUser($user)->count();
-        $allEtkinlik = Event::forUser($user)->count();
-        $allBakim = MaintenancePlan::forUser($user)->count();
+        $allLojistik = Shipment::count();
+        $allUretim = ProductionPlan::count();
+        $allEtkinlik = Event::count();
+        $allBakim = MaintenancePlan::count();
 
         if ($allLojistik > 0)
             $chartData[] = ['Lojistik', 'Sevkiyatlar', $allLojistik];
@@ -769,7 +900,6 @@ class HomeController extends Controller
         if (empty($chartData))
             $chartData[] = ['Sistem', 'Henüz Kayıt Yok', 1];
 
-        // Admin ekranında tablo verisi göstermiyoruz, sadece özet.
         return [
             'welcomeTitle' => session('active_unit_name', 'Genel') . " Özeti",
             'chartTitle' => "Departman Dağılımı",
@@ -780,25 +910,19 @@ class HomeController extends Controller
             'chartData' => $chartData
         ];
     }
+
     /**
      * BİLDİRİM OKUMA VE YÖNLENDİRME
-     * Kullanıcı bildirime tıkladığında bu fonksiyon çalışır.
      */
     public function readNotification($id)
     {
-        // 1. Kullanıcının bildirimleri içinde bu ID'ye sahip olanı bul
         $notification = auth()->user()->unreadNotifications->where('id', $id)->first();
 
         if ($notification) {
-            // 2. Okundu olarak işaretle (Veritabanında read_at sütununu doldurur)
             $notification->markAsRead();
-
-            // 3. Bildirimin içindeki 'link' verisine yönlendir
-            // Eğer link yoksa anasayfaya at
             return redirect($notification->data['link'] ?? route('home'));
         }
 
-        // Eğer bildirim bulunamazsa (zaten okunmuşsa veya yoksa) direkt geri dön
         return back();
     }
 
@@ -810,6 +934,7 @@ class HomeController extends Controller
         auth()->user()->unreadNotifications->markAsRead();
         return back()->with('success', 'Tüm bildirimler okundu olarak işaretlendi.');
     }
+
     /**
      * AJAX İLE BİLDİRİM KONTROLÜ
      */
@@ -821,7 +946,6 @@ class HomeController extends Controller
 
         if ($count > 0) {
             foreach ($notifications as $notification) {
-                // Rota ve İkon ayarları
                 $url = route('notifications.read', $notification->id);
                 $icon = $notification->data['icon'] ?? 'fa-info-circle';
                 $color = $notification->data['color'] ?? 'primary';
@@ -829,7 +953,6 @@ class HomeController extends Controller
                 $message = $notification->data['message'] ?? '';
                 $time = $notification->created_at->diffForHumans();
 
-                // HTML Oluştur (Layout'taki yapının aynısı)
                 $html .= '
                 <a href="' . $url . '" class="list-group-item list-group-item-action p-3 border-bottom-0 d-flex align-items-start">
                     <div class="me-3 mt-1 text-' . $color . '">
@@ -855,6 +978,7 @@ class HomeController extends Controller
             'html' => $html
         ]);
     }
+
     public function switchUnit(Request $request)
     {
         $request->validate([
@@ -875,6 +999,7 @@ class HomeController extends Controller
 
         return back()->with('success', "Çalışma alanı {$unit->name} olarak değiştirildi.");
     }
+
     private function normalizeCargoContent($cargo)
     {
         if (empty($cargo)) {

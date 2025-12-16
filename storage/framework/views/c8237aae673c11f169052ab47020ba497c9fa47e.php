@@ -370,9 +370,7 @@
                     </div>
                     <div class="card-body p-0">
                         <?php
-                            // Basitçe view içinde çekiyoruz (View Composer ile daha şık olur ama bu hızlı çözüm)
-                            $myTodos = \App\Models\Todo::forUser(auth()->user())
-                                ->where('user_id', auth()->id())
+                            $myTodos = \App\Models\Todo::where('user_id', auth()->id())
                                 ->where('is_completed', false)
                                 ->orderBy('priority', 'desc') // High -> Low
                                 ->orderBy('due_date', 'asc')

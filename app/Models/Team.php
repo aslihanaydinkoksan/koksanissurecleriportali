@@ -33,6 +33,7 @@ class Team extends Model
         'description',
         'created_by_user_id',
         'is_active',
+        'business_unit_id',
     ];
 
     protected $casts = [

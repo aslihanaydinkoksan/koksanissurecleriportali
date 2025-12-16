@@ -67,6 +67,7 @@ class Booking extends Model implements HasMedia
         'end_datetime',
         'status',
         'notes',
+        'business_unit_id',
     ];
 
     protected $casts = [

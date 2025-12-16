@@ -52,6 +52,7 @@ class ServiceSchedule extends Model
         'default_vehicle_id',
         'is_active',
         'is_important',
+        'business_unit_id',
     ];
 
     // Tarih/saat alanlarını otomatik Carbon'a çevirme

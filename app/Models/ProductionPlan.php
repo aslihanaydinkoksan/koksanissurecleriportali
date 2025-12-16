@@ -54,6 +54,7 @@ class ProductionPlan extends Model
         'week_start_date',
         'plan_details',
         'is_important',
+        'business_unit_id',
     ];
 
     /**

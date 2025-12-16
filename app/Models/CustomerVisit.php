@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Loggable;
+use App\Traits\HasBusinessUnit;
 
 /**
  * App\Models\CustomerVisit
@@ -40,14 +41,15 @@ use App\Traits\Loggable;
  */
 class CustomerVisit extends Model
 {
-    use HasFactory, Loggable;
+    use HasFactory, Loggable, HasBusinessUnit;
     protected $fillable = [
         'event_id',
         'customer_id',
         'travel_id',
         'visit_purpose',
         'has_machine',
-        'after_sales_notes'
+        'after_sales_notes',
+        'business_unit_id',
     ];
     public function event()
     {

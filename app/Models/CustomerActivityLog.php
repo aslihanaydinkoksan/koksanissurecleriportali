@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Loggable;
+use App\Traits\HasBusinessUnit;
 
 /**
  * App\Models\CustomerActivityLog
@@ -35,7 +36,7 @@ use App\Traits\Loggable;
  */
 class CustomerActivityLog extends Model
 {
-    use HasFactory, Loggable;
-    protected $fillable = ['user_id', 'model_type', 'model_id', 'action', 'changes'];
+    use HasFactory, Loggable, HasBusinessUnit;
+    protected $fillable = ['user_id', 'model_type', 'model_id', 'action', 'changes', 'business_unit_id'];
     protected $casts = ['changes' => 'array'];
 }

@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasBusinessUnit;
 
 class ShipmentStop extends Model
 {
-    use HasFactory;
+    use HasFactory, HasBusinessUnit;
 
     protected $table = 'shipment_stops';
 
@@ -18,7 +19,8 @@ class ShipmentStop extends Model
         'remaining_amount',
         'stop_date',
         'receiver_name',
-        'note'
+        'note',
+        'business_unit_id',
     ];
 
     public function shipment()
