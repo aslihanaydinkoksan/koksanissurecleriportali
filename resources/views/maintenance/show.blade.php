@@ -559,34 +559,47 @@
                             <i class="fas fa-stopwatch me-2 text-primary"></i>İşlem Sayacı
                         </h6>
 
-                        @if ($plan->isTimerActive())
-                            {{-- DURUM 1: SAYAÇ AKTİF (ÇALIŞIYOR) --}}
+                        @php
+                            // Sadece AÇIK olan sayacı buluyoruz. Kimin olduğu önemsiz.
+                            $activeEntry = $plan->timeEntries->whereNull('end_time')->first();
+                        @endphp
+
+                        @if ($activeEntry)
+                            {{-- DURUM 1: SAYAÇ AKTİF (KİMİN OLDUĞU FARK ETMEZ, GÖRÜNSÜN) --}}
                             <div class="timer-widget active">
                                 <div class="text-primary fw-bold mb-2 animate-pulse">
                                     <i class="fas fa-circle me-1 small"></i> ÇALIŞMA SÜRÜYOR
+                                    {{-- Çalışan kişinin ismini de ufakça belirtelim ki karışıklık olmasın --}}
+                                    <span class="text-muted small fw-normal">({{ $activeEntry->user->name }})</span>
                                 </div>
+
+                                {{-- CANLI SAYAÇ ALANI --}}
                                 <h2 class="display-5 timer-display mb-2" id="liveTimer">00:00:00</h2>
+
                                 <small class="text-muted d-block mb-3">
-                                    Başlangıç:
-                                    {{ $plan->timeEntries->whereNull('end_time')->first()->start_time->format('H:i:s') }}
+                                    Başlangıç: {{ $activeEntry->start_time->format('H:i:s') }}
                                 </small>
 
-                                <button type="button" class="btn btn-danger w-100 py-2 rounded-3 shadow-sm"
-                                    data-bs-toggle="modal" data-bs-target="#stopTimerModal">
-                                    <i class="fas fa-stop-circle me-2"></i>Çalışmayı Durdur
-                                </button>
+                                {{-- DURDURMA BUTONU --}}
+                                {{-- Sadece sayacı başlatan kişi veya Admin durdurabilsin (Controller yetkisine bağlı) --}}
+                                @if (Auth::id() == $activeEntry->user_id || Auth::user()->role == 'admin')
+                                    <button type="button" class="btn btn-danger w-100 py-2 rounded-3 shadow-sm"
+                                        data-bs-toggle="modal" data-bs-target="#stopTimerModal">
+                                        <i class="fas fa-stop-circle me-2"></i>Çalışmayı Durdur
+                                    </button>
+                                @else
+                                    <div class="alert alert-light border small text-muted">
+                                        <i class="fas fa-lock me-1"></i> Sadece başlatan kişi durdurabilir.
+                                    </div>
+                                @endif
                             </div>
                         @elseif ($plan->status == 'pending_approval')
-                            {{-- DURUM 2: ONAY BEKLİYOR (KİLİTLİ) --}}
+                            {{-- DURUM 2: ONAY BEKLİYOR --}}
                             <div class="timer-widget bg-light border-warning">
                                 <div class="text-warning fw-bold mb-3">
                                     <i class="fas fa-hourglass-half fa-3x mb-2"></i><br>
                                     ONAY SÜRECİNDE
                                 </div>
-                                <p class="text-muted small mb-0">
-                                    Bu iş tamamlanmış ve yönetici onayına sunulmuştur. <br>
-                                    Onaylanana veya reddedilene kadar tekrar işlem yapılamaz.
-                                </p>
                                 <div class="mt-3 pt-3 border-top border-warning border-opacity-25">
                                     <strong class="text-dark d-block mb-1">Kaydedilen Toplam Süre</strong>
                                     <span class="fs-5 font-monospace text-secondary">
@@ -596,7 +609,7 @@
                                 </div>
                             </div>
                         @elseif ($plan->status == 'completed')
-                            {{-- DURUM 3: TAMAMLANDI (KAPALI) --}}
+                            {{-- DURUM 3: TAMAMLANDI --}}
                             <div
                                 class="alert alert-success border-0 bg-success bg-opacity-10 text-success text-center py-4 rounded-3 mb-0">
                                 <i class="fas fa-check-circle fa-3x mb-3"></i>
@@ -608,7 +621,7 @@
                                 </p>
                             </div>
                         @else
-                            {{-- DURUM 4: SAYAÇ PASİF AMA BAŞLATILABİLİR (AÇIK/İŞLEMDE) --}}
+                            {{-- DURUM 4: KİMSE ÇALIŞMIYOR -> BAŞLAT --}}
                             <div class="timer-widget">
                                 <div class="text-muted mb-1 small">Toplam Çalışma Süresi</div>
                                 <h2 class="display-6 timer-display mb-3 text-secondary">
@@ -616,7 +629,6 @@
                                 </h2>
 
                                 <div class="d-grid gap-2">
-                                    {{-- 1. ÇALIŞMAYI BAŞLAT BUTONU --}}
                                     <form action="{{ route('maintenance.start-timer', $plan->id) }}" method="POST">
                                         @csrf
                                         <button type="submit" class="btn btn-success w-100 py-2 rounded-3 shadow-sm">
@@ -629,14 +641,12 @@
                                         </button>
                                     </form>
 
-                                    {{-- 2. HIZLI BİTİR / ONAYA GÖNDER BUTONU --}}
-                                    {{-- Sadece daha önce çalışılmışsa (süresi varsa) ve şu an sayaç kapalıysa görünür --}}
                                     @if ($plan->previous_duration_minutes > 0)
                                         <button type="button"
                                             class="btn btn-outline-primary w-100 py-2 rounded-3 border-2 fw-bold"
                                             data-bs-toggle="modal" data-bs-target="#quickFinishModal">
                                             <i class="fas fa-check-double me-2"></i>
-                                            Sayaçsız Tamamla / Onaya Gönder
+                                            Sayaçsız Tamamla
                                         </button>
                                     @endif
                                 </div>

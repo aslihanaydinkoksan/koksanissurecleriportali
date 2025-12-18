@@ -34,7 +34,7 @@ class RolePermissionSeeder extends Seeder
         // 3. ROLLER - Görselindeki verileri buraya işledim
         $roles = [
             'admin' => Permission::all(), // Admin her şeyi yapar
-            'yonetici' => ['view_logistics', 'view_production', 'view_maintenance'],
+            'yonetici' => Permission::all(),
             'mudur' => ['view_logistics', 'view_production'],
             'lojistik_personeli' => ['view_logistics'],
             'uretim_personeli' => ['view_production'],
