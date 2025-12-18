@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use App\Services\CsvExporter;
 use App\Models\ShipmentsVehicleType;
+use Illuminate\Support\Facades\DB;
 
 class ShipmentController extends Controller
 {
@@ -29,8 +30,8 @@ class ShipmentController extends Controller
      */
     public function store(Request $request)
     {
-        // YENİ EKLENDİ: Kullanıcının 'lojistik' birimine erişimi var mı?
         $this->authorize('access-department', 'lojistik');
+
         $validatedData = $request->validate([
             'arac_tipi' => 'required|string|in:tır,gemi,kamyon',
             'plaka' => 'required_if:arac_tipi,tır,kamyon|nullable|string|max:255',
@@ -57,13 +58,35 @@ class ShipmentController extends Controller
             ],
         ]);
 
+        // Dosya hazırlığı
+        $dosyaYolu = null;
+        $uploadedFile = null;
+
         if ($request->hasFile('ek_dosya')) {
-            $dosyaYolu = $request->file('ek_dosya')->store('sevkiyat_dosyalari', 'public');
+            $uploadedFile = $request->file('ek_dosya');
+            // Dosyayı public diskine kaydet
+            $dosyaYolu = $uploadedFile->store('sevkiyat_dosyalari', 'public');
             $validatedData['dosya_yolu'] = $dosyaYolu;
         }
 
         $validatedData['user_id'] = Auth::id();
-        Shipment::create($validatedData);
+
+        // 1. ADIM: Sevkiyatı oluştur
+        $shipment = Shipment::create($validatedData);
+
+        // 2. ADIM: Files tablosuna yedek/log kaydı at
+        if ($uploadedFile && $dosyaYolu) {
+            DB::table('files')->insert([
+                'fileable_type' => get_class($shipment),       // Örn: App\Models\Shipment
+                'fileable_id' => $shipment->id,              // Sevkiyat ID
+                'path' => $dosyaYolu,                 // Dosya yolu
+                'original_name' => $uploadedFile->getClientOriginalName(), // Orijinal ad
+                'mime_type' => $uploadedFile->getMimeType(),       // Dosya türü
+                'uploaded_by' => Auth::id(),                 // Yükleyen
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
 
         return redirect()->route('shipments.create')->with('success', 'Sevkiyat kaydı başarıyla oluşturuldu!');
     }
@@ -88,12 +111,13 @@ class ShipmentController extends Controller
      */
     public function update(Request $request, Shipment $shipment)
     {
-        // YENİ EKLENDİ: Kullanıcının 'lojistik' birimine erişimi var mı?
         $this->authorize('access-department', 'lojistik');
+
         if (Auth::id() !== $shipment->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
             return redirect()->route('home')
                 ->with('error', 'Bu sevkiyatı sadece oluşturan kişi düzenleyebilir.');
         }
+
         $validatedData = $request->validate([
             'arac_tipi' => 'required|string|in:tır,gemi,kamyon',
             'plaka' => 'nullable|string|max:255',
@@ -118,11 +142,27 @@ class ShipmentController extends Controller
 
         // --- DOSYA YÖNETİMİ ---
         if ($request->hasFile('ek_dosya')) {
+            // Eski fiziksel dosyayı sil (Opsiyonel, yer açmak için)
             if ($shipment->dosya_yolu) {
                 Storage::disk('public')->delete($shipment->dosya_yolu);
             }
-            $dosyaYolu = $request->file('ek_dosya')->store('sevkiyat_dosyalari', 'public');
+
+            $uploadedFile = $request->file('ek_dosya');
+            $dosyaYolu = $uploadedFile->store('sevkiyat_dosyalari', 'public');
             $validatedData['dosya_yolu'] = $dosyaYolu;
+
+            // Files tablosuna yeni kaydı ekle (Eskisini files tablosundan silmiyoruz, tarihçe kalsın)
+            DB::table('files')->insert([
+                'fileable_type' => get_class($shipment),
+                'fileable_id' => $shipment->id,
+                'path' => $dosyaYolu,
+                'original_name' => $uploadedFile->getClientOriginalName(),
+                'mime_type' => $uploadedFile->getMimeType(),
+                'uploaded_by' => Auth::id(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
         } elseif ($request->has('dosya_sil') && $request->input('dosya_sil') == '1') {
             if ($shipment->dosya_yolu) {
                 Storage::disk('public')->delete($shipment->dosya_yolu);

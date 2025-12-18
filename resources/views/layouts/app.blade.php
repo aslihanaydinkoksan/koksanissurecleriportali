@@ -530,7 +530,7 @@
                                 </li>
                             @endcan
 
-                            {{-- BUSINESS UNIT SWITCHER (BİRİM DEĞİŞTİRİCİ) - YENİ EKLENDİ --}}
+                            {{-- BUSINESS UNIT SWITCHER (BİRİM DEĞİŞTİRİCİ) --}}
                             @auth
                                 @if (auth()->user()->businessUnits->count() > 1)
                                     {{-- Kullanıcının birden fazla birimi varsa SEÇİM KUTUSU göster --}}

@@ -333,11 +333,20 @@
                                         <div class="mb-3 border p-2 rounded"
                                             style="background-color: rgba(255, 255, 255, 0.7);">
                                             <p class="mb-1"><strong>Mevcut Dosya:</strong></p>
-                                            <a href="{{ \Illuminate\Support\Facades\Storage::url($shipment->dosya_yolu ? asset('storage/' . $shipment->dosya_yolu) : null) }}"
-                                                target="_blank">Dosyayı Görüntüle</a>
-                                            {{--
-                                    <a href="{{ \Illuminate\Support\Facades\Storage::url($shipment->dosya_yolu) }}" target="_blank">Dosyayı Görüntüle</a>
-                                    --}}
+
+                                            {{-- AKILLI LINK YAPISI: Hem eski (http...) hem yeni (relative path) veriyi destekler --}}
+                                            @if (Str::startsWith($shipment->dosya_yolu, ['http://', 'https://']))
+                                                <a href="{{ $shipment->dosya_yolu }}" target="_blank"
+                                                    class="btn btn-sm btn-info text-white">
+                                                    <i class="fas fa-external-link-alt"></i> Dosyayı Görüntüle
+                                                </a>
+                                            @else
+                                                <a href="{{ asset('storage/' . $shipment->dosya_yolu) }}" target="_blank"
+                                                    class="btn btn-sm btn-info text-white">
+                                                    <i class="fas fa-external-link-alt"></i> Dosyayı Görüntüle
+                                                </a>
+                                            @endif
+
                                             {{-- DOSYA SİLME SEÇENEĞİ --}}
                                             <div class="form-check mt-2">
                                                 <input class="form-check-input" type="checkbox" name="dosya_sil"

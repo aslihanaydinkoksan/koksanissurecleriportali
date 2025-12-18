@@ -5,8 +5,8 @@
 
     <style>
         /* ==========================================
-                   1. EKRAN GÖRÜNÜMÜ (STANDART ARAYÜZ)
-                   ========================================== */
+                           1. EKRAN GÖRÜNÜMÜ (STANDART ARAYÜZ)
+                           ========================================== */
         .shipment-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 12px;
@@ -187,8 +187,8 @@
 
 
         /* ==========================================
-                   2. YAZDIRMA (PRINT) TASARIMI
-                   ========================================== */
+                           2. YAZDIRMA (PRINT) TASARIMI
+                           ========================================== */
         @media print {
 
             /* --- GİZLEMELER --- */
@@ -525,6 +525,28 @@
                             <th><i class="fas fa-clock text-muted"></i> Çıkış Saati</th>
                             <td><?php echo e(\Carbon\Carbon::parse($shipment->cikis_tarihi)->format('H:i')); ?></td>
                         </tr>
+                        
+                        <?php if($shipment->dosya_yolu): ?>
+                            <tr class="no-print"> 
+                                <th><i class="fas fa-file-alt text-muted"></i> Ek Dosya</th>
+                                <td>
+                                    <?php if(Str::startsWith($shipment->dosya_yolu, ['http://', 'https://'])): ?>
+                                        
+                                        <a href="<?php echo e($shipment->dosya_yolu); ?>" target="_blank"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-external-link-alt"></i> Dosyayı Görüntüle
+                                        </a>
+                                    <?php else: ?>
+                                        
+                                        <a href="<?php echo e(asset('storage/' . $shipment->dosya_yolu)); ?>" target="_blank"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-external-link-alt"></i> Dosyayı Görüntüle
+                                        </a>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                        
                     </table>
                 </div>
                 <div class="col-md-4">
