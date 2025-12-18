@@ -243,4 +243,58 @@ class User extends Authenticatable
 
         return $this->businessUnits->contains('id', $unitId);
     }
+    /**
+     * KÖKSAN AKILLI YETKİ KONTROLÜ
+     * Kullanıcının departmanına göre Navbar menülerini filtreler.
+     * Örn: Bakım yöneticisi ise permission 'view_logistics' olsa bile FALSE döner.
+     */
+    public function hasDepartmentPermission(string $permission): bool
+    {
+        // 1. ADIM: Temel Yetki Kontrolü (Spatie)
+        // Rolünde bu yetki tanımlı değilse zaten göremez.
+        if (!$this->can($permission)) {
+            return false;
+        }
+
+        // 2. ADIM: Süper Yetkililer (Filtreye Takılmaz)
+        // Admin her şeyi görür.
+        if ($this->hasRole('admin')) {
+            return true;
+        }
+
+        // 3. ADIM: "Departmansız" Yönetici Kontrolü (Genel Müdür vb.)
+        // Eğer kullanıcının rolü "yönetici" ise VE department_id'si NULL ise -> Her yeri görsün.
+        if ($this->hasRole('yönetici') && is_null($this->department_id)) {
+            return true;
+        }
+
+        // 4. ADIM: Departman Eşleşmesi (En Önemli Kısım)
+        // Eğer kullanıcının bir departmanı varsa, sadece o departmanla ilgili menüleri görsün.
+        if ($this->department) {
+            $userDeptName = mb_strtolower($this->department->name, 'UTF-8');
+
+            // İzin Anahtarı -> Departman Kelimeleri Eşleşmesi
+            // Bu liste sayesinde if-else yığınından kurtuluyoruz.
+            $moduleMap = [
+                'view_logistics' => ['lojistik', 'sevkiyat', 'depo', 'nakliye'],
+                'view_production' => ['üretim', 'imalat', 'planlama', 'fabrika'],
+                'view_maintenance' => ['bakım', 'teknik', 'tamir', 'onarım'],
+                'view_administrative' => ['idari', 'hizmet', 'insan kaynakları', 'muhasebe', 'satın alma'],
+            ];
+
+            // Eğer sorgulanan izin (örn: view_logistics) haritamızda varsa
+            if (array_key_exists($permission, $moduleMap)) {
+                // Kullanıcının departman isminde, izin verilen kelimelerden biri geçiyor mu?
+                foreach ($moduleMap[$permission] as $keyword) {
+                    if (str_contains($userDeptName, $keyword)) {
+                        return true; // Eşleşme var, menüyü göster.
+                    }
+                }
+                return false; // Yetkisi var (Spatie'den gelmiş) ama departmanı uymuyor -> GİZLE.
+            }
+        }
+
+        // Eğer haritada olmayan genel bir yetki ise (örn: view_users) ve 1. adımı geçtiyse göster.
+        return true;
+    }
 }
