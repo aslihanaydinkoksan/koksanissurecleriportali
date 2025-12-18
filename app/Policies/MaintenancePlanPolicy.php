@@ -9,96 +9,104 @@ use Illuminate\Auth\Access\Response;
 class MaintenancePlanPolicy
 {
     /**
-     * Determine whether the user can update the model.
+     * Kullanıcı bu planı "Tamamlandı" durumuna getirebilir mi (veya onaylayabilir mi)?
+     * Bu metod diğer metodlar tarafından da (update/delete) referans alınır.
      */
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, MaintenancePlan $plan): bool
+    public function approve(User $user, MaintenancePlan $plan): bool
     {
-        // 1. KURAL: Plan TAMAMLANDIYSA (completed) sadece yetkili (Admin/Yönetici) düzenleyebilir.
-        // Standart personel tamamlanmış işi değiştiremez.
-        if ($plan->status === 'completed') {
-            // Eğer kullanıcının onay yetkisi varsa (Yönetici/Müdür) değiştirebilir.
-            if ($user->can('approve', $plan)) {
-                return true;
-            }
-            return false;
-        }
-
-        // 2. KURAL: Plan ONAY BEKLİYORSA (pending_approval), standart personel değiştiremez.
-        // Sadece reddetmek/onaylamak isteyen yönetici değiştirebilir.
-        if ($plan->status === 'pending_approval') {
-            if ($user->can('approve', $plan)) {
-                return true;
-            }
-            // Personel onaydaki işi geri çekemez (Controller'da da ek kontrolümüz var ama burada da keselim)
-            return false;
-        }
-
-        // 3. KURAL: Diğer durumlarda (Açık, İşlemde, İptal)
-
-        // Admin her zaman düzenler
-        if ($user->isAdmin()) {
+        // 1. Admin veya "Yönetici" rolündekiler HER ŞEYİ onaylayabilir (Departman bağımsız).
+        // Bu sayede Yönetici, başka departmanın işine de müdahale edebilir.
+        if (in_array($user->role, ['admin', 'yonetici'])) {
             return true;
         }
 
-        // Planın SAHİBİ (Oluşturan) her zaman düzenler
-        if ($user->id === $plan->user_id) {
-            return true;
-        }
-
-        // Yöneticiler kendi departmanlarındaki işleri düzenler
-        $planDepartmentId = $plan->department_id ?? $plan->user->department_id;
-        if ($user->isManagerOrDirector()) {
+        // 2. "Müdür" ise SADECE Kendi departmanını onaylayabilir.
+        // (Eğer "Yönetici" ile "Müdür"ü ayırıyorsanız bu blok işe yarar)
+        if ($user->role === 'mudur') {
+            $planDepartmentId = $plan->department_id ?? $plan->user->department_id;
             if ($user->department_id === $planDepartmentId) {
                 return true;
             }
         }
-        // C) AYNI DEPARTMAN İZNİ:
-        // Eğer giriş yapan kullanıcı ile planı oluşturan kişi AYNI DEPARTMANDAYSA izin ver.
-        // Böylece Yönetici iş atadığında, Bakım Personeli o işi yapıp tamamlayabilir.
-        if ($user->department_id && $user->department_id == $planDepartmentId) {
+
+        return false;
+    }
+
+    /**
+     * Kullanıcı kaydı düzenleyebilir mi?
+     */
+    public function update(User $user, MaintenancePlan $plan): bool
+    {
+        // --- 1. ÖZEL DURUMLAR (Tamamlanmış veya Onay Bekleyen) ---
+
+        // Tamamlanmış (completed) veya Onay Bekleyen (pending_approval) işleri
+        // sadece onay yetkisi olanlar (Admin/Yönetici/İlgili Müdür) değiştirebilir.
+        if (in_array($plan->status, ['completed', 'pending_approval'])) {
+            return $this->approve($user, $plan);
+        }
+
+        // --- 2. GENEL DÜZENLEME YETKİLERİ ---
+
+        // A) Admin ve Yönetici HER ZAMAN düzenler (Departman fark etmeksizin)
+        if (in_array($user->role, ['admin', 'yonetici'])) {
             return true;
         }
 
-        // D) Planın SAHİBİ (Oluşturan) her zaman düzenler (Departman değişse bile)
+        // B) Planın SAHİBİ (Oluşturan) her zaman düzenler
         if ($user->id === $plan->user_id) {
+            return true;
+        }
+
+        // C) Müdürler kendi departmanındaki işleri düzenleyebilir
+        if ($user->role === 'mudur') {
+            $planDepartmentId = $plan->department_id ?? $plan->user->department_id;
+            if ($user->department_id === $planDepartmentId) {
+                return true;
+            }
+        }
+
+        // D) AYNI DEPARTMAN PERSONELİ İZNİ (Opsiyonel):
+        // Bakım ekibi bir havuz mantığıyla çalışıyorsa, aynı departmandaki arkadaşının işini düzenleyebilir.
+        // İstemiyorsanız bu bloğu kaldırabilirsiniz.
+        $planDepartmentId = $plan->department_id ?? $plan->user->department_id;
+        if ($user->department_id && $user->department_id == $planDepartmentId) {
             return true;
         }
 
         return false;
     }
 
-    // Silme yetkisi güncelleme ile aynı mantıktaysa:
+    /**
+     * Kullanıcı kaydı silebilir mi?
+     */
     public function delete(User $user, MaintenancePlan $plan): bool
     {
-        if ($plan->status === 'completed') {
-            return false;
-        }
-        return $this->update($user, $plan);
-    }
-    /**
-     * Kullanıcı bu planı "Tamamlandı" durumuna getirebilir mi?
-     */
-    public function approve(User $user, MaintenancePlan $plan): bool
-    {
-        // 1. Admin her zaman onaylayabilir.
-        if ($user->isAdmin()) {
+        // 1. Admin ve Yönetici, tamamlanmış olsa bile silebilir (Temizlik yetkisi).
+        if (in_array($user->role, ['admin', 'yonetici'])) {
             return true;
         }
 
-        // 2. Yönetici veya Müdür ise VE Kendi departmanıysa onaylayabilir.
-        if ($user->isManagerOrDirector()) {
-            // Planın departmanını bul (ilişki veya kullanıcı üzerinden)
-            $planDepartmentId = $plan->department_id ?? $plan->user->department_id;
+        // 2. Diğer kullanıcılar (Personel/Müdür) TAMAMLANMIŞ işi asla silemez.
+        if ($plan->status === 'completed') {
+            return false;
+        }
 
+        // 3. Diğer durumlarda güncelleme yetkisi olan silebilir mi?
+        // Genelde silme yetkisi daha kısıtlıdır, sadece "Sahibi" veya "Yönetici" silmeli.
+
+        // Sahibi ise silebilir
+        if ($user->id === $plan->user_id) {
+            return true;
+        }
+
+        // Müdür ise kendi departmanındakini silebilir
+        if ($user->role === 'mudur') {
+            $planDepartmentId = $plan->department_id ?? $plan->user->department_id;
             if ($user->department_id === $planDepartmentId) {
                 return true;
             }
         }
 
-        // Diğerleri (Standart kullanıcılar) onaylayamaz.
         return false;
     }
 }
