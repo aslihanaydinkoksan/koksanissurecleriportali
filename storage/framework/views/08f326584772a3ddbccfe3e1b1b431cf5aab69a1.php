@@ -1,7 +1,7 @@
-@extends('layouts.app')
 
-@section('title', 'Sevkiyat Detayı')
-@section('content')
+
+<?php $__env->startSection('title', 'Sevkiyat Detayı'); ?>
+<?php $__env->startSection('content'); ?>
 
     <style>
         /* ==========================================
@@ -452,20 +452,21 @@
         <div class="print-header">
             <h2>KÖKSAN PET ve PLASTİK AMBALAJ SAN. ve TİC. A.Ş.</h2>
             <p>SEVKİYAT VE DAĞITIM TAKİP FORMU</p>
-            <small>Form Tarihi: {{ now()->format('d.m.Y') }} | Belge No: #{{ $shipment->id }}</small>
+            <small>Form Tarihi: <?php echo e(now()->format('d.m.Y')); ?> | Belge No: #<?php echo e($shipment->id); ?></small>
         </div>
 
         <div class="shipment-header no-print">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h1>Sevkiyat Detayı <span class="badge">#{{ $shipment->id }}</span></h1>
+                    <h1>Sevkiyat Detayı <span class="badge">#<?php echo e($shipment->id); ?></span></h1>
                     <p class="mb-0 mt-2" style="opacity: 0.9;">
                         <i class="fas fa-calendar-alt"></i>
-                        {{ \Carbon\Carbon::parse($shipment->cikis_tarihi)->format('d.m.Y H:i') }}
+                        <?php echo e(\Carbon\Carbon::parse($shipment->cikis_tarihi)->format('d.m.Y H:i')); ?>
+
                     </p>
                 </div>
                 <div class="action-buttons">
-                    <a href="{{ route('shipments.index') }}" class="btn btn-light">
+                    <a href="<?php echo e(route('shipments.index')); ?>" class="btn btn-light">
                         <i class="fas fa-arrow-left"></i> Geri Dön
                     </a>
                     <button onclick="window.print()" class="btn btn-warning">
@@ -475,16 +476,18 @@
             </div>
         </div>
 
-        @if (session('success'))
+        <?php if(session('success')): ?>
             <div class="alert alert-success no-print">
-                <i class="fas fa-check-circle"></i> {{ session('success') }}
+                <i class="fas fa-check-circle"></i> <?php echo e(session('success')); ?>
+
             </div>
-        @endif
-        @if ($errors->any())
+        <?php endif; ?>
+        <?php if($errors->any()): ?>
             <div class="alert alert-danger no-print">
-                <i class="fas fa-exclamation-circle"></i> {{ $errors->first() }}
+                <i class="fas fa-exclamation-circle"></i> <?php echo e($errors->first()); ?>
+
             </div>
-        @endif
+        <?php endif; ?>
 
         <div class="info-card">
             <div class="info-card-header">
@@ -496,38 +499,38 @@
                     <table class="info-table">
                         <tr>
                             <th><i class="fas fa-id-card text-muted"></i> Plaka / Araç</th>
-                            <td>{{ $shipment->plaka ?? $shipment->gemi_adi }}</td>
+                            <td><?php echo e($shipment->plaka ?? $shipment->gemi_adi); ?></td>
                         </tr>
                         <tr>
                             <th><i class="fas fa-user text-muted"></i> Şoför / Kaptan</th>
-                            <td>{{ $shipment->sofor_adi ?? $shipment->imo_numarasi }}</td>
+                            <td><?php echo e($shipment->sofor_adi ?? $shipment->imo_numarasi); ?></td>
                         </tr>
                         <tr>
                             <th><i class="fas fa-weight-hanging text-muted"></i> Başlangıç Yükü</th>
-                            <td><strong>{{ number_format($shipment->kargo_miktari, 2) }} Ton</strong></td>
+                            <td><strong><?php echo e(number_format($shipment->kargo_miktari, 2)); ?> Ton</strong></td>
                         </tr>
                         <tr>
                             <th><i class="fas fa-map-marker-alt text-muted"></i> Kalkış Noktası</th>
-                            <td>{{ $shipment->kalkis_noktasi ?? $shipment->kalkis_limani }}</td>
+                            <td><?php echo e($shipment->kalkis_noktasi ?? $shipment->kalkis_limani); ?></td>
                         </tr>
                         <tr>
                             <th><i class="fas fa-flag-checkered text-muted"></i> Varış Noktası</th>
-                            <td>{{ $shipment->varis_noktasi ?? $shipment->varis_limani }}</td>
+                            <td><?php echo e($shipment->varis_noktasi ?? $shipment->varis_limani); ?></td>
                         </tr>
                         <tr>
                             <th><i class="fas fa-calendar text-muted"></i> Çıkış Tarihi</th>
-                            <td>{{ \Carbon\Carbon::parse($shipment->cikis_tarihi)->format('d.m.Y') }}</td>
+                            <td><?php echo e(\Carbon\Carbon::parse($shipment->cikis_tarihi)->format('d.m.Y')); ?></td>
                         </tr>
                         <tr>
                             <th><i class="fas fa-clock text-muted"></i> Çıkış Saati</th>
-                            <td>{{ \Carbon\Carbon::parse($shipment->cikis_tarihi)->format('H:i') }}</td>
+                            <td><?php echo e(\Carbon\Carbon::parse($shipment->cikis_tarihi)->format('H:i')); ?></td>
                         </tr>
                     </table>
                 </div>
                 <div class="col-md-4">
-                    <div class="current-load-box {{ $shipment->latest_remaining_amount == 0 ? 'empty' : '' }}">
+                    <div class="current-load-box <?php echo e($shipment->latest_remaining_amount == 0 ? 'empty' : ''); ?>">
                         <small>Araçtaki Güncel Yük</small>
-                        <div class="load-amount">{{ number_format($shipment->latest_remaining_amount, 2) }} Ton</div>
+                        <div class="load-amount"><?php echo e(number_format($shipment->latest_remaining_amount, 2)); ?> Ton</div>
                     </div>
                 </div>
             </div>
@@ -538,12 +541,12 @@
                 <i class="fas fa-list-alt"></i>
                 <h6>Dağıtım Durakları (Teslimat Listesi)</h6>
                 <div class="ms-auto">
-                    @if ($shipment->latest_remaining_amount > 0)
+                    <?php if($shipment->latest_remaining_amount > 0): ?>
                         <button type="button" class="btn btn-primary btn-sm no-print" data-bs-toggle="modal"
                             data-bs-target="#addStopModal">
                             <i class="fas fa-plus"></i> Yeni Durak Ekle
                         </button>
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -564,47 +567,51 @@
                         <tr class="factory-row">
                             <td>-</td>
                             <td><strong><i class="fas fa-industry"></i> FABRİKA ÇIKIŞ</strong></td>
-                            <td>{{ \Carbon\Carbon::parse($shipment->created_at)->format('d.m.Y') }}</td>
+                            <td><?php echo e(\Carbon\Carbon::parse($shipment->created_at)->format('d.m.Y')); ?></td>
                             <td>-</td>
-                            <td class="amount-remaining"><strong>{{ (float) $shipment->kargo_miktari }}</strong></td>
+                            <td class="amount-remaining"><strong><?php echo e((float) $shipment->kargo_miktari); ?></strong></td>
                             <td><small>İlk Yükleme</small></td>
                             <td class="no-print"></td>
                         </tr>
 
-                        @foreach ($shipment->stops as $index => $stop)
+                        <?php $__currentLoopData = $shipment->stops; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $stop): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <tr>
-                                <td><span class="badge-index">{{ $index + 1 }}</span></td>
-                                <td><strong>{{ $stop->location_name }}</strong></td>
+                                <td><span class="badge-index"><?php echo e($index + 1); ?></span></td>
+                                <td><strong><?php echo e($stop->location_name); ?></strong></td>
                                 <td>
-                                    @if ($stop->stop_date)
-                                        {{ \Carbon\Carbon::parse($stop->stop_date)->format('d.m.Y') }}
+                                    <?php if($stop->stop_date): ?>
+                                        <?php echo e(\Carbon\Carbon::parse($stop->stop_date)->format('d.m.Y')); ?>
+
                                         <br>
                                         <small class="text-muted">
                                             <i class="fas fa-clock"></i>
-                                            {{ \Carbon\Carbon::parse($stop->stop_date)->format('H:i') }}
+                                            <?php echo e(\Carbon\Carbon::parse($stop->stop_date)->format('H:i')); ?>
+
                                         </small>
-                                    @else
+                                    <?php else: ?>
                                         -
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
                                 <td class="amount-dropped">
-                                    <i class="fas fa-arrow-down"></i> {{ (float) $stop->dropped_amount }}
+                                    <i class="fas fa-arrow-down"></i> <?php echo e((float) $stop->dropped_amount); ?>
+
                                 </td>
                                 <td class="amount-remaining">
-                                    <i class="fas fa-box"></i> {{ (float) $stop->remaining_amount }}
+                                    <i class="fas fa-box"></i> <?php echo e((float) $stop->remaining_amount); ?>
+
                                 </td>
-                                <td><small>{{ $stop->note }}</small></td>
+                                <td><small><?php echo e($stop->note); ?></small></td>
                                 <td class="no-print">
-                                    <form action="{{ route('shipments.stops.destroy', $stop->id) }}" method="POST"
+                                    <form action="<?php echo e(route('shipments.stops.destroy', $stop->id)); ?>" method="POST"
                                         onsubmit="return confirm('Silmek istediğinize emin misiniz?');">
-                                        @csrf @method('DELETE')
+                                        <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
                                         <button type="submit" class="btn-delete" title="Sil">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
                                 </td>
                             </tr>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </tbody>
                 </table>
             </div>
@@ -635,8 +642,8 @@
     <div class="modal fade" id="addStopModal" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-                <form action="{{ route('shipments.stops.store', $shipment->id) }}" method="POST">
-                    @csrf
+                <form action="<?php echo e(route('shipments.stops.store', $shipment->id)); ?>" method="POST">
+                    <?php echo csrf_field(); ?>
                     <div class="modal-header bg-primary text-white">
                         <h5 class="modal-title"><i class="fas fa-plus-circle"></i> Yeni Teslimat Girişi</h5>
                         <button type="button" class="close text-white" data-bs-dismiss="modal">&times;</button>
@@ -644,7 +651,7 @@
                     <div class="modal-body">
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle"></i> Güncel Yük:
-                            <strong>{{ number_format($shipment->latest_remaining_amount, 2) }} Ton</strong>
+                            <strong><?php echo e(number_format($shipment->latest_remaining_amount, 2)); ?> Ton</strong>
                         </div>
 
                         <div class="form-group">
@@ -659,7 +666,7 @@
                                     <label><i class="fas fa-weight"></i> İndirilen Miktar (Ton) <span
                                             class="text-danger">*</span></label>
                                     <input type="number" step="0.01" min="0.01"
-                                        max="{{ $shipment->latest_remaining_amount }}" class="form-control"
+                                        max="<?php echo e($shipment->latest_remaining_amount); ?>" class="form-control"
                                         name="dropped_amount" required>
                                 </div>
                             </div>
@@ -668,7 +675,7 @@
                                     <label><i class="fas fa-calendar-check"></i> Tarih/Saat <span
                                             class="text-danger">*</span></label>
                                     <input type="datetime-local" class="form-control" name="stop_date"
-                                        value="{{ now()->format('Y-m-d\TH:i') }}" required>
+                                        value="<?php echo e(now()->format('Y-m-d\TH:i')); ?>" required>
                                 </div>
                             </div>
                         </div>
@@ -695,4 +702,6 @@
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/shipments/show.blade.php ENDPATH**/ ?>
