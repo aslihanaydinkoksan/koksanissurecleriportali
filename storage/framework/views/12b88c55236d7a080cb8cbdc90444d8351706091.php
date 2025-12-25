@@ -41,7 +41,7 @@
             overflow-x: hidden;
         }
 
-        /* Navbar */
+        /* --- Navbar Temel Yapısı --- */
         nav.navbar {
             position: fixed !important;
             top: 0 !important;
@@ -50,7 +50,8 @@
             width: 100% !important;
             z-index: 1000 !important;
             margin: 0 !important;
-            padding: 0.75rem 0 2rem 0 !important;
+            padding: 0.5rem 0 !important;
+            /* Dikey padding azaltıldı */
             background: var(--navbar-bg) !important;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -59,7 +60,7 @@
         }
 
         nav.navbar.scrolled {
-            padding: 0.75rem 0 2rem 0 !important;
+            padding: 0.4rem 0 !important;
             box-shadow: 0 4px 25px rgba(102, 126, 234, 0.2);
         }
 
@@ -74,31 +75,28 @@
             white-space: nowrap;
         }
 
-        .navbar-brand:hover {
-            transform: translateY(-2px);
-        }
-
         .navbar-brand img {
             height: 30px;
             transition: var(--transition);
         }
 
-        .navbar-brand:hover img {
-            transform: rotate(5deg) scale(1.05);
-        }
-
+        /* --- Esnek Nav Linkleri --- */
         .nav-link {
             font-weight: 600;
-            font-size: 0.875rem;
+            font-size: 0.85rem;
+            /* Font hafif küçültüldü */
             color: #4a5568 !important;
-            padding: 0.4rem 0.85rem !important;
+            padding: 0.4rem 0.6rem !important;
+            /* Yatay boşluk daraltıldı */
             border-radius: 8px;
             transition: var(--transition);
             position: relative;
-            white-space: nowrap;
+            white-space: normal;
+            /* Yakınlaştırınca metnin aşağı kaymasına izin verir */
             display: flex;
             align-items: center;
             gap: 0.4rem;
+            text-align: center;
         }
 
         .nav-link:hover {
@@ -107,11 +105,7 @@
             transform: translateY(-2px);
         }
 
-        .nav-link:hover i {
-            transform: scale(1.05);
-        }
-
-        /* Dropdown */
+        /* --- Dropdown Menü --- */
         .dropdown-menu {
             border: none;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
@@ -121,108 +115,70 @@
             animation: slideDown 0.3s ease-out;
         }
 
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .dropdown-item {
-            border-radius: 8px;
-            padding: 0.55rem 1rem;
-            font-weight: 600;
-            font-size: 0.875rem;
-            transition: var(--transition);
-            color: #4a5568;
-        }
-
-        .dropdown-item:hover {
-            background: var(--hover-bg);
-            color: #667eea;
-            transform: translateX(-2px);
-        }
-
-        /* User Badge */
-        .badge {
-            font-size: 0.65rem;
-            padding: 0.2rem 0.45rem;
-            font-weight: 700;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                transform: scale(1.05);
-            }
-
-            50% {
-                transform: scale(1.05);
-            }
-        }
-
+        /* --- Kullanıcı Badge ve Dropdown --- */
         #navbarDropdown {
             background: var(--primary-gradient);
             color: white !important;
-            padding: 0.45rem 1.1rem !important;
+            padding: 0.45rem 1rem !important;
             border-radius: 25px;
-            font-size: 0.85rem;
-            max-width: 180px;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 0.8rem;
+            max-width: 150px;
+            /* Zoom'da taşmayı önlemek için sınırlandırıldı */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        #navbarDropdown:hover {
-            transform: translateY(1.1);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        /* --- Responsive Düzenlemeler (Zoom ve Mobil Dostu) --- */
+        @media (max-width: 991px) {
+
+            /* Mobil menü açıldığında ekranı kaplamaması için scroll eklendi */
+            .navbar-collapse {
+                max-height: 80vh;
+                overflow-y: auto;
+                background: rgba(255, 255, 255, 0.98);
+                padding: 1rem;
+                border-radius: 15px;
+                margin-top: 10px;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            }
+
+            .nav-item {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+
+            .nav-link {
+                justify-content: flex-start;
+                padding: 0.75rem 1rem !important;
+            }
+
+            #navbarDropdown {
+                max-width: 100% !important;
+                /* Mobilde tam genişlik */
+                width: 100%;
+            }
+
+            main {
+                margin-top: 80px !important;
+                /* Mobil navbar yüksekliğine göre ayar */
+            }
         }
 
-        #navbarDropdown i {
-            color: white;
-        }
-
-        /* Main Content */
+        /* --- Main Content --- */
         #app {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding-top: 0;
         }
 
         main {
             flex: 1;
             padding: 0 !important;
-            margin: 0 !important;
-            margin-top: 6rem !important;
+            margin: 6rem 0 0 0 !important;
         }
 
-        @media (max-width: 991px) {
-            main {
-                margin-top: 58px !important;
-            }
-        }
-
-        /* SweetAlert Custom */
-        .swal2-popup {
-            font-family: 'Nunito', sans-serif !important;
-            border-radius: 1rem !important;
-        }
-
-        .swal2-title {
-            font-size: 1.25rem !important;
-        }
-
-        .swal2-content {
-            font-size: 0.9rem !important;
-        }
-
+        /* --- Loader ve Diğer Animasyonlar --- */
         #global-loader {
             position: fixed;
             top: 0;
@@ -230,9 +186,7 @@
             width: 100%;
             height: 100%;
             z-index: 99999;
-            /* Her şeyin üstünde olsun */
             background: #f0f5ff;
-            /* Senin body renginle uyumlu */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -250,20 +204,8 @@
             height: 60px;
             border: 4px solid rgba(102, 126, 234, 0.2);
             border-left-color: #667eea;
-            /* Senin primary rengin */
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            box-shadow: 0 0 15px rgba(102, 126, 234, 0.2);
-        }
-
-        .loader-text {
-            margin-top: 15px;
-            font-weight: 700;
-            font-size: 0.9rem;
-            background: var(--primary-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: pulse 1.5s infinite;
         }
 
         @keyframes spin {
@@ -273,6 +215,18 @@
 
             100% {
                 transform: rotate(360deg);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
     </style>
@@ -285,8 +239,8 @@
         <div class="loader-text">Yükleniyor...</div>
     </div>
     <div id="app">
-        <nav class="navbar navbar-expand-lg navbar-light">
-            <<div class="container-fluid px-lg-4">
+        <nav class="navbar navbar-expand-xl navbar-light">
+            <div class="container-fluid px-lg-4">
                 <a class="navbar-brand d-flex align-items-center" href="<?php echo e(route('welcome')); ?>">
                     <img src="<?php echo e(asset('koksan-logo.png')); ?>" alt="Köksan Logo" class="me-2">
                     <strong>Köksan İş Süreçleri Portalı</strong>
@@ -687,12 +641,12 @@
                         <?php endif; ?>
                     </ul>
                 </div>
-    </div>
-    </nav>
+            </div>
+        </nav>
 
-    <main>
-        <?php echo $__env->yieldContent('content'); ?>
-    </main>
+        <main>
+            <?php echo $__env->yieldContent('content'); ?>
+        </main>
     </div>
 
     <?php echo $__env->yieldContent('page_scripts'); ?>
