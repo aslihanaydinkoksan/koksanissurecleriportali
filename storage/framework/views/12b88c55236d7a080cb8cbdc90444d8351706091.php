@@ -286,7 +286,7 @@
     </div>
     <div id="app">
         <nav class="navbar navbar-expand-lg navbar-light">
-            <div class="container-fluid px-lg-4">
+            <<div class="container-fluid px-lg-4">
                 <a class="navbar-brand d-flex align-items-center" href="<?php echo e(route('welcome')); ?>">
                     <img src="<?php echo e(asset('koksan-logo.png')); ?>" alt="Köksan Logo" class="me-2">
                     <strong>Köksan İş Süreçleri Portalı</strong>
@@ -304,9 +304,7 @@
                             <?php endif; ?>
                         <?php else: ?>
                             
-                            <?php
-                                $user = Auth::user();
-                            ?>
+                            <?php $user = Auth::user(); ?>
 
                             <li class="nav-item"><a class="nav-link" href="<?php echo e(route('general.calendar')); ?>"><i
                                         class="fa-solid fa-calendar-days" style="color: #667EEA;"></i><span>Genel
@@ -339,8 +337,7 @@
                                             Görevler</a></li>
                                     <li><a class="dropdown-item" href="<?php echo e(route('my-assignments.index')); ?>"><i
                                                 class="fa-solid fa-cloud-arrow-down" style="color: #4258bb;"></i> Bana
-                                            Atanan
-                                            Görevler</a></li>
+                                            Atanan Görevler</a></li>
                                     <li>
                                         <hr class="dropdown-divider">
                                     </li>
@@ -351,7 +348,7 @@
                             </li>
 
                             
-                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view_logistics')): ?>
+                            <?php if($user->hasDepartmentPermission('view_logistics')): ?>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown"><i class="fa-solid fa-route"
@@ -362,14 +359,13 @@
                                                 Sevkiyat</a></li>
                                         <li><a class="dropdown-item" href="<?php echo e(route('products.list')); ?>"><i
                                                     class="fa-solid fa-truck-ramp-box" style="color: #4FD1C5;"></i>
-                                                Sevkiyat
-                                                Listesi</a></li>
+                                                Sevkiyat Listesi</a></li>
                                     </ul>
                                 </li>
                             <?php endif; ?>
 
                             
-                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view_production')): ?>
+                            <?php if($user->hasDepartmentPermission('view_production')): ?>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown"><i class="fa-solid fa-industry"
@@ -387,7 +383,7 @@
                             <?php endif; ?>
 
                             
-                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view_maintenance')): ?>
+                            <?php if($user->hasDepartmentPermission('view_maintenance')): ?>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown">
@@ -438,8 +434,7 @@
                             <?php endif; ?>
 
                             
-                            
-                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view_administrative')): ?>
+                            <?php if($user->hasDepartmentPermission('view_administrative')): ?>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown">
@@ -449,83 +444,58 @@
 
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         
-                                        <li>
-                                            <a class="dropdown-item" href="<?php echo e(route('service.events.create')); ?>">
+                                        <li><a class="dropdown-item" href="<?php echo e(route('service.events.create')); ?>">
                                                 <i class="fa-solid fa-calendar-plus" style="color: #3B82F6;"></i> Yeni
-                                                Etkinlik
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item" href="<?php echo e(route('service.events.index')); ?>">
-                                                <i class="fa-solid fa-calendar-days" style="color: #0EA5E9;"></i>
-                                                Etkinlik Listesi
-                                            </a>
-                                        </li>
+                                                Etkinlik</a></li>
+                                        <li><a class="dropdown-item" href="<?php echo e(route('service.events.index')); ?>">
+                                                <i class="fa-solid fa-calendar-days" style="color: #0EA5E9;"></i> Etkinlik
+                                                Listesi</a></li>
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
 
                                         
-                                        <li>
-                                            <a class="dropdown-item" href="<?php echo e(route('service.vehicles.index')); ?>">
+                                        <li><a class="dropdown-item" href="<?php echo e(route('service.vehicles.index')); ?>">
                                                 <i class="fa-solid fa-car" style="color: #F59E0B;"></i> Şirket
-                                                Araçları
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item" href="<?php echo e(route('service.logistics-vehicles.index')); ?>">
+                                                Araçları</a></li>
+                                        <li><a class="dropdown-item"
+                                                href="<?php echo e(route('service.logistics-vehicles.index')); ?>">
                                                 <i class="fa-solid fa-truck" style="color: #EA580C;"></i> Nakliye
-                                                Araçları
-                                            </a>
-                                        </li>
+                                                Araçları</a></li>
 
                                         
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
-                                        <li>
-                                            <a class="dropdown-item" href="<?php echo e(route('travels.create')); ?>">
-                                                <i class="fa-solid fa-route" style="color: #8B5CF6;"></i> Yeni Seyahat
-                                            </a>
+                                        <li><a class="dropdown-item" href="<?php echo e(route('travels.create')); ?>">
+                                                <i class="fa-solid fa-route" style="color: #8B5CF6;"></i> Yeni Seyahat</a>
                                         </li>
-                                        <li>
-                                            <a class="dropdown-item" href="<?php echo e(route('travels.index')); ?>">
+                                        <li><a class="dropdown-item" href="<?php echo e(route('travels.index')); ?>">
                                                 <i class="fa-solid fa-list-check" style="color: #A78BFA;"></i> Seyahat
-                                                Listesi
-                                            </a>
-                                        </li>
+                                                Listesi</a></li>
 
                                         
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
-                                        <li>
-                                            <a class="dropdown-item"
+                                        <li><a class="dropdown-item"
                                                 href="<?php echo e(route('service.events.index', ['event_type' => 'fuar'])); ?>">
                                                 <i class="fa-solid fa-tents" style="color: #10B981;"></i> Fuar
-                                                Yönetimi
-                                            </a>
-                                        </li>
+                                                Yönetimi</a></li>
 
                                         
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
-                                        <li>
-                                            <a class="dropdown-item" href="<?php echo e(route('bookings.index')); ?>">
+                                        <li><a class="dropdown-item" href="<?php echo e(route('bookings.index')); ?>">
                                                 <i class="fa-solid fa-book-bookmark" style="color: #EC4899;"></i> Tüm
-                                                Rezervasyonlar
-                                            </a>
-                                        </li>
+                                                Rezervasyonlar</a></li>
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
-                                        <li>
-                                            <a class="dropdown-item" href="<?php echo e(route('customers.index')); ?>">
+                                        <li><a class="dropdown-item" href="<?php echo e(route('customers.index')); ?>">
                                                 <i class="fa-solid fa-users" style="color: #06B6D4;"></i> Müşteri
-                                                Yönetimi
-                                            </a>
-                                        </li>
+                                                Yönetimi</a></li>
                                     </ul>
                                 </li>
                             <?php endif; ?>
@@ -533,12 +503,10 @@
                             
                             <?php if(auth()->guard()->check()): ?>
                                 <?php if(auth()->user()->businessUnits->count() > 1): ?>
-                                    
                                     <li class="nav-item dropdown me-3 d-flex align-items-center">
                                         <a class="nav-link dropdown-toggle btn btn-sm shadow-sm border" href="#"
                                             role="button" data-bs-toggle="dropdown"
                                             style="border-radius: 20px; padding: 5px 15px; background: rgba(255,255,255,0.8); border-color: #e2e8f0 !important;">
-                                            
                                             <i class="fa-solid fa-industry text-primary me-2"></i>
                                             <span class="fw-bold text-dark" style="font-size: 0.85rem;">
                                                 <?php echo e(session('active_unit_name', 'Birim Seçiniz')); ?>
@@ -552,7 +520,6 @@
                                             <li>
                                                 <hr class="dropdown-divider my-0">
                                             </li>
-
                                             <?php $__currentLoopData = auth()->user()->businessUnits; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $unit): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                 <li>
                                                     <form action="<?php echo e(route('switch.unit')); ?>" method="POST">
@@ -562,7 +529,6 @@
                                                             class="dropdown-item d-flex justify-content-between align-items-center px-3 py-2"
                                                             style="cursor: pointer;">
                                                             <span class="fw-semibold"><?php echo e($unit->name); ?></span>
-                                                            
                                                             <?php if(session('active_unit_id') == $unit->id): ?>
                                                                 <i class="fa-solid fa-circle-check text-success"></i>
                                                             <?php endif; ?>
@@ -573,7 +539,6 @@
                                         </ul>
                                     </li>
                                 <?php elseif(auth()->user()->businessUnits->count() == 1): ?>
-                                    
                                     <li class="nav-item me-3 d-flex align-items-center">
                                         <span class="badge bg-white text-primary border px-3 py-2 rounded-pill shadow-sm"
                                             style="font-size: 0.8rem;">
@@ -583,7 +548,6 @@
                                         </span>
                                     </li>
                                 <?php else: ?>
-                                    
                                     <li class="nav-item me-3 d-flex align-items-center">
                                         <span class="badge bg-danger text-white border px-3 py-2 rounded-pill shadow-sm">
                                             <i class="fa-solid fa-triangle-exclamation me-1"></i>
@@ -723,12 +687,12 @@
                         <?php endif; ?>
                     </ul>
                 </div>
-            </div>
-        </nav>
+    </div>
+    </nav>
 
-        <main>
-            <?php echo $__env->yieldContent('content'); ?>
-        </main>
+    <main>
+        <?php echo $__env->yieldContent('content'); ?>
+    </main>
     </div>
 
     <?php echo $__env->yieldContent('page_scripts'); ?>

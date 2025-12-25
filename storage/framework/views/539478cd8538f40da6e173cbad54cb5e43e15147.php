@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', 'KÖKSAN Canlı İzleme Paneli')
 
-@push('styles')
+<?php $__env->startSection('title', 'KÖKSAN Canlı İzleme Paneli'); ?>
+
+<?php $__env->startPush('styles'); ?>
     <style>
         /* --- 1. TV MODU VE GENEL DÜZEN --- */
         nav.navbar,
@@ -186,12 +186,12 @@
             cursor: pointer;
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container-fluid d-flex flex-column" style="height: 97vh;">
 
-        {{-- A. ÜST BAŞLIK & SAAT --}}
+        
         <div class="d-flex justify-content-between align-items-center mb-3 px-1">
             <div>
                 <div class="d-flex align-items-center">
@@ -207,17 +207,17 @@
                 <h1 class="fw-bold mb-0" id="live-clock"
                     style="font-size: 3.5rem; font-family: 'Courier New', monospace; color: #2d3748; line-height: 1;">--:--
                 </h1>
-                <span class="text-secondary fw-medium fs-5">{{ \Carbon\Carbon::now()->translatedFormat('d F Y, l') }}</span>
+                <span class="text-secondary fw-medium fs-5"><?php echo e(\Carbon\Carbon::now()->translatedFormat('d F Y, l')); ?></span>
             </div>
         </div>
 
-        {{-- B. GENEL İSTATİSTİKLER (KPI) --}}
+        
         <div class="row g-3 mb-3">
             <div class="col">
                 <div class="tv-card" style="border-bottom: 4px solid #667EEA;">
                     <div class="kpi-mini-card">
                         <div>
-                            <div class="kpi-value">{{ $kpiData['sevkiyat_sayisi'] }}</div>
+                            <div class="kpi-value"><?php echo e($kpiData['sevkiyat_sayisi']); ?></div>
                             <div class="kpi-label">Sevkiyat</div>
                         </div>
                         <i class="fa-solid fa-truck-fast kpi-icon" style="color: #667EEA;"></i>
@@ -228,7 +228,7 @@
                 <div class="tv-card" style="border-bottom: 4px solid #4FD1C5;">
                     <div class="kpi-mini-card">
                         <div>
-                            <div class="kpi-value">{{ $kpiData['plan_sayisi'] }}</div>
+                            <div class="kpi-value"><?php echo e($kpiData['plan_sayisi']); ?></div>
                             <div class="kpi-label">Toplam Üretim</div>
                         </div>
                         <i class="fa-solid fa-industry kpi-icon" style="color: #4FD1C5;"></i>
@@ -239,7 +239,7 @@
                 <div class="tv-card" style="border-bottom: 4px solid #F093FB;">
                     <div class="kpi-mini-card">
                         <div>
-                            <div class="kpi-value">{{ $kpiData['etkinlik_sayisi'] }}</div>
+                            <div class="kpi-value"><?php echo e($kpiData['etkinlik_sayisi']); ?></div>
                             <div class="kpi-label">Etkinlik & Ziyaret</div>
                         </div>
                         <i class="fa-solid fa-users-viewfinder kpi-icon" style="color: #F093FB;"></i>
@@ -250,7 +250,7 @@
                 <div class="tv-card" style="border-bottom: 4px solid #F6E05E;">
                     <div class="kpi-mini-card">
                         <div>
-                            <div class="kpi-value">{{ $kpiData['arac_gorevi_sayisi'] }}</div>
+                            <div class="kpi-value"><?php echo e($kpiData['arac_gorevi_sayisi']); ?></div>
                             <div class="kpi-label">Araç Görevi</div>
                         </div>
                         <i class="fa-solid fa-car kpi-icon" style="color: #F6E05E;"></i>
@@ -261,7 +261,7 @@
                 <div class="tv-card" style="border-bottom: 4px solid #ED8936;">
                     <div class="kpi-mini-card">
                         <div>
-                            <div class="kpi-value">{{ $kpiData['bakim_sayisi'] }}</div>
+                            <div class="kpi-value"><?php echo e($kpiData['bakim_sayisi']); ?></div>
                             <div class="kpi-label">Bakım & Arıza</div>
                         </div>
                         <i class="fa-solid fa-wrench kpi-icon" style="color: #ED8936;"></i>
@@ -270,7 +270,7 @@
             </div>
         </div>
 
-        {{-- C. FABRİKA BİRİMLERİ (Özel Tasarım) --}}
+        
         <div class="row g-3 mb-3" style="min-height: 180px;">
             <div class="col-md-4">
                 <div class="unit-card" style="background: linear-gradient(135deg, #2c7a7b 0%, #319795 100%);">
@@ -281,7 +281,7 @@
                             <span class="unit-badge"><i class="fa-solid fa-pulse me-2"></i>Aktif</span>
                         </div>
                         <div class="d-flex align-items-end justify-content-between">
-                            <div class="unit-count">{{ $kpiData['kopet_count'] }}</div>
+                            <div class="unit-count"><?php echo e($kpiData['kopet_count']); ?></div>
                             <div class="text-end" style="opacity: 0.9;">
                                 <div class="fs-6 fw-bold">İş Emri</div>
                             </div>
@@ -302,7 +302,7 @@
                             <span class="unit-badge"><i class="fa-solid fa-bolt me-2"></i>Üretim</span>
                         </div>
                         <div class="d-flex align-items-end justify-content-between">
-                            <div class="unit-count">{{ $kpiData['preform_count'] }}</div>
+                            <div class="unit-count"><?php echo e($kpiData['preform_count']); ?></div>
                             <div class="text-end" style="opacity: 0.9;">
                                 <div class="fs-6 fw-bold">Planlanan</div>
                             </div>
@@ -323,7 +323,7 @@
                             <span class="unit-badge"><i class="fa-solid fa-truck-ramp-box me-2"></i>Süreçte</span>
                         </div>
                         <div class="d-flex align-items-end justify-content-between">
-                            <div class="unit-count">{{ $kpiData['levha_count'] }}</div>
+                            <div class="unit-count"><?php echo e($kpiData['levha_count']); ?></div>
                             <div class="text-end" style="opacity: 0.9;">
                                 <div class="fs-6 fw-bold">Hareket</div>
                             </div>
@@ -336,9 +336,9 @@
             </div>
         </div>
 
-        {{-- D. ALT BÖLÜM: BİLDİRİMLER & AKIŞ GRAFİĞİ --}}
+        
         <div class="row g-3 flex-grow-1" style="min-height: 0;">
-            {{-- SOL: BİLDİRİMLER --}}
+            
             <div class="col-md-4 h-100">
                 <div class="tv-card">
                     <h5 class="fw-bold mb-3 pb-2 border-bottom text-danger d-flex align-items-center">
@@ -346,16 +346,16 @@
                     </h5>
 
                     <div style="overflow-y: hidden; position: relative; flex-grow: 1;">
-                        @if ($importantItems->isEmpty())
+                        <?php if($importantItems->isEmpty()): ?>
                             <div
                                 class="d-flex flex-column align-items-center justify-content-center h-100 text-muted opacity-50">
                                 <i class="fa-regular fa-circle-check fa-4x mb-3"></i>
                                 <span class="fs-4">Her şey yolunda, işlem yok.</span>
                             </div>
-                        @else
+                        <?php else: ?>
                             <div class="d-flex flex-column gap-2">
-                                @foreach ($importantItems as $item)
-                                    @php
+                                <?php $__currentLoopData = $importantItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <?php
                                         // Dinamik Renk ve İkon Seçimi
                                         $borderColor = match ($item->type) {
                                             'shipment' => '#667EEA',
@@ -375,35 +375,35 @@
                                             'travel' => 'fa-plane',
                                             default => 'fa-info-circle',
                                         };
-                                    @endphp
-                                    <div class="important-item" style="border-left-color: {{ $borderColor }};">
+                                    ?>
+                                    <div class="important-item" style="border-left-color: <?php echo e($borderColor); ?>;">
                                         <div class="me-3 text-center" style="width: 35px;">
                                             <div class="rounded-circle d-flex align-items-center justify-content-center"
-                                                style="width: 35px; height: 35px; background-color: {{ $borderColor }}20;">
-                                                <i class="fa-solid {{ $icon }}"
-                                                    style="color: {{ $borderColor }}; font-size: 1rem;"></i>
+                                                style="width: 35px; height: 35px; background-color: <?php echo e($borderColor); ?>20;">
+                                                <i class="fa-solid <?php echo e($icon); ?>"
+                                                    style="color: <?php echo e($borderColor); ?>; font-size: 1rem;"></i>
                                             </div>
                                         </div>
                                         <div class="flex-grow-1">
                                             <div class="fw-bold text-uppercase"
-                                                style="font-size: 0.7rem; color: {{ $borderColor }}; letter-spacing: 0.5px;">
-                                                {{ $item->category }}</div>
+                                                style="font-size: 0.7rem; color: <?php echo e($borderColor); ?>; letter-spacing: 0.5px;">
+                                                <?php echo e($item->category); ?></div>
                                             <div class="fw-bold text-dark" style="font-size: 0.95rem; line-height: 1.2;">
-                                                {{ $item->content }}</div>
+                                                <?php echo e($item->content); ?></div>
                                         </div>
                                         <div class="text-end ps-2 ms-1">
                                             <div class="fw-bold text-dark" style="font-size: 1rem;">
-                                                {{ $item->date->format('H:i') }}</div>
+                                                <?php echo e($item->date->format('H:i')); ?></div>
                                         </div>
                                     </div>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
 
-            {{-- SAĞ: SANKEY GRAFİĞİ (Yeni Yapı) --}}
+            
             <div class="col-md-8 h-100">
                 <div class="tv-card">
                     <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
@@ -420,21 +420,21 @@
             </div>
         </div>
 
-        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
+        <form id="logout-form" action="<?php echo e(route('logout')); ?>" method="POST" style="display: none;"><?php echo csrf_field(); ?></form>
         <div onclick="document.getElementById('logout-form').submit();" class="emergency-exit-btn" title="Çıkış Yap">
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('page_scripts')
+<?php $__env->startSection('page_scripts'); ?>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
             // --- 1. OTOMATİK YENİLEME SİSTEMİ ---
-            let currentHash = "{{ $currentDataHash }}";
+            let currentHash = "<?php echo e($currentDataHash); ?>";
             setInterval(() => {
-                fetch("{{ route('tv.check_updates') }}")
+                fetch("<?php echo e(route('tv.check_updates')); ?>")
                     .then(response => response.json())
                     .then(data => {
                         // Eğer sunucudaki hash değiştiyse sayfayı yenile
@@ -469,7 +469,7 @@
                 data.addColumn('number', 'Değer');
 
                 // Controller'dan gelen JSON verisi
-                var rawData = @json($chartData);
+                var rawData = <?php echo json_encode($chartData, 15, 512) ?>;
                 data.addRows(rawData);
 
                 // Renk Paleti (Fabrika Birimleri için Uyumlu Renkler)
@@ -534,4 +534,6 @@
             });
         });
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/tv/dashboard.blade.php ENDPATH**/ ?>

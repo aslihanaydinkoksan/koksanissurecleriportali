@@ -560,41 +560,45 @@
                         </h6>
 
                         @php
-                            // Sadece AÇIK olan sayacı buluyoruz. Kimin olduğu önemsiz.
+                            // Get ANY active timer for this plan
                             $activeEntry = $plan->timeEntries->whereNull('end_time')->first();
+                            // Check if the active timer belongs to the current user
+                            $isMyTimer = $activeEntry && $activeEntry->user_id === Auth::id();
                         @endphp
 
                         @if ($activeEntry)
-                            {{-- DURUM 1: SAYAÇ AKTİF (KİMİN OLDUĞU FARK ETMEZ, GÖRÜNSÜN) --}}
+                            {{-- CASE 1: TIMER IS ACTIVE (Running) --}}
                             <div class="timer-widget active">
                                 <div class="text-primary fw-bold mb-2 animate-pulse">
                                     <i class="fas fa-circle me-1 small"></i> ÇALIŞMA SÜRÜYOR
-                                    {{-- Çalışan kişinin ismini de ufakça belirtelim ki karışıklık olmasın --}}
-                                    <span class="text-muted small fw-normal">({{ $activeEntry->user->name }})</span>
+                                    @if (!$isMyTimer)
+                                        <div class="text-muted small fw-normal mt-1">
+                                            <i class="fas fa-user me-1"></i> {{ $activeEntry->user->name }} tarafından
+                                        </div>
+                                    @endif
                                 </div>
 
-                                {{-- CANLI SAYAÇ ALANI --}}
+                                {{-- LIVE TIMER DISPLAY - Visible to everyone --}}
                                 <h2 class="display-5 timer-display mb-2" id="liveTimer">00:00:00</h2>
 
                                 <small class="text-muted d-block mb-3">
                                     Başlangıç: {{ $activeEntry->start_time->format('H:i:s') }}
                                 </small>
 
-                                {{-- DURDURMA BUTONU --}}
-                                {{-- Sadece sayacı başlatan kişi veya Admin durdurabilsin (Controller yetkisine bağlı) --}}
-                                @if (Auth::id() == $activeEntry->user_id || Auth::user()->role == 'admin')
+                                {{-- ACTION BUTTONS - Only for the timer owner or Admin --}}
+                                @if ($isMyTimer || Auth::user()->role == 'admin')
                                     <button type="button" class="btn btn-danger w-100 py-2 rounded-3 shadow-sm"
                                         data-bs-toggle="modal" data-bs-target="#stopTimerModal">
                                         <i class="fas fa-stop-circle me-2"></i>Çalışmayı Durdur
                                     </button>
                                 @else
-                                    <div class="alert alert-light border small text-muted">
-                                        <i class="fas fa-lock me-1"></i> Sadece başlatan kişi durdurabilir.
+                                    <div class="alert alert-light border small text-muted mb-0">
+                                        <i class="fas fa-lock me-1"></i> Şu an başka bir kullanıcı çalışıyor.
                                     </div>
                                 @endif
                             </div>
                         @elseif ($plan->status == 'pending_approval')
-                            {{-- DURUM 2: ONAY BEKLİYOR --}}
+                            {{-- CASE 2: PENDING APPROVAL --}}
                             <div class="timer-widget bg-light border-warning">
                                 <div class="text-warning fw-bold mb-3">
                                     <i class="fas fa-hourglass-half fa-3x mb-2"></i><br>
@@ -609,7 +613,7 @@
                                 </div>
                             </div>
                         @elseif ($plan->status == 'completed')
-                            {{-- DURUM 3: TAMAMLANDI --}}
+                            {{-- CASE 3: COMPLETED --}}
                             <div
                                 class="alert alert-success border-0 bg-success bg-opacity-10 text-success text-center py-4 rounded-3 mb-0">
                                 <i class="fas fa-check-circle fa-3x mb-3"></i>
@@ -621,7 +625,7 @@
                                 </p>
                             </div>
                         @else
-                            {{-- DURUM 4: KİMSE ÇALIŞMIYOR -> BAŞLAT --}}
+                            {{-- CASE 4: IDLE (Start Button) --}}
                             <div class="timer-widget">
                                 <div class="text-muted mb-1 small">Toplam Çalışma Süresi</div>
                                 <h2 class="display-6 timer-display mb-3 text-secondary">
@@ -1042,22 +1046,32 @@
                     quickModal.show();
                 }
             }
-
             // --- 2. SAYAÇ MANTIĞI ---
-            @if ($plan->isTimerActive())
-                // ... (Sayaç kodları aynen kalacak, buraya dokunma) ...
-                const startTimeString =
-                    "{{ $plan->timeEntries->whereNull('end_time')->where('user_id', Auth::id())->first()->start_time->format('Y-m-d H:i:s') }}";
-                // ...
-                // NOT: Yukarıdaki satırda ->where('user_id', Auth::id()) ekledim ki başkasının saatiyle karışmasın.
+            @php
+                // Get the active timer entry (regardless of user) to feed into JS
+                $jsActiveEntry = $plan->timeEntries->whereNull('end_time')->first();
+            @endphp
+
+            @if ($jsActiveEntry)
+                // If there is an active timer, run the JS clock for everyone
+                const startTimeString = "{{ $jsActiveEntry->start_time->format('Y-m-d H:i:s') }}";
                 const startTime = new Date(startTimeString).getTime();
+
                 const previousDurationMs = {{ $plan->previous_duration_minutes * 60 * 1000 }};
                 const timerElement = document.getElementById("liveTimer");
 
                 if (timerElement) {
-                    const x = setInterval(function() {
+                    // Update the timer immediately to avoid 1-second delay
+                    updateTimerDisplay();
+
+                    const x = setInterval(updateTimerDisplay, 1000);
+
+                    function updateTimerDisplay() {
                         const now = new Date().getTime();
-                        const currentSessionDuration = now - startTime;
+                        // If client time is behind server time, prevent negative numbers
+                        let currentSessionDuration = now - startTime;
+                        if (currentSessionDuration < 0) currentSessionDuration = 0;
+
                         const totalDuration = previousDurationMs + currentSessionDuration;
 
                         const hours = Math.floor((totalDuration / (1000 * 60 * 60)));
@@ -1068,7 +1082,7 @@
                             (hours < 10 ? "0" + hours : hours) + ":" +
                             (minutes < 10 ? "0" + minutes : minutes) + ":" +
                             (seconds < 10 ? "0" + seconds : seconds);
-                    }, 1000);
+                    }
                 }
             @endif
         });
