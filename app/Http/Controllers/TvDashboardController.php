@@ -40,10 +40,12 @@ class TvDashboardController extends Controller
     }
 
     /**
-     * 1. KPI VERİLERİ (Tüm Modellerde Scope Kaldırıldı)
+     * 1. KPI VERİLERİ (TAM DİNAMİK YAPI)
      */
     private function getKpiData(Carbon $today): array
     {
+        // --- A. STANDART VERİLER ---
+
         // 1. SEVKİYAT
         $shipmentGroups = Shipment::withoutGlobalScope('business_unit_scope')
             ->whereDate('tahmini_varis_tarihi', $today)
@@ -67,30 +69,67 @@ class TvDashboardController extends Controller
 
         $eventDetails = $eventGroups->map(fn($item) => "{$item->count} {$item->type_name}")->implode(', ');
 
-        // 3. FABRİKA BİRİMLERİ (ProductionPlan)
-        $activePlans = ProductionPlan::withoutGlobalScope('business_unit_scope')
-            ->with('businessUnit')
+
+        // --- B. DİNAMİK FABRİKA BİRİMLERİ ---
+
+        // 1. Tüm Fabrika Birimlerini Çek (Alfabetik)
+        $units = BusinessUnit::orderBy('name')->get();
+
+        // 2. Tüm Aktif Planları Tek Seferde Çek (Veritabanı Performansı İçin)
+        $activeProduction = ProductionPlan::withoutGlobalScope('business_unit_scope')
             ->whereDate('week_start_date', '<=', $today)
             ->get();
 
-        $kopetCount = $activePlans->filter(fn($p) => $p->businessUnit && Str::contains(Str::lower($p->businessUnit->name), 'kopet'))->count();
-        $preformCount = $activePlans->filter(fn($p) => $p->businessUnit && Str::contains(Str::lower($p->businessUnit->name), 'preform'))->count();
-        $levhaCount = $activePlans->filter(fn($p) => $p->businessUnit && Str::contains(Str::lower($p->businessUnit->name), 'levha'))->count();
+        $activeMaintenance = MaintenancePlan::withoutGlobalScope('business_unit_scope')
+            ->whereDate('planned_start_date', $today)
+            ->get();
 
-        // 4. DİĞER MODELLER (Scope Kaldırıldı)
+        // 3. Birimler İçin Dinamik İstatistik Hesapla
+        $unitStats = $units->map(function ($unit) use ($activeProduction, $activeMaintenance) {
 
-        // VehicleAssignment (start_time kullanıyor)
+            // Bu birime ait üretimleri say
+            $prodCount = $activeProduction->where('business_unit_id', $unit->id)->count();
+
+            // Bu birime ait bakımları say
+            $maintCount = $activeMaintenance->where('business_unit_id', $unit->id)->count();
+
+            // Toplam aktivite
+            $total = $prodCount + $maintCount;
+
+            // Kart Durumu ve İkonu Belirle
+            $status = 'Beklemede';
+            $icon = 'fa-pause';
+
+            if ($prodCount > 0) {
+                $status = 'Üretim';
+                $icon = 'fa-bolt';
+            } elseif ($maintCount > 0) {
+                $status = 'Bakım';
+                $icon = 'fa-wrench';
+            } elseif ($total > 0) {
+                $status = 'Aktif';
+                $icon = 'fa-pulse';
+            }
+
+            return [
+                'id' => $unit->id,
+                'name' => Str::upper($unit->name),
+                'count' => $total,
+                'status' => $status,
+                'icon' => $icon,
+                'sub_label' => ($prodCount >= $maintCount) ? 'Planlanan' : 'Bakım', // Hangisi çoksa o yazsın
+                'progress' => ($total > 0) ? rand(40, 90) : 0 // Görsel doluluk (opsiyonel mantık kurabilirsin)
+            ];
+        });
+
+
+        // --- C. DİĞER KPI VERİLERİ ---
+
         $vehicleCount = VehicleAssignment::withoutGlobalScope('business_unit_scope')
             ->whereDate('start_time', $today)
             ->whereIn('status', ['pending', 'in_progress'])
             ->count();
 
-        // MaintenancePlan (planned_start_date kullanıyor)
-        $maintenanceCount = MaintenancePlan::withoutGlobalScope('business_unit_scope')
-            ->whereDate('planned_start_date', $today)
-            ->count();
-
-        // Travel (start_date kullanıyor)
         $travelCount = Travel::withoutGlobalScope('business_unit_scope')
             ->whereDate('start_date', $today)
             ->count();
@@ -98,24 +137,22 @@ class TvDashboardController extends Controller
         return [
             'sevkiyat_sayisi' => $totalShipment,
             'sevkiyat_detay' => $shipmentDetails,
-            'plan_sayisi' => $activePlans->count(),
+            'plan_sayisi' => $activeProduction->count(), // Toplam üretim planı
 
-            'kopet_count' => $kopetCount,
-            'preform_count' => $preformCount,
-            'levha_count' => $levhaCount,
+            // YENİ DİNAMİK DİZİ
+            'unit_stats' => $unitStats,
 
             'etkinlik_sayisi' => Event::withoutGlobalScope('business_unit_scope')->whereDate('start_datetime', $today)->count(),
             'etkinlik_detay' => $eventDetails,
-
             'arac_gorevi_sayisi' => $vehicleCount,
-            'bakim_sayisi' => $maintenanceCount,
-            'kullanici_sayisi' => User::count(), // User modelinde genelde business unit trait olmaz, varsa buna da ekle
+            'bakim_sayisi' => $activeMaintenance->count(),
+            'kullanici_sayisi' => User::count(),
             'seyahat_sayisi' => $travelCount
         ];
     }
 
     /**
-     * 2. ÖNEMLİ BİLDİRİMLER (Tüm Modellerde Scope Kaldırıldı)
+     * 2. ÖNEMLİ BİLDİRİMLER (Değişiklik Yok)
      */
     private function getImportantItems(Carbon $today): \Illuminate\Support\Collection
     {
@@ -175,7 +212,7 @@ class TvDashboardController extends Controller
             });
         $items = $items->merge($events);
 
-        // 4. ARAÇ GÖREVLERİ (VehicleAssignment)
+        // 4. ARAÇ GÖREVLERİ
         $vehicles = VehicleAssignment::withoutGlobalScope('business_unit_scope')
             ->where('is_important', true)
             ->where('start_time', '>=', $today)
@@ -190,7 +227,7 @@ class TvDashboardController extends Controller
             });
         $items = $items->merge($vehicles);
 
-        // 5. SEYAHATLER (Travel)
+        // 5. SEYAHATLER
         $travels = Travel::withoutGlobalScope('business_unit_scope')
             ->where('is_important', true)
             ->where('start_date', '>=', $today)
@@ -205,15 +242,14 @@ class TvDashboardController extends Controller
             });
         $items = $items->merge($travels);
 
-        // 6. BAKIM (MaintenancePlan)
-        // Bakım modelinde 'is_important' alanı yok, 'priority' kullanıyoruz.
+        // 6. BAKIM (Priority kontrolü)
         $maintenance = MaintenancePlan::withoutGlobalScope('business_unit_scope')
             ->whereIn('priority', ['high', 'critical'])
             ->where('planned_start_date', '>=', $today)
             ->get()
             ->map(fn($i) => (object) [
                 'category' => 'BAKIM',
-                'content' => $i->title ?? 'Bakım Planı', // title alanı null ise varsayılan
+                'content' => $i->title ?? 'Bakım Planı',
                 'date' => $i->planned_start_date,
                 'type' => 'maintenance'
             ]);
@@ -224,118 +260,86 @@ class TvDashboardController extends Controller
     }
 
     /**
-     * 3. SANKEY GRAFİK VERİSİ (TAM FABRİKA RÖNTGENİ)
-     * Akış: KÖKSAN -> [FABRİKA ADI] -> [DEPARTMAN (Üretim/Sevkiyat/Bakım)]
+     * 3. SANKEY GRAFİK VERİSİ (Değişiklik Yok)
      */
     private function getSankeyData(): array
     {
         $data = [];
         $root = 'KÖKSAN';
 
-        // 1. Veritabanındaki tüm Business Unit'leri (Fabrikaları) çek
         $units = BusinessUnit::all();
 
-        // 2. TÜM VERİLERİ BİRİMLERE GÖRE GRUPLAYARAK ÇEK
-        // Her sorguda 'withoutGlobalScope' kullanarak tüm veriyi görüyoruz.
-        // pluck('count', 'business_unit_id') ile bize şöyle bir dizi döner: [ '1' => 5, '2' => 8 ]
-
-        // A) ÜRETİM
+        // Verileri birim ID'sine göre grupla
         $prodCounts = ProductionPlan::withoutGlobalScope('business_unit_scope')
             ->select('business_unit_id', DB::raw('count(*) as count'))
-            ->whereDate('week_start_date', '<=', Carbon::today()) // Tarih filtreleri
+            ->whereDate('week_start_date', '<=', Carbon::today())
             ->groupBy('business_unit_id')
             ->pluck('count', 'business_unit_id');
 
-        // B) SEVKİYAT
         $shipCounts = Shipment::withoutGlobalScope('business_unit_scope')
             ->select('business_unit_id', DB::raw('count(*) as count'))
             ->whereDate('tahmini_varis_tarihi', Carbon::today())
             ->groupBy('business_unit_id')
             ->pluck('count', 'business_unit_id');
 
-        // C) BAKIM
         $maintCounts = MaintenancePlan::withoutGlobalScope('business_unit_scope')
             ->select('business_unit_id', DB::raw('count(*) as count'))
             ->whereDate('planned_start_date', Carbon::today())
             ->groupBy('business_unit_id')
             ->pluck('count', 'business_unit_id');
 
-        // D) ETKİNLİK / ZİYARET
         $eventCounts = Event::withoutGlobalScope('business_unit_scope')
             ->select('business_unit_id', DB::raw('count(*) as count'))
             ->whereDate('start_datetime', Carbon::today())
             ->groupBy('business_unit_id')
             ->pluck('count', 'business_unit_id');
 
-
-        // 3. GRAFİĞİ İNŞA ET
-        // Her bir fabrika için döngüye girip kollarını oluşturuyoruz.
-
-        $totalSystemActivity = 0; // Sistemin hiç verisi yoksa kontrolü için
-
         foreach ($units as $unit) {
             $uId = $unit->id;
-            $unitName = Str::upper($unit->name); // Örn: PREFORM FAB.
+            $unitName = Str::upper($unit->name);
 
-            // Bu fabrikaya ait sayıları al (Yoksa 0)
-            $pCount = $prodCounts[$uId] ?? 0; // Üretim
-            $sCount = $shipCounts[$uId] ?? 0; // Sevkiyat
-            $mCount = $maintCounts[$uId] ?? 0; // Bakım
-            $eCount = $eventCounts[$uId] ?? 0; // Etkinlik
+            $pCount = $prodCounts[$uId] ?? 0;
+            $sCount = $shipCounts[$uId] ?? 0;
+            $mCount = $maintCounts[$uId] ?? 0;
+            $eCount = $eventCounts[$uId] ?? 0;
 
             $totalUnitActivity = $pCount + $sCount + $mCount + $eCount;
 
-            // Eğer bu fabrikada bugün hiç hareket yoksa grafiğe ekleme (kalabalık yapmasın)
             if ($totalUnitActivity == 0)
                 continue;
 
-            $totalSystemActivity += $totalUnitActivity;
-
-            // ADIM 1: ANA KOL (KÖKSAN -> FABRİKA)
-            // Kalınlığı toplam aktivite kadar olacak
+            // ADIM 1: ANA KOL
             $data[] = [$root, $unitName, (int) $totalUnitActivity];
 
-            // ADIM 2: ALT KOLLAR (FABRİKA -> DEPARTMANLAR)
-
-            // Üretim Kolu
+            // ADIM 2: ALT KOLLAR
             if ($pCount > 0) {
-                // Node ismi "ÜRETİM (PREFORM)" gibi olsun ki diğer fabrikanın üretimiyle karışmasın
                 $nodeName = 'ÜRETİM (' . Str::limit($unit->name, 4, '') . ')';
                 $data[] = [$unitName, $nodeName, (int) $pCount];
             }
-
-            // Sevkiyat Kolu
             if ($sCount > 0) {
                 $nodeName = 'SEVKİYAT (' . Str::limit($unit->name, 4, '') . ')';
                 $data[] = [$unitName, $nodeName, (int) $sCount];
             }
-
-            // Bakım Kolu
             if ($mCount > 0) {
                 $nodeName = 'BAKIM (' . Str::limit($unit->name, 4, '') . ')';
                 $data[] = [$unitName, $nodeName, (int) $mCount];
             }
-
-            // Etkinlik Kolu
             if ($eCount > 0) {
                 $nodeName = 'ZİYARET (' . Str::limit($unit->name, 4, '') . ')';
                 $data[] = [$unitName, $nodeName, (int) $eCount];
             }
         }
 
-        // 4. GENEL / TANIMSIZ İŞLEMLER (Birim ID'si null olanlar)
-        // Bazen idari işler birime bağlı olmaz, onları "GENEL MERKEZ" altında toplayalım.
-        $generalP = $prodCounts[''] ?? 0; // Key boş string veya null dönebilir
+        // Genel / Tanımsız
+        $generalP = $prodCounts[''] ?? 0;
         $generalS = $shipCounts[''] ?? 0;
         $generalM = $maintCounts[''] ?? 0;
         $generalE = $eventCounts[''] ?? 0;
-
         $totalGeneral = $generalP + $generalS + $generalM + $generalE;
 
         if ($totalGeneral > 0) {
             $genLabel = 'GENEL MERKEZ';
             $data[] = [$root, $genLabel, (int) $totalGeneral];
-
             if ($generalS > 0)
                 $data[] = [$genLabel, 'LOJİSTİK (GENEL)', (int) $generalS];
             if ($generalE > 0)
@@ -344,7 +348,6 @@ class TvDashboardController extends Controller
                 $data[] = [$genLabel, 'GENEL BAKIM', (int) $generalM];
         }
 
-        // HİÇ VERİ YOKSA BOŞ GÖRÜNMESİN
         if (empty($data)) {
             $data[] = [$root, 'SİSTEM HAZIR', 1];
         }
@@ -357,7 +360,6 @@ class TvDashboardController extends Controller
      */
     private function getSystemDataHash()
     {
-        // Tüm modellerden Scope kaldırarak son güncelleme zamanını alıyoruz
         $timestamps = [
             Shipment::withoutGlobalScope('business_unit_scope')->max('updated_at'),
             ProductionPlan::withoutGlobalScope('business_unit_scope')->max('updated_at'),

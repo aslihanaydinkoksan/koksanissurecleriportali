@@ -11,7 +11,6 @@
         .breadcrumb,
         #kt_header_mobile {
             display: none !important;
-            /* Yönetim paneli menülerini gizle */
         }
 
         #app>main.py-4,
@@ -21,12 +20,10 @@
             min-height: 100vh;
             width: 100vw;
             margin: 0 !important;
-            /* Hafif hareketli, göz yormayan arka plan */
             background: linear-gradient(-45deg, #f3f4f6, #e2e8f0, #edf2f7, #e6fffa);
             background-size: 400% 400%;
             animation: gradientWave 60s ease infinite;
             overflow: hidden;
-            /* Scroll bar gizlensin */
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
 
@@ -48,12 +45,11 @@
             max-width: 100% !important;
         }
 
-        /* TV ekranında mouse imlecini gizle */
         body {
             cursor: none;
         }
 
-        /* --- 2. KART TASARIMLARI (Cam Efekti) --- */
+        /* --- 2. KART TASARIMLARI --- */
         .tv-card {
             background-color: rgba(255, 255, 255, 0.9);
             border-radius: 1rem;
@@ -93,7 +89,7 @@
             opacity: 0.8;
         }
 
-        /* --- 4. FABRİKA BİRİM KARTLARI (Kopet, Preform, Levha) --- */
+        /* --- 4. FABRİKA BİRİM KARTLARI --- */
         .unit-card {
             position: relative;
             overflow: hidden;
@@ -270,70 +266,69 @@
             </div>
         </div>
 
-        {{-- C. FABRİKA BİRİMLERİ (Özel Tasarım) --}}
+        {{-- C. FABRİKA BİRİMLERİ (DİNAMİK DÖNGÜ) --}}
         <div class="row g-3 mb-3" style="min-height: 180px;">
-            <div class="col-md-4">
-                <div class="unit-card" style="background: linear-gradient(135deg, #2c7a7b 0%, #319795 100%);">
-                    <i class="fa-solid fa-bottle-water unit-icon-bg"></i>
-                    <div class="unit-content h-100 d-flex flex-column justify-content-between">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="unit-title">KOPET FABRİKASI</div>
-                            <span class="unit-badge"><i class="fa-solid fa-pulse me-2"></i>Aktif</span>
-                        </div>
-                        <div class="d-flex align-items-end justify-content-between">
-                            <div class="unit-count">{{ $kpiData['kopet_count'] }}</div>
-                            <div class="text-end" style="opacity: 0.9;">
-                                <div class="fs-6 fw-bold">İş Emri</div>
-                            </div>
-                        </div>
-                        <div class="progress mt-2" style="height: 4px; background: rgba(255,255,255,0.3);">
-                            <div class="progress-bar bg-white" style="width: 75%"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            @php
+                // Dinamik Renk Paleti (Sırayla döner)
+                $gradients = [
+                    'linear-gradient(135deg, #2c7a7b 0%, #319795 100%)', // Teal (Kopet tarzı)
+                    'linear-gradient(135deg, #2b6cb0 0%, #3182ce 100%)', // Blue (Preform tarzı)
+                    'linear-gradient(135deg, #c05621 0%, #dd6b20 100%)', // Orange (Levha tarzı)
+                    'linear-gradient(135deg, #553C9A 0%, #805AD5 100%)', // Purple
+                    'linear-gradient(135deg, #C53030 0%, #E53E3E 100%)', // Red
+                    'linear-gradient(135deg, #2F855A 0%, #48BB78 100%)', // Green
+                    'linear-gradient(135deg, #2d3748 0%, #4a5568 100%)', // Gray
+                ];
 
-            <div class="col-md-4">
-                <div class="unit-card" style="background: linear-gradient(135deg, #2b6cb0 0%, #3182ce 100%);">
-                    <i class="fa-solid fa-flask unit-icon-bg"></i>
-                    <div class="unit-content h-100 d-flex flex-column justify-content-between">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="unit-title">PREFORM FABRİKASI</div>
-                            <span class="unit-badge"><i class="fa-solid fa-bolt me-2"></i>Üretim</span>
-                        </div>
-                        <div class="d-flex align-items-end justify-content-between">
-                            <div class="unit-count">{{ $kpiData['preform_count'] }}</div>
-                            <div class="text-end" style="opacity: 0.9;">
-                                <div class="fs-6 fw-bold">Planlanan</div>
-                            </div>
-                        </div>
-                        <div class="progress mt-2" style="height: 4px; background: rgba(255,255,255,0.3);">
-                            <div class="progress-bar bg-white" style="width: 60%"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                // İkonlar (Birim adına göre özel ikon atamak istersen, yoksa varsayılan)
+                $bgIcons = [
+                    'KOPET' => 'fa-bottle-water',
+                    'PREFORM' => 'fa-flask',
+                    'LEVHA' => 'fa-sheet-plastic',
+                    'KAPAK' => 'fa-circle-notch',
+                    'STREÇ' => 'fa-scroll',
+                    'GERİ' => 'fa-recycle',
+                ];
+            @endphp
 
-            <div class="col-md-4">
-                <div class="unit-card" style="background: linear-gradient(135deg, #c05621 0%, #dd6b20 100%);">
-                    <i class="fa-solid fa-sheet-plastic unit-icon-bg"></i>
-                    <div class="unit-content h-100 d-flex flex-column justify-content-between">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="unit-title">LEVHA FABRİKASI</div>
-                            <span class="unit-badge"><i class="fa-solid fa-truck-ramp-box me-2"></i>Süreçte</span>
-                        </div>
-                        <div class="d-flex align-items-end justify-content-between">
-                            <div class="unit-count">{{ $kpiData['levha_count'] }}</div>
-                            <div class="text-end" style="opacity: 0.9;">
-                                <div class="fs-6 fw-bold">Hareket</div>
+            @foreach ($kpiData['unit_stats'] as $index => $unit)
+                @php
+                    // Rengi sırayla seç
+                    $bgStyle = $gradients[$index % count($gradients)];
+
+                    // İkonu ismin içinde geçen kelimeye göre bulmaya çalış
+                    $bgIconClass = 'fa-industry';
+                    foreach ($bgIcons as $key => $icon) {
+                        if (str_contains($unit['name'], $key)) {
+                            $bgIconClass = $icon;
+                            break;
+                        }
+                    }
+                @endphp
+
+                <div class="col-md-4">
+                    <div class="unit-card" style="background: {{ $bgStyle }};">
+                        <i class="fa-solid {{ $bgIconClass }} unit-icon-bg"></i>
+                        <div class="unit-content h-100 d-flex flex-column justify-content-between">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="unit-title">{{ $unit['name'] }}</div>
+                                <span class="unit-badge">
+                                    <i class="fa-solid {{ $unit['icon'] }} me-2"></i>{{ $unit['status'] }}
+                                </span>
                             </div>
-                        </div>
-                        <div class="progress mt-2" style="height: 4px; background: rgba(255,255,255,0.3);">
-                            <div class="progress-bar bg-white" style="width: 85%"></div>
+                            <div class="d-flex align-items-end justify-content-between">
+                                <div class="unit-count">{{ $unit['count'] }}</div>
+                                <div class="text-end" style="opacity: 0.9;">
+                                    <div class="fs-6 fw-bold">{{ $unit['sub_label'] }}</div>
+                                </div>
+                            </div>
+                            <div class="progress mt-2" style="height: 4px; background: rgba(255,255,255,0.3);">
+                                <div class="progress-bar bg-white" style="width: {{ $unit['progress'] }}%"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            @endforeach
         </div>
 
         {{-- D. ALT BÖLÜM: BİLDİRİMLER & AKIŞ GRAFİĞİ --}}
@@ -356,7 +351,6 @@
                             <div class="d-flex flex-column gap-2">
                                 @foreach ($importantItems as $item)
                                     @php
-                                        // Dinamik Renk ve İkon Seçimi
                                         $borderColor = match ($item->type) {
                                             'shipment' => '#667EEA',
                                             'productionplan' => '#4FD1C5',
@@ -403,7 +397,7 @@
                 </div>
             </div>
 
-            {{-- SAĞ: SANKEY GRAFİĞİ (Yeni Yapı) --}}
+            {{-- SAĞ: SANKEY GRAFİĞİ --}}
             <div class="col-md-8 h-100">
                 <div class="tv-card">
                     <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
@@ -437,14 +431,13 @@
                 fetch("{{ route('tv.check_updates') }}")
                     .then(response => response.json())
                     .then(data => {
-                        // Eğer sunucudaki hash değiştiyse sayfayı yenile
                         if (data.hash !== currentHash) {
                             console.log('Veri değişikliği algılandı, sayfa yenileniyor...');
                             location.reload();
                         }
                     })
                     .catch(err => console.error('Bağlantı hatası:', err));
-            }, 10000); // 10 saniyede bir kontrol et
+            }, 10000);
 
             // --- 2. CANLI DİJİTAL SAAT ---
             setInterval(() => {
@@ -456,7 +449,7 @@
                 document.getElementById('live-clock').textContent = timeString;
             }, 1000);
 
-            // --- 3. SANKEY GRAFİĞİ (Google Charts) ---
+            // --- 3. SANKEY GRAFİĞİ ---
             google.charts.load('current', {
                 'packages': ['sankey']
             });
@@ -468,19 +461,11 @@
                 data.addColumn('string', 'Hedef');
                 data.addColumn('number', 'Değer');
 
-                // Controller'dan gelen JSON verisi
                 var rawData = @json($chartData);
                 data.addRows(rawData);
 
-                // Renk Paleti (Fabrika Birimleri için Uyumlu Renkler)
                 var colors = [
-                    '#1a202c', // KÖKSAN (Siyah/Koyu Gri)
-                    '#319795', // KOPET (Teal)
-                    '#3182ce', // PREFORM (Blue)
-                    '#dd6b20', // LEVHA (Orange)
-                    '#805ad5', // DİĞER (Purple)
-                    '#e53e3e', // KIRMIZI
-                    '#38a169', // YEŞİL
+                    '#1a202c', '#319795', '#3182ce', '#dd6b20', '#805ad5', '#e53e3e', '#38a169',
                 ];
 
                 var options = {
@@ -493,8 +478,8 @@
                                 bold: true,
                                 color: '#2d3748'
                             },
-                            nodePadding: 40, // Düğümler arası boşluk
-                            width: 15, // Düğüm kalınlığı
+                            nodePadding: 40,
+                            width: 15,
                             interactivity: true
                         },
                         link: {
@@ -511,8 +496,7 @@
                 chart.draw(data, options);
             }
 
-            // --- 4. SCROLL LOOP (İçerik taşarsa otomatik kaydır) ---
-            // Genelde bu tasarım tek ekrana sığar ama taşarsa diye önlem:
+            // --- 4. SCROLL LOOP ---
             setTimeout(() => {
                 if (document.body.scrollHeight > window.innerHeight) {
                     window.scrollTo({
@@ -528,7 +512,7 @@
                 }
             }, 15000);
 
-            // Klavye ile çıkış (ESC)
+            // Klavye ile çıkış
             document.addEventListener('keydown', (e) => {
                 if (e.key === "Escape") document.getElementById('logout-form').submit();
             });
