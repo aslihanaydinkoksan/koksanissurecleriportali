@@ -92,7 +92,7 @@ class StatisticsController extends Controller
 
         // Tarih Filtreleri
         $defaultStartDate = Carbon::now()->startOfYear();
-        $defaultEndDate = Carbon::now()->endOfDay();
+        $defaultEndDate = Carbon::now()->endOfYear();
         $filters = [
             'date_from' => $request->input('date_from', $defaultStartDate->toDateString()),
             'date_to' => $request->input('date_to', $defaultEndDate->toDateString())
@@ -100,9 +100,6 @@ class StatisticsController extends Controller
         $startDate = Carbon::parse($filters['date_from'])->startOfDay();
         $endDate = Carbon::parse($filters['date_to'])->endOfDay();
 
-        // 4. VERİLERİ SERVİSTEN ÇEK
-        // Servis içindeki sorgular '::forUser($user)' scope'unu kullanarak
-        // otomatik olarak Coped/Preform ayrımını yapacak.
 
         $statsData = [];
         try {
