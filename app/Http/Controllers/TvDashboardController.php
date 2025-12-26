@@ -39,13 +39,13 @@ class TvDashboardController extends Controller
         return response()->json(['hash' => $this->getSystemDataHash()]);
     }
     /**
-     * 1. KPI VERİLERİ (GÜNCELLENMİŞ - GELECEK PLANLARI DAHİL EDER)
+     * 1. KPI VERİLERİ (LOJİSTİK VE ETKİNLİK DAHİL - TAM FABRİKA YÜKÜ)
      */
     private function getKpiData(Carbon $today): array
     {
-        // --- A. STANDART VERİLER ---
+        // --- A. STANDART ÜST KART VERİLERİ ---
 
-        // 1. SEVKİYAT (Bugünün sevkiyatları kalsın, bu mantıklı)
+        // 1. SEVKİYAT (Genel Toplam)
         $shipmentGroups = Shipment::withoutGlobalScope('business_unit_scope')
             ->whereDate('tahmini_varis_tarihi', $today)
             ->select(['arac_tipi', DB::raw('count(*) as count')])
@@ -58,7 +58,7 @@ class TvDashboardController extends Controller
             return "{$item->count} {$type}";
         })->implode(', ');
 
-        // 2. ETKİNLİK (Bugünkü etkinlikler)
+        // 2. ETKİNLİK (Genel Toplam)
         $eventGroups = Event::withoutGlobalScope('business_unit_scope')
             ->whereDate('start_datetime', $today)
             ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
@@ -69,53 +69,72 @@ class TvDashboardController extends Controller
         $eventDetails = $eventGroups->map(fn($item) => "{$item->count} {$item->type_name}")->implode(', ');
 
 
-        // --- B. DİNAMİK FABRİKA BİRİMLERİ (DÜZELTİLEN KISIM) ---
+        // --- B. DİNAMİK FABRİKA KARTLARI (BURASI GÜNCELLENDİ) ---
 
-        // 1. Tüm Fabrika Birimlerini Çek
+        // 1. Fabrikaları Çek
         $units = BusinessUnit::orderBy('name')->get();
 
-        // 2. TÜM AKTİF PLANLARI ÇEK
+        // 2. TÜM VERİLERİ ÇEK (Business Unit ID'sine göre eşleştireceğiz)
 
-        // ÜRETİM: Gelecek planları da görmek için tarihi bugünden büyük veya eşit alıyoruz
-        // VEYA sadece bugünü görmek istersen whereDate kalabilir. Yöneticiler genelde 'Sırada ne var?' görmek ister.
-        // Şimdilik üretim için "Bu hafta ve sonrası" mantığı daha doğru olabilir ama senin yapında 'week_start_date' var.
-        // Biz "Tamamlanmamış" mantığına gidelim.
-
+        // Üretim: Gelecek dahil
         $activeProduction = ProductionPlan::withoutGlobalScope('business_unit_scope')
-            ->whereDate('week_start_date', '>=', $today) // Bugünden sonraki üretimler
+            ->whereDate('week_start_date', '>=', $today)
             ->get();
 
-        // BAKIM: --- BURASI DÜZELDİ ---
-        // Tarihe bakmaksızın, durumu "Tamamlandı" veya "İptal" OLMAYAN her şeyi çekiyoruz.
-        // Böylece 2026 yılındaki "Bekliyor" statüsündeki işler de sayıya dahil olur.
+        // Bakım: Tamamlanmamış hepsi
         $activeMaintenance = MaintenancePlan::withoutGlobalScope('business_unit_scope')
             ->whereNotIn('status', ['completed', 'cancelled', 'iptal', 'tamamlandi'])
             ->get();
 
-        // 3. Birimler İçin Dinamik İstatistik Hesapla
-        $unitStats = $units->map(function ($unit) use ($activeProduction, $activeMaintenance) {
+        // YENİ: Sevkiyat (Lojistik) - Bugüne ait olanlar
+        $activeShipments = Shipment::withoutGlobalScope('business_unit_scope')
+            ->whereDate('tahmini_varis_tarihi', $today)
+            ->get();
 
-            // Bu birime ait aktif üretimleri say
+        // YENİ: Etkinlikler - Bugüne ait olanlar
+        $activeEvents = Event::withoutGlobalScope('business_unit_scope')
+            ->whereDate('start_datetime', $today)
+            ->get();
+
+        // 3. Hesaplama ve Kart Oluşturma
+        $unitStats = $units->map(function ($unit) use ($activeProduction, $activeMaintenance, $activeShipments, $activeEvents) {
+
+            // Sayımları Yap
             $prodCount = $activeProduction->where('business_unit_id', $unit->id)->count();
-
-            // Bu birime ait aktif bakımları say (2026 planları burada sayılacak artık)
             $maintCount = $activeMaintenance->where('business_unit_id', $unit->id)->count();
+            $shipCount = $activeShipments->where('business_unit_id', $unit->id)->count(); // Lojistik Sayısı
+            $eventCount = $activeEvents->where('business_unit_id', $unit->id)->count();   // Etkinlik Sayısı
 
-            $total = $prodCount + $maintCount;
+            // Toplam Yük
+            $total = $prodCount + $maintCount + $shipCount + $eventCount;
 
-            // Kart Durumu ve İkonu Belirle
+            // Kartın Durumunu En Yoğun Departmana Göre Belirle
             $status = 'Beklemede';
             $icon = 'fa-pause';
+            $subLabel = 'Sistem Hazır';
 
-            if ($prodCount > 0) {
-                $status = 'Üretim';
-                $icon = 'fa-bolt';
-            } elseif ($maintCount > 0) {
-                $status = 'Bakım';
-                $icon = 'fa-wrench';
-            } elseif ($total > 0) {
-                $status = 'Aktif'; // Hem üretim hem bakım yok ama toplam sayı var ise
-                $icon = 'fa-pulse';
+            // Öncelik Sıralaması ve Etiketleme
+            if ($total > 0) {
+                // Hangi sayı en büyükse kartın kimliğini o belirlesin
+                $maxVal = max($prodCount, $maintCount, $shipCount, $eventCount);
+
+                if ($maxVal == $prodCount) {
+                    $status = 'Üretim';
+                    $icon = 'fa-bolt';
+                    $subLabel = 'Planlanan';
+                } elseif ($maxVal == $shipCount) {
+                    $status = 'Sevkiyat';     // <--- ARTIK LOJİSTİK GÖRÜNECEK
+                    $icon = 'fa-truck-ramp-box';
+                    $subLabel = 'Lojistik';
+                } elseif ($maxVal == $maintCount) {
+                    $status = 'Bakım';
+                    $icon = 'fa-wrench';
+                    $subLabel = 'Arıza/Bakım';
+                } elseif ($maxVal == $eventCount) {
+                    $status = 'Ziyaret';
+                    $icon = 'fa-users';
+                    $subLabel = 'Etkinlik';
+                }
             }
 
             return [
@@ -124,13 +143,13 @@ class TvDashboardController extends Controller
                 'count' => $total,
                 'status' => $status,
                 'icon' => $icon,
-                'sub_label' => ($prodCount >= $maintCount) ? 'Planlanan' : 'Bakım',
+                'sub_label' => $subLabel,
                 'progress' => ($total > 0) ? rand(40, 90) : 0
             ];
         });
 
 
-        // --- C. DİĞER KPI VERİLERİ ---
+        // --- C. DİĞER VERİLER ---
 
         $vehicleCount = VehicleAssignment::withoutGlobalScope('business_unit_scope')
             ->whereDate('start_time', $today)
@@ -146,12 +165,12 @@ class TvDashboardController extends Controller
             'sevkiyat_detay' => $shipmentDetails,
             'plan_sayisi' => $activeProduction->count(),
 
-            'unit_stats' => $unitStats, // DİNAMİK VERİ
+            'unit_stats' => $unitStats, // GÜNCELLENMİŞ DİNAMİK VERİ
 
             'etkinlik_sayisi' => Event::withoutGlobalScope('business_unit_scope')->whereDate('start_datetime', $today)->count(),
             'etkinlik_detay' => $eventDetails,
             'arac_gorevi_sayisi' => $vehicleCount,
-            'bakim_sayisi' => $activeMaintenance->count(), // Toplam aktif bakım yükü
+            'bakim_sayisi' => $activeMaintenance->count(),
             'kullanici_sayisi' => User::count(),
             'seyahat_sayisi' => $travelCount
         ];
