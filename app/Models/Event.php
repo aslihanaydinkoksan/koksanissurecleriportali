@@ -116,4 +116,17 @@ class Event extends Model
     {
         return $this->belongsTo(EventType::class, 'event_type_id');
     }
+    /**
+     * Kullanıcı yetkisine göre filtreleme kapsamı.
+     */
+    public function scopeForUser($query, $user)
+    {
+        // 1. Admin, Yönetici veya Global yetkisi olanlar
+        if ($user->hasRole(['admin', 'yonetici']) || $user->can('view_all_business_units')) {
+            return $query;
+        }
+
+        // 2. Diğer kullanıcılar (Şimdilik kısıtlama yok, filtre serviste yapılıyor)
+        return $query;
+    }
 }

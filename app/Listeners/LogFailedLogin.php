@@ -29,10 +29,16 @@ class LogFailedLogin
         $email = $event->credentials['email'] ?? 'bilinmiyor';
         $ip = request()->ip();
 
-        activity()
-            ->causedBy($event->user)
+        // Activity başlat
+        $activity = activity()
             ->withProperty('email_denemesi', $email)
-            ->withProperty('ip_adresi', $ip)
-            ->log('BAŞARISIZ kullanıcı girişi denemesi');
+            ->withProperty('ip_adresi', $ip);
+
+        // Eğer kullanıcı veritabanında varsa (sadece şifre yanlışsa) 'causedBy' ekle
+        if ($event->user) {
+            $activity->causedBy($event->user);
+        }
+
+        $activity->log('BAŞARISIZ kullanıcı girişi denemesi');
     }
 }

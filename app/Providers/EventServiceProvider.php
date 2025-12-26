@@ -6,8 +6,12 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Auth\Events\Login;      // <-- DOĞRU ADRES
-use Illuminate\Auth\Events\Failed;    // <-- DOĞRU ADRES
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Failed;
+use Illuminate\Auth\Events\Logout;
+use App\Listeners\LogSuccessfulLogin;
+use App\Listeners\LogFailedLogin;
+use App\Listeners\LogLogout;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -22,6 +26,20 @@ class EventServiceProvider extends ServiceProvider
         ],
         \Illuminate\Auth\Events\Failed::class => [
             \App\Listeners\LogFailedLogin::class,
+        ],
+            // 1. Başarılı Giriş
+        Login::class => [
+            LogSuccessfulLogin::class,
+        ],
+
+            // 2. Hatalı Giriş
+        Failed::class => [
+            LogFailedLogin::class,
+        ],
+
+            // 3. Çıkış (Henüz dosyan yok, aşağıda oluşturacağız)
+        Logout::class => [
+            LogLogout::class,
         ],
 
     ];

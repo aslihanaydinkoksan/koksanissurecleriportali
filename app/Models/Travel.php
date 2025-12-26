@@ -83,4 +83,17 @@ class Travel extends Model
     {
         return $this->morphMany(File::class, 'fileable');
     }
+    /**
+     * Kullanıcı yetkisine göre filtreleme kapsamı.
+     */
+    public function scopeForUser($query, $user)
+    {
+        // 1. Admin, Yönetici veya Global yetkisi olanlar
+        if ($user->hasRole(['admin', 'yonetici']) || $user->can('view_all_business_units')) {
+            return $query;
+        }
+
+        // 2. Diğer kullanıcılar (Şimdilik kısıtlama yok, filtre serviste yapılıyor)
+        return $query;
+    }
 }
