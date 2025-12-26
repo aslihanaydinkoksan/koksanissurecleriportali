@@ -397,19 +397,83 @@
                 </div>
             </div>
 
-            {{-- SAĞ: SANKEY GRAFİĞİ --}}
+            {{-- SAĞ: DİNAMİK FABRİKA MATRİSİ --}}
             <div class="col-md-8 h-100">
                 <div class="tv-card">
-                    <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
                         <h5 class="fw-bold mb-0 text-primary">
-                            <i class="fas fa-project-diagram me-2"></i>FABRİKA İŞ AKIŞI
+                            <i class="fas fa-network-wired me-2"></i>FABRİKA & DEPARTMAN DURUMU
                         </h5>
                         <span class="badge bg-light text-dark border">
-                            <i class="fa-solid fa-circle-info me-1 text-primary"></i>
-                            KÖKSAN -> Fabrikalar -> (Üretim / Sevkiyat / Bakım)
+                            <i class="fa-solid fa-clock me-1 text-primary"></i>
+                            Anlık Veri Akışı
                         </span>
                     </div>
-                    <div id="sankey-chart" style="width: 100%; height: 92%;"></div>
+
+                    <div class="table-responsive flex-grow-1" style="overflow-y: auto;">
+                        <table class="table table-borderless align-middle mb-0">
+                            <thead style="border-bottom: 2px solid #e2e8f0;">
+                                <tr class="text-uppercase text-secondary"
+                                    style="font-size: 0.85rem; letter-spacing: 1px;">
+                                    <th class="ps-3">FABRİKA BİRİMİ</th>
+
+                                    {{-- 1. BAŞLIKLARI DÖNGÜYLE BAS --}}
+                                    @foreach ($matrixHeaders as $header)
+                                        <th class="text-center">{{ $header }}</th>
+                                    @endforeach
+
+                                    <th class="text-end pe-3">DURUM</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (empty($matrixData))
+                                    <tr>
+                                        {{-- colspan sayısını dinamik hesapla: İsim + Sütunlar + Durum --}}
+                                        <td colspan="{{ count($matrixHeaders) + 2 }}"
+                                            class="text-center py-5 text-muted">
+                                            <i class="fa-solid fa-bed fa-3x mb-3 opacity-50"></i><br>
+                                            Şu an aktif bir iş akışı bulunmuyor.
+                                        </td>
+                                    </tr>
+                                @else
+                                    @foreach ($matrixData as $row)
+                                        <tr
+                                            style="border-bottom: 1px solid rgba(0,0,0,0.05); transition: background 0.3s;">
+
+                                            {{-- FABRİKA ADI VE DURUM NOKTASI --}}
+                                            <td class="fw-bold text-dark ps-3 py-3">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="rounded-circle me-3 d-flex align-items-center justify-content-center"
+                                                        style="width: 10px; height: 10px; 
+                                                                background-color: var(--bs-{{ $row['status_dot_color'] }}); 
+                                                                box-shadow: 0 0 10px var(--bs-{{ $row['status_dot_color'] }});">
+                                                    </div>
+                                                    {{ $row['name'] }}
+                                                </div>
+                                            </td>
+
+                                            {{-- 2. DİNAMİK SÜTUNLAR (İçerik ne olursa olsun basar) --}}
+                                            @foreach ($row['columns'] as $col)
+                                                <td class="text-center">
+                                                    <span class="{{ $col['badge_class'] }}">
+                                                        {!! $col['icon_html'] !!}
+                                                    </span>
+                                                </td>
+                                            @endforeach
+
+                                            {{-- DURUM METNİ --}}
+                                            <td class="text-end pe-3">
+                                                <span class="{{ $row['status_text_class'] }}"
+                                                    style="font-size: 0.85rem;">
+                                                    {{ $row['status_text'] }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -448,53 +512,6 @@
                 });
                 document.getElementById('live-clock').textContent = timeString;
             }, 1000);
-
-            // --- 3. SANKEY GRAFİĞİ ---
-            google.charts.load('current', {
-                'packages': ['sankey']
-            });
-            google.charts.setOnLoadCallback(drawChart);
-
-            function drawChart() {
-                var data = new google.visualization.DataTable();
-                data.addColumn('string', 'Kaynak');
-                data.addColumn('string', 'Hedef');
-                data.addColumn('number', 'Değer');
-
-                var rawData = @json($chartData);
-                data.addRows(rawData);
-
-                var colors = [
-                    '#1a202c', '#319795', '#3182ce', '#dd6b20', '#805ad5', '#e53e3e', '#38a169',
-                ];
-
-                var options = {
-                    sankey: {
-                        node: {
-                            colors: colors,
-                            label: {
-                                fontName: 'Segoe UI',
-                                fontSize: 13,
-                                bold: true,
-                                color: '#2d3748'
-                            },
-                            nodePadding: 40,
-                            width: 15,
-                            interactivity: true
-                        },
-                        link: {
-                            colorMode: 'gradient',
-                            fillOpacity: 0.4
-                        }
-                    },
-                    tooltip: {
-                        isHtml: true
-                    }
-                };
-
-                var chart = new google.visualization.Sankey(document.getElementById('sankey-chart'));
-                chart.draw(data, options);
-            }
 
             // --- 4. SCROLL LOOP ---
             setTimeout(() => {

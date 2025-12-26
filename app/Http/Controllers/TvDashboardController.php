@@ -28,10 +28,16 @@ class TvDashboardController extends Controller
 
         $kpiData = $this->getKpiData($today);
         $importantItems = $this->getImportantItems($today);
-        $chartData = $this->getSankeyData();
+
+        // DİNAMİK MATRİS VERİSİ VE BAŞLIKLARI
+        $matrixResult = $this->getMatrixData();
+
         $currentDataHash = $this->getSystemDataHash();
 
-        return view('tv.dashboard', compact('kpiData', 'importantItems', 'chartData', 'currentDataHash'));
+        return view('tv.dashboard', array_merge(
+            compact('kpiData', 'importantItems', 'currentDataHash'),
+            $matrixResult // 'matrixHeaders' ve 'matrixData' buranın içinden çıkacak
+        ));
     }
 
     public function checkUpdates()
@@ -285,99 +291,104 @@ class TvDashboardController extends Controller
     }
 
     /**
-     * 3. SANKEY GRAFİK VERİSİ (Değişiklik Yok)
+     * 3. FABRİKA DURUM MATRİSİ (TAM DİNAMİK YAPILANDIRMA)
      */
-    private function getSankeyData(): array
+    private function getMatrixData(): array
     {
-        $data = [];
-        $root = 'KÖKSAN';
+        $today = Carbon::today();
+        $units = BusinessUnit::orderBy('name')->get();
 
-        $units = BusinessUnit::all();
+        // 1. SÜTUN AYARLARI (YENİ SÜTUN EKLEMEK İÇİN TEK YAPMAN GEREKEN BURAYA EKLEMEK)
+        // key: Veritabanı veya mantıksal anahtar
+        // label: Tablo başlığı
+        // icon: İkon sınıfı
+        // color: Bootstrap/Tema renk sınıfı (info, warning, primary, secondary)
+        $columnsConfig = [
+            'production' => ['label' => 'ÜRETİM', 'icon' => 'fa-industry', 'color' => 'info'],
+            'shipment' => ['label' => 'SEVKİYAT', 'icon' => 'fa-truck', 'color' => 'primary'],
+            'maintenance' => ['label' => 'BAKIM/ARIZA', 'icon' => 'fa-wrench', 'color' => 'warning'],
+            'event' => ['label' => 'ZİYARET', 'icon' => 'fa-users', 'color' => 'secondary'],
+            // Yarın 'kalite' eklersen: 'quality' => ['label' => 'KALİTE', 'icon' => 'fa-check', 'color' => 'success']
+        ];
 
-        // Verileri birim ID'sine göre grupla
-        $prodCounts = ProductionPlan::withoutGlobalScope('business_unit_scope')
-            ->select('business_unit_id', DB::raw('count(*) as count'))
-            ->whereDate('week_start_date', '<=', Carbon::today())
-            ->groupBy('business_unit_id')
-            ->pluck('count', 'business_unit_id');
+        // 2. Verileri Çek
+        $activeProduction = ProductionPlan::withoutGlobalScope('business_unit_scope')
+            ->whereDate('week_start_date', '>=', $today)->get();
 
-        $shipCounts = Shipment::withoutGlobalScope('business_unit_scope')
-            ->select('business_unit_id', DB::raw('count(*) as count'))
-            ->whereDate('tahmini_varis_tarihi', Carbon::today())
-            ->groupBy('business_unit_id')
-            ->pluck('count', 'business_unit_id');
+        $activeMaintenance = MaintenancePlan::withoutGlobalScope('business_unit_scope')
+            ->whereNotIn('status', ['completed', 'cancelled', 'iptal', 'tamamlandi'])->get();
 
-        $maintCounts = MaintenancePlan::withoutGlobalScope('business_unit_scope')
-            ->select('business_unit_id', DB::raw('count(*) as count'))
-            ->whereDate('planned_start_date', Carbon::today())
-            ->groupBy('business_unit_id')
-            ->pluck('count', 'business_unit_id');
+        $activeShipments = Shipment::withoutGlobalScope('business_unit_scope')
+            ->whereDate('tahmini_varis_tarihi', $today)->get();
 
-        $eventCounts = Event::withoutGlobalScope('business_unit_scope')
-            ->select('business_unit_id', DB::raw('count(*) as count'))
-            ->whereDate('start_datetime', Carbon::today())
-            ->groupBy('business_unit_id')
-            ->pluck('count', 'business_unit_id');
+        $activeEvents = Event::withoutGlobalScope('business_unit_scope')
+            ->whereDate('start_datetime', $today)->get();
+
+        $matrixRows = [];
 
         foreach ($units as $unit) {
-            $uId = $unit->id;
-            $unitName = Str::upper($unit->name);
+            // Sayımları al
+            $counts = [
+                'production' => $activeProduction->where('business_unit_id', $unit->id)->count(),
+                'maintenance' => $activeMaintenance->where('business_unit_id', $unit->id)->count(),
+                'shipment' => $activeShipments->where('business_unit_id', $unit->id)->count(),
+                'event' => $activeEvents->where('business_unit_id', $unit->id)->count(),
+            ];
 
-            $pCount = $prodCounts[$uId] ?? 0;
-            $sCount = $shipCounts[$uId] ?? 0;
-            $mCount = $maintCounts[$uId] ?? 0;
-            $eCount = $eventCounts[$uId] ?? 0;
-
-            $totalUnitActivity = $pCount + $sCount + $mCount + $eCount;
-
-            if ($totalUnitActivity == 0)
+            // Eğer hareket yoksa atla
+            if (array_sum($counts) == 0)
                 continue;
 
-            // ADIM 1: ANA KOL
-            $data[] = [$root, $unitName, (int) $totalUnitActivity];
+            // Durum ve Renk Belirleme (Öncelik Sırası: Bakım > Üretim > Sevkiyat)
+            $statusText = 'HAZIR';
+            $statusColor = 'secondary';
+            $glowColor = 'secondary'; // Sol baştaki nokta rengi
 
-            // ADIM 2: ALT KOLLAR
-            if ($pCount > 0) {
-                $nodeName = 'ÜRETİM (' . Str::limit($unit->name, 4, '') . ')';
-                $data[] = [$unitName, $nodeName, (int) $pCount];
+            if ($counts['maintenance'] > 0) {
+                $statusText = 'BAKIMDA';
+                $statusColor = 'warning'; // Yazı rengi
+                $glowColor = 'danger';    // Nokta rengi
+            } elseif ($counts['production'] > 0) {
+                $statusText = 'ÜRETİMDE';
+                $statusColor = 'success';
+                $glowColor = 'success';
+            } elseif ($counts['shipment'] > 0) {
+                $statusText = 'SEVKİYAT';
+                $statusColor = 'primary';
+                $glowColor = 'primary';
             }
-            if ($sCount > 0) {
-                $nodeName = 'SEVKİYAT (' . Str::limit($unit->name, 4, '') . ')';
-                $data[] = [$unitName, $nodeName, (int) $sCount];
+
+            // Sütunları Yapılandır (Blade'e hazır gönderiyoruz)
+            $preparedColumns = [];
+            foreach ($columnsConfig as $key => $config) {
+                $count = $counts[$key] ?? 0;
+                $preparedColumns[] = [
+                    'count' => $count,
+                    'has_data' => $count > 0,
+                    'icon' => $config['icon'],
+                    'color' => $config['color'],
+                    // Blade'de if kontrolü yapmamak için style class'larını buradan gönderiyoruz
+                    'badge_class' => $count > 0 ? "badge bg-{$config['color']} px-3 py-2 rounded-pill" : "text-muted opacity-25",
+                    'icon_html' => $count > 0 ? "<i class='fa-solid {$config['icon']} me-1'></i> $count" : "<i class='fa-solid fa-minus'></i>"
+                ];
             }
-            if ($mCount > 0) {
-                $nodeName = 'BAKIM (' . Str::limit($unit->name, 4, '') . ')';
-                $data[] = [$unitName, $nodeName, (int) $mCount];
-            }
-            if ($eCount > 0) {
-                $nodeName = 'ZİYARET (' . Str::limit($unit->name, 4, '') . ')';
-                $data[] = [$unitName, $nodeName, (int) $eCount];
-            }
+
+            $matrixRows[] = [
+                'name' => Str::upper($unit->name),
+                'status_dot_color' => $glowColor, // Sol baştaki nokta
+                'columns' => $preparedColumns,    // Hazırlanmış sütun verileri
+                'status_text' => $statusText,
+                'status_text_class' => "fw-bold text-{$statusColor}"
+            ];
         }
 
-        // Genel / Tanımsız
-        $generalP = $prodCounts[''] ?? 0;
-        $generalS = $shipCounts[''] ?? 0;
-        $generalM = $maintCounts[''] ?? 0;
-        $generalE = $eventCounts[''] ?? 0;
-        $totalGeneral = $generalP + $generalS + $generalM + $generalE;
+        // Blade tarafında başlıkları basmak için sadece label'ları gönderiyoruz
+        $headers = array_column($columnsConfig, 'label');
 
-        if ($totalGeneral > 0) {
-            $genLabel = 'GENEL MERKEZ';
-            $data[] = [$root, $genLabel, (int) $totalGeneral];
-            if ($generalS > 0)
-                $data[] = [$genLabel, 'LOJİSTİK (GENEL)', (int) $generalS];
-            if ($generalE > 0)
-                $data[] = [$genLabel, 'İDARİ/ZİYARET', (int) $generalE];
-            if ($generalM > 0)
-                $data[] = [$genLabel, 'GENEL BAKIM', (int) $generalM];
-        }
-
-        if (empty($data)) {
-            $data[] = [$root, 'SİSTEM HAZIR', 1];
-        }
-
-        return $data;
+        return [
+            'matrixHeaders' => $headers,
+            'matrixData' => $matrixRows
+        ];
     }
 
     /**
