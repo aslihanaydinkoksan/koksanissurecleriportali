@@ -150,4 +150,15 @@ class Shipment extends Model
         // Hiç durak yoksa kalan miktar = başlangıçtaki kargo_miktari
         return $this->kargo_miktari;
     }
+    /**
+     * Kullanıcı yetkisine göre filtreleme kapsamı (Scope).
+     * StatisticsService tarafında ::forUser($user) şeklinde çağrılır.
+     */
+    public function scopeForUser($query, $user)
+    {
+        // 1. Admin, Yönetici veya Global yetkisi olanlar her şeyi görebilir
+        if ($user->hasRole(['admin', 'yonetici']) || $user->can('view_all_business_units')) {
+            return $query;
+        }
+    }
 }

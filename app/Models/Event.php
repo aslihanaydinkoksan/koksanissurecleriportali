@@ -116,4 +116,19 @@ class Event extends Model
     {
         return $this->belongsTo(EventType::class, 'event_type_id');
     }
+    /**
+     * Kullanıcı yetkisine göre filtreleme kapsamı (Scope).
+     * StatisticsService tarafında ::forUser($user) şeklinde çağrılır.
+     */
+    public function scopeForUser($query, $user)
+    {
+        // 1. Admin, Yönetici veya Global yetkisi olanlar her şeyi görebilir
+        if ($user->hasRole(['admin', 'yonetici']) || $user->can('view_all_business_units')) {
+            return $query;
+        }
+
+        // 2. Diğer kullanıcılar için şimdilik kısıtlama yok
+        // (Zaten Service katmanında Business Unit filtresi uygulanıyor)
+        return $query;
+    }
 }

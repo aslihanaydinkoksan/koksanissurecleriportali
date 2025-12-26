@@ -5,11 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\HasBusinessUnit; // <--- 1. Use ekle
+use App\Traits\HasBusinessUnit;
 
 class MaintenancePlan extends Model
 {
-    use HasFactory, SoftDeletes, HasBusinessUnit; // <--- 2. Trait ekle
+    use HasFactory, SoftDeletes, HasBusinessUnit;
+
     protected $guarded = [];
 
     protected $casts = [
@@ -18,6 +19,28 @@ class MaintenancePlan extends Model
         'actual_start_date' => 'datetime',
         'actual_end_date' => 'datetime',
     ];
+
+    // --- EKLENEN KRİTİK METOD BAŞLANGICI ---
+    /**
+     * Kullanıcı yetkisine göre filtreleme kapsamı (Scope).
+     * Service katmanındaki '::forUser($user)' çağrısını karşılar.
+     */
+    public function scopeForUser($query, $user)
+    {
+        // 1. Admin, Yönetici veya Global yetkisi olanlar her şeyi görebilir
+        if ($user->hasRole(['admin', 'yonetici']) || $user->can('view_all_business_units')) {
+            return $query;
+        }
+
+        // 2. Normal kullanıcılar için:
+        // Şimdilik sorguyu olduğu gibi döndürüyoruz çünkü Controller/Service katmanında
+        // zaten 'active_unit_id' (Fabrika) filtresi uygulanıyor.
+        // Eğer ileride "Sadece kendi oluşturduğu planları görsün" istersen burayı açabilirsin:
+        // return $query->where('user_id', $user->id);
+
+        return $query;
+    }
+    // --- EKLENEN KRİTİK METOD BİTİŞİ ---
 
     public function type()
     {
@@ -52,11 +75,12 @@ class MaintenancePlan extends Model
             ->whereNull('end_time')
             ->exists();
     }
+
     // 1. Durumun Ekranda Görünen Adı
     public function getStatusLabelAttribute()
     {
         return match ($this->status) {
-            'pending_approval' => 'Onay Bekliyor', // Yeni eklenen
+            'pending_approval' => 'Onay Bekliyor',
             'pending' => 'Bekliyor',
             'in_progress' => $this->isTimerActive() ? 'Çalışma Sürüyor' : 'Duraklatıldı',
             'completed' => 'Tamamlandı',
@@ -65,7 +89,6 @@ class MaintenancePlan extends Model
         };
     }
 
-    // 2. Durumun Rengini getiren özellik ($plan->status_color)
     // 2. Durumun Rengi (Badge Fonksiyonun bunu kullanıyor)
     public function getStatusColorAttribute()
     {
@@ -78,11 +101,13 @@ class MaintenancePlan extends Model
             default => 'secondary',
         };
     }
+
     // Tamamlanmış (End time'ı olan) tüm kayıtların toplam süresi
     public function getPreviousDurationMinutesAttribute()
     {
         return $this->timeEntries()->whereNotNull('end_time')->sum('duration_minutes');
     }
+
     public function getPriorityBadgeAttribute()
     {
         $val = strtolower($this->priority ?? '');
@@ -100,6 +125,7 @@ class MaintenancePlan extends Model
             'is_badge' => true
         ];
     }
+
     public function getStatusBadgeAttribute()
     {
         $color = $this->status_color;

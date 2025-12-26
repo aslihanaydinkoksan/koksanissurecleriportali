@@ -96,68 +96,20 @@ class StatisticsService
      */
     public function getLojistikStatsData(Carbon $startDate, Carbon $endDate, string $viewLevel = 'basic', $unitId = null): StatisticsData
     {
-        $chartData = [];
         $user = Auth::user();
 
-        // Filtreleme eklendi
+        // 1. Ana Sorgu (Helper'a gönderilecek)
         $shipmentQuery = Shipment::forUser($user)
             ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId))
             ->whereNotNull('cikis_tarihi')
             ->whereBetween('cikis_tarihi', [$startDate, $endDate]);
 
-        // 1. Saatlik Yoğunluk
-        $hourlyLabels = array_map(fn($h) => str_pad($h, 2, '0', STR_PAD_LEFT) . ':00', range(0, 23));
-        $hourlyCounts = array_fill_keys(range(0, 23), 0);
-        $hourlyDbData = (clone $shipmentQuery)->select([DB::raw('HOUR(cikis_tarihi) as hour'), DB::raw('COUNT(*) as count')])->groupBy('hour')->pluck('count', 'hour');
-        foreach ($hourlyDbData as $hour => $count) {
-            if (isset($hourlyCounts[$hour]))
-                $hourlyCounts[$hour] = $count;
-        }
-        $chartData['hourly'] = ['labels' => $hourlyLabels, 'data' => array_values($hourlyCounts), 'title' => '⏰ Saatlik Sevkiyat Yoğunluğu'];
+        // 2. Grafikleri Hazırla (Helper Metod)
+        $chartData = $this->prepareLojistikCharts($shipmentQuery, $viewLevel);
 
-        // 2. Haftalık Yoğunluk
-        $dayLabels = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
-        $dayCounts = array_fill(0, 7, 0);
-        $dayMap = [2 => 0, 3 => 1, 4 => 2, 5 => 3, 6 => 4, 7 => 5, 1 => 6];
-        $dailyDbData = (clone $shipmentQuery)->select([DB::raw('DAYOFWEEK(cikis_tarihi) as day_of_week'), DB::raw('COUNT(*) as count')])->groupBy('day_of_week')->pluck('count', 'day_of_week');
-        foreach ($dailyDbData as $dayNum => $count) {
-            if (isset($dayMap[$dayNum]))
-                $dayCounts[$dayMap[$dayNum]] = $count;
-        }
-        $chartData['daily'] = ['labels' => $dayLabels, 'data' => $dayCounts, 'title' => '📅 Haftalık Sevkiyat Yoğunluğu'];
-
-        // 3. Stratejik Veriler
-        if ($viewLevel === 'full') {
-            // Aylık
-            $monthLabels = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
-            $monthCounts = array_fill(0, 12, 0);
-            $monthlyDbData = (clone $shipmentQuery)->select([DB::raw('MONTH(cikis_tarihi) as month'), DB::raw('COUNT(*) as count')])->groupBy('month')->pluck('count', 'month');
-            foreach ($monthlyDbData as $monthNum => $count) {
-                if ($monthNum >= 1 && $monthNum <= 12)
-                    $monthCounts[$monthNum - 1] = $count;
-            }
-            $chartData['monthly'] = ['labels' => $monthLabels, 'data' => $monthCounts, 'title' => 'Aylık Sevkiyat Dağılımı'];
-
-            // Yıllık
-            $yearlyDbData = (clone $shipmentQuery)->select([DB::raw('YEAR(cikis_tarihi) as year'), DB::raw('COUNT(*) as count')])->groupBy('year')->orderBy('year')->pluck('count', 'year');
-            $chartData['yearly'] = ['labels' => $yearlyDbData->keys()->map(fn($y) => (string) $y)->all(), 'data' => $yearlyDbData->values()->all(), 'title' => 'Yıllık Toplam Sevkiyat'];
-        } else {
-            $chartData['monthly'] = null;
-            $chartData['yearly'] = null;
-        }
-
-        // 4. Araç Tipi Pasta Grafiği
-        $vehicleTypeData = (clone $shipmentQuery)->select(['arac_tipi', DB::raw('COUNT(*) as count')])->whereNotNull('arac_tipi')->groupBy('arac_tipi')->get()
-            ->groupBy(fn($item) => $this->normalizeVehicleType($item->arac_tipi))
-            ->map(fn($group) => $group->sum('count'));
-        $chartData['pie'] = ['labels' => $vehicleTypeData->keys()->map(fn($tip) => $tip ?? 'Bilinmiyor')->all(), 'data' => $vehicleTypeData->values()->all(), 'title' => 'Araç Tipi Dağılımı'];
-
-        // 5. Filtreleme Listesi
-        $shipmentsForFiltering = Shipment::forUser($user)
-            ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId)) // Filtre Eklendi
+        // 3. Filtreleme Listesi (Burada kalabilir)
+        $shipmentsForFiltering = (clone $shipmentQuery)
             ->select(['arac_tipi', 'kargo_icerigi', 'shipment_type'])
-            ->whereNotNull('cikis_tarihi')
-            ->whereBetween('cikis_tarihi', [$startDate, $endDate])
             ->get()
             ->map(function ($shipment) {
                 return [
@@ -279,7 +231,6 @@ class StatisticsService
     {
         $user = Auth::user();
 
-        // Filtre Eklendi
         $maintenancePlans = MaintenancePlan::forUser($user)
             ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId))
             ->whereBetween('planned_start_date', [$startDate, $endDate])->get();
@@ -287,12 +238,16 @@ class StatisticsService
         $maintenanceTypes = MaintenanceType::select('id', 'name')->orderBy('name')->get()->toArray();
         $assets = MaintenanceAsset::select('id', 'name')->orderBy('name')->get()->toArray();
 
-        // 1. Tür Dağılımı
-        $typeCounts = $maintenancePlans->groupBy('maintenance_type_id')->map->count();
+        // DÜZELTME 1: ->map->count() yerine Closure kullanımı
+        // VS Code bunu artık bir Collection olarak tanır, integer olarak değil.
+        $typeCounts = $maintenancePlans->groupBy('maintenance_type_id')
+            ->map(fn($group) => $group->count());
+
         $typeLabels = [];
         $typeData = [];
         foreach ($typeCounts as $typeId => $count) {
-            $typeName = collect($maintenanceTypes)->firstWhere('id', $typeId)['name'] ?? 'Bilinmiyor';
+            $foundType = collect($maintenanceTypes)->firstWhere('id', $typeId);
+            $typeName = $foundType ? $foundType['name'] : 'Bilinmiyor';
             $typeLabels[] = $typeName;
             $typeData[] = $count;
         }
@@ -304,16 +259,24 @@ class StatisticsService
         $monthlyData = [];
 
         if ($viewLevel === 'full') {
-            // En Çok Bakım Gören Varlıklar
-            $assetCounts = $maintenancePlans->groupBy('maintenance_asset_id')->map->count()->sortDesc()->take(5);
+            // DÜZELTME 2: ->map->count() yine açık hale getirildi
+            // sortDesc() hatası burada düzelir.
+            $assetCounts = $maintenancePlans->groupBy('maintenance_asset_id')
+                ->map(fn($group) => $group->count())
+                ->sortDesc()
+                ->take(5);
+
             foreach ($assetCounts as $assetId => $count) {
-                $assetName = collect($assets)->firstWhere('id', $assetId)['name'] ?? 'Bilinmiyor';
+                $foundAsset = collect($assets)->firstWhere('id', $assetId);
+                $assetName = $foundAsset ? $foundAsset['name'] : 'Bilinmiyor';
                 $assetLabels[] = Str::limit($assetName, 20);
                 $assetData[] = $count;
             }
 
             // Aylık Bakım Yükü
-            $monthlyCounts = $maintenancePlans->groupBy(fn($d) => $d->planned_start_date->format('Y-m'))->map->count();
+            $monthlyCounts = $maintenancePlans->groupBy(fn($d) => $d->planned_start_date->format('Y-m'))
+                ->map(fn($group) => $group->count()); // Burası zaten map içinde ama garanti olsun diye fn ile yazdım
+
             $currentMonth = $startDate->copy()->startOfMonth();
             while ($currentMonth->lte($endDate)) {
                 $key = $currentMonth->format('Y-m');
@@ -351,73 +314,17 @@ class StatisticsService
     {
         $user = Auth::user();
 
-        // Filtre Eklendi
+        // 1. Veriyi Çek
         $assignments = VehicleAssignment::forUser($user)
             ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId))
             ->with('vehicle')
             ->whereBetween('start_time', [$startDate, $endDate])
             ->get();
 
-        // 2. Operasyonel Grafikler
-        // A. Görev Durum Dağılımı (Pie Chart)
-        $statusCounts = $assignments->groupBy('status')->map(function ($group) {
-            return $group->count();
-        });
+        // 2. Grafikleri Hazırla (Yardımcı metoda taşıdık)
+        $chartData = $this->prepareUlastirmaCharts($assignments, $startDate, $endDate, $viewLevel);
 
-        $statusLabels = $statusCounts->keys()->map(fn($s) => match ($s) {
-            'pending' => 'Bekleyen',
-            'approved' => 'Onaylı',
-            'in_progress' => 'Sürüyor',
-            'completed' => 'Tamamlandı',
-            'cancelled' => 'İptal',
-            default => ucfirst($s)
-        });
-
-        $statusData = $statusCounts->values();
-        $chartData = [
-            'status_pie' => ['labels' => $statusLabels->all(), 'data' => $statusData->all(), 'title' => 'Görev Durumları'],
-        ];
-
-        // 3. Stratejik Grafikler
-        if ($viewLevel === 'full') {
-            // B. En Çok Kullanılan Araçlar
-            $vehicleUsage = $assignments->groupBy('vehicle_id')
-                ->map(fn($group) => $group->count())
-                ->sortDesc()
-                ->take(5);
-
-            $vehicleLabels = [];
-            $vehicleData = [];
-
-            foreach ($vehicleUsage as $vehId => $count) {
-                $assign = $assignments->firstWhere('vehicle_id', $vehId);
-                $vehicleLabels[] = $assign->vehicle->plate_number ?? 'Bilinmiyor';
-                $vehicleData[] = $count;
-            }
-
-            $chartData['top_vehicles'] = ['labels' => $vehicleLabels, 'data' => $vehicleData, 'title' => '🚗 En Çok Görev Yapan Araçlar'];
-
-            // C. Aylık Görev Yoğunluğu
-            $monthlyCounts = $assignments->groupBy(fn($d) => $d->start_time->format('Y-m'))
-                ->map(fn($group) => $group->count());
-
-            $monthlyLabels = [];
-            $monthlyData = [];
-            $currentMonth = $startDate->copy()->startOfMonth();
-
-            while ($currentMonth->lte($endDate)) {
-                $key = $currentMonth->format('Y-m');
-                $monthlyLabels[] = $currentMonth->translatedFormat('M Y');
-                $monthlyData[] = $monthlyCounts[$key] ?? 0;
-                $currentMonth->addMonth();
-            }
-            $chartData['monthly_trend'] = ['labels' => $monthlyLabels, 'data' => $monthlyData, 'title' => '📅 Aylık Görev Grafiği'];
-        } else {
-            $chartData['top_vehicles'] = null;
-            $chartData['monthly_trend'] = null;
-        }
-
-        // 4. Filtreleme Verileri
+        // 3. Filtreleme Verilerini Hazırla
         $assignmentsForFiltering = $assignments->map(function ($a) {
             return [
                 'vehicle_plate' => $a->vehicle->plate_number ?? 'Bilinmiyor',
@@ -429,7 +336,7 @@ class StatisticsService
         return new StatisticsData(
             chartData: $chartData,
             assignmentsForFiltering: $assignmentsForFiltering,
-            vehiclesForFiltering: \App\Models\Vehicle::select('id', 'plate_number')->get()->toArray()
+            vehiclesForFiltering: Vehicle::select('id', 'plate_number')->get()->toArray()
         );
     }
 
@@ -524,5 +431,127 @@ class StatisticsService
     public function getEventTypes()
     {
         return ['toplanti' => 'Toplantı', 'egitim' => 'Eğitim', 'fuar' => 'Fuar', 'gezi' => 'Gezi', 'musteri_ziyareti' => 'Müşteri Ziyareti', 'misafir_karsilama' => 'Misafir Karşılama', 'diger' => 'Diğer'];
+    }
+    /**
+     * Ulaştırma grafikleri için yardımcı metod
+     */
+    private function prepareUlastirmaCharts($assignments, $startDate, $endDate, $viewLevel): array
+    {
+        // A. Görev Durum Dağılımı (Pie Chart)
+        $statusCounts = $assignments->groupBy('status')->map(fn($group) => $group->count());
+
+        $statusLabels = $statusCounts->keys()->map(fn($s) => match ($s) {
+            'pending' => 'Bekleyen',
+            'approved' => 'Onaylı',
+            'in_progress' => 'Sürüyor',
+            'completed' => 'Tamamlandı',
+            'cancelled' => 'İptal',
+            default => ucfirst($s)
+        });
+
+        $chartData = [
+            'status_pie' => ['labels' => $statusLabels->all(), 'data' => $statusCounts->values()->all(), 'title' => 'Görev Durumları'],
+        ];
+
+        // B. Stratejik Grafikler
+        if ($viewLevel === 'full') {
+            // En Çok Kullanılan Araçlar
+            $vehicleUsage = $assignments->groupBy('vehicle_id')
+                ->map(fn($group) => $group->count())
+                ->sortDesc()
+                ->take(5);
+
+            $vehicleLabels = [];
+            $vehicleData = [];
+
+            foreach ($vehicleUsage as $vehId => $count) {
+                $assign = $assignments->firstWhere('vehicle_id', $vehId);
+                $vehicleLabels[] = $assign->vehicle->plate_number ?? 'Bilinmiyor';
+                $vehicleData[] = $count;
+            }
+
+            $chartData['top_vehicles'] = ['labels' => $vehicleLabels, 'data' => $vehicleData, 'title' => '🚗 En Çok Görev Yapan Araçlar'];
+
+            // Aylık Görev Yoğunluğu
+            $monthlyCounts = $assignments->groupBy(fn($d) => $d->start_time->format('Y-m'))
+                ->map(fn($group) => $group->count());
+
+            $monthlyLabels = [];
+            $monthlyData = [];
+            $currentMonth = $startDate->copy()->startOfMonth();
+
+            while ($currentMonth->lte($endDate)) {
+                $key = $currentMonth->format('Y-m');
+                $monthlyLabels[] = $currentMonth->translatedFormat('M Y');
+                $monthlyData[] = $monthlyCounts[$key] ?? 0;
+                $currentMonth->addMonth();
+            }
+            $chartData['monthly_trend'] = ['labels' => $monthlyLabels, 'data' => $monthlyData, 'title' => '📅 Aylık Görev Grafiği'];
+        } else {
+            $chartData['top_vehicles'] = null;
+            $chartData['monthly_trend'] = null;
+        }
+
+        return $chartData;
+    }
+    /**
+     * Lojistik grafikleri için hesaplama yapan yardımcı metod
+     */
+    private function prepareLojistikCharts($shipmentQuery, string $viewLevel): array
+    {
+        $chartData = [];
+
+        // 1. Saatlik Yoğunluk
+        $hourlyLabels = array_map(fn($h) => str_pad($h, 2, '0', STR_PAD_LEFT) . ':00', range(0, 23));
+        $hourlyCounts = array_fill_keys(range(0, 23), 0);
+        $hourlyDbData = (clone $shipmentQuery)->select([DB::raw('HOUR(cikis_tarihi) as hour'), DB::raw('COUNT(*) as count')])->groupBy('hour')->pluck('count', 'hour');
+
+        foreach ($hourlyDbData as $hour => $count) {
+            if (isset($hourlyCounts[$hour]))
+                $hourlyCounts[$hour] = $count;
+        }
+        $chartData['hourly'] = ['labels' => $hourlyLabels, 'data' => array_values($hourlyCounts), 'title' => '⏰ Saatlik Sevkiyat Yoğunluğu'];
+
+        // 2. Haftalık Yoğunluk
+        $dayLabels = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+        $dayCounts = array_fill(0, 7, 0);
+        $dayMap = [2 => 0, 3 => 1, 4 => 2, 5 => 3, 6 => 4, 7 => 5, 1 => 6];
+        $dailyDbData = (clone $shipmentQuery)->select([DB::raw('DAYOFWEEK(cikis_tarihi) as day_of_week'), DB::raw('COUNT(*) as count')])->groupBy('day_of_week')->pluck('count', 'day_of_week');
+
+        foreach ($dailyDbData as $dayNum => $count) {
+            if (isset($dayMap[$dayNum]))
+                $dayCounts[$dayMap[$dayNum]] = $count;
+        }
+        $chartData['daily'] = ['labels' => $dayLabels, 'data' => $dayCounts, 'title' => '📅 Haftalık Sevkiyat Yoğunluğu'];
+
+        // 3. Stratejik Veriler (Full View)
+        if ($viewLevel === 'full') {
+            // Aylık
+            $monthLabels = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+            $monthCounts = array_fill(0, 12, 0);
+            $monthlyDbData = (clone $shipmentQuery)->select([DB::raw('MONTH(cikis_tarihi) as month'), DB::raw('COUNT(*) as count')])->groupBy('month')->pluck('count', 'month');
+
+            foreach ($monthlyDbData as $monthNum => $count) {
+                if ($monthNum >= 1 && $monthNum <= 12)
+                    $monthCounts[$monthNum - 1] = $count;
+            }
+            $chartData['monthly'] = ['labels' => $monthLabels, 'data' => $monthCounts, 'title' => 'Aylık Sevkiyat Dağılımı'];
+
+            // Yıllık
+            $yearlyDbData = (clone $shipmentQuery)->select([DB::raw('YEAR(cikis_tarihi) as year'), DB::raw('COUNT(*) as count')])->groupBy('year')->orderBy('year')->pluck('count', 'year');
+            $chartData['yearly'] = ['labels' => $yearlyDbData->keys()->map(fn($y) => (string) $y)->all(), 'data' => $yearlyDbData->values()->all(), 'title' => 'Yıllık Toplam Sevkiyat'];
+        } else {
+            $chartData['monthly'] = null;
+            $chartData['yearly'] = null;
+        }
+
+        // 4. Araç Tipi Pasta Grafiği
+        $vehicleTypeData = (clone $shipmentQuery)->select(['arac_tipi', DB::raw('COUNT(*) as count')])->whereNotNull('arac_tipi')->groupBy('arac_tipi')->get()
+            ->groupBy(fn($item) => $this->normalizeVehicleType($item->arac_tipi))
+            ->map(fn($group) => $group->sum('count'));
+
+        $chartData['pie'] = ['labels' => $vehicleTypeData->keys()->map(fn($tip) => $tip ?? 'Bilinmiyor')->all(), 'data' => $vehicleTypeData->values()->all(), 'title' => 'Araç Tipi Dağılımı'];
+
+        return $chartData;
     }
 }
