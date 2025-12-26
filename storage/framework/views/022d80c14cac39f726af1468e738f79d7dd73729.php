@@ -883,4 +883,4 @@
 </body>
 
 </html>
-<?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/layouts/app.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\inetpub\wwwroot\koksan_is_surecleri\resources\views/layouts/app.blade.php ENDPATH**/ ?>

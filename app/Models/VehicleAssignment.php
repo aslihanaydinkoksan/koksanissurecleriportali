@@ -214,16 +214,18 @@ class VehicleAssignment extends Model
         return $this->morphMany(File::class, 'fileable');
     }
     /**
-     * Kullanıcı yetkisine göre filtreleme kapsamı.
+     * Kullanıcı yetkisine göre filtreleme kapsamı (Scope).
+     * StatisticsService tarafında ::forUser($user) şeklinde çağrılır.
      */
     public function scopeForUser($query, $user)
     {
-        // 1. Admin, Yönetici veya Global yetkisi olanlar
+        // 1. Admin, Yönetici veya Global yetkisi olanlar her şeyi görebilir
         if ($user->hasRole(['admin', 'yonetici']) || $user->can('view_all_business_units')) {
             return $query;
         }
 
-        // 2. Diğer kullanıcılar (Şimdilik kısıtlama yok, filtre serviste yapılıyor)
+        // 2. Diğer kullanıcılar için şimdilik kısıtlama yok
+        // (Zaten Service katmanında Business Unit filtresi uygulanıyor)
         return $query;
     }
 }
