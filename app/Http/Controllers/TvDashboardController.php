@@ -24,6 +24,25 @@ class TvDashboardController extends Controller
 
     public function index()
     {
+        // --- DEBUG BAŞLANGICI (Sorun çözülünce sileceğiz) ---
+        // 1. Veritabanındaki TÜM bakım planlarını çek (Filtresiz)
+        $allMaintenance = \App\Models\MaintenancePlan::withoutGlobalScope('business_unit_scope')->get();
+
+        // 2. Preform fabrikasına (veya herhangi bir birime) ait olanları bul
+        $preformMaintenances = $allMaintenance->filter(function ($m) {
+            // Birim adı "Preform" içeriyor mu?
+            return $m->businessUnit && \Illuminate\Support\Str::contains(strtolower($m->businessUnit->name), 'preform');
+        });
+
+        dd([
+            'SİSTEM TARİHİ' => \Carbon\Carbon::today()->format('Y-m-d'),
+            'VERİTABANINDAKİ TOPLAM BAKIM SAYISI' => $allMaintenance->count(),
+            'PREFORM İÇİN BULUNAN KAYIT SAYISI' => $preformMaintenances->count(),
+            'PREFORM KAYITLARININ TARİHLERİ' => $preformMaintenances->map(fn($m) => $m->planned_start_date->format('Y-m-d'))->toArray(),
+            'PREFORM KAYITLARININ DURUMLARI' => $preformMaintenances->pluck('status')->toArray(),
+            'KODUN ŞU AN ARADIĞI KRİTER' => 'Sadece ' . \Carbon\Carbon::today()->format('Y-m-d') . ' tarihli kayıtlar aranıyor.'
+        ]);
+        // --- DEBUG BİTİŞİ ---
         $today = Carbon::today();
 
         $kpiData = $this->getKpiData($today);
