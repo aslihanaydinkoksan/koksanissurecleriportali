@@ -307,7 +307,7 @@ class TvDashboardController extends Controller
             'production' => ['label' => 'ÜRETİM', 'icon' => 'fa-industry', 'color' => 'info'],
             'shipment' => ['label' => 'SEVKİYAT', 'icon' => 'fa-truck', 'color' => 'primary'],
             'maintenance' => ['label' => 'BAKIM/ARIZA', 'icon' => 'fa-wrench', 'color' => 'warning'],
-            'event' => ['label' => 'ZİYARET', 'icon' => 'fa-users', 'color' => 'secondary'],
+            'event' => ['label' => 'ETKİNLİK', 'icon' => 'fa-users', 'color' => 'secondary'],
             // Yarın 'kalite' eklersen: 'quality' => ['label' => 'KALİTE', 'icon' => 'fa-check', 'color' => 'success']
         ];
 
