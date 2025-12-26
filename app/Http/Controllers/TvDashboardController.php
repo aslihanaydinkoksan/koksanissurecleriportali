@@ -24,25 +24,6 @@ class TvDashboardController extends Controller
 
     public function index()
     {
-        // --- DEBUG BAŞLANGICI (Sorun çözülünce sileceğiz) ---
-        // 1. Veritabanındaki TÜM bakım planlarını çek (Filtresiz)
-        $allMaintenance = \App\Models\MaintenancePlan::withoutGlobalScope('business_unit_scope')->get();
-
-        // 2. Preform fabrikasına (veya herhangi bir birime) ait olanları bul
-        $preformMaintenances = $allMaintenance->filter(function ($m) {
-            // Birim adı "Preform" içeriyor mu?
-            return $m->businessUnit && \Illuminate\Support\Str::contains(strtolower($m->businessUnit->name), 'preform');
-        });
-
-        dd([
-            'SİSTEM TARİHİ' => \Carbon\Carbon::today()->format('Y-m-d'),
-            'VERİTABANINDAKİ TOPLAM BAKIM SAYISI' => $allMaintenance->count(),
-            'PREFORM İÇİN BULUNAN KAYIT SAYISI' => $preformMaintenances->count(),
-            'PREFORM KAYITLARININ TARİHLERİ' => $preformMaintenances->map(fn($m) => $m->planned_start_date->format('Y-m-d'))->toArray(),
-            'PREFORM KAYITLARININ DURUMLARI' => $preformMaintenances->pluck('status')->toArray(),
-            'KODUN ŞU AN ARADIĞI KRİTER' => 'Sadece ' . \Carbon\Carbon::today()->format('Y-m-d') . ' tarihli kayıtlar aranıyor.'
-        ]);
-        // --- DEBUG BİTİŞİ ---
         $today = Carbon::today();
 
         $kpiData = $this->getKpiData($today);
@@ -57,15 +38,14 @@ class TvDashboardController extends Controller
     {
         return response()->json(['hash' => $this->getSystemDataHash()]);
     }
-
     /**
-     * 1. KPI VERİLERİ (TAM DİNAMİK YAPI)
+     * 1. KPI VERİLERİ (GÜNCELLENMİŞ - GELECEK PLANLARI DAHİL EDER)
      */
     private function getKpiData(Carbon $today): array
     {
         // --- A. STANDART VERİLER ---
 
-        // 1. SEVKİYAT
+        // 1. SEVKİYAT (Bugünün sevkiyatları kalsın, bu mantıklı)
         $shipmentGroups = Shipment::withoutGlobalScope('business_unit_scope')
             ->whereDate('tahmini_varis_tarihi', $today)
             ->select(['arac_tipi', DB::raw('count(*) as count')])
@@ -78,7 +58,7 @@ class TvDashboardController extends Controller
             return "{$item->count} {$type}";
         })->implode(', ');
 
-        // 2. ETKİNLİK
+        // 2. ETKİNLİK (Bugünkü etkinlikler)
         $eventGroups = Event::withoutGlobalScope('business_unit_scope')
             ->whereDate('start_datetime', $today)
             ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
@@ -89,30 +69,38 @@ class TvDashboardController extends Controller
         $eventDetails = $eventGroups->map(fn($item) => "{$item->count} {$item->type_name}")->implode(', ');
 
 
-        // --- B. DİNAMİK FABRİKA BİRİMLERİ ---
+        // --- B. DİNAMİK FABRİKA BİRİMLERİ (DÜZELTİLEN KISIM) ---
 
-        // 1. Tüm Fabrika Birimlerini Çek (Alfabetik)
+        // 1. Tüm Fabrika Birimlerini Çek
         $units = BusinessUnit::orderBy('name')->get();
 
-        // 2. Tüm Aktif Planları Tek Seferde Çek (Veritabanı Performansı İçin)
+        // 2. TÜM AKTİF PLANLARI ÇEK
+
+        // ÜRETİM: Gelecek planları da görmek için tarihi bugünden büyük veya eşit alıyoruz
+        // VEYA sadece bugünü görmek istersen whereDate kalabilir. Yöneticiler genelde 'Sırada ne var?' görmek ister.
+        // Şimdilik üretim için "Bu hafta ve sonrası" mantığı daha doğru olabilir ama senin yapında 'week_start_date' var.
+        // Biz "Tamamlanmamış" mantığına gidelim.
+
         $activeProduction = ProductionPlan::withoutGlobalScope('business_unit_scope')
-            ->whereDate('week_start_date', '<=', $today)
+            ->whereDate('week_start_date', '>=', $today) // Bugünden sonraki üretimler
             ->get();
 
+        // BAKIM: --- BURASI DÜZELDİ ---
+        // Tarihe bakmaksızın, durumu "Tamamlandı" veya "İptal" OLMAYAN her şeyi çekiyoruz.
+        // Böylece 2026 yılındaki "Bekliyor" statüsündeki işler de sayıya dahil olur.
         $activeMaintenance = MaintenancePlan::withoutGlobalScope('business_unit_scope')
-            ->whereDate('planned_start_date', $today)
+            ->whereNotIn('status', ['completed', 'cancelled', 'iptal', 'tamamlandi'])
             ->get();
 
         // 3. Birimler İçin Dinamik İstatistik Hesapla
         $unitStats = $units->map(function ($unit) use ($activeProduction, $activeMaintenance) {
 
-            // Bu birime ait üretimleri say
+            // Bu birime ait aktif üretimleri say
             $prodCount = $activeProduction->where('business_unit_id', $unit->id)->count();
 
-            // Bu birime ait bakımları say
+            // Bu birime ait aktif bakımları say (2026 planları burada sayılacak artık)
             $maintCount = $activeMaintenance->where('business_unit_id', $unit->id)->count();
 
-            // Toplam aktivite
             $total = $prodCount + $maintCount;
 
             // Kart Durumu ve İkonu Belirle
@@ -126,7 +114,7 @@ class TvDashboardController extends Controller
                 $status = 'Bakım';
                 $icon = 'fa-wrench';
             } elseif ($total > 0) {
-                $status = 'Aktif';
+                $status = 'Aktif'; // Hem üretim hem bakım yok ama toplam sayı var ise
                 $icon = 'fa-pulse';
             }
 
@@ -136,8 +124,8 @@ class TvDashboardController extends Controller
                 'count' => $total,
                 'status' => $status,
                 'icon' => $icon,
-                'sub_label' => ($prodCount >= $maintCount) ? 'Planlanan' : 'Bakım', // Hangisi çoksa o yazsın
-                'progress' => ($total > 0) ? rand(40, 90) : 0 // Görsel doluluk (opsiyonel mantık kurabilirsin)
+                'sub_label' => ($prodCount >= $maintCount) ? 'Planlanan' : 'Bakım',
+                'progress' => ($total > 0) ? rand(40, 90) : 0
             ];
         });
 
@@ -156,15 +144,14 @@ class TvDashboardController extends Controller
         return [
             'sevkiyat_sayisi' => $totalShipment,
             'sevkiyat_detay' => $shipmentDetails,
-            'plan_sayisi' => $activeProduction->count(), // Toplam üretim planı
+            'plan_sayisi' => $activeProduction->count(),
 
-            // YENİ DİNAMİK DİZİ
-            'unit_stats' => $unitStats,
+            'unit_stats' => $unitStats, // DİNAMİK VERİ
 
             'etkinlik_sayisi' => Event::withoutGlobalScope('business_unit_scope')->whereDate('start_datetime', $today)->count(),
             'etkinlik_detay' => $eventDetails,
             'arac_gorevi_sayisi' => $vehicleCount,
-            'bakim_sayisi' => $activeMaintenance->count(),
+            'bakim_sayisi' => $activeMaintenance->count(), // Toplam aktif bakım yükü
             'kullanici_sayisi' => User::count(),
             'seyahat_sayisi' => $travelCount
         ];
