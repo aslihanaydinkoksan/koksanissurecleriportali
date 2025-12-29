@@ -12,6 +12,145 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\LogController;
 
+use App\Models\Location;
+use Illuminate\Support\Str;
+
+Route::get('/fix-bulk-locations', function () {
+    $report = [];
+    $count = 0;
+
+    // 1. DÜZELTİLECEK HEDEFLERİ BELİRLE
+    // Type'ı 'site' olan ama aslında daire ismi taşıyanları çekiyoruz.
+    // Parent ID'si olmayanları (en tepede duranları) alıyoruz.
+    $records = Location::where('type', 'site')
+        ->whereNull('parent_id')
+        ->get();
+
+    foreach ($records as $record) {
+        $name = Str::upper($record->name); // Büyük harfe çevirip kontrol edelim
+        $parent = null;
+        $cleanName = $record->name;
+
+        // --- SENARYO 1: BEYTEPE ELİF SİTESİ ---
+        if (Str::contains($name, 'BEYTEPE ELİF')) {
+            // 1. Ana Siteyi Bul/Oluştur
+            $site = Location::firstOrCreate(
+                ['name' => 'Beytepe Elif Sitesi'],
+                ['type' => 'site', 'ownership' => 'rented']
+            );
+
+            // 2. Blok Kontrolü (C ve D Blokları Gördüm)
+            if (Str::contains($name, 'C BLOK')) {
+                $block = Location::firstOrCreate(
+                    ['name' => 'C Blok', 'parent_id' => $site->id],
+                    ['type' => 'block', 'ownership' => 'rented']
+                );
+                $parent = $block;
+                $cleanName = str_replace(['BEYTEPE ELİF SİTESİ', 'C BLOK'], '', $record->name);
+            } elseif (Str::contains($name, 'D BLOK')) {
+                $block = Location::firstOrCreate(
+                    ['name' => 'D Blok', 'parent_id' => $site->id],
+                    ['type' => 'block', 'ownership' => 'rented']
+                );
+                $parent = $block;
+                $cleanName = str_replace(['BEYTEPE ELİF SİTESİ', 'D BLOK'], '', $record->name);
+            } else {
+                // Blok yazmıyorsa direkt siteye bağlayalım
+                $parent = $site;
+                $cleanName = str_replace('BEYTEPE ELİF SİTESİ', '', $record->name);
+            }
+        }
+
+        // --- SENARYO 2: FISTIKLIK TUĞÇE SİTESİ ---
+        elseif (Str::contains($name, 'TUĞÇE SİTESİ')) {
+            $site = Location::firstOrCreate(
+                ['name' => 'Fıstıklık Tuğçe Sitesi'],
+                ['type' => 'site', 'ownership' => 'rented', 'address' => 'Fıstıklık Mah.']
+            );
+
+            if (Str::contains($name, 'C BLOK')) {
+                $block = Location::firstOrCreate(
+                    ['name' => 'C Blok', 'parent_id' => $site->id],
+                    ['type' => 'block', 'ownership' => 'rented']
+                );
+                $parent = $block;
+                $cleanName = str_replace(['FISTIKLIK MAHALLESI', 'TUĞÇE SİTESİ', 'C BLOK'], '', $record->name);
+            } else {
+                $parent = $site;
+                $cleanName = str_replace(['FISTIKLIK MAHALLESI', 'TUĞÇE SİTESİ'], '', $record->name);
+            }
+        }
+
+        // --- SENARYO 3: FISTIKLIK ASRIN SİTESİ ---
+        elseif (Str::contains($name, 'ASRIN SİTESİ')) {
+            $site = Location::firstOrCreate(
+                ['name' => 'Fıstıklık Asrın Sitesi'],
+                ['type' => 'site', 'ownership' => 'rented', 'address' => 'Fıstıklık Mah.']
+            );
+
+            if (Str::contains($name, 'A BLOK')) { // Görselde A Blok gördüm
+                $block = Location::firstOrCreate(
+                    ['name' => 'A Blok', 'parent_id' => $site->id],
+                    ['type' => 'block', 'ownership' => 'rented']
+                );
+                $parent = $block;
+                $cleanName = str_replace(['FISTIKLIK MAHALLESI', 'ASRIN SİTESİ', 'A BLOK'], '', $record->name);
+            } else {
+                $parent = $site;
+                $cleanName = str_replace(['FISTIKLIK MAHALLESI', 'ASRIN SİTESİ'], '', $record->name);
+            }
+        }
+
+        // --- SENARYO 4: 15 TEMMUZ LOJMANLARI ---
+        elseif (Str::contains($name, '15 TEMMUZ')) {
+            $site = Location::firstOrCreate(
+                ['name' => '15 Temmuz Lojmanları'],
+                ['type' => 'site', 'ownership' => 'owned'] // Lojman genelde mülktür
+            );
+            // Burada blok göremedim, direkt siteye bağlıyoruz
+            $parent = $site;
+            $cleanName = str_replace(['15 TEMMUZ LOJMAN', '15 TEMMUZ'], '', $record->name);
+        }
+
+        // --- SENARYO 5: MURAT APARTMANI ---
+        elseif (Str::contains($name, 'MURAT APARTM')) {
+            $site = Location::firstOrCreate(
+                ['name' => 'Murat Apartmanı'],
+                ['type' => 'site', 'ownership' => 'rented', 'address' => 'Binevler Mah.']
+            );
+            $parent = $site;
+            $cleanName = str_replace(['BİNEVLER MAHALLESİ', 'MURAT APARTMANI', 'MURAT APARTM'], '', $record->name);
+        }
+
+        // --- EĞER YUKARIDAKİLERDEN BİRİNE UYDUYSA GÜNCELLE ---
+        if ($parent) {
+            // İsmi temizle (baştaki/sondaki boşlukları sil)
+            $cleanName = trim($cleanName);
+            // Eğer boş kaldıysa (bazen sadece site adı girilmiş olabilir) eski ad kalsın
+            if (empty($cleanName))
+                $cleanName = "İsimsiz Daire " . $record->id;
+
+            $oldName = $record->name;
+
+            $record->update([
+                'type' => 'apartment', // Artık bunlar birer daire
+                'parent_id' => $parent->id, // Yeni babasına bağlandı
+                'name' => $cleanName // Kısa ve temiz ismi
+            ]);
+
+            $report[] = "$oldName -> <b>{$parent->name} > $cleanName</b> olarak taşındı.";
+            $count++;
+        }
+    }
+
+    echo "<h1>Toplam $count kayıt düzenlendi!</h1>";
+    echo "<ul>";
+    foreach ($report as $r) {
+        echo "<li>$r</li>";
+    }
+    echo "</ul>";
+});
+
 // --- MİSAFİR ROTALARI (Giriş yapmamışlar görebilir) ---
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
