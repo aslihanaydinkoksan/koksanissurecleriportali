@@ -11,7 +11,10 @@ return new class extends Migration {
     public function up()
     {
         Schema::table('stays', function (Blueprint $table) {
-            $table->softDeletes(); // Bu, 'deleted_at' sütununu ekler
+            // KONTROL: Eğer 'deleted_at' sütunu YOKSA ekle
+            if (!Schema::hasColumn('stays', 'deleted_at')) {
+                $table->softDeletes(); // Bu 'deleted_at' sütununu oluşturur
+            }
         });
     }
 

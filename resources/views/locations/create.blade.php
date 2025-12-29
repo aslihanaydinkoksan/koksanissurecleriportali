@@ -60,23 +60,19 @@
                         @csrf
                         <input type="hidden" name="parent_id" value="{{ $parentLocation?->id }}">
 
-                        {{-- BÖLÜM 1: TÜR SEÇİMİ (GÜNCELLENEN KISIM) --}}
+                        {{-- BÖLÜM 1: TÜR SEÇİMİ --}}
                         <div class="alert alert-light border mb-4">
                             <div class="row align-items-center">
                                 <div class="col-md-3">
                                     <label class="form-label fw-bold text-dark mb-0">Ne Ekliyorsunuz?</label>
                                 </div>
                                 <div class="col-md-9">
-                                    {{-- BURASI ARTIK IF-ELSE DEĞİL, CONTROLLER'DAN GELEN VERİYİ KULLANIYOR --}}
                                     <select name="type" class="form-select form-select-lg bg-white text-primary fw-bold"
                                         id="typeSelect" required>
-
                                         @foreach ($allowedTypes as $value => $label)
                                             <option value="{{ $value }}">{{ $label }}</option>
                                         @endforeach
-
                                     </select>
-
                                     @if (empty($allowedTypes))
                                         <small class="text-danger d-block mt-2">
                                             <i class="fa fa-ban"></i> Bu birimin altına eklenebilecek uygun bir alt tür
@@ -99,6 +95,27 @@
                                         Sistemde görünecek tam ad: <strong>{{ $parentLocation->name }} / [Gireceğiniz
                                             İsim]</strong> olacaktır.
                                     @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- YENİ EKLENDİ: ADRES VE KONUM BİLGİLERİ --}}
+                        <div class="mb-4">
+                            <label class="form-label fw-medium text-secondary small">Adres ve Konum Bilgileri</label>
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <textarea name="address" class="form-control" rows="2"
+                                        placeholder="Açık adres giriniz (Mahalle, Sokak, Apt No vb.)"></textarea>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light text-muted"><i
+                                                class="fa fa-map-marker-alt"></i></span>
+                                        <input type="url" name="map_link" class="form-control"
+                                            placeholder="Google Haritalar Linki (https://goo.gl/maps/...)">
+                                    </div>
+                                    <div class="form-text text-xs text-muted">Konumu haritada açıp 'Paylaş' diyerek linki
+                                        kopyalayabilirsiniz.</div>
                                 </div>
                             </div>
                         </div>
@@ -134,39 +151,81 @@
                             </div>
                         </div>
 
-                        {{-- BÖLÜM 4: ABONELİK BİLGİLERİ --}}
+                        {{-- BÖLÜM 4: ABONELİK BİLGİLERİ (GÜNCELLENDİ) --}}
                         <div id="subscriptionFields" class="accordion mb-4" style="display: none;">
                             <div class="accordion-item border-0 shadow-sm mb-2">
                                 <h2 class="accordion-header">
                                     <button class="accordion-button collapsed bg-light" type="button"
                                         data-bs-toggle="collapse" data-bs-target="#collapseSubs">
-                                        <i class="fa fa-file-invoice me-2 text-muted"></i> Abonelik Numaraları (Opsiyonel)
+                                        <i class="fa fa-file-invoice me-2 text-muted"></i> Abonelik Bilgileri (Opsiyonel)
                                     </button>
                                 </h2>
-                                <div id="collapseSubs" class="accordion-collapse collapse" data-bs-parent="#subsAccordion">
+                                <div id="collapseSubs" class="accordion-collapse collapse"
+                                    data-bs-parent="#subsAccordion">
                                     <div class="accordion-body">
-                                        <div class="row g-3">
+                                        {{-- Elektrik --}}
+                                        <div class="row g-2 mb-3 align-items-end">
                                             <div class="col-md-6">
-                                                <label class="small text-muted">Elektrik No</label>
+                                                <label class="small text-muted fw-bold"><i
+                                                        class="fa fa-bolt text-warning me-1"></i> Elektrik</label>
                                                 <input type="text" name="subs_electric"
-                                                    class="form-control form-control-sm">
+                                                    class="form-control form-control-sm" placeholder="Abone No">
                                             </div>
                                             <div class="col-md-6">
-                                                <label class="small text-muted">Su No</label>
-                                                <input type="text" name="subs_water"
-                                                    class="form-control form-control-sm">
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="small text-muted">Doğalgaz No</label>
-                                                <input type="text" name="subs_gas"
-                                                    class="form-control form-control-sm">
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="small text-muted">İnternet No</label>
-                                                <input type="text" name="subs_internet"
-                                                    class="form-control form-control-sm">
+                                                <input type="text" name="subs_electric_holder"
+                                                    class="form-control form-control-sm"
+                                                    placeholder="Abonelik Kimin Üzerine? (Ad Soyad)">
                                             </div>
                                         </div>
+                                        <hr class="my-2 opacity-10">
+
+                                        {{-- Su --}}
+                                        <div class="row g-2 mb-3 align-items-end">
+                                            <div class="col-md-6">
+                                                <label class="small text-muted fw-bold"><i
+                                                        class="fa fa-tint text-primary me-1"></i> Su</label>
+                                                <input type="text" name="subs_water"
+                                                    class="form-control form-control-sm" placeholder="Abone No">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <input type="text" name="subs_water_holder"
+                                                    class="form-control form-control-sm"
+                                                    placeholder="Abonelik Kimin Üzerine? (Ad Soyad)">
+                                            </div>
+                                        </div>
+                                        <hr class="my-2 opacity-10">
+
+                                        {{-- Doğalgaz --}}
+                                        <div class="row g-2 mb-3 align-items-end">
+                                            <div class="col-md-6">
+                                                <label class="small text-muted fw-bold"><i
+                                                        class="fa fa-fire text-danger me-1"></i> Doğalgaz</label>
+                                                <input type="text" name="subs_gas"
+                                                    class="form-control form-control-sm" placeholder="Abone No">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <input type="text" name="subs_gas_holder"
+                                                    class="form-control form-control-sm"
+                                                    placeholder="Abonelik Kimin Üzerine? (Ad Soyad)">
+                                            </div>
+                                        </div>
+                                        <hr class="my-2 opacity-10">
+
+                                        {{-- İnternet --}}
+                                        <div class="row g-2 align-items-end">
+                                            <div class="col-md-6">
+                                                <label class="small text-muted fw-bold"><i
+                                                        class="fa fa-wifi text-info me-1"></i> İnternet</label>
+                                                <input type="text" name="subs_internet"
+                                                    class="form-control form-control-sm" placeholder="Abone No">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <input type="text" name="subs_internet_holder"
+                                                    class="form-control form-control-sm"
+                                                    placeholder="Abonelik Kimin Üzerine? (Ad Soyad)">
+                                            </div>
+                                        </div>
+
                                     </div>
                                 </div>
                             </div>
@@ -198,7 +257,7 @@
 
 @push('scripts')
     <script>
-        // 1. Kiralık Seçilirse Ev Sahibi Bilgilerini Göster
+        // (Bu kısım aynen kaldı, mantık değişmediği için ellemeye gerek yok)
         function toggleLandlordFields() {
             var selectBox = document.getElementById("ownershipSelect");
             var landlordDiv = document.getElementById("landlordFields");
@@ -208,48 +267,34 @@
             } else {
                 if (landlordDiv) {
                     landlordDiv.style.display = "none";
-                    // Gizlenince içini temizle
                     var inputs = landlordDiv.querySelectorAll('input');
                     inputs.forEach(input => input.value = '');
                 }
             }
         }
 
-        // 2. Türe Göre (Site/Daire) Alanları Gizle/Göster
         function toggleDynamicFields() {
             var typeSelect = document.getElementById("typeSelect");
             var selectedType = typeSelect.value;
 
-            // Gizlenecek ve Gösterilecek Bölümler
             var subsDiv = document.getElementById("subscriptionFields");
             var ownerDiv = document.getElementById("ownershipSection");
             var ownerSelect = document.getElementById("ownershipSelect");
 
-            // --- KRİTİK NOKTA ---
-            // Hangi türlerde DETAY (Abonelik, Mülkiyet) GİZLENSİN?
-            // Senaryo gereği: Site, Kampüs, Ortak Alan ve BLOK seçilirse abonelik sorulmaz.
+            // Blok veya Site eklerken abonelik detayını gizliyoruz
             var simpleTypes = ['site', 'campus', 'common_area', 'block'];
 
             if (simpleTypes.includes(selectedType)) {
-                // SADELEŞTİRİLMİŞ MOD
-                if (subsDiv) subsDiv.style.display = "none"; // Aboneliği gizle
-
-                // Blok için mülkiyet sorulup sorulmayacağına karar ver. 
-                // Genelde Blok mülkiyeti Site ile aynıdır, o yüzden gizliyoruz.
+                if (subsDiv) subsDiv.style.display = "none";
                 if (ownerDiv) ownerDiv.style.display = "none";
-
-                // Arka planda "KÖKSAN Mülkü" olarak ayarla
                 if (ownerSelect) ownerSelect.value = "owned";
-
-                toggleLandlordFields(); // Kiralık detaylarını da kapat
+                toggleLandlordFields();
             } else {
-                // DETAYLI MOD (Daire, Bağımsız Bölüm vb.)
                 if (subsDiv) subsDiv.style.display = "block";
                 if (ownerDiv) ownerDiv.style.display = "block";
             }
         }
 
-        // Sayfa yüklendiğinde ve Tür değiştiğinde çalıştır
         document.addEventListener("DOMContentLoaded", function() {
             var typeSelect = document.getElementById("typeSelect");
             var ownershipSelect = document.getElementById("ownershipSelect");
@@ -262,9 +307,7 @@
                 ownershipSelect.addEventListener("change", toggleLandlordFields);
             }
 
-            // Başlangıç ayarlarını yap
             toggleDynamicFields();
-            // toggleLandlordFields, toggleDynamicFields içinde zaten çağrılıyor ama garanti olsun
         });
     </script>
 @endpush

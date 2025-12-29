@@ -71,6 +71,27 @@
                             </div>
                         </div>
 
+                        {{-- YENİ EKLENDİ: ADRES VE KONUM --}}
+                        {{-- Create sayfasındaki gibi buraya da ekledik ve mevcut verileri çektik --}}
+                        <div class="mb-4">
+                            <label class="form-label fw-medium text-secondary small">Adres ve Konum Bilgileri</label>
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <textarea name="address" class="form-control" rows="2" placeholder="Açık adres giriniz">{{ old('address', $location->address) }}</textarea>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light text-muted"><i
+                                                class="fa fa-map-marker-alt"></i></span>
+                                        <input type="url" name="map_link" class="form-control"
+                                            value="{{ old('map_link', $location->map_link) }}"
+                                            placeholder="Google Haritalar Linki">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
                         {{-- BÖLÜM 2: MÜLKİYET DURUMU --}}
                         <div class="mb-4">
                             <div class="row g-3">
@@ -106,52 +127,73 @@
                             </div>
                         </div>
 
-                        {{-- BÖLÜM 3: ABONELİK BİLGİLERİ --}}
-                        <h6 class="text-uppercase text-muted fw-bold small mb-3 border-bottom pb-2 mt-4">Abonelik Numaraları
+                        {{-- BÖLÜM 3: ABONELİK BİLGİLERİ (GÜNCELLENDİ) --}}
+                        {{-- Yapıyı değiştirdik: Her satırda Abone No ve Sahip İsmi yan yana --}}
+                        <h6 class="text-uppercase text-muted fw-bold small mb-3 border-bottom pb-2 mt-4">Abonelik Bilgileri
                         </h6>
 
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6 col-lg-3">
-                                <label class="form-label fw-medium text-secondary small">Elektrik</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-warning bg-opacity-10 text-warning border-end-0">
-                                        <i class="fa fa-bolt"></i>
-                                    </span>
-                                    <input type="text" name="subs_electric" class="form-control border-start-0 ps-0"
-                                        value="{{ $location->subscriptions->where('type', 'electric')->first()?->subscriber_no }}">
+                        <div class="mb-4">
+                            {{-- Elektrik --}}
+                            <div class="row g-2 mb-3 align-items-end">
+                                <div class="col-md-6">
+                                    <label class="small text-muted fw-bold"><i class="fa fa-bolt text-warning me-1"></i>
+                                        Elektrik No</label>
+                                    <input type="text" name="subs_electric" class="form-control"
+                                        value="{{ old('subs_electric', $location->subscriptions->where('type', 'electric')->first()?->subscriber_no) }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted">Kimin Üzerine?</label>
+                                    <input type="text" name="subs_electric_holder" class="form-control"
+                                        placeholder="Ad Soyad"
+                                        value="{{ old('subs_electric_holder', $location->subscriptions->where('type', 'electric')->first()?->holder_name) }}">
                                 </div>
                             </div>
 
-                            <div class="col-md-6 col-lg-3">
-                                <label class="form-label fw-medium text-secondary small">Su</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-info bg-opacity-10 text-info border-end-0">
-                                        <i class="fa fa-tint"></i>
-                                    </span>
-                                    <input type="text" name="subs_water" class="form-control border-start-0 ps-0"
-                                        value="{{ $location->subscriptions->where('type', 'water')->first()?->subscriber_no }}">
+                            {{-- Su --}}
+                            <div class="row g-2 mb-3 align-items-end">
+                                <div class="col-md-6">
+                                    <label class="small text-muted fw-bold"><i class="fa fa-tint text-primary me-1"></i>
+                                        Su No</label>
+                                    <input type="text" name="subs_water" class="form-control"
+                                        value="{{ old('subs_water', $location->subscriptions->where('type', 'water')->first()?->subscriber_no) }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted">Kimin Üzerine?</label>
+                                    <input type="text" name="subs_water_holder" class="form-control"
+                                        placeholder="Ad Soyad"
+                                        value="{{ old('subs_water_holder', $location->subscriptions->where('type', 'water')->first()?->holder_name) }}">
                                 </div>
                             </div>
 
-                            <div class="col-md-6 col-lg-3">
-                                <label class="form-label fw-medium text-secondary small">Doğalgaz</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-danger bg-opacity-10 text-danger border-end-0">
-                                        <i class="fa fa-fire"></i>
-                                    </span>
-                                    <input type="text" name="subs_gas" class="form-control border-start-0 ps-0"
-                                        value="{{ $location->subscriptions->where('type', 'gas')->first()?->subscriber_no }}">
+                            {{-- Doğalgaz --}}
+                            <div class="row g-2 mb-3 align-items-end">
+                                <div class="col-md-6">
+                                    <label class="small text-muted fw-bold"><i class="fa fa-fire text-danger me-1"></i>
+                                        Doğalgaz No</label>
+                                    <input type="text" name="subs_gas" class="form-control"
+                                        value="{{ old('subs_gas', $location->subscriptions->where('type', 'gas')->first()?->subscriber_no) }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted">Kimin Üzerine?</label>
+                                    <input type="text" name="subs_gas_holder" class="form-control"
+                                        placeholder="Ad Soyad"
+                                        value="{{ old('subs_gas_holder', $location->subscriptions->where('type', 'gas')->first()?->holder_name) }}">
                                 </div>
                             </div>
 
-                            <div class="col-md-6 col-lg-3">
-                                <label class="form-label fw-medium text-secondary small">İnternet</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-secondary bg-opacity-10 text-secondary border-end-0">
-                                        <i class="fa fa-wifi"></i>
-                                    </span>
-                                    <input type="text" name="subs_internet" class="form-control border-start-0 ps-0"
-                                        value="{{ $location->subscriptions->where('type', 'internet')->first()?->subscriber_no }}">
+                            {{-- İnternet --}}
+                            <div class="row g-2 align-items-end">
+                                <div class="col-md-6">
+                                    <label class="small text-muted fw-bold"><i class="fa fa-wifi text-info me-1"></i>
+                                        İnternet No</label>
+                                    <input type="text" name="subs_internet" class="form-control"
+                                        value="{{ old('subs_internet', $location->subscriptions->where('type', 'internet')->first()?->subscriber_no) }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted">Kimin Üzerine?</label>
+                                    <input type="text" name="subs_internet_holder" class="form-control"
+                                        placeholder="Ad Soyad"
+                                        value="{{ old('subs_internet_holder', $location->subscriptions->where('type', 'internet')->first()?->holder_name) }}">
                                 </div>
                             </div>
                         </div>
@@ -186,7 +228,6 @@
 
             if (selectBox.value === "rented") {
                 landlordDiv.style.display = "block";
-                // Yumuşak geçiş efekti için class eklenebilir ama şu an basit tutalım
             } else {
                 landlordDiv.style.display = "none";
             }

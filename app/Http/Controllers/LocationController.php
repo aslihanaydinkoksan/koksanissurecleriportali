@@ -96,62 +96,64 @@ class LocationController extends Controller
             'type' => 'required',
             'ownership' => 'required',
             'parent_id' => 'nullable|exists:locations,id',
+
+            // YENİ: Adres ve Konum
+            'address' => 'nullable|string',
+            'map_link' => 'nullable|url|max:500',
+
             'landlord_name' => 'nullable|string|max:255',
             'landlord_phone' => 'nullable|string|max:50',
             'notes' => 'nullable|string',
-            // Abonelikler opsiyonel
+            'capacity' => 'nullable|integer',
+
+            // Abonelik Numaraları
             'subs_electric' => 'nullable|string|max:50',
             'subs_water' => 'nullable|string|max:50',
             'subs_gas' => 'nullable|string|max:50',
             'subs_internet' => 'nullable|string|max:50',
-            'capacity' => '1',
+
+            // YENİ: Abonelik Sahipleri (Form input name'leri böyle olmalı)
+            'subs_electric_holder' => 'nullable|string|max:255',
+            'subs_water_holder' => 'nullable|string|max:255',
+            'subs_gas_holder' => 'nullable|string|max:255',
+            'subs_internet_holder' => 'nullable|string|max:255',
         ]);
 
-        // 2. Mekanı Kaydet (Locations Tablosuna)
+        // 2. Mekanı Kaydet
         $location = Location::create([
             'name' => $request->name,
             'type' => $request->type,
             'ownership' => $request->ownership,
             'parent_id' => $request->parent_id,
+            'address' => $request->address,   // EKLENDİ
+            'map_link' => $request->map_link, // EKLENDİ
             'landlord_name' => $request->landlord_name,
             'landlord_phone' => $request->landlord_phone,
             'notes' => $request->notes,
             'capacity' => $request->capacity ?? 1,
         ]);
 
-        // 3. Abonelikleri Kaydet (Subscriptions Tablosuna)
-        // Eğer formda numara girildiyse otomatik ekle
+        // 3. Abonelikleri Kaydet
+        // Kod tekrarını önlemek için döngüye aldık
+        $types = ['electric', 'water', 'gas', 'internet'];
 
-        if ($request->filled('subs_electric')) {
-            $location->subscriptions()->create([
-                'type' => 'electric',
-                'subscriber_no' => $request->subs_electric
-            ]);
-        }
+        foreach ($types as $type) {
+            $subNo = $request->input("subs_{$type}");
+            $holderName = $request->input("subs_{$type}_holder");
 
-        if ($request->filled('subs_water')) {
-            $location->subscriptions()->create([
-                'type' => 'water',
-                'subscriber_no' => $request->subs_water
-            ]);
-        }
-
-        if ($request->filled('subs_gas')) {
-            $location->subscriptions()->create([
-                'type' => 'gas',
-                'subscriber_no' => $request->subs_gas
-            ]);
-        }
-
-        if ($request->filled('subs_internet')) {
-            $location->subscriptions()->create([
-                'type' => 'internet',
-                'subscriber_no' => $request->subs_internet
-            ]);
+            // Eğer numara girildiyse kaydet
+            if ($subNo) {
+                $location->subscriptions()->create([
+                    'type' => $type,
+                    'subscriber_no' => $subNo,
+                    'holder_name' => $holderName, // EKLENDİ
+                    // 'meter_no' => ... (Formda meter_no inputu varsa buraya eklersin)
+                ]);
+            }
         }
 
         return redirect()->route('locations.index', $request->parent_id)
-            ->with('success', 'Mekan ve abonelik bilgileri kaydedildi.');
+            ->with('success', 'Mekan ve abonelik bilgileri başarıyla kaydedildi.');
     }
 
     /**
@@ -159,17 +161,13 @@ class LocationController extends Controller
      */
     public function show($id)
     {
-        // Mekanı; abonelikleri, üst birimi ve demirbaşlarıyla beraber çekiyoruz
         $location = Location::with(['subscriptions', 'parent', 'assets'])->findOrFail($id);
-
-        // Üst menü (Breadcrumb) için soy ağacını çıkarıyoruz
         $breadcrumbs = [];
         $temp = $location;
         while ($temp->parent) {
-            array_unshift($breadcrumbs, $temp->parent); // Başa ekle
-            $temp = $temp->parent; // Bir üste çık
+            array_unshift($breadcrumbs, $temp->parent);
+            $temp = $temp->parent;
         }
-
         return view('locations.show', compact('location', 'breadcrumbs'));
     }
 
@@ -227,51 +225,68 @@ class LocationController extends Controller
             'name' => 'required|max:255',
             'type' => 'required',
             'ownership' => 'required',
+            // YENİ
+            'address' => 'nullable|string',
+            'map_link' => 'nullable|url|max:500',
+
             'landlord_name' => 'nullable|string|max:255',
             'landlord_phone' => 'nullable|string|max:50',
             'notes' => 'nullable|string',
+            'capacity' => 'nullable|integer',
+
             // Abonelikler
             'subs_electric' => 'nullable|string|max:50',
             'subs_water' => 'nullable|string|max:50',
             'subs_gas' => 'nullable|string|max:50',
             'subs_internet' => 'nullable|string|max:50',
-            'capacity' => '1',
+
+            // Abonelik Sahipleri
+            'subs_electric_holder' => 'nullable|string|max:255',
+            'subs_water_holder' => 'nullable|string|max:255',
+            'subs_gas_holder' => 'nullable|string|max:255',
+            'subs_internet_holder' => 'nullable|string|max:255',
         ]);
 
-        // 2. Mekan Bilgilerini Güncelle
+        // 2. Mekanı Güncelle
         $location->update([
             'name' => $request->name,
             'type' => $request->type,
             'ownership' => $request->ownership,
+            'address' => $request->address,   // EKLENDİ
+            'map_link' => $request->map_link, // EKLENDİ
             'landlord_name' => $request->landlord_name,
             'landlord_phone' => $request->landlord_phone,
             'notes' => $request->notes,
             'capacity' => $request->capacity ?? 1,
         ]);
 
-        // 3. Abonelikleri Güncelle (Yardımcı fonksiyon kullanacağız)
-        $this->updateSubscription($location, 'electric', $request->subs_electric);
-        $this->updateSubscription($location, 'water', $request->subs_water);
-        $this->updateSubscription($location, 'gas', $request->subs_gas);
-        $this->updateSubscription($location, 'internet', $request->subs_internet);
+        // 3. Abonelikleri Güncelle
+        // Yardımcı fonksiyonu kullanarak her türü güncelliyoruz
+        $this->updateSubscription($location, 'electric', $request->subs_electric, $request->subs_electric_holder);
+        $this->updateSubscription($location, 'water', $request->subs_water, $request->subs_water_holder);
+        $this->updateSubscription($location, 'gas', $request->subs_gas, $request->subs_gas_holder);
+        $this->updateSubscription($location, 'internet', $request->subs_internet, $request->subs_internet_holder);
 
-        return redirect()->route('locations.show', $location->id) // Detay sayfasına dön
+        return redirect()->route('locations.show', $location->id)
             ->with('success', 'Mekan bilgileri güncellendi.');
     }
 
     /**
      * Yardımcı Fonksiyon: Abonelik varsa güncelle, yoksa oluştur, boş geldiyse sil.
      */
-    private function updateSubscription($location, $type, $value)
+    private function updateSubscription($location, $type, $number, $holderName = null)
     {
-        if ($value) {
+        if ($number) {
             // Varsa güncelle veya oluştur (updateOrCreate)
             $location->subscriptions()->updateOrCreate(
-                ['type' => $type], // Arama kriteri
-                ['subscriber_no' => $value] // Güncellenecek değer
+                ['type' => $type], // Neye göre arayacak? (Location ID zaten var, Type'a göre)
+                [
+                    'subscriber_no' => $number,
+                    'holder_name' => $holderName // YENİ: Sahip ismini de yazıyoruz
+                ]
             );
         } else {
-            // Eğer form boş geldiyse ve veritabanında varsa SİL (Belki abonelik iptal oldu)
+            // Eğer formdan numara silindiyse, veritabanından da silelim
             $location->subscriptions()->where('type', $type)->delete();
         }
     }

@@ -84,6 +84,28 @@
                         </div>
                     </div>
 
+                    {{-- YENİ EKLENDİ: ADRES VE HARİTA BUTONU --}}
+                    @if ($location->address || $location->map_link)
+                        <div class="bg-light p-3 rounded-3 mb-3 border border-light-subtle">
+                            @if ($location->address)
+                                <div class="d-flex gap-2 mb-2">
+                                    <i class="fa fa-map-pin text-secondary mt-1"></i>
+                                    <span class="text-secondary small"
+                                        style="line-height: 1.4;">{{ $location->address }}</span>
+                                </div>
+                            @endif
+
+                            @if ($location->map_link)
+                                <a href="{{ $location->map_link }}" target="_blank"
+                                    class="btn btn-sm btn-white border w-100 text-primary fw-medium shadow-sm">
+                                    <i class="fa fa-map-marked-alt me-1"></i> Konumu Haritada Aç
+                                </a>
+                            @endif
+                        </div>
+                    @endif
+                    {{-- ADRES BİTİŞ --}}
+
+
                     <hr class="opacity-10 my-3">
 
                     {{-- Mülkiyet Bilgisi (SADECE DAİRE TİPLERİNDE GÖRÜNÜR) --}}
@@ -163,9 +185,18 @@
                                             style="width: 36px; height: 36px;">
                                             <i class="fa {{ $subIcon }}"></i>
                                         </div>
-                                        <span class="text-secondary fw-medium text-capitalize">
-                                            {{ $sub->type == 'gas' ? 'Doğalgaz' : ($sub->type == 'water' ? 'Su' : ($sub->type == 'electric' ? 'Elektrik' : 'İnternet')) }}
-                                        </span>
+                                        <div class="d-flex flex-column">
+                                            <span class="text-secondary fw-medium text-capitalize">
+                                                {{ $sub->type == 'gas' ? 'Doğalgaz' : ($sub->type == 'water' ? 'Su' : ($sub->type == 'electric' ? 'Elektrik' : 'İnternet')) }}
+                                            </span>
+                                            {{-- YENİ EKLENDİ: ABONELİK SAHİBİ GÖSTERİMİ --}}
+                                            @if ($sub->holder_name)
+                                                <span class="text-muted x-small" style="font-size: 0.75rem;">
+                                                    <i class="fa fa-user me-1 text-secondary opacity-50"></i>
+                                                    {{ $sub->holder_name }}
+                                                </span>
+                                            @endif
+                                        </div>
                                     </div>
                                     <span
                                         class="fw-bold font-monospace text-dark bg-light px-2 py-1 rounded border">{{ $sub->subscriber_no }}</span>
@@ -502,10 +533,16 @@
                                 <option value="internet">İnternet</option>
                             </select>
                         </div>
-                        <div class="mb-0">
+                        <div class="mb-3">
                             <label class="form-label small fw-bold text-secondary">Abone Numarası</label>
                             <input type="text" name="new_sub_no" class="form-control bg-light border-0"
                                 placeholder="Örn: 12345678" required>
+                        </div>
+                        {{-- YENİ EKLENDİ: ABONELİK SAHİBİ --}}
+                        <div class="mb-0">
+                            <label class="form-label small fw-bold text-secondary">Abonelik Sahibi (Opsiyonel)</label>
+                            <input type="text" name="new_sub_holder" class="form-control bg-light border-0"
+                                placeholder="Örn: Ahmet Yılmaz">
                         </div>
                     </div>
                     <div class="modal-footer border-0 p-4 pt-0">
