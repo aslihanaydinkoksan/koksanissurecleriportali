@@ -250,7 +250,7 @@
                                 </h2>
                                 <p class="mb-0 text-muted mt-1">
                                     <span
-                                        class="badge bg-dark bg-opacity-10 text-dark border">{{ ucfirst(Auth::user()->role) }}</span>
+                                        class="badge bg-dark bg-opacity-10 text-dark border">{{ ucwords(str_replace('_', ' ', Auth::user()->role)) }}</span>
                                     @if (Auth::user()->department)
                                         <span class="text-muted ms-2"><i class="fa-solid fa-building me-1"></i>
                                             {{ Auth::user()->department->name }}</span>
