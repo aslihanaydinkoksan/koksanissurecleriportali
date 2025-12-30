@@ -13,11 +13,28 @@ class Kernel extends ConsoleKernel
      * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      * @return void
      */
+    /**
+     * Define the application's command schedule.
+     *
+     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
+     * @return void
+     */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('travel:send-reminders')->dailyAt('09:00');
-    }
+        // 1. Bakım Kontrolleri (Teknik Ekip) - 09:00
+        $schedule->command('maintenance:check-upcoming')->dailyAt('09:00');
 
+        // 2. Sevkiyat Kontrolleri (Lojistik) - 08:00
+        $schedule->command('shipment:check-upcoming')->everyMinute();
+
+        // 3. Etkinlik ve Ziyaretler (Satış/İdari) - 08:30
+        // Mesai başlamadan hatırlatma iyidir.
+        $schedule->command('event:check-upcoming')->dailyAt('08:30');
+
+        // 4. Üretim Planları (Planlama) - 07:30
+        // Üretim genelde erken başlar.
+        $schedule->command('production:check-upcoming')->dailyAt('07:30');
+    }
     /**
      * Register the commands for the application.
      *
@@ -29,4 +46,5 @@ class Kernel extends ConsoleKernel
 
         require base_path('routes/console.php');
     }
+
 }

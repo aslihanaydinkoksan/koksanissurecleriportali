@@ -42,26 +42,29 @@ class UserObserver
      */
     private function assignRoleByDepartment(User $user): void
     {
-        // 1. Eğer kullanıcı veritabanında 'admin' olarak işaretlenmişse
-        // Departmanına bakmaksızın ona 'admin' yetkisi ver.
-        if ($user->role === 'admin') {
+        // 1. Admin ise dokunma
+        if ($user->role === 'admin' || $user->hasRole('admin')) {
             $user->syncRoles(['admin']);
             return;
         }
 
-        // 2. Departman ID'sine göre hangi rolü alacak?
-        // (Veritabanındaki ID'ler ile Seeder'daki isimleri eşleştiriyoruz)
+        // 2. KRİTİK KORUMA: Eğer kullanıcı "Yönetici" ise, onu "Personel" yapma!
+        // Bu sayede "İdari İşler Yöneticisi" olarak kalır.
+        if ($user->role === 'yönetici' || $user->hasRole(['yönetici', 'yonetici', 'manager'])) {
+            // İstersen burada yönetici rolünü garantiye alabilirsin:
+            // $user->syncRoles(['yönetici']); 
+            return; // İşlemi burada kes, aşağıya inip personel rolü atamasın.
+        }
+
+        // 3. Standart Personel Ataması (Aynen kalsın)
         $roleToAssign = match ($user->department_id) {
-            1 => 'lojistik_personeli',      // ID 1: Lojistik
-            2 => 'uretim_personeli',        // ID 2: Üretim
-            3 => 'idari_isler_personeli',   // ID 3: İdari İşler
-            4 => 'bakim_personeli',         // ID 4: Bakım
-            default => 'user',              // Departmanı yoksa standart user
+            1 => 'lojistik_personeli',
+            2 => 'uretim_personeli',
+            3 => 'idari_isler_personeli',
+            4 => 'bakim_personeli',
+            default => 'user',
         };
 
-        // 3. Rolü ata (syncRoles mevcut yetkileri siler, yenisini yazar - temiz iş yapar)
-        // Eğer özel bir yönetici rolü varsa (booking_manager gibi) onu ezmemek için kontrol eklenebilir
-        // Ama standart personel için bu en temizidir.
         if (Role::where('name', $roleToAssign)->exists()) {
             $user->syncRoles([$roleToAssign]);
         }

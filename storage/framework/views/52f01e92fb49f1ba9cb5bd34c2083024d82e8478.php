@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', 'Giriş Yap')
 
-@section('content')
+<?php $__env->startSection('title', 'Giriş Yap'); ?>
+
+<?php $__env->startSection('content'); ?>
     <style>
         /* Ana içerik alanı - dikeyde ortalanmış */
         #app>main.py-4 {
@@ -216,8 +216,8 @@
                     </div>
 
                     <div class="card-body">
-                        <form method="POST" action="{{ route('login') }}">
-                            @csrf
+                        <form method="POST" action="<?php echo e(route('login')); ?>">
+                            <?php echo csrf_field(); ?>
 
                             <!-- E-posta Adresi -->
                             <div class="form-group-custom">
@@ -226,14 +226,28 @@
                                     E-posta Adresi
                                 </label>
                                 <input id="email" type="email"
-                                    class="form-control form-control-custom @error('email') is-invalid @enderror"
-                                    name="email" value="{{ old('email') }}" required autocomplete="email" autofocus
+                                    class="form-control form-control-custom <?php $__errorArgs = ['email'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                    name="email" value="<?php echo e(old('email')); ?>" required autocomplete="email" autofocus
                                     placeholder="ornek@koksan.com">
-                                @error('email')
+                                <?php $__errorArgs = ['email'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
                                     <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
+                                        <strong><?php echo e($message); ?></strong>
                                     </span>
-                                @enderror
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                             </div>
 
                             <!-- Şifre -->
@@ -244,61 +258,96 @@
                                 </label>
                                 <div class="password-group">
                                     <input id="password" type="password"
-                                        class="form-control form-control-custom @error('password') is-invalid @enderror"
+                                        class="form-control form-control-custom <?php $__errorArgs = ['password'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
                                         name="password" required autocomplete="current-password" placeholder="••••••••">
                                     <button class="password-toggle-btn" type="button" id="togglePassword">
                                         <i class="fa-solid fa-eye" id="eyeIcon"></i>
                                     </button>
                                 </div>
-                                @error('password')
+                                <?php $__errorArgs = ['password'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
                                     <span class="invalid-feedback d-block" role="alert">
-                                        <strong>{{ $message }}</strong>
+                                        <strong><?php echo e($message); ?></strong>
                                     </span>
-                                @enderror
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                             </div>
 
                             <!-- Beni Hatırla -->
                             <div class="form-group-custom">
                                 <div class="form-check-custom">
                                     <input class="form-check-input" type="checkbox" name="remember" id="remember"
-                                        {{ old('remember') ? 'checked' : '' }}>
+                                        <?php echo e(old('remember') ? 'checked' : ''); ?>>
                                     <label class="form-check-label" for="remember">
                                         Beni Hatırla
                                     </label>
                                 </div>
                             </div>
-                            @if ($showCaptcha ?? false)
+                            <?php if($showCaptcha ?? false): ?>
                                 <div class="recaptcha-wrapper">
-                                    <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}">
+                                    <div class="g-recaptcha" data-sitekey="<?php echo e(config('services.recaptcha.site_key')); ?>">
                                     </div>
                                 </div>
-                                @error('g-recaptcha-response')
+                                <?php $__errorArgs = ['g-recaptcha-response'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
                                     <div class="text-center mb-3">
                                         <span class="text-danger">
                                             <strong>Lütfen robot olmadığınızı doğrulayın.</strong>
                                         </span>
                                     </div>
-                                @enderror
-                            @endif
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                            <?php endif; ?>
 
-                            {{-- KVKK CHECKBOX (LİNK VERSİYONU) --}}
+                            
                             <div class="mb-3">
                                 <div class="form-check">
-                                    <input class="form-check-input @error('kvkk_approval') is-invalid @enderror"
+                                    <input class="form-check-input <?php $__errorArgs = ['kvkk_approval'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
                                         type="checkbox" name="kvkk_approval" id="kvkk_approval" required>
 
                                     <label class="form-check-label small" for="kvkk_approval">
-                                        {{-- TETİKLEYİCİ LİNK --}}
+                                        
                                         <a href="#" class="text-decoration-none fw-bold" style="color: #667eea;"
-                                            data-bs-toggle="modal" data-bs-target="#kvkkModal"> {{-- Hedef ID Burası --}}
+                                            data-bs-toggle="modal" data-bs-target="#kvkkModal"> 
                                             KVKK Aydınlatma Metnini
                                         </a>
                                         okudum ve onaylıyorum.
                                     </label>
                                 </div>
-                                @error('kvkk_approval')
-                                    <div class="text-danger small mt-1"><strong>{{ $message }}</strong></div>
-                                @enderror
+                                <?php $__errorArgs = ['kvkk_approval'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <div class="text-danger small mt-1"><strong><?php echo e($message); ?></strong></div>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                             </div>
 
                             <!-- Giriş Butonu -->
@@ -310,24 +359,24 @@
                             </div>
 
                             <!-- Şifremi Unuttum Linki -->
-                            @if (Route::has('password.request'))
+                            <?php if(Route::has('password.request')): ?>
                                 <div class="text-center">
-                                    <a class="link-palette" href="{{ route('password.request') }}">
+                                    <a class="link-palette" href="<?php echo e(route('password.request')); ?>">
                                         <i class="fa-solid fa-question-circle me-1"></i>
                                         Şifreni mi unuttun?
                                     </a>
                                 </div>
-                            @endif
+                            <?php endif; ?>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    @include('auth.kvkk')
-@endsection
+    <?php echo $__env->make('auth.kvkk', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+<?php $__env->stopSection(); ?>
 
-@section('page_scripts')
+<?php $__env->startSection('page_scripts'); ?>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
     <script>
@@ -351,7 +400,7 @@
             });
         });
     </script>
-    {{-- KVKK OTOMATİK ONAY ve ZORUNLU MODAL SCRİPTİ --}}
+    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Elementleri seç
@@ -389,4 +438,6 @@
             }
         });
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/auth/login.blade.php ENDPATH**/ ?>

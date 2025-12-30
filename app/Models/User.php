@@ -14,11 +14,12 @@ use Illuminate\Foundation\Auth\Access\Authorizable;
 use App\Traits\Loggable;
 use Illuminate\Support\Str;
 use App\Models\BusinessUnit;
-use Spatie\Permission\Traits\HasRoles; // ✅ BU KALMALI
+use Spatie\Permission\Traits\HasRoles;
+use App\Notifications\ResetPasswordNotification;
 
 class User extends Authenticatable
 {
-    // ✅ HasRoles trait'i buraya eklendi, artık roller buradan yönetiliyor
+    // HasRoles trait'i buraya eklendi, artık roller buradan yönetiliyor
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes, Authorizable, Loggable, HasRoles;
 
     /**
@@ -244,57 +245,64 @@ class User extends Authenticatable
         return $this->businessUnits->contains('id', $unitId);
     }
     /**
-     * KÖKSAN AKILLI YETKİ KONTROLÜ
-     * Kullanıcının departmanına göre Navbar menülerini filtreler.
-     * Örn: Bakım yöneticisi ise permission 'view_logistics' olsa bile FALSE döner.
+     * KÖKSAN YETKİ KONTROLÜ - ID TABANLI (GARANTİ)
      */
     public function hasDepartmentPermission(string $permission): bool
     {
-        // 1. ADIM: Temel Yetki Kontrolü (Spatie)
-        // Rolünde bu yetki tanımlı değilse zaten göremez.
-        if (!$this->can($permission)) {
-            return false;
-        }
-
-        // 2. ADIM: Süper Yetkililer (Filtreye Takılmaz)
-        // Admin her şeyi görür.
-        if ($this->hasRole('admin')) {
+        // 1. Admin Kontrolü
+        if ($this->hasRole(['admin', 'super-admin']) || trim($this->role) === 'admin') {
             return true;
         }
 
-        // 3. ADIM: "Departmansız" Yönetici Kontrolü (Genel Müdür vb.)
-        // Eğer kullanıcının rolü "yönetici" ise VE department_id'si NULL ise -> Her yeri görsün.
-        if ($this->hasRole('yönetici') && is_null($this->department_id)) {
-            return true;
-        }
+        // 2. Yönetici Kontrolü (Boşlukları temizleyerek kontrol ediyoruz)
+        $userRole = trim($this->role); // Veritabanındaki 'role' sütunu
+        $isManager = $this->hasRole(['yönetici', 'yonetici', 'manager']) ||
+            in_array($userRole, ['yönetici', 'yonetici', 'manager', 'müdür']);
 
-        // 4. ADIM: Departman Eşleşmesi (En Önemli Kısım)
-        // Eğer kullanıcının bir departmanı varsa, sadece o departmanla ilgili menüleri görsün.
-        if ($this->department) {
-            $userDeptName = mb_strtolower($this->department->name, 'UTF-8');
+        // 3. ID Eşleşmesi (Kelime arama riskini ortadan kaldırıyoruz)
+        // Hangi izin, hangi ID'yi gerektiriyor?
+        $permissionMap = [
+            'view_logistics' => [1], // ID 1: Lojistik
+            'view_production' => [2], // ID 2: Üretim
+            'view_administrative' => [3], // ID 3: İdari İşler
+            'view_maintenance' => [4], // ID 4: Bakım
+        ];
 
-            // İzin Anahtarı -> Departman Kelimeleri Eşleşmesi
-            // Bu liste sayesinde if-else yığınından kurtuluyoruz.
-            $moduleMap = [
-                'view_logistics' => ['lojistik', 'sevkiyat', 'depo', 'nakliye'],
-                'view_production' => ['üretim', 'imalat', 'planlama', 'fabrika'],
-                'view_maintenance' => ['bakım', 'teknik', 'tamir', 'onarım'],
-                'view_administrative' => ['idari', 'hizmet', 'insan kaynakları', 'muhasebe', 'satın alma'],
-            ];
+        // Eğer sorgulanan yetki listemizde varsa (Örn: view_administrative)
+        if (isset($permissionMap[$permission])) {
 
-            // Eğer sorgulanan izin (örn: view_logistics) haritamızda varsa
-            if (array_key_exists($permission, $moduleMap)) {
-                // Kullanıcının departman isminde, izin verilen kelimelerden biri geçiyor mu?
-                foreach ($moduleMap[$permission] as $keyword) {
-                    if (str_contains($userDeptName, $keyword)) {
-                        return true; // Eşleşme var, menüyü göster.
-                    }
-                }
-                return false; // Yetkisi var (Spatie'den gelmiş) ama departmanı uymuyor -> GİZLE.
+            // Kullanıcının departman ID'si, izin verilen ID listesinde var mı?
+            // (int) diyerek sayıyı garantiye alıyoruz.
+            if ($this->department_id && in_array((int) $this->department_id, $permissionMap[$permission])) {
+                return true;
             }
+
+            // ID uyuşmuyor!
+            // Eğer Genel Müdür ise (Yönetici + Dept ID yok) -> Göster
+            if ($isManager && is_null($this->department_id)) {
+                return true;
+            }
+
+            return false; // Departman ID'si tutmuyor, GİZLE.
         }
 
-        // Eğer haritada olmayan genel bir yetki ise (örn: view_users) ve 1. adımı geçtiyse göster.
-        return true;
+        // Listede olmayan genel izinler için (eğer yöneticiyse veya spatie izni varsa geç)
+        if ($isManager)
+            return true;
+
+        return $this->can($permission);
+    }
+
+    /**
+     * Şifre sıfırlama bildirimi gönderir.
+     * Varsayılan metodu override ediyoruz.
+     *
+     * @param  string  $token
+     * @return void
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        // Kuyruğa atarak gönderir
+        $this->notify(new ResetPasswordNotification($token));
     }
 }
