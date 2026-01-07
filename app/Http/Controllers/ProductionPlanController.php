@@ -65,26 +65,36 @@ class ProductionPlanController extends Controller
         // View'a birimleri gönder
         return view('production.plans.create', compact('birimler'));
     }
+    /**
+     * Store Metodu (HİBRİT YAPI GÜNCELLEMESİ YAPILDI)
+     */
     public function store(Request $request)
     {
         $this->authorize('access-department', 'uretim');
 
-        $validatedData = $request->validate([
+        // 1. Standart Kurallar
+        $rules = [
             'plan_title' => 'required|string|max:255',
             'week_start_date' => 'required|date',
             'plan_details' => 'nullable|array',
-
             'plan_details.*.machine' => 'required_with:plan_details|string|max:255',
             'plan_details.*.product' => 'required_with:plan_details|string|max:255',
             'plan_details.*.quantity' => 'required_with:plan_details|numeric|min:1',
-            // YENİ VALIDASYON KURALI EKLENDİ
             'plan_details.*.birim_id' => 'required_with:plan_details|integer|exists:birims,id',
-        ]);
+        ];
 
+        // 2. [HİBRİT] Dinamik Kuralları Birleştir
+        // Üretim planına eklenen özel alanları (Örn: Vardiya Amiri, Notlar) doğrula
+        $rules = array_merge($rules, ProductionPlan::getDynamicValidationRules());
+
+        // 3. Validasyon
+        $validatedData = $request->validate($rules);
 
         $validatedData['user_id'] = Auth::id();
 
-
+        // 4. Kayıt
+        // ProductionPlan modelinde 'extras' => 'array' cast olduğu için
+        // $validatedData['extras'] otomatik olarak JSON sütununa yazılır.
         ProductionPlan::create($validatedData);
 
         return redirect()->route('production.plans.create')
@@ -109,9 +119,11 @@ class ProductionPlanController extends Controller
     }
 
 
+    /**
+     * Update Metodu (HİBRİT YAPI GÜNCELLEMESİ YAPILDI)
+     */
     public function update(Request $request, ProductionPlan $productionPlan)
     {
-
         $this->authorize('access-department', 'uretim');
 
         if (Auth::id() !== $productionPlan->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
@@ -119,20 +131,26 @@ class ProductionPlanController extends Controller
                 ->with('error', 'Bu planı sadece oluşturan kişi güncelleyebilir.');
         }
 
-
-        $validatedData = $request->validate([
+        // 1. Standart Kurallar
+        $rules = [
             'plan_title' => 'required|string|max:255',
             'week_start_date' => 'required|date',
             'plan_details' => 'nullable|array',
             'plan_details.*.machine' => 'required_with:plan_details|string|max:255',
             'plan_details.*.product' => 'required_with:plan_details|string|max:255',
             'plan_details.*.quantity' => 'required_with:plan_details|numeric|min:1',
-            // YENİ VALIDASYON KURALI EKLENDİ
             'plan_details.*.birim_id' => 'required_with:plan_details|integer|exists:birims,id',
-        ]);
+        ];
 
+        // 2. [HİBRİT] Dinamik Kuralları Birleştir
+        $rules = array_merge($rules, ProductionPlan::getDynamicValidationRules());
+
+        // 3. Validasyon
+        $validatedData = $request->validate($rules);
+
+        // 4. Güncelleme
+        // $validatedData içinde 'extras' dizisi de var, model cast sayesinde JSON olur.
         $productionPlan->update($validatedData);
-
 
         return redirect()->route('production.plans.index')
             ->with('success', 'Üretim planı başarıyla güncellendi.');

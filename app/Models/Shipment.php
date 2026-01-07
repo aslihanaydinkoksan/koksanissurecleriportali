@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Loggable;
 use App\Traits\HasBusinessUnit;
+use App\Traits\HasDynamicAttributes;
 
 /**
  * App\Models\Shipment
@@ -81,7 +82,7 @@ use App\Traits\HasBusinessUnit;
  */
 class Shipment extends Model
 {
-    use HasFactory, SoftDeletes, Loggable, HasBusinessUnit; // <--- 2. Trait ekle
+    use HasFactory, SoftDeletes, Loggable, HasBusinessUnit, HasDynamicAttributes; // <--- 2. Trait ekle
 
     protected $fillable = [
         'user_id',
@@ -107,12 +108,14 @@ class Shipment extends Model
         'aciklamalar',
         'dosya_yolu',
         'is_important',
+        'extras'
     ];
     protected $casts = [
         'cikis_tarihi' => 'datetime',
         'tahmini_varis_tarihi' => 'datetime',
         'onaylanma_tarihi' => 'datetime',
         'is_important' => 'boolean',
+        'extras' => 'array',
     ];
 
     public function onaylayanKullanici(): BelongsTo

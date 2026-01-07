@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str; // Slug oluşturmak için gerekli
 use Illuminate\Support\Facades\Auth;
-
+use Spatie\Permission\Models\Role;
 class RoleController extends Controller
 {
     // GÜVENLİK DUVARI: Sadece Adminler Erişebilir

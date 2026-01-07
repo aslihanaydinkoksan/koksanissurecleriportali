@@ -334,6 +334,8 @@
                                 </div>
                             </div>
                             <div class="text-end mt-3">
+                                {{-- DİNAMİK ALANLAR (HİBRİT YAPI) --}}
+                                <x-dynamic-fields :model="\App\Models\Shipment::class" />
                                 <button type="submit" class="btn btn-animated-gradient rounded-3 px-4 py-2">Kaydı
                                     Oluştur</button>
                             </div>

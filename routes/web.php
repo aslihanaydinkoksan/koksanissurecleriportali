@@ -32,6 +32,7 @@ use App\Http\Controllers\TvDashboardController;
 use App\Http\Controllers\SystemController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\StatisticsController;
+use App\Http\Controllers\CustomFieldDefinitionController;
 
 use App\Models\Event;
 use App\Models\Travel;
@@ -119,6 +120,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/system/logs', [ActivityLogController::class, 'index'])
             ->middleware('can:is-global-manager') // Veya role:admin
             ->name('logs.index');
+
+        Route::middleware(['role:admin|yönetici'])
+            ->prefix('admin')
+            ->name('admin.')
+            ->group(function () {
+                Route::resource('custom-fields', CustomFieldDefinitionController::class);
+            });
     });
 
     // Profil (Herkes)

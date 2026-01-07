@@ -395,6 +395,10 @@
                                 <textarea class="form-control" id="description" name="description" rows="5"
                                     placeholder="Yapılacak işlemlerin detaylarını, parça gereksinimlerini veya özel notları buraya giriniz...">{{ old('description', $plan->description) }}</textarea>
                             </div>
+                            {{-- DİNAMİK ALANLAR --}}
+                            <div class="mt-4">
+                                <x-dynamic-fields :model="\App\Models\MaintenancePlan::class" :entity="$plan" />
+                            </div>
 
                             {{-- Aksiyon Butonları --}}
                             <div class="d-flex justify-content-end align-items-center mt-5 pt-3 border-top">

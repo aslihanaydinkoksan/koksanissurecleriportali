@@ -278,7 +278,10 @@
                                 </div>
                             </div>
 
-
+                            {{-- DİNAMİK ALANLAR --}}
+                            <div class="col-span-12">
+                                <x-dynamic-fields :model="\App\Models\Event::class" />
+                            </div>
                             <div class="text-end mt-4">
                                 {{-- Buton metni güncellendi --}}
                                 <button type="submit" class="btn btn-animated-gradient rounded-3 px-4 py-2">Etkinliği

@@ -612,6 +612,13 @@
                                                 Ölçü Birimleri
                                             </a>
                                         </li>
+
+                                        <li>
+                                            <a class="dropdown-item" href="<?php echo e(route('admin.custom-fields.index')); ?>">
+                                                <i class="fa-solid fa-wpforms" style="color: #00177c;"></i>
+                                                Form Alanları
+                                            </a>
+                                        </li>
                                         <li><a class="dropdown-item" href="<?php echo e(route('departments.index')); ?>"><i
                                                     class="fa-solid fa-building" style="color: #667EEA;"></i>
                                                 Departmanlar</a></li>

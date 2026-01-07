@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Loggable;
 use App\Traits\HasBusinessUnit; // <--- 1. Use ekle
+use App\Traits\HasDynamicAttributes;
 
 /**
  * App\Models\ProductionPlan
@@ -44,7 +45,7 @@ use App\Traits\HasBusinessUnit; // <--- 1. Use ekle
  */
 class ProductionPlan extends Model
 {
-    use HasFactory, SoftDeletes, Loggable, HasBusinessUnit; // <--- 2. Trait ekle
+    use HasFactory, SoftDeletes, Loggable, HasBusinessUnit, HasDynamicAttributes; // <--- 2. Trait ekle
     /**
      * Toplu atanabilir alanlar.
      */
@@ -55,6 +56,7 @@ class ProductionPlan extends Model
         'plan_details',
         'is_important',
         'business_unit_id',
+        'extras',
     ];
 
     /**
@@ -64,6 +66,7 @@ class ProductionPlan extends Model
         'week_start_date' => 'date',
         'plan_details' => 'array',
         'is_important' => 'boolean',
+        'extras' => 'array',
     ];
 
     /**

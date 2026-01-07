@@ -219,7 +219,10 @@
                                         Ekle</button>
                                 </fieldset>
                             </div>
-
+                            {{-- DİNAMİK ALANLAR --}}
+                            <div class="mb-3">
+                                <x-dynamic-fields :model="\App\Models\ProductionPlan::class" :entity="$productionPlan" />
+                            </div>
 
                             <div class="text-end mt-4">
                                 {{-- Butonlar güncellendi --}}

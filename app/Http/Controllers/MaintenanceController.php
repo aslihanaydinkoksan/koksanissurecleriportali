@@ -70,28 +70,37 @@ class MaintenanceController extends Controller
         return view('maintenance.create', compact('types', 'assets'));
     }
 
-    // 3. KAYDETME İŞLEMİ
     public function store(Request $request)
     {
-        $request->validate([
+        // 1. Standart Kurallar
+        $rules = [
             'title' => 'required|string|max:255',
             'maintenance_type_id' => 'required|exists:maintenance_types,id',
             'maintenance_asset_id' => 'required|exists:maintenance_assets,id',
             'planned_start_date' => 'required|date',
             'planned_end_date' => 'required|date|after:planned_start_date',
             'priority' => 'required|in:low,normal,high,critical',
-        ]);
+        ];
 
+        // 2. [HİBRİT] Dinamik Kuralları Birleştir
+        $rules = array_merge($rules, MaintenancePlan::getDynamicValidationRules());
+
+        // 3. Validasyon
+        $validatedData = $request->validate($rules);
+
+        // 4. Kayıt (Extras manuel ekleniyor)
         $plan = MaintenancePlan::create([
             'user_id' => Auth::id(),
-            'title' => $request->title,
-            'description' => $request->description,
-            'maintenance_type_id' => $request->maintenance_type_id,
-            'maintenance_asset_id' => $request->maintenance_asset_id,
-            'planned_start_date' => $request->planned_start_date,
-            'planned_end_date' => $request->planned_end_date,
-            'priority' => $request->priority,
-            'status' => 'pending'
+            'title' => $validatedData['title'],
+            'description' => $request->description, // Description nullable olduğu için validate'e girmemiş olabilir
+            'maintenance_type_id' => $validatedData['maintenance_type_id'],
+            'maintenance_asset_id' => $validatedData['maintenance_asset_id'],
+            'planned_start_date' => $validatedData['planned_start_date'],
+            'planned_end_date' => $validatedData['planned_end_date'],
+            'priority' => $validatedData['priority'],
+            'status' => 'pending',
+            // [HİBRİT] Formdan gelen extras array'ini buraya ekliyoruz
+            'extras' => $validatedData['extras'] ?? [],
         ]);
 
         // LOGLAMA
@@ -119,7 +128,7 @@ class MaintenanceController extends Controller
         return view('maintenance.edit', compact('plan', 'types', 'assets'));
     }
 
-    // 6. GÜNCELLEME İŞLEMİ
+    // 6. GÜNCELLEME İŞLEMİ (HİBRİT YAPI GÜNCELLEMESİ)
     public function update(Request $request, $id)
     {
         $plan = MaintenancePlan::findOrFail($id);
@@ -156,9 +165,24 @@ class MaintenanceController extends Controller
             }
         }
 
-        $request->validate([
-            'title' => 'sometimes|required|string|max:255',
-        ]);
+        // [HİBRİT] Validasyon Mantığı
+        // Sadece normal form güncellemesinde dinamik alanları kontrol etmeliyiz.
+        // Hızlı bitirme (completion_note) veya sayaç işlemlerinde validasyon gerekmez.
+        if (!$request->has('completion_note') && !$request->has('stop_timer')) {
+            $rules = [
+                'title' => 'sometimes|required|string|max:255',
+            ];
+            // Dinamik kuralları da ekle (Sadece formdan veri geliyorsa)
+            $rules = array_merge($rules, MaintenancePlan::getDynamicValidationRules());
+
+            $validatedData = $request->validate($rules);
+
+            // Validated data içindeki extras'ı data dizisine aktar
+            if (isset($validatedData['extras'])) {
+                $data['extras'] = $validatedData['extras'];
+            }
+        }
+
 
         // 3. SENARYOLAR VE DURUM YÖNETİMİ
 
@@ -237,6 +261,7 @@ class MaintenanceController extends Controller
         }
 
         // 4. VERİTABANI GÜNCELLEME VE LOGLAMA
+        // $data içinde artık 'extras' da var (eğer formdan geldiyse)
         $plan->update($data);
 
         if ($oldStatus !== $plan->status) {

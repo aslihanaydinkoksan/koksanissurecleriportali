@@ -121,7 +121,6 @@
 
 @section('content')
     <div class="container-fluid modern-container">
-
         {{-- Üst Navigasyon --}}
         <div class="d-flex align-items-center mb-4">
             <a href="{{ route('maintenance.index') }}" class="btn btn-light rounded-circle shadow-sm me-3"
@@ -264,6 +263,10 @@
                                 </label>
                                 <textarea class="form-control" id="description" name="description" rows="5"
                                     placeholder="Yapılacak işlemlerin detaylarını, parça gereksinimlerini veya özel notları buraya giriniz...">{{ old('description') }}</textarea>
+                            </div>
+                            {{-- DİNAMİK ALANLAR --}}
+                            <div class="mt-4">
+                                <x-dynamic-fields :model="\App\Models\MaintenancePlan::class" />
                             </div>
 
                             {{-- Aksiyon Butonları --}}

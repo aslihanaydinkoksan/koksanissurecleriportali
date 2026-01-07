@@ -370,6 +370,8 @@
                                 </div>
                             </div>
                             <div class="text-end mt-3">
+                                {{-- DİNAMİK ALANLAR (HİBRİT YAPI) --}}
+                                <x-dynamic-fields :model="\App\Models\Shipment::class" :entity="$shipment" />
                                 <button type="submit"
                                     class="btn btn-animated-gradient rounded-3 px-4 py-2">Değişiklikleri Kaydet</button>
                                 <a href="{{ route('home') }}" class="btn btn-outline-secondary rounded-3">İptal</a>

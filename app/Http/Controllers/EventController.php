@@ -123,12 +123,15 @@ class EventController extends Controller
         return view('service.events.create', compact('eventTypes', 'customers', 'availableTravels'));
     }
 
+    /**
+     * Store Metodu (HİBRİT YAPI GÜNCELLEMESİ YAPILDI)
+     */
     public function store(Request $request)
     {
-        // GÜNCEL YETKİ KONTROLÜ
         $this->checkAuth();
 
-        $validatedData = $request->validate([
+        // 1. Standart Kurallar
+        $rules = [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'start_datetime' => 'required|date',
@@ -151,11 +154,18 @@ class EventController extends Controller
             'after_sales_notes' => 'nullable|string',
             'visit_status' => 'nullable|string|in:planlandi,gerceklesti,ertelendi,iptal',
             'cancellation_reason' => 'nullable|required_if:visit_status,iptal,ertelendi|string',
-        ]);
+        ];
+
+        // 2. [HİBRİT] Dinamik Kuralları Birleştir
+        $rules = array_merge($rules, Event::getDynamicValidationRules());
+
+        // 3. Validasyon
+        $validatedData = $request->validate($rules);
 
         try {
             DB::beginTransaction();
 
+            // 4. Event Kaydı (Extras alanını manuel ekliyoruz)
             $event = Event::create([
                 'user_id' => Auth::id(),
                 'title' => $validatedData['title'],
@@ -167,6 +177,8 @@ class EventController extends Controller
                 'customer_id' => $validatedData['customer_id'] ?? null,
                 'visit_status' => $validatedData['visit_status'] ?? 'planlandi',
                 'cancellation_reason' => $validatedData['cancellation_reason'] ?? null,
+                // [HİBRİT] Formdan gelen extras array'ini buraya ekliyoruz
+                'extras' => $validatedData['extras'] ?? [],
             ]);
 
             if ($event->event_type === 'musteri_ziyareti') {
@@ -228,18 +240,20 @@ class EventController extends Controller
         return view('service.events.edit', compact('event', 'eventTypes'));
     }
 
+    /**
+     * Update Metodu (HİBRİT YAPI GÜNCELLEMESİ YAPILDI)
+     */
     public function update(Request $request, Event $event)
     {
-        // GÜNCEL YETKİ KONTROLÜ
         $this->checkAuth();
 
-        // Rol kontrolünü güncelledik (yonetici + yönetici)
         if (Auth::id() !== $event->user_id && !in_array(Auth::user()->role, ['admin', 'yonetici', 'yönetici'])) {
             return redirect()->route('home')
                 ->with('error', 'Bu etkinliği sadece oluşturan kişi düzenleyebilir.');
         }
 
-        $validatedData = $request->validate([
+        // 1. Standart Kurallar
+        $rules = [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'start_datetime' => 'required|date',
@@ -249,8 +263,15 @@ class EventController extends Controller
             'visit_status' => 'nullable|string|in:planlandi,gerceklesti,ertelendi,iptal',
             'cancellation_reason' => 'nullable|required_if:visit_status,iptal,ertelendi|string',
             'customer_id' => 'nullable|exists:customers,id',
-        ]);
+        ];
 
+        // 2. [HİBRİT] Dinamik Kuralları Birleştir
+        $rules = array_merge($rules, Event::getDynamicValidationRules());
+
+        // 3. Validasyon
+        $validatedData = $request->validate($rules);
+
+        // 4. Güncelleme
         $event->update([
             'title' => $validatedData['title'],
             'description' => $validatedData['description'],
@@ -261,6 +282,10 @@ class EventController extends Controller
             'visit_status' => $validatedData['visit_status'] ?? $event->visit_status,
             'cancellation_reason' => $validatedData['cancellation_reason'] ?? null,
             'customer_id' => $validatedData['customer_id'] ?? $event->customer_id,
+            // [HİBRİT] Extras alanını güncelle
+            // Eğer formdan extras gelmediyse (boşsa) mevcut olanı koruyabiliriz veya null yapabiliriz.
+            // Validasyon kurallarına göre hareket ettiği için null gelebilir.
+            'extras' => $validatedData['extras'] ?? $event->extras,
         ]);
 
         return redirect()->route('service.events.index')

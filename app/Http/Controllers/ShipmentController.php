@@ -4,13 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Shipment;
 use App\Models\Birim;
+use App\Models\ShipmentsVehicleType; // Araç tipleri modeli
+use App\Services\CsvExporter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB; // Transaction için gerekli
 use Carbon\Carbon;
-use App\Services\CsvExporter;
-use App\Models\ShipmentsVehicleType;
-use Illuminate\Support\Facades\DB;
 
 class ShipmentController extends Controller
 {
@@ -19,7 +19,6 @@ class ShipmentController extends Controller
      */
     public function create()
     {
-        // YENİ EKLENDİ: Kullanıcının 'lojistik' birimine erişimi var mı?
         $this->authorize('access-department', 'lojistik');
         $birimler = Birim::orderBy('ad')->get();
         return view('shipments.create', compact('birimler'));
@@ -32,8 +31,9 @@ class ShipmentController extends Controller
     {
         $this->authorize('access-department', 'lojistik');
 
-        $validatedData = $request->validate([
-            'arac_tipi' => 'required|string|in:tır,gemi,kamyon',
+        // Validasyon: Araç tiplerini veritabanından kontrol ediyoruz (Dinamik Validasyon)
+        $rules = [
+            'arac_tipi' => 'required|string|exists:shipments_vehicle_types,name',
             'plaka' => 'required_if:arac_tipi,tır,kamyon|nullable|string|max:255',
             'dorse_plakasi' => 'required_if:arac_tipi,tır|nullable|string|max:255',
             'sofor_adi' => 'nullable|string|max:255',
@@ -50,43 +50,40 @@ class ShipmentController extends Controller
             'cikis_tarihi' => 'required|date',
             'tahmini_varis_tarihi' => 'required|date|after_or_equal:cikis_tarihi',
             'aciklamalar' => 'nullable|string',
-            'ek_dosya' => [
-                'nullable',
-                'file',
-                'mimes:doc,docx,xls,xlsx,pdf,jpg,jpeg,png,txt',
-                'max:5120',
-            ],
-        ]);
+            'ek_dosya' => ['nullable', 'file', 'mimes:doc,docx,xls,xlsx,pdf,jpg,jpeg,png,txt', 'max:5120'],
+        ];
+        $rules = array_merge($rules, Shipment::getDynamicValidationRules());
+        $validatedData = $request->validate($rules);
 
-        // Dosya hazırlığı
-        $dosyaYolu = null;
-        $uploadedFile = null;
+        // Veri bütünlüğü için Transaction başlatıyoruz
+        DB::transaction(function () use ($request, $validatedData) {
 
-        if ($request->hasFile('ek_dosya')) {
-            $uploadedFile = $request->file('ek_dosya');
-            // Dosyayı public diskine kaydet
-            $dosyaYolu = $uploadedFile->store('sevkiyat_dosyalari', 'public');
-            $validatedData['dosya_yolu'] = $dosyaYolu;
-        }
+            $dosyaYolu = null;
+            $uploadedFile = null;
 
-        $validatedData['user_id'] = Auth::id();
+            if ($request->hasFile('ek_dosya')) {
+                $uploadedFile = $request->file('ek_dosya');
+                $dosyaYolu = $uploadedFile->store('sevkiyat_dosyalari', 'public');
+                $validatedData['dosya_yolu'] = $dosyaYolu;
+            }
 
-        // 1. ADIM: Sevkiyatı oluştur
-        $shipment = Shipment::create($validatedData);
+            // 1. ADIM: Sevkiyatı oluştur
+            $shipment = Shipment::create($validatedData);
 
-        // 2. ADIM: Files tablosuna yedek/log kaydı at
-        if ($uploadedFile && $dosyaYolu) {
-            DB::table('files')->insert([
-                'fileable_type' => get_class($shipment),       // Örn: App\Models\Shipment
-                'fileable_id' => $shipment->id,              // Sevkiyat ID
-                'path' => $dosyaYolu,                 // Dosya yolu
-                'original_name' => $uploadedFile->getClientOriginalName(), // Orijinal ad
-                'mime_type' => $uploadedFile->getMimeType(),       // Dosya türü
-                'uploaded_by' => Auth::id(),                 // Yükleyen
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
+            // 2. ADIM: Files tablosuna kayıt (Transaction içinde güvenli)
+            if ($uploadedFile && $dosyaYolu) {
+                DB::table('files')->insert([
+                    'fileable_type' => get_class($shipment),
+                    'fileable_id' => $shipment->id,
+                    'path' => $dosyaYolu,
+                    'original_name' => $uploadedFile->getClientOriginalName(),
+                    'mime_type' => $uploadedFile->getMimeType(),
+                    'uploaded_by' => Auth::id(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        });
 
         return redirect()->route('shipments.create')->with('success', 'Sevkiyat kaydı başarıyla oluşturuldu!');
     }
@@ -96,13 +93,16 @@ class ShipmentController extends Controller
      */
     public function edit(Shipment $shipment)
     {
-        // YENİ EKLENDİ: Kullanıcının 'lojistik' birimine erişimi var mı?
         $this->authorize('access-department', 'lojistik');
+
         $birimler = Birim::orderBy('ad')->get();
+
+        // Yetki kontrolü
         if (Auth::id() !== $shipment->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
             return redirect()->route('home')
                 ->with('error', 'Bu sevkiyatı sadece oluşturan kişi düzenleyebilir.');
         }
+
         return view('shipments.edit', compact('shipment', 'birimler'));
     }
 
@@ -118,8 +118,8 @@ class ShipmentController extends Controller
                 ->with('error', 'Bu sevkiyatı sadece oluşturan kişi düzenleyebilir.');
         }
 
-        $validatedData = $request->validate([
-            'arac_tipi' => 'required|string|in:tır,gemi,kamyon',
+        $rules = [
+            'arac_tipi' => 'required|string|exists:shipments_vehicle_types,name',
             'plaka' => 'nullable|string|max:255',
             'dorse_plakasi' => 'nullable|string|max:255',
             'sofor_adi' => 'nullable|string|max:255',
@@ -138,100 +138,81 @@ class ShipmentController extends Controller
             'aciklamalar' => 'nullable|string',
             'ek_dosya' => ['nullable', 'file', 'mimes:doc,docx,xls,xlsx,pdf,jpg,jpeg,png,txt', 'max:5120'],
             'dosya_sil' => 'nullable|boolean',
-        ]);
+        ];
+        $rules = array_merge($rules, Shipment::getDynamicValidationRules());
+        $validatedData = $request->validate($rules);
 
-        // --- DOSYA YÖNETİMİ ---
-        if ($request->hasFile('ek_dosya')) {
-            // Eski fiziksel dosyayı sil (Opsiyonel, yer açmak için)
-            if ($shipment->dosya_yolu) {
-                Storage::disk('public')->delete($shipment->dosya_yolu);
+        DB::transaction(function () use ($request, $shipment, $validatedData) {
+
+            // --- DOSYA YÖNETİMİ ---
+            if ($request->hasFile('ek_dosya')) {
+                // Eski fiziksel dosyayı sil
+                if ($shipment->dosya_yolu && Storage::disk('public')->exists($shipment->dosya_yolu)) {
+                    Storage::disk('public')->delete($shipment->dosya_yolu);
+                }
+
+                $uploadedFile = $request->file('ek_dosya');
+                $dosyaYolu = $uploadedFile->store('sevkiyat_dosyalari', 'public');
+                $validatedData['dosya_yolu'] = $dosyaYolu;
+
+                // Files tablosuna yeni kayıt
+                DB::table('files')->insert([
+                    'fileable_type' => get_class($shipment),
+                    'fileable_id' => $shipment->id,
+                    'path' => $dosyaYolu,
+                    'original_name' => $uploadedFile->getClientOriginalName(),
+                    'mime_type' => $uploadedFile->getMimeType(),
+                    'uploaded_by' => Auth::id(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+            } elseif ($request->has('dosya_sil') && $request->input('dosya_sil') == '1') {
+                if ($shipment->dosya_yolu && Storage::disk('public')->exists($shipment->dosya_yolu)) {
+                    Storage::disk('public')->delete($shipment->dosya_yolu);
+                }
             }
+            // --- DOSYA YÖNETİMİ SONU ---
 
-            $uploadedFile = $request->file('ek_dosya');
-            $dosyaYolu = $uploadedFile->store('sevkiyat_dosyalari', 'public');
-            $validatedData['dosya_yolu'] = $dosyaYolu;
-
-            // Files tablosuna yeni kaydı ekle (Eskisini files tablosundan silmiyoruz, tarihçe kalsın)
-            DB::table('files')->insert([
-                'fileable_type' => get_class($shipment),
-                'fileable_id' => $shipment->id,
-                'path' => $dosyaYolu,
-                'original_name' => $uploadedFile->getClientOriginalName(),
-                'mime_type' => $uploadedFile->getMimeType(),
-                'uploaded_by' => Auth::id(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-        } elseif ($request->has('dosya_sil') && $request->input('dosya_sil') == '1') {
-            if ($shipment->dosya_yolu) {
-                Storage::disk('public')->delete($shipment->dosya_yolu);
-            }
-            $validatedData['dosya_yolu'] = null;
-        }
-        // --- DOSYA YÖNETİMİ SONU ---
-
-        $shipment->update($validatedData);
+            $shipment->update($validatedData);
+        });
 
         return redirect()->route('home')->with('success', 'Sevkiyat kaydı başarıyla güncellendi!');
     }
 
     /**
-     * Belirtilen sevkiyatı bir CSV dosyası olarak indirir (Dinamik Sütunlar).
+     * Belirtilen sevkiyatı bir CSV dosyası olarak indirir.
      */
     public function export(Shipment $shipment)
     {
-        // 1. Yetki Kontrolü (İsteğe bağlı, kodunda yorum satırıydı)
-        // $this->authorize('access-department', 'lojistik');
+        // 1. Yetki Kontrolü AKTİF EDİLDİ
+        $this->authorize('access-department', 'lojistik');
 
         $fileName = 'sevkiyat_detay_' . $shipment->id . '.csv';
 
-        // 2. Dinamik Başlık Mantığını Hazırla
-        // Tüm senaryolardaki ortak başlık havuzu
-        $ortakBasliklar = [
-            'ID',
-            'Araç Tipi', // Buradan kesip araya özel sütunları ekleyeceğiz
-            'Kargo Yükü',
-            'Kargo Tipi',
-            'Kargo Miktarı',
-            'Çıkış Tarihi',
-            'Tahmini Varış Tarihi',
-            'Açıklamalar',
-            'İhracat/İthalat'
-        ];
-
+        // ... (Header mantığı aynı kaldı) ...
+        $ortakBasliklar = ['ID', 'Araç Tipi', 'Kargo Yükü', 'Kargo Tipi', 'Kargo Miktarı', 'Çıkış Tarihi', 'Tahmini Varış Tarihi', 'Açıklamalar', 'İhracat/İthalat'];
         $ozelBasliklar = [];
 
-        // Araç tipine göre araya girecek başlıkları seç
         if (in_array($shipment->arac_tipi, ['tır', 'kamyon'])) {
             $ozelBasliklar = ['Plaka', 'Dorse Plakası', 'Şoför Adı', 'Kalkış Noktası', 'Varış Noktası'];
         } elseif ($shipment->arac_tipi === 'gemi') {
             $ozelBasliklar = ['IMO Numarası', 'Gemi Adı', 'Kalkış Limanı', 'Varış Limanı'];
         }
 
-        // Başlıkları Birleştir: [İlk 2 Sütun] + [Özel Sütunlar] + [Kalan Sütunlar]
-        $finalHeaders = array_merge(
-            array_slice($ortakBasliklar, 0, 2),
-            $ozelBasliklar,
-            array_slice($ortakBasliklar, 2)
-        );
+        $finalHeaders = array_merge(array_slice($ortakBasliklar, 0, 2), $ozelBasliklar, array_slice($ortakBasliklar, 2));
 
-        // 3. Servisi Çağır
-        // Tek bir kayıt olsa bile standart yapı bozulmasın diye 'where' ile sorgu gibi gönderiyoruz.
         return CsvExporter::streamDownload(
             query: Shipment::where('id', $shipment->id),
             headers: $finalHeaders,
             fileName: $fileName,
             rowMapper: function ($record) {
-                // Not: $record, burada $shipment'in veritabanından gelen kopyasıdır.
-    
                 $sevkiyatTuru = match ($record->shipment_type) {
                     'export' => 'İhracat',
                     'import' => 'İthalat',
-                    default => $record->shipment_type
+                    'default' => $record->shipment_type
                 };
 
-                // Ortak Veriler
                 $ortakData = [
                     $record->id,
                     ucfirst($record->arac_tipi),
@@ -244,66 +225,36 @@ class ShipmentController extends Controller
                     $sevkiyatTuru
                 ];
 
-                // Özel Veriler (Başlık sırasına sadık kalarak)
                 $ozelData = [];
                 if (in_array($record->arac_tipi, ['tır', 'kamyon'])) {
-                    $ozelData = [
-                        $record->plaka,
-                        // Kamyon ise Dorse Plakası boş string olsun
-                        $record->arac_tipi === 'kamyon' ? '' : $record->dorse_plakasi,
-                        $record->sofor_adi,
-                        $record->kalkis_noktasi,
-                        $record->varis_noktasi
-                    ];
+                    $ozelData = [$record->plaka, $record->arac_tipi === 'kamyon' ? '' : $record->dorse_plakasi, $record->sofor_adi, $record->kalkis_noktasi, $record->varis_noktasi];
                 } elseif ($record->arac_tipi === 'gemi') {
-                    $ozelData = [
-                        $record->imo_numarasi,
-                        $record->gemi_adi,
-                        $record->kalkis_limani,
-                        $record->varis_limani
-                    ];
+                    $ozelData = [$record->imo_numarasi, $record->gemi_adi, $record->kalkis_limani, $record->varis_limani];
                 }
 
-                // Verileri aynı mantıkla birleştirip döndür
-                return array_merge(
-                    array_slice($ortakData, 0, 2),
-                    $ozelData,
-                    array_slice($ortakData, 2)
-                );
+                return array_merge(array_slice($ortakData, 0, 2), $ozelData, array_slice($ortakData, 2));
             }
         );
     }
+
     /**
-     * TÜM SEVKİYAT LİSTESİNİ DIŞA AKTAR (Genel Rapor)
+     * TÜM SEVKİYAT LİSTESİNİ DIŞA AKTAR
      */
     public function exportList(Request $request)
     {
-        $fileName = 'tum-sevkiyatlar-' . date('d-m-Y') . '.csv';
+        // Yetki Kontrolü EKLENDİ
+        $this->authorize('access-department', 'lojistik');
 
-        // Filtreleme mantığın varsa buraya ekleyebilirsin.
-        // Şimdilik tüm listeyi son eklenen başta olacak şekilde çekiyoruz.
+        $fileName = 'tum-sevkiyatlar-' . date('d-m-Y') . '.csv';
         $query = Shipment::latest();
 
-        $headers = [
-            'ID',
-            'Tip',
-            'Müşteri/Firma', // Varsa
-            'Plaka / Gemi Adı', // Ortak Sütun
-            'Şoför / IMO',      // Ortak Sütun
-            'Çıkış Noktası',
-            'Varış Noktası',
-            'Yük İçeriği',
-            'Durum',
-            'Çıkış Tarihi'
-        ];
+        $headers = ['ID', 'Tip', 'Müşteri/Firma', 'Plaka / Gemi Adı', 'Şoför / IMO', 'Çıkış Noktası', 'Varış Noktası', 'Yük İçeriği', 'Durum', 'Çıkış Tarihi'];
 
         return CsvExporter::streamDownload(
             query: $query,
             headers: $headers,
             fileName: $fileName,
             rowMapper: function ($shipment) {
-
-                // Tipine göre verileri hazırla
                 $aracBilgisi = '-';
                 $soforBilgisi = '-';
 
@@ -315,21 +266,17 @@ class ShipmentController extends Controller
                     $soforBilgisi = 'IMO: ' . $shipment->imo_numarasi;
                 }
 
-                $cikisTarihi = $shipment->cikis_tarihi
-                    ? \Carbon\Carbon::parse($shipment->cikis_tarihi)->format('d.m.Y')
-                    : '-';
-
                 return [
                     $shipment->id,
                     ucfirst($shipment->arac_tipi),
-                    $shipment->musteri_adi ?? '-', // Veritabanında varsa
+                    $shipment->musteri_adi ?? '-',
                     $aracBilgisi,
                     $soforBilgisi,
                     $shipment->kalkis_noktasi ?? $shipment->kalkis_limani ?? '-',
                     $shipment->varis_noktasi ?? $shipment->varis_limani ?? '-',
                     $shipment->kargo_icerigi,
                     $shipment->status ?? 'Aktif',
-                    $cikisTarihi
+                    $shipment->cikis_tarihi ? \Carbon\Carbon::parse($shipment->cikis_tarihi)->format('d.m.Y') : '-'
                 ];
             }
         );
@@ -337,21 +284,34 @@ class ShipmentController extends Controller
 
     public function destroy(Shipment $shipment)
     {
-        // YENİ EKLENDİ: Kullanıcının 'lojistik' birimine erişimi var mı?
         $this->authorize('access-department', 'lojistik');
 
         if (Auth::id() !== $shipment->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
-            return redirect()->route('home')
-                ->with('error', 'Bu sevkiyatı sadece oluşturan kişi silebilir.');
+            return redirect()->route('home')->with('error', 'Bu sevkiyatı sadece oluşturan kişi silebilir.');
         }
-        $shipment->delete();
 
-        return redirect()->route('home')->with('success', 'Sevkiyat kaydı başarıyla silindi.');
+        // Silme işlemi de Transaction içine alındı
+        DB::transaction(function () use ($shipment) {
+            // 1. Fiziksel dosyayı sil (Çöp dosya oluşmaması için)
+            if ($shipment->dosya_yolu && Storage::disk('public')->exists($shipment->dosya_yolu)) {
+                Storage::disk('public')->delete($shipment->dosya_yolu);
+            }
+
+            // 2. Files tablosundaki yetim kaydı temizle
+            DB::table('files')
+                ->where('fileable_id', $shipment->id)
+                ->where('fileable_type', get_class($shipment))
+                ->delete();
+
+            // 3. Sevkiyatı sil
+            $shipment->delete();
+        });
+
+        return redirect()->route('home')->with('success', 'Sevkiyat kaydı ve ilişkili dosyalar başarıyla silindi.');
     }
 
     public function onayla(Request $request, Shipment $shipment)
     {
-        // YENİ EKLENDİ: Kullanıcının 'lojistik' birimine erişimi var mı?
         $this->authorize('access-department', 'lojistik');
         $shipment->refresh();
 
@@ -367,77 +327,61 @@ class ShipmentController extends Controller
         return redirect()->route('home', ['open_modal' => $shipment->id])
             ->with('success', 'Sevkiyat başarıyla onaylandı.');
     }
-    /**
-     * Sevkiyat onayını geri alır.
-     */
+
     public function onayiGeriAl(Request $request, Shipment $shipment)
     {
-        // YENİ EKLENDİ: Kullanıcının 'lojistik' birimine erişimi var mı?
         $this->authorize('access-department', 'lojistik');
-        // Sevkiyatı yeniden yükle (başka kullanıcı değiştirmiş olabilir)
         $shipment->refresh();
 
-        // Eğer sevkiyat zaten onaylanmamışsa hata döndür
         if (is_null($shipment->onaylanma_tarihi)) {
             return redirect()->route('home', ['open_modal' => $shipment->id])
                 ->with('error', 'Bu sevkiyat zaten onaylanmamış durumdadır.');
         }
 
-        // Onayı geri al
         $shipment->onaylanma_tarihi = null;
         $shipment->onaylayan_user_id = null;
         $shipment->save();
 
-        // Modalı açık tutarak geri dön
         return redirect()->route('home', ['open_modal' => $shipment->id])
             ->with('success', 'Sevkiyat onayı başarıyla geri alındı.');
     }
+
     /**
-     * Sadece 'import' (İthalat) tipindeki sevkiyatları listeler.
+     * Filtreli Listeleme (Pagination Eklendi)
      */
     public function listAllFiltered(Request $request)
     {
-        // YENİ EKLENDİ: Kullanıcının 'lojistik' birimine erişimi var mı?
         $this->authorize('access-department', 'lojistik');
-        // Temel sorguyu başlat
+
         $query = Shipment::query();
         $user = Auth::user();
         $isImportantFilter = $request->input('is_important', 'all');
 
-        // Bu filtreyi sadece admin veya yönetici ise uygula
         if ($isImportantFilter !== 'all' && $user && in_array($user->role, ['admin', 'yönetici'])) {
-
-
             if ($isImportantFilter === 'yes') {
                 $query->where('is_important', true);
             } elseif ($isImportantFilter === 'no') {
                 $query->where('is_important', false);
             }
-            // 'all' ise hiçbir şey yapma, tümünü getir.
         }
 
-        // 1. Sevkiyat Türüne Göre Filtrele
         if ($request->filled('shipment_type') && $request->input('shipment_type') !== 'all') {
             $query->where('shipment_type', $request->input('shipment_type'));
         }
 
-        // 2. Araç Tipine Göre Filtrele
         if ($request->filled('vehicle_type') && $request->input('vehicle_type') !== 'all') {
             $query->where('arac_tipi', $request->input('vehicle_type'));
         }
 
-        // 3. Kargo İçeriğine Göre Filtrele (Benzerlik araması için LIKE)
         if ($request->filled('cargo_content')) {
             $query->where('kargo_icerigi', 'LIKE', '%' . $request->input('cargo_content') . '%');
         }
 
-        // 4. Tarih Aralığına Göre Filtrele (Çıkış Tarihi baz alınmıştır, değiştirilebilir)
         if ($request->filled('date_from')) {
             try {
                 $dateFrom = Carbon::parse($request->input('date_from'))->startOfDay();
                 $query->where('cikis_tarihi', '>=', $dateFrom);
             } catch (\Exception $e) {
-                // Geçersiz tarih formatı girilirse görmezden gel veya hata mesajı ver
                 return back()->with('error', 'Geçersiz başlangıç tarihi formatı.');
             }
         }
@@ -450,23 +394,22 @@ class ShipmentController extends Controller
             }
         }
 
-        // Sonuçları en yeniden eskiye sırala ve al
-        $shipments = $query->orderBy('cikis_tarihi', 'desc')->get(); // Veya paginate(15)
+        $shipments = $query->orderBy('cikis_tarihi', 'desc')
+            ->paginate(15)
+            ->appends($request->query());
 
-        // Filtre dropdownları için seçenekleri al
-        // distinct() null değerleri de getirebilir, filter() ile temizle
         $vehicleTypes = ShipmentsVehicleType::pluck('name');
         $cargoContents = Shipment::distinct()->pluck('kargo_icerigi')->filter()->sort()->values();
-
-        // İsteği de view'a gönderelim ki form tekrar doldurulabilsin
         $filters = $request->only(['shipment_type', 'vehicle_type', 'cargo_content', 'date_from', 'date_to', 'is_important']);
+
         return view('shipments.list', compact('shipments', 'vehicleTypes', 'cargoContents', 'filters'));
     }
-    /*
-     *sevkiyat detaylarını gösteren fonksiyon
-     */
+
     public function show($id)
     {
+        // Yetki Kontrolü EKLENDİ
+        $this->authorize('access-department', 'lojistik');
+
         $shipment = Shipment::with('stops')->findOrFail($id);
 
         return view('shipments.show', compact('shipment'));

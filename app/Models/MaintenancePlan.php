@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\HasBusinessUnit;
 use App\Traits\Loggable;
-
+use App\Traits\HasDynamicAttributes;
 class MaintenancePlan extends Model
 {
-    use HasFactory, SoftDeletes, HasBusinessUnit, Loggable;
+    use HasFactory, SoftDeletes, HasBusinessUnit, Loggable, HasDynamicAttributes;
 
     protected $guarded = [];
 
@@ -19,6 +19,7 @@ class MaintenancePlan extends Model
         'planned_end_date' => 'datetime',
         'actual_start_date' => 'datetime',
         'actual_end_date' => 'datetime',
+        'extras' => 'array',
     ];
 
     // --- EKLENEN KRİTİK METOD BAŞLANGICI ---
