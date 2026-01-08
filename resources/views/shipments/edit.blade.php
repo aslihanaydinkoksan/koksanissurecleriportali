@@ -317,6 +317,31 @@
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
+                                    {{-- STATÜ SEÇİMİ (KANBAN ENTEGRASYONU İÇİN) --}}
+                                    <div class="mb-3">
+                                        <label for="shipment_status" class="form-label fw-bold text-primary">
+                                            <i class="fas fa-tasks"></i> Sevkiyat Durumu
+                                        </label>
+                                        <select name="shipment_status" id="shipment_status"
+                                            class="form-select border-primary" required>
+                                            <option value="pending"
+                                                {{ old('shipment_status', $shipment->shipment_status) == 'pending' ? 'selected' : '' }}>
+                                                📋 Sipariş Alındı (Bekliyor)
+                                            </option>
+                                            <option value="on_road"
+                                                {{ old('shipment_status', $shipment->shipment_status) == 'on_road' ? 'selected' : '' }}>
+                                                🚚 Yolda (Transit)
+                                            </option>
+                                            <option value="delivered"
+                                                {{ old('shipment_status', $shipment->shipment_status) == 'delivered' ? 'selected' : '' }}>
+                                                ✅ Teslim Edildi
+                                            </option>
+                                        </select>
+                                        <div class="form-text text-muted small">
+                                            Bu durumu değiştirdiğinizde, sevkiyat <strong>Lojistik Panosu</strong> üzerinde
+                                            otomatik olarak ilgili sütuna taşınacaktır.
+                                        </div>
+                                    </div>
 
                                     {{-- DOSYA YÖNETİM ALANI --}}
                                     <div class="mb-3">

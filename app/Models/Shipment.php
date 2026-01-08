@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Loggable;
 use App\Traits\HasBusinessUnit;
 use App\Traits\HasDynamicAttributes;
+use App\Traits\HasKanban;
 
 /**
  * App\Models\Shipment
@@ -82,7 +83,7 @@ use App\Traits\HasDynamicAttributes;
  */
 class Shipment extends Model
 {
-    use HasFactory, SoftDeletes, Loggable, HasBusinessUnit, HasDynamicAttributes; // <--- 2. Trait ekle
+    use HasFactory, SoftDeletes, Loggable, HasBusinessUnit, HasDynamicAttributes, HasKanban; // <--- 2. Trait ekle
 
     protected $fillable = [
         'user_id',
@@ -108,7 +109,8 @@ class Shipment extends Model
         'aciklamalar',
         'dosya_yolu',
         'is_important',
-        'extras'
+        'extras',
+        'shipment_status'
     ];
     protected $casts = [
         'cikis_tarihi' => 'datetime',

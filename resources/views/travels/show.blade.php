@@ -291,7 +291,8 @@
                                 <p>Ziyaret</p>
                             </div>
                             <div class="stat-box">
-                                <h4>{{ \Carbon\Carbon::parse($travel->start_date)->diffInDays(\Carbon\Carbon::parse($travel->end_date)) }}
+                                <h4>
+                                    {{ \Carbon\Carbon::parse($travel->start_date)->diffInDays(\Carbon\Carbon::parse($travel->end_date), false) }}
                                 </h4>
                                 <p>Gün</p>
                             </div>
@@ -435,10 +436,14 @@
                             <div class="row align-items-center">
                                 <div class="col-md-3">
                                     <div class="text-muted small">Müşteri</div>
-                                    <a href="{{ route('customers.show', $visit->customer) }}"
-                                        style="font-weight: 600; font-size: 1.05rem; color: #667EEA;">
-                                        {{ $visit->customer->name ?? 'Bilinmiyor' }}
-                                    </a>
+                                    @if ($visit->customer)
+                                        <a href="{{ route('customers.show', $visit->customer) }}"
+                                            style="font-weight: 600; font-size: 1.05rem; color: #667EEA;">
+                                            {{ $visit->customer->name }}
+                                        </a>
+                                    @else
+                                        <span class="text-danger fst-italic">Müşteri Silinmiş</span>
+                                    @endif
                                 </div>
                                 <div class="col-md-3">
                                     <div class="text-muted small">Etkinlik</div>

@@ -15,6 +15,7 @@ use App\Models\VehicleAssignment;
 use App\Models\Travel;
 use App\Models\MaintenancePlan;
 use App\Observers\BusinessUnitObserver;
+use App\Observers\KanbanModelObserver;
 class AppServiceProvider extends ServiceProvider
 {
     public function register()
@@ -50,7 +51,6 @@ class AppServiceProvider extends ServiceProvider
                     if (method_exists($user, 'isManagerOrDirector') && $user->isManagerOrDirector() && $user->department_id) {
                         $maintenanceQuery->whereHas('user', fn($q) => $q->where('department_id', $user->department_id));
                     } else {
-                        // Yetkisi yoksa hiçbir şey gösterme
                         $maintenanceQuery->where('id', 0);
                     }
                 }
@@ -65,5 +65,9 @@ class AppServiceProvider extends ServiceProvider
         VehicleAssignment::observe(BusinessUnitObserver::class);
         Travel::observe(BusinessUnitObserver::class);
         MaintenancePlan::observe(BusinessUnitObserver::class);
+        MaintenancePlan::observe(KanbanModelObserver::class);
+        Shipment::observe(KanbanModelObserver::class);
+        ProductionPlan::observe(KanbanModelObserver::class);
+        Event::observe(KanbanModelObserver::class);
     }
 }

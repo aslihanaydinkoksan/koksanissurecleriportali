@@ -33,7 +33,9 @@ use App\Http\Controllers\SystemController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\CustomFieldDefinitionController;
-
+use App\Http\Controllers\KanbanBoardController;
+use App\Http\Controllers\KanbanViewController;
+use App\Services\KanbanService;
 use App\Models\Event;
 use App\Models\Travel;
 
@@ -102,6 +104,14 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/calendar/toggle-important', [GeneralCalendarController::class, 'toggleImportant'])->name('calendar.toggleImportant');
     Route::get('/important-items', [HomeController::class, 'showAllImportant'])->name('important.all');
 
+    // --- KANBAN PANOSU YÖNETİMİ ---
+    // Panoyu Görüntüleme (Örn: /kanban/board?scope=maintenance)
+    Route::get('/kanban/board', [KanbanViewController::class, 'index'])->name('kanban.board');
+    Route::get('/kanban/card/{kanbanCard}', [KanbanViewController::class, 'show'])->name('kanban.show');
+    // Kart Taşıma (AJAX - API)
+    Route::post('/kanban/move-card', [KanbanViewController::class, 'moveCard'])->name('kanban.move');
+
+
     // ==========================================================
     //  DEPARTMAN BAZLI YÖNETİMLER
     // ==========================================================
@@ -127,6 +137,7 @@ Route::middleware(['auth'])->group(function () {
             ->group(function () {
                 Route::resource('custom-fields', CustomFieldDefinitionController::class);
             });
+        Route::resource('kanban-boards', KanbanBoardController::class);
     });
 
     // Profil (Herkes)

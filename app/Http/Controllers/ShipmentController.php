@@ -54,6 +54,7 @@ class ShipmentController extends Controller
         ];
         $rules = array_merge($rules, Shipment::getDynamicValidationRules());
         $validatedData = $request->validate($rules);
+        $validatedData['user_id'] = Auth::id();
 
         // Veri bütünlüğü için Transaction başlatıyoruz
         DB::transaction(function () use ($request, $validatedData) {
@@ -138,6 +139,7 @@ class ShipmentController extends Controller
             'aciklamalar' => 'nullable|string',
             'ek_dosya' => ['nullable', 'file', 'mimes:doc,docx,xls,xlsx,pdf,jpg,jpeg,png,txt', 'max:5120'],
             'dosya_sil' => 'nullable|boolean',
+            'shipment_status' => 'nullable|string|in:pending,on_road,delivered',
         ];
         $rules = array_merge($rules, Shipment::getDynamicValidationRules());
         $validatedData = $request->validate($rules);
@@ -173,11 +175,14 @@ class ShipmentController extends Controller
                 }
             }
             // --- DOSYA YÖNETİMİ SONU ---
-
+            if (!isset($validatedData['shipment_status'])) {
+                unset($validatedData['shipment_status']); // Null gidip veriyi bozmasın
+            }
             $shipment->update($validatedData);
         });
 
-        return redirect()->route('home')->with('success', 'Sevkiyat kaydı başarıyla güncellendi!');
+        return redirect()->route('shipments.show', $shipment->id)
+            ->with('success', 'Sevkiyat kaydı başarıyla güncellendi!');
     }
 
     /**

@@ -19,16 +19,19 @@ use Illuminate\Support\Facades\Gate;
 use App\Models\Department;
 use App\Models\MaintenancePlan;
 use Illuminate\Support\Collection;
+use App\Services\KanbanService;
 use App\Services\StatisticsService;
 
 class HomeController extends Controller
 {
     protected $statsService;
+    protected $kanbanService;
 
-    public function __construct(StatisticsService $statsService)
+    public function __construct(StatisticsService $statsService, KanbanService $kanbanService)
     {
         $this->middleware('auth');
         $this->statsService = $statsService;
+        $this->kanbanService = $kanbanService;
     }
 
     /**
@@ -41,6 +44,11 @@ class HomeController extends Controller
         // Görünüm için departman bilgisi
         $departmentSlug = $user->department ? strtolower(trim($user->department->slug)) : 'genel';
         $departmentName = $user->department?->name ?? 'Genel';
+
+        $kanbanBoards = collect();
+        if ($user->business_unit_id) {
+            $kanbanBoards = $this->kanbanService->getDashboardSummary($user->business_unit_id);
+        }
 
         $allEvents = [];
         $statsTitle = "Takvimim";
@@ -132,7 +140,8 @@ class HomeController extends Controller
             'departmentSlug' => $departmentSlug,
             'events' => $allEvents,
             'chartData' => [],
-            'statsTitle' => $statsTitle
+            'statsTitle' => $statsTitle,
+            'kanbanBoards' => $kanbanBoards,
         ]);
     }
 
@@ -141,7 +150,14 @@ class HomeController extends Controller
      */
     public function welcome(Request $request)
     {
+
         $user = Auth::user();
+        $kanbanBoards = collect();
+
+        // Constructor'da servisi zaten tanımlamıştık, direkt kullanabiliriz.
+        if ($user && $user->business_unit_id) {
+            $kanbanBoards = $this->kanbanService->getDashboardSummary($user->business_unit_id);
+        }
 
         // Önemli Öğeler (Sağ Sidebar)
         $allItems = $this->getMappedImportantItems($request);
@@ -271,7 +287,8 @@ class HomeController extends Controller
             'chartData',
             'chartTitle',
             'departmentSlug',
-            'kpiData'
+            'kpiData',
+            'kanbanBoards'
         ));
     }
 

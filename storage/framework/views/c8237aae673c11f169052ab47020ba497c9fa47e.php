@@ -535,6 +535,50 @@
                 <?php endif; ?>
 
                 
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h4 class="text-gray-800 mb-3"><i class="fa fa-th-large"></i> İş Takip Panoları</h4>
+                    </div>
+
+                    <?php $__empty_1 = true; $__currentLoopData = $kanbanBoards; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $board): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-<?php echo e($board->color); ?> shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div
+                                                class="text-xs font-weight-bold text-<?php echo e($board->color); ?> text-uppercase mb-1">
+                                                <?php echo e($board->name); ?>
+
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                <?php echo e($board->total_tasks); ?> Aktif İş
+                                            </div>
+                                            <div class="text-xs text-muted mt-1">
+                                                <?php echo e($board->column_count); ?> farklı aşama mevcut
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas <?php echo e($board->icon); ?> fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                    <a href="<?php echo e($board->route); ?>"
+                                        class="btn btn-sm btn-outline-<?php echo e($board->color); ?> mt-3 w-100 stretched-link">
+                                        Panoya Git <i class="fa fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                Henüz tanımlı bir iş panonuz yok. Yönetim panelinden oluşturabilirsiniz.
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                
                 <?php if(isset($chartData) && !empty($chartData)): ?>
                     <div class="card create-shipment-card border-0 mb-4">
                         <div

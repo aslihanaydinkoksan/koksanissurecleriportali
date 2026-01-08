@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Loggable;
 use App\Traits\HasBusinessUnit; // <--- 1. Use ekle
 use App\Traits\HasDynamicAttributes;
+use App\Traits\HasKanban;
 
 /**
  * App\Models\Event
@@ -52,7 +53,7 @@ use App\Traits\HasDynamicAttributes;
  */
 class Event extends Model
 {
-    use HasFactory, SoftDeletes, Loggable, HasBusinessUnit, HasDynamicAttributes; // <--- 2. Trait ekle
+    use HasFactory, SoftDeletes, Loggable, HasBusinessUnit, HasDynamicAttributes, HasKanban; // <--- 2. Trait ekle
     /**
      * Toplu atanabilir alanlar.
      */

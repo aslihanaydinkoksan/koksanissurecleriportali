@@ -158,7 +158,11 @@ class TravelController extends Controller
             'customerVisits.customer',
             'customerVisits.event'
         ]);
-        $travelActivities = $travel->activities()->latest()->get();
+        $travelActivities = collect([]);
+        if (method_exists($travel, 'activities')) {
+            $travelActivities = $travel->activities()->latest()->get();
+        }
+
 
         return view('travels.show', compact('travel', 'travelActivities'));
     }

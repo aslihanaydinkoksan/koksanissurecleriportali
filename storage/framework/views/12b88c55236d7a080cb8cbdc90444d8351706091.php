@@ -619,6 +619,14 @@
                                                 Form Alanları
                                             </a>
                                         </li>
+
+                                        <li>
+                                            <a class="dropdown-item" href="<?php echo e(route('kanban-boards.index')); ?>">
+                                                <i class="fa-solid fa-chalkboard-user" style="color: #e65100;"></i>
+                                                İş Panoları (Kanban)
+                                            </a>
+                                        </li>
+
                                         <li><a class="dropdown-item" href="<?php echo e(route('departments.index')); ?>"><i
                                                     class="fa-solid fa-building" style="color: #667EEA;"></i>
                                                 Departmanlar</a></li>

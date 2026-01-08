@@ -1,7 +1,7 @@
-@extends('layouts.app')
-@section('title', 'Bakım Planları')
 
-@push('styles')
+<?php $__env->startSection('title', 'Bakım Planları'); ?>
+
+<?php $__env->startPush('styles'); ?>
     <style>
         /* --- ANA TEMEL STİLLER (Üretim Modülü ile Eşitlendi) --- */
         #app>main.py-4 {
@@ -327,48 +327,50 @@
             color: white;
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container-fluid modern-container">
         <div class="row justify-content-center">
             <div class="col-12">
 
-                {{-- Sayfa Başlığı --}}
+                
                 <div class="page-header d-flex justify-content-between align-items-center">
                     <div>
                         <h1><i class="fas fa-tools"></i> Bakım Planları</h1>
                         <p>Bakım ve arıza planlarını görüntüleyin, yönetin ve takip edin.</p>
                     </div>
                     <div>
-                        <a href="{{ route('maintenance.export_list') }}" class="btn btn-export-global shadow-sm">
+                        <a href="<?php echo e(route('maintenance.export_list')); ?>" class="btn btn-export-global shadow-sm">
                             <i class="fas fa-file-excel me-2"></i>Listeyi Excel'e Aktar
                         </a>
-                        <a href="{{ route('maintenance.create') }}" class="btn btn-apply-filter shadow-sm">
+                        <a href="<?php echo e(route('maintenance.create')); ?>" class="btn btn-apply-filter shadow-sm">
                             <i class="fas fa-plus me-2"></i> Yeni Bakım Planı
                         </a>
-                        <a href="{{ route('kanban.board', ['scope' => 'maintenance']) }}"
+                        <a href="<?php echo e(route('kanban.board', ['scope' => 'maintenance'])); ?>"
                             class="btn btn-apply-filter shadow-sm">
                             <i class="fas fa-plus me-2"></i> Pano Görünümü
                         </a>
                     </div>
                 </div>
 
-                {{-- Başarı/Hata Mesajları --}}
-                @if (session('success'))
+                
+                <?php if(session('success')): ?>
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-                @if (session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
+                        <i class="fas fa-check-circle me-2"></i><?php echo e(session('success')); ?>
 
-                {{-- Filtre Bölümü (Opsiyonel - Backend desteği varsa aktif edilebilir) --}}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
+                <?php if(session('error')): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i><?php echo e(session('error')); ?>
+
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
+
+                
                 <div class="mb-4">
                     <div class="d-grid">
                         <button class="btn btn-filter-toggle" type="button" data-bs-toggle="collapse"
@@ -380,13 +382,13 @@
 
                     <div class="collapse mt-3" id="filterCollapse">
                         <div class="card filter-card">
-                            <form method="GET" action="{{ route('maintenance.index') }}">
+                            <form method="GET" action="<?php echo e(route('maintenance.index')); ?>">
                                 <div class="row">
-                                    {{-- Örnek Filtreler --}}
+                                    
                                     <div class="col-md-4">
                                         <label class="form-label"><i class="fas fa-search me-1"></i>Başlık Ara</label>
                                         <input type="text" class="form-control" name="search"
-                                            placeholder="Plan başlığı..." value="{{ request('search') }}">
+                                            placeholder="Plan başlığı..." value="<?php echo e(request('search')); ?>">
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label"><i class="fas fa-tasks me-1"></i>Durum</label>
@@ -400,11 +402,11 @@
                                     <div class="col-md-4">
                                         <label class="form-label"><i class="fas fa-calendar-alt me-1"></i>Tarih</label>
                                         <input type="date" class="form-control" name="date"
-                                            value="{{ request('date') }}">
+                                            value="<?php echo e(request('date')); ?>">
                                     </div>
                                 </div>
                                 <div class="d-flex justify-content-end gap-2 mt-4">
-                                    <a href="{{ route('maintenance.index') }}" class="btn btn-clear-filter">
+                                    <a href="<?php echo e(route('maintenance.index')); ?>" class="btn btn-clear-filter">
                                         <i class="fas fa-times me-2"></i>Temizle
                                     </a>
                                     <button type="submit" class="btn btn-apply-filter">
@@ -416,22 +418,22 @@
                     </div>
                 </div>
 
-                {{-- Ana Liste Kartı --}}
+                
                 <div class="card list-card">
                     <div class="card-header">
                         <div>
                             <i class="fas fa-list me-2"></i>
                             <span>Bakım Listesi</span>
                         </div>
-                        <span class="badge bg-white text-primary rounded-pill fs-6">{{ $plans->count() }} Kayıt</span>
+                        <span class="badge bg-white text-primary rounded-pill fs-6"><?php echo e($plans->count()); ?> Kayıt</span>
                     </div>
 
                     <div class="card-body p-0">
-                        @if ($plans->isEmpty())
+                        <?php if($plans->isEmpty()): ?>
                             <div class="alert alert-warning m-4" role="alert">
                                 <i class="fas fa-info-circle me-2"></i>Henüz kayıtlı bir bakım planı bulunamadı.
                             </div>
-                        @else
+                        <?php else: ?>
                             <div class="table-responsive">
                                 <table class="table mb-0">
                                     <thead>
@@ -447,80 +449,86 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($plans as $plan)
+                                        <?php $__currentLoopData = $plans; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $plan): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                             <tr>
                                                 <td class="ps-4">
-                                                    {{-- YENİ: Modelden gelen Status Badge --}}
-                                                    @php $statusBadge = $plan->status_badge; @endphp
+                                                    
+                                                    <?php $statusBadge = $plan->status_badge; ?>
                                                     <span
-                                                        class="badge rounded-pill {{ $statusBadge['class'] }} shadow-sm px-3 py-2">
-                                                        {{ $statusBadge['text'] }}
+                                                        class="badge rounded-pill <?php echo e($statusBadge['class']); ?> shadow-sm px-3 py-2">
+                                                        <?php echo e($statusBadge['text']); ?>
+
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    {{-- YENİ: Modelden gelen Priority Badge --}}
-                                                    @php $priorityBadge = $plan->priority_badge; @endphp
+                                                    
+                                                    <?php $priorityBadge = $plan->priority_badge; ?>
                                                     <span
-                                                        class="badge rounded-pill {{ $priorityBadge['class'] }} shadow-sm px-3 py-2">
-                                                        {{ $priorityBadge['text'] }}
+                                                        class="badge rounded-pill <?php echo e($priorityBadge['class']); ?> shadow-sm px-3 py-2">
+                                                        <?php echo e($priorityBadge['text']); ?>
+
                                                     </span>
                                                 </td>
                                                 <td>
                                                     <div class="d-flex flex-column">
-                                                        <strong class="text-dark">{{ $plan->title }}</strong>
+                                                        <strong class="text-dark"><?php echo e($plan->title); ?></strong>
                                                     </div>
                                                 </td>
                                                 <td>
                                                     <span class="badge bg-light text-dark border">
                                                         <i class="fas fa-tag me-1 text-secondary"></i>
-                                                        {{ $plan->type ? $plan->type->name : '-' }}
+                                                        <?php echo e($plan->type ? $plan->type->name : '-'); ?>
+
                                                     </span>
                                                 </td>
                                                 <td>
                                                     <div class="d-flex align-items-center">
                                                         <i class="fas fa-microchip text-primary me-2 opacity-50"></i>
                                                         <span
-                                                            class="text-dark">{{ $plan->asset ? $plan->asset->name : '-' }}</span>
+                                                            class="text-dark"><?php echo e($plan->asset ? $plan->asset->name : '-'); ?></span>
                                                     </div>
                                                 </td>
                                                 <td>
                                                     <div class="d-flex flex-column">
                                                         <small class="text-muted">
                                                             <i class="fas fa-play me-1 text-success"></i>
-                                                            {{ $plan->planned_start_date ? $plan->planned_start_date->format('d.m.Y H:i') : '-' }}
+                                                            <?php echo e($plan->planned_start_date ? $plan->planned_start_date->format('d.m.Y H:i') : '-'); ?>
+
                                                         </small>
                                                         <small class="text-muted">
                                                             <i class="fas fa-stop me-1 text-danger"></i>
-                                                            {{ $plan->planned_end_date ? $plan->planned_end_date->format('d.m.Y H:i') : '-' }}
+                                                            <?php echo e($plan->planned_end_date ? $plan->planned_end_date->format('d.m.Y H:i') : '-'); ?>
+
                                                         </small>
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    @if ($plan->user)
+                                                    <?php if($plan->user): ?>
                                                         <div class="d-flex align-items-center">
                                                             <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2 shadow-sm"
                                                                 style="width: 32px; height: 32px; font-size: 0.85rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                                                                {{ substr($plan->user->name, 0, 1) }}
+                                                                <?php echo e(substr($plan->user->name, 0, 1)); ?>
+
                                                             </div>
                                                             <span
-                                                                class="small fw-semibold text-dark">{{ $plan->user->name }}</span>
+                                                                class="small fw-semibold text-dark"><?php echo e($plan->user->name); ?></span>
                                                         </div>
-                                                    @else
+                                                    <?php else: ?>
                                                         <span class="badge bg-secondary">Atanmamış</span>
-                                                    @endif
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td class="text-end pe-4">
                                                     <div class="btn-group" role="group">
 
-                                                        {{-- 1. İNCELE BUTONU (Herkes görebilir) --}}
-                                                        <a href="{{ route('maintenance.show', $plan->id) }}"
+                                                        
+                                                        <a href="<?php echo e(route('maintenance.show', $plan->id)); ?>"
                                                             class="btn btn-action btn-info" title="Plan Detayları">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
 
-                                                        {{-- 2. DÜZENLE BUTONU MANTIĞI --}}
-                                                        {{-- KURAL: Plan Tamamlanmışsa VE Kullanıcı Yönetici Değilse -> KİLİTLE --}}
-                                                        @if ($plan->status === 'completed' && Auth::user()->cannot('approve', $plan))
+                                                        
+                                                        
+                                                        <?php if($plan->status === 'completed' && Auth::user()->cannot('approve', $plan)): ?>
                                                             <button type="button"
                                                                 class="btn btn-action btn-danger-disabled"
                                                                 style="background: #a4a6a8; cursor: not-allowed;"
@@ -528,15 +536,15 @@
                                                                 title="Tamamlandığı için kilitli">
                                                                 <i class="fas fa-lock"></i>
                                                             </button>
-                                                        @else
-                                                            {{-- Diğer Durumlar: Yetki kontrolü --}}
-                                                            @can('update', $plan)
-                                                                <a href="{{ route('maintenance.edit', $plan->id) }}"
+                                                        <?php else: ?>
+                                                            
+                                                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('update', $plan)): ?>
+                                                                <a href="<?php echo e(route('maintenance.edit', $plan->id)); ?>"
                                                                     class="btn btn-action btn-warning text-white"
                                                                     title="Düzenle">
                                                                     <i class="fas fa-edit"></i>
                                                                 </a>
-                                                            @else
+                                                            <?php else: ?>
                                                                 <button type="button"
                                                                     class="btn btn-action btn-danger-disabled"
                                                                     style="background: #a4a6a8; cursor: not-allowed;"
@@ -544,12 +552,12 @@
                                                                     title="Yetkiniz Yok">
                                                                     <i class="fas fa-ban"></i>
                                                                 </button>
-                                                            @endcan
-                                                        @endif
+                                                            <?php endif; ?>
+                                                        <?php endif; ?>
 
-                                                        {{-- 3. SİLME BUTONU MANTIĞI --}}
-                                                        {{-- KURAL: Plan Tamamlanmışsa -> HERKESE KİLİTLE (Arşiv Güvenliği) --}}
-                                                        @if ($plan->status === 'completed')
+                                                        
+                                                        
+                                                        <?php if($plan->status === 'completed'): ?>
                                                             <button type="button"
                                                                 class="btn btn-action btn-danger-disabled"
                                                                 style="background: #a4a6a8; cursor: not-allowed;"
@@ -557,52 +565,53 @@
                                                                 title="Tamamlandığı için silinemez">
                                                                 <i class="fas fa-lock"></i>
                                                             </button>
-                                                        @else
-                                                            {{-- Plan Açık/İşlemde ise -> Yetki kontrolü --}}
-                                                            @can('delete', $plan)
-                                                                <form action="{{ route('maintenance.destroy', $plan->id) }}"
+                                                        <?php else: ?>
+                                                            
+                                                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('delete', $plan)): ?>
+                                                                <form action="<?php echo e(route('maintenance.destroy', $plan->id)); ?>"
                                                                     method="POST" class="d-inline"
                                                                     onsubmit="return confirm('Bu planı silmek istediğinize emin misiniz?');">
-                                                                    @csrf
-                                                                    @method('DELETE')
+                                                                    <?php echo csrf_field(); ?>
+                                                                    <?php echo method_field('DELETE'); ?>
                                                                     <button type="submit" class="btn btn-action btn-danger"
                                                                         title="Sil">
                                                                         <i class="fas fa-trash"></i>
                                                                     </button>
                                                                 </form>
-                                                            @else
+                                                            <?php else: ?>
                                                                 <button type="button"
                                                                     class="btn btn-action btn-danger-disabled"
                                                                     style="background: #a4a6a8; cursor: not-allowed;"
                                                                     onclick="alert('Bu işlemi yapmaya yetkiniz yok!\nSadece Admin, Yönetici veya Kaydı Oluşturan kişi silebilir.')"
                                                                     title="Yetkiniz Yok">
-                                                                    <i class="fas fa-trash"></i> {{-- Yetkisi yoksa çöp kutusu ama gri --}}
+                                                                    <i class="fas fa-trash"></i> 
                                                                 </button>
-                                                            @endcan
-                                                        @endif
+                                                            <?php endif; ?>
+                                                        <?php endif; ?>
                                                     </div>
                                                 </td>
                                             </tr>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </tbody>
                                 </table>
                             </div>
 
-                            {{-- Sayfalama (Eğer controller'da paginate kullanılıyorsa) --}}
-                            @if (method_exists($plans, 'links'))
+                            
+                            <?php if(method_exists($plans, 'links')): ?>
                                 <div class="card-footer">
-                                    {{ $plans->links('pagination::bootstrap-5') }}
+                                    <?php echo e($plans->links('pagination::bootstrap-5')); ?>
+
                                 </div>
-                            @endif
-                        @endif
+                            <?php endif; ?>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('page_scripts')
+<?php $__env->startSection('page_scripts'); ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Filtre toggle animasyonu
@@ -639,4 +648,6 @@
             });
         });
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/maintenance/index.blade.php ENDPATH**/ ?>

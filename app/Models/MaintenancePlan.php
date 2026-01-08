@@ -8,9 +8,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\HasBusinessUnit;
 use App\Traits\Loggable;
 use App\Traits\HasDynamicAttributes;
+use App\Traits\HasKanban;
 class MaintenancePlan extends Model
 {
-    use HasFactory, SoftDeletes, HasBusinessUnit, Loggable, HasDynamicAttributes;
+    use HasFactory, SoftDeletes, HasBusinessUnit, Loggable, HasDynamicAttributes, HasKanban;
 
     protected $guarded = [];
 

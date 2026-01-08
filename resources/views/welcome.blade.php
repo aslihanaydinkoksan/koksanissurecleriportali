@@ -532,6 +532,49 @@
                     </div>
                 @endif
 
+                {{-- -KANBAN KARTLARI --}}
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h4 class="text-gray-800 mb-3"><i class="fa fa-th-large"></i> İş Takip Panoları</h4>
+                    </div>
+
+                    @forelse($kanbanBoards as $board)
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-{{ $board->color }} shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div
+                                                class="text-xs font-weight-bold text-{{ $board->color }} text-uppercase mb-1">
+                                                {{ $board->name }}
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                {{ $board->total_tasks }} Aktif İş
+                                            </div>
+                                            <div class="text-xs text-muted mt-1">
+                                                {{ $board->column_count }} farklı aşama mevcut
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas {{ $board->icon }} fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                    <a href="{{ $board->route }}"
+                                        class="btn btn-sm btn-outline-{{ $board->color }} mt-3 w-100 stretched-link">
+                                        Panoya Git <i class="fa fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                Henüz tanımlı bir iş panonuz yok. Yönetim panelinden oluşturabilirsiniz.
+                            </div>
+                        </div>
+                    @endforelse
+                </div>
+
                 {{-- GRAFİK KARTI (SANKEY) --}}
                 @if (isset($chartData) && !empty($chartData))
                     <div class="card create-shipment-card border-0 mb-4">
