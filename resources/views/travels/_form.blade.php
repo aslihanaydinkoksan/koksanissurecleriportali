@@ -1,5 +1,6 @@
+{{-- Hata Mesajları --}}
 @if ($errors->any())
-    <div class="alert alert-danger mb-3">
+    <div class="alert alert-danger">
         <ul class="mb-0">
             @foreach ($errors->all() as $error)
                 <li>{{ $error }}</li>
@@ -8,112 +9,81 @@
     </div>
 @endif
 
-<div class="row">
-    <div class="col-md-3 mb-3">
-        <label for="type" class="form-label">Tip (*)</label>
-        <select name="type" id="type" class="form-select" required>
-            {{-- DÜZELTME: $booking?->type kullanıldı --}}
-            <option value="flight" @if (old('type', $booking?->type) == 'flight') selected @endif>✈️ Uçuş</option>
-            <option value="bus" @if (old('type', $booking?->type) == 'bus') selected @endif>🚌 Otobüs</option>
-            <option value="hotel" @if (old('type', $booking?->type) == 'hotel') selected @endif>🏨 Otel</option>
-            <option value="car_rental" @if (old('type', $booking?->type) == 'car_rental') selected @endif>🚗 Araç Kiralama</option>
-            <option value="train" @if (old('type', $booking?->type) == 'train') selected @endif>🚆 Tren</option>
-            <option value="other" @if (old('type', $booking?->type) == 'other') selected @endif>Diğer</option>
-        </select>
-    </div>
-    <div class="col-md-5 mb-3">
-        <label for="provider_name" class="form-label">Sağlayıcı (*)</label>
-        {{-- DÜZELTME: $booking?->provider_name --}}
-        <input type="text" name="provider_name" id="provider_name" class="form-control"
-            value="{{ old('provider_name', $booking?->provider_name ?? '') }}"
-            placeholder="Örn: Türk Hava Yolları, Hilton..." required>
-    </div>
-    <div class="col-md-4 mb-3">
-        <label for="confirmation_code" class="form-label">Rezervasyon Kodu (TK Numarası vb.)</label>
-        {{-- DÜZELTME: $booking?->confirmation_code --}}
-        <input type="text" name="confirmation_code" id="confirmation_code" class="form-control"
-            value="{{ old('confirmation_code', $booking?->confirmation_code ?? '') }}" placeholder="Örn: ABC123">
-    </div>
-</div>
-
-@php
-    // Başlangıç tarihi için değer belirleme
-    $startValue = '';
-    if (old('start_datetime')) {
-        $startValue = old('start_datetime');
-    } elseif (isset($booking) && $booking?->start_datetime) {
-        // Düzeltme
-        $startValue = \Carbon\Carbon::parse($booking->start_datetime)->format('Y-m-d\TH:i');
-    }
-
-    // Bitiş tarihi için değer belirleme
-    $endValue = '';
-    if (old('end_datetime')) {
-        $endValue = old('end_datetime');
-    } elseif (isset($booking) && $booking?->end_datetime) {
-        // Düzeltme
-        $endValue = \Carbon\Carbon::parse($booking->end_datetime)->format('Y-m-d\TH:i');
-    }
-@endphp
-
-<div class="row">
-    <div class="col-md-3 mb-3">
-        <label for="start_datetime" class="form-label">Başlangıç / Kalkış (*)</label>
-        <input type="datetime-local" name="start_datetime" class="form-control" value="{{ $startValue }}" required>
+<div class="create-event-card">
+    {{-- BAŞLIK ALANI (Controller 'name' beklediği için 'name' kullanıyoruz) --}}
+    <div class="mb-4">
+        <label for="name" class="form-label">
+            <i class="fa-solid fa-flag me-1 text-primary"></i> Seyahat Başlığı / Tanımı
+        </label>
+        <input type="text" name="name" id="name" class="form-control form-control-lg"
+            value="{{ old('name', $travel->name ?? '') }}" placeholder="Örn: Ankara Müşteri Ziyareti" required>
     </div>
 
-    <div class="col-md-3 mb-3">
-        <label for="end_datetime" class="form-label">Bitiş / Varış</label>
-        <input type="datetime-local" name="end_datetime" class="form-control" value="{{ $endValue }}">
-    </div>
-    <div class="col-md-4 mb-3">
-        <label for="booking_files" class="form-label">Bilet / Voucher (PDF, JPG...)</label>
-        <input type="file" name="booking_files[]" id="booking_files" class="form-control" multiple>
-        <small class="form-text text-muted">Yeni dosya seçmek, eskilerin üzerine eklenir.</small>
-    </div>
-
-    {{-- Durum Seçimi (Sadece Düzenleme Sayfasında Görünsün - isset kontrolü zaten var ama nullsafe yapalım) --}}
-    @if (isset($booking) && $booking?->exists)
+    {{-- TARİHLER VE SAATLER (Controller ayrı ayrı beklediği için ayırdık) --}}
+    <div class="row mb-4">
+        {{-- BAŞLANGIÇ --}}
         <div class="col-md-6">
-            <label for="status" class="form-label fw-bold text-dark">
-                <i class="fa-solid fa-flag me-1 text-primary"></i> Rezervasyon Durumu
+            <label class="form-label fw-bold text-success">
+                <i class="fa-regular fa-calendar me-1"></i> Başlangıç Zamanı
+            </label>
+            <div class="input-group">
+                {{-- Başlangıç Tarihi --}}
+                <input type="date" name="start_date" class="form-control"
+                    value="{{ old('start_date', isset($travel->start_date) ? \Carbon\Carbon::parse($travel->start_date)->format('Y-m-d') : '') }}"
+                    required>
+                {{-- Başlangıç Saati --}}
+                <input type="time" name="start_time" class="form-control"
+                    value="{{ old('start_time', isset($travel->start_time) ? \Carbon\Carbon::parse($travel->start_time)->format('H:i') : '') }}"
+                    required>
+            </div>
+            <small class="text-muted">Tarih ve Saat</small>
+        </div>
+
+        {{-- BİTİŞ --}}
+        <div class="col-md-6">
+            <label class="form-label fw-bold text-danger">
+                <i class="fa-regular fa-calendar-check me-1"></i> Bitiş Zamanı
+            </label>
+            <div class="input-group">
+                {{-- Bitiş Tarihi --}}
+                <input type="date" name="end_date" class="form-control"
+                    value="{{ old('end_date', isset($travel->end_date) ? \Carbon\Carbon::parse($travel->end_date)->format('Y-m-d') : '') }}"
+                    required>
+                {{-- Bitiş Saati --}}
+                <input type="time" name="end_time" class="form-control"
+                    value="{{ old('end_time', isset($travel->end_time) ? \Carbon\Carbon::parse($travel->end_time)->format('H:i') : '') }}"
+                    required>
+            </div>
+            <small class="text-muted">Tarih ve Saat</small>
+        </div>
+    </div>
+
+    {{-- DURUM VE ÖNEM --}}
+    <div class="row align-items-center">
+        {{-- Durum Seçimi --}}
+        <div class="col-md-6">
+            <label for="status" class="form-label">
+                <i class="fa-solid fa-list-check me-1 text-info"></i> Durum
             </label>
             <select name="status" id="status" class="form-select">
-                <option value="planned" {{ old('status', $booking?->status) == 'planned' ? 'selected' : '' }}>⏳
+                <option value="planned" {{ old('status', $travel->status ?? '') == 'planned' ? 'selected' : '' }}>
                     Planlandı</option>
-                <option value="completed" {{ old('status', $booking?->status) == 'completed' ? 'selected' : '' }}>✅
-                    Gerçekleşti</option>
-                <option value="cancelled" {{ old('status', $booking?->status) == 'cancelled' ? 'selected' : '' }}>❌
-                    İptal Edildi</option>
-                <option value="postponed" {{ old('status', $booking?->status) == 'postponed' ? 'selected' : '' }}>📅
-                    Ertelendi</option>
+                <option value="completed" {{ old('status', $travel->status ?? '') == 'completed' ? 'selected' : '' }}>
+                    Tamamlandı</option>
+                {{-- Controller validasyonunda sadece 'planned' ve 'completed' vardı, diğerlerini kaldırdım hata vermesin diye --}}
             </select>
         </div>
-    @endif
-</div>
 
-<div class="mb-3">
-    <label for="notes" class="form-label">Notlar</label>
-    {{-- DÜZELTME: $booking?->notes --}}
-    <textarea name="notes" id="notes" class="form-control" rows="2"
-        placeholder="Örn: 1 adet kabin bagajı dahil...">{{ old('notes', $booking?->notes ?? '') }}</textarea>
-</div>
-
-{{-- DOSYALAR KISMI --}}
-@if (isset($booking) && $booking?->exists)
-    <div class="mb-3">
-        <h6><i class="fa-solid fa-paperclip me-2"></i> Mevcut Dosyalar</h6>
-        @forelse($booking->getMedia('attachments') as $media)
-            <div class="file-list-item"
-                style="display: flex; align-items: center; justify-content: space-between; padding: 0.2rem 0.5rem; background-color: #f1f3f5; border-radius: 0.25rem; margin-bottom: 0.2rem;">
-                <span>
-                    <i class="fa-solid fa-file me-2"></i>{{ $media->file_name }} ({{ $media->human_readable_size }})
-                </span>
-                <a href="{{ $media->getUrl() }}" target="_blank"
-                    class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0">Görüntüle</a>
+        {{-- Önemli Switch --}}
+        <div class="col-md-6">
+            <div class="form-check form-switch mt-4">
+                <input class="form-check-input" type="checkbox" role="switch" id="is_important" name="is_important"
+                    value="1" {{ old('is_important', $travel->is_important ?? false) ? 'checked' : '' }}>
+                <label class="form-check-label fw-bold text-danger ms-2" for="is_important">
+                    <i class="fa-solid fa-star me-1"></i> Önemli / Acil
+                </label>
             </div>
-        @empty
-            <p class="text-muted small">Bu rezervasyona ait dosya bulunmuyor.</p>
-        @endforelse
+            <small class="text-muted d-block mt-1">İşaretlenirse listelerde öne çıkarılır.</small>
+        </div>
     </div>
-@endif
+</div>

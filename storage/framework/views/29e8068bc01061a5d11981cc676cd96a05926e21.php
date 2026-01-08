@@ -1,5 +1,6 @@
+
 <?php if($errors->any()): ?>
-    <div class="alert alert-danger mb-3">
+    <div class="alert alert-danger">
         <ul class="mb-0">
             <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <li><?php echo e($error); ?></li>
@@ -8,113 +9,82 @@
     </div>
 <?php endif; ?>
 
-<div class="row">
-    <div class="col-md-3 mb-3">
-        <label for="type" class="form-label">Tip (*)</label>
-        <select name="type" id="type" class="form-select" required>
-            
-            <option value="flight" <?php if(old('type', $booking?->type) == 'flight'): ?> selected <?php endif; ?>>✈️ Uçuş</option>
-            <option value="bus" <?php if(old('type', $booking?->type) == 'bus'): ?> selected <?php endif; ?>>🚌 Otobüs</option>
-            <option value="hotel" <?php if(old('type', $booking?->type) == 'hotel'): ?> selected <?php endif; ?>>🏨 Otel</option>
-            <option value="car_rental" <?php if(old('type', $booking?->type) == 'car_rental'): ?> selected <?php endif; ?>>🚗 Araç Kiralama</option>
-            <option value="train" <?php if(old('type', $booking?->type) == 'train'): ?> selected <?php endif; ?>>🚆 Tren</option>
-            <option value="other" <?php if(old('type', $booking?->type) == 'other'): ?> selected <?php endif; ?>>Diğer</option>
-        </select>
-    </div>
-    <div class="col-md-5 mb-3">
-        <label for="provider_name" class="form-label">Sağlayıcı (*)</label>
-        
-        <input type="text" name="provider_name" id="provider_name" class="form-control"
-            value="<?php echo e(old('provider_name', $booking?->provider_name ?? '')); ?>"
-            placeholder="Örn: Türk Hava Yolları, Hilton..." required>
-    </div>
-    <div class="col-md-4 mb-3">
-        <label for="confirmation_code" class="form-label">Rezervasyon Kodu (TK Numarası vb.)</label>
-        
-        <input type="text" name="confirmation_code" id="confirmation_code" class="form-control"
-            value="<?php echo e(old('confirmation_code', $booking?->confirmation_code ?? '')); ?>" placeholder="Örn: ABC123">
-    </div>
-</div>
-
-<?php
-    // Başlangıç tarihi için değer belirleme
-    $startValue = '';
-    if (old('start_datetime')) {
-        $startValue = old('start_datetime');
-    } elseif (isset($booking) && $booking?->start_datetime) {
-        // Düzeltme
-        $startValue = \Carbon\Carbon::parse($booking->start_datetime)->format('Y-m-d\TH:i');
-    }
-
-    // Bitiş tarihi için değer belirleme
-    $endValue = '';
-    if (old('end_datetime')) {
-        $endValue = old('end_datetime');
-    } elseif (isset($booking) && $booking?->end_datetime) {
-        // Düzeltme
-        $endValue = \Carbon\Carbon::parse($booking->end_datetime)->format('Y-m-d\TH:i');
-    }
-?>
-
-<div class="row">
-    <div class="col-md-3 mb-3">
-        <label for="start_datetime" class="form-label">Başlangıç / Kalkış (*)</label>
-        <input type="datetime-local" name="start_datetime" class="form-control" value="<?php echo e($startValue); ?>" required>
-    </div>
-
-    <div class="col-md-3 mb-3">
-        <label for="end_datetime" class="form-label">Bitiş / Varış</label>
-        <input type="datetime-local" name="end_datetime" class="form-control" value="<?php echo e($endValue); ?>">
-    </div>
-    <div class="col-md-4 mb-3">
-        <label for="booking_files" class="form-label">Bilet / Voucher (PDF, JPG...)</label>
-        <input type="file" name="booking_files[]" id="booking_files" class="form-control" multiple>
-        <small class="form-text text-muted">Yeni dosya seçmek, eskilerin üzerine eklenir.</small>
+<div class="create-event-card">
+    
+    <div class="mb-4">
+        <label for="name" class="form-label">
+            <i class="fa-solid fa-flag me-1 text-primary"></i> Seyahat Başlığı / Tanımı
+        </label>
+        <input type="text" name="name" id="name" class="form-control form-control-lg"
+            value="<?php echo e(old('name', $travel->name ?? '')); ?>" placeholder="Örn: Ankara Müşteri Ziyareti" required>
     </div>
 
     
-    <?php if(isset($booking) && $booking?->exists): ?>
+    <div class="row mb-4">
+        
         <div class="col-md-6">
-            <label for="status" class="form-label fw-bold text-dark">
-                <i class="fa-solid fa-flag me-1 text-primary"></i> Rezervasyon Durumu
+            <label class="form-label fw-bold text-success">
+                <i class="fa-regular fa-calendar me-1"></i> Başlangıç Zamanı
+            </label>
+            <div class="input-group">
+                
+                <input type="date" name="start_date" class="form-control"
+                    value="<?php echo e(old('start_date', isset($travel->start_date) ? \Carbon\Carbon::parse($travel->start_date)->format('Y-m-d') : '')); ?>"
+                    required>
+                
+                <input type="time" name="start_time" class="form-control"
+                    value="<?php echo e(old('start_time', isset($travel->start_time) ? \Carbon\Carbon::parse($travel->start_time)->format('H:i') : '')); ?>"
+                    required>
+            </div>
+            <small class="text-muted">Tarih ve Saat</small>
+        </div>
+
+        
+        <div class="col-md-6">
+            <label class="form-label fw-bold text-danger">
+                <i class="fa-regular fa-calendar-check me-1"></i> Bitiş Zamanı
+            </label>
+            <div class="input-group">
+                
+                <input type="date" name="end_date" class="form-control"
+                    value="<?php echo e(old('end_date', isset($travel->end_date) ? \Carbon\Carbon::parse($travel->end_date)->format('Y-m-d') : '')); ?>"
+                    required>
+                
+                <input type="time" name="end_time" class="form-control"
+                    value="<?php echo e(old('end_time', isset($travel->end_time) ? \Carbon\Carbon::parse($travel->end_time)->format('H:i') : '')); ?>"
+                    required>
+            </div>
+            <small class="text-muted">Tarih ve Saat</small>
+        </div>
+    </div>
+
+    
+    <div class="row align-items-center">
+        
+        <div class="col-md-6">
+            <label for="status" class="form-label">
+                <i class="fa-solid fa-list-check me-1 text-info"></i> Durum
             </label>
             <select name="status" id="status" class="form-select">
-                <option value="planned" <?php echo e(old('status', $booking?->status) == 'planned' ? 'selected' : ''); ?>>⏳
+                <option value="planned" <?php echo e(old('status', $travel->status ?? '') == 'planned' ? 'selected' : ''); ?>>
                     Planlandı</option>
-                <option value="completed" <?php echo e(old('status', $booking?->status) == 'completed' ? 'selected' : ''); ?>>✅
-                    Gerçekleşti</option>
-                <option value="cancelled" <?php echo e(old('status', $booking?->status) == 'cancelled' ? 'selected' : ''); ?>>❌
-                    İptal Edildi</option>
-                <option value="postponed" <?php echo e(old('status', $booking?->status) == 'postponed' ? 'selected' : ''); ?>>📅
-                    Ertelendi</option>
+                <option value="completed" <?php echo e(old('status', $travel->status ?? '') == 'completed' ? 'selected' : ''); ?>>
+                    Tamamlandı</option>
+                
             </select>
         </div>
-    <?php endif; ?>
-</div>
 
-<div class="mb-3">
-    <label for="notes" class="form-label">Notlar</label>
-    
-    <textarea name="notes" id="notes" class="form-control" rows="2"
-        placeholder="Örn: 1 adet kabin bagajı dahil..."><?php echo e(old('notes', $booking?->notes ?? '')); ?></textarea>
-</div>
-
-
-<?php if(isset($booking) && $booking?->exists): ?>
-    <div class="mb-3">
-        <h6><i class="fa-solid fa-paperclip me-2"></i> Mevcut Dosyalar</h6>
-        <?php $__empty_1 = true; $__currentLoopData = $booking->getMedia('attachments'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $media): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-            <div class="file-list-item"
-                style="display: flex; align-items: center; justify-content: space-between; padding: 0.2rem 0.5rem; background-color: #f1f3f5; border-radius: 0.25rem; margin-bottom: 0.2rem;">
-                <span>
-                    <i class="fa-solid fa-file me-2"></i><?php echo e($media->file_name); ?> (<?php echo e($media->human_readable_size); ?>)
-                </span>
-                <a href="<?php echo e($media->getUrl()); ?>" target="_blank"
-                    class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0">Görüntüle</a>
+        
+        <div class="col-md-6">
+            <div class="form-check form-switch mt-4">
+                <input class="form-check-input" type="checkbox" role="switch" id="is_important" name="is_important"
+                    value="1" <?php echo e(old('is_important', $travel->is_important ?? false) ? 'checked' : ''); ?>>
+                <label class="form-check-label fw-bold text-danger ms-2" for="is_important">
+                    <i class="fa-solid fa-star me-1"></i> Önemli / Acil
+                </label>
             </div>
-        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-            <p class="text-muted small">Bu rezervasyona ait dosya bulunmuyor.</p>
-        <?php endif; ?>
+            <small class="text-muted d-block mt-1">İşaretlenirse listelerde öne çıkarılır.</small>
+        </div>
     </div>
-<?php endif; ?>
+</div>
 <?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/travels/_form.blade.php ENDPATH**/ ?>
