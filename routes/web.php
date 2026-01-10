@@ -35,6 +35,7 @@ use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\CustomFieldDefinitionController;
 use App\Http\Controllers\KanbanBoardController;
 use App\Http\Controllers\KanbanViewController;
+use App\Http\Controllers\ExpenseController;
 use App\Services\KanbanService;
 use App\Models\Event;
 use App\Models\Travel;
@@ -183,7 +184,7 @@ Route::middleware(['auth'])->group(function () {
     // 3. ÜRETİM YÖNETİMİ
     Route::prefix('production')->name('production.')->group(function () {
         Route::get('/plans/export-list', [ProductionPlanController::class, 'exportList'])->name('plans.export_list');
-        Route::get('/plans/{productionPlan}/export', [ProductionPlanController::class, 'export'])->name('plans.export');
+        Route::get('/plans/{plan}/export', [ProductionPlanController::class, 'export'])->name('plans.export');
         Route::resource('plans', ProductionPlanController::class);
     });
 
@@ -281,6 +282,9 @@ Route::middleware(['auth'])->group(function () {
     // Genel Rezervasyonlar
     Route::get('/bookings/export', [BookingController::class, 'export'])->name('bookings.export');
     Route::resource('bookings', BookingController::class)->except(['create', 'store']);
+    // --- MASRAF YÖNETİMİ 
+    Route::post('/expenses', [ExpenseController::class, 'store'])->name('expenses.store');
+    Route::delete('/expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
 
     // Takım Yönetimi
     Route::resource('teams', TeamController::class);

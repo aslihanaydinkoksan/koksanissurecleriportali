@@ -202,11 +202,23 @@ class TravelController extends Controller
 
     public function destroy(Travel $travel)
     {
+        // 1. Yetki Kontrolü
         if (Auth::id() !== $travel->user_id && !Auth::user()->can('is-global-manager') && Auth::user()->role !== 'admin') {
+            if (request()->wantsJson()) {
+                return response()->json(['message' => 'Bu eylemi gerçekleştirme yetkiniz yok.'], 403);
+            }
             abort(403, 'Bu eylemi gerçekleştirme yetkiniz yok.');
         }
 
+        // 2. Silme İşlemi
         $travel->delete();
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Seyahat planı başarıyla silindi.',
+                'redirect_url' => route('travels.index')
+            ]);
+        }
 
         return redirect()->route('travels.index')
             ->with('success', 'Seyahat planı başarıyla silindi.');

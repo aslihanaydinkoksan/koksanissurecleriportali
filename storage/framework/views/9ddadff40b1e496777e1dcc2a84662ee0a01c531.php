@@ -47,15 +47,13 @@
                                     <td><?php echo e(strtoupper($board->module_scope)); ?></td>
                                     <td><?php echo e($board->columns->count()); ?></td>
                                     <td class="text-right">
-                                        
                                         <a href="<?php echo e(route('kanban.board', ['scope' => $board->module_scope])); ?>"
                                             class="btn btn-sm btn-info text-white me-1" target="_blank">
                                             <i class="fa fa-columns"></i> Panoya Git
                                         </a>
-
                                         <a href="<?php echo e(route('kanban-boards.edit', $board->id)); ?>"
                                             class="btn btn-sm btn-warning text-white">
-                                            Düzenle
+                                            Panoyu Düzenle
                                         </a>
                                     </td>
                                 </tr>

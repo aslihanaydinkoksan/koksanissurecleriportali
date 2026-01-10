@@ -1,34 +1,34 @@
-@extends('layouts.app')
 
-@section('title', 'Seyahat Planını Düzenle')
 
-@section('content')
+<?php $__env->startSection('title', 'Seyahat Planını Düzenle'); ?>
+
+<?php $__env->startSection('content'); ?>
     <div class="container py-4">
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="customer-card shadow-sm border">
                     <div class="card-header bg-white border-0 px-4 pt-4">
-                        <h4 class="mb-0">"{{ $travel->name }}" Planını Düzenle</h4>
+                        <h4 class="mb-0">"<?php echo e($travel->name); ?>" Planını Düzenle</h4>
                     </div>
                     <div class="card-body px-4">
-                        {{-- GÜNCELLEME FORMU --}}
-                        <form action="{{ route('travels.update', $travel) }}" method="POST" id="update-form"
+                        
+                        <form action="<?php echo e(route('travels.update', $travel)); ?>" method="POST" id="update-form"
                             autocomplete="off">
-                            @csrf
-                            @method('PUT')
-                            @include('travels._form', ['travel' => $travel])
+                            <?php echo csrf_field(); ?>
+                            <?php echo method_field('PUT'); ?>
+                            <?php echo $__env->make('travels._form', ['travel' => $travel], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                         </form>
 
                         <div class="d-flex justify-content-between mt-3">
-                            {{-- SİLME BUTONU --}}
-                            {{-- type="button" olması kritik, yoksa formu submit etmeye çalışır --}}
+                            
+                            
                             <button type="button" class="btn btn-outline-danger rounded-pill px-4"
-                                onclick="confirmDeleteTravel({{ $travel->id }})">
+                                onclick="confirmDeleteTravel(<?php echo e($travel->id); ?>)">
                                 <i class="fa-solid fa-trash-alt me-1"></i> Sil
                             </button>
 
                             <div>
-                                <a href="{{ route('travels.index') }}"
+                                <a href="<?php echo e(route('travels.index')); ?>"
                                     class="btn btn-outline-secondary rounded-pill px-4 me-2">
                                     İptal
                                 </a>
@@ -46,8 +46,8 @@
             </div>
         </div>
     </div>
-@endsection
-@section('page_scripts')
+<?php $__env->stopSection(); ?>
+<?php $__env->startSection('page_scripts'); ?>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
     <script>
@@ -94,4 +94,6 @@
             });
         }
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/travels/edit.blade.php ENDPATH**/ ?>

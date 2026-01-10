@@ -430,6 +430,14 @@
                                                 <span class="ms-1">Düzenle</span>
                                             </a>
                                         <?php endif; ?>
+                                        <?php if(Auth::id() == $travel->user_id || Auth::user()->can('is-global-manager')): ?>
+                                            <button type="button"
+                                                class="btn btn-sm-modern btn-outline-danger btn-action-equal"
+                                                onclick="confirmDeleteTravel(<?php echo e($travel->id); ?>)" title="Sil">
+                                                <i class="fa-solid fa-trash-alt"></i>
+                                                <span class="ms-1">Sil</span>
+                                            </button>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
@@ -445,6 +453,51 @@
             </div>
         </div>
     </div>
+<?php $__env->stopSection(); ?>
+<?php $__env->startSection('page_scripts'); ?>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script>
+        // Global Silme Fonksiyonu
+        window.confirmDeleteTravel = function(id) {
+            Swal.fire({
+                title: 'Emin misiniz?',
+                text: "Bu seyahat planı silinecek! İşlem geri alınamaz.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Evet, Sil',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    axios.delete(`/travels/${id}`)
+                        .then(response => {
+                            if (response.data.status === 'success') {
+                                Swal.fire({
+                                    title: 'Silindi!',
+                                    text: response.data.message,
+                                    icon: 'success',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    // Index sayfasındayız, listeyi güncellemek için sayfayı yeniliyoruz
+                                    window.location.reload();
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Silme hatası:', error);
+                            Swal.fire(
+                                'Hata!',
+                                error.response?.data?.message || 'Bir sorun oluştu.',
+                                'error'
+                            );
+                        });
+                }
+            });
+        }
+    </script>
 <?php $__env->stopSection(); ?>
 
 <?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/travels/index.blade.php ENDPATH**/ ?>

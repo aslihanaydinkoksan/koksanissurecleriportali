@@ -98,4 +98,8 @@ class Travel extends Model
         // (Zaten Service katmanında Business Unit filtresi uygulanıyor)
         return $query;
     }
+    public function expenses()
+    {
+        return $this->morphMany(Expense::class, 'expensable');
+    }
 }

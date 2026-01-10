@@ -430,6 +430,14 @@
                                                 <span class="ms-1">Düzenle</span>
                                             </a>
                                         @endif
+                                        @if (Auth::id() == $travel->user_id || Auth::user()->can('is-global-manager'))
+                                            <button type="button"
+                                                class="btn btn-sm-modern btn-outline-danger btn-action-equal"
+                                                onclick="confirmDeleteTravel({{ $travel->id }})" title="Sil">
+                                                <i class="fa-solid fa-trash-alt"></i>
+                                                <span class="ms-1">Sil</span>
+                                            </button>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -444,4 +452,48 @@
             </div>
         </div>
     </div>
+@endsection
+@section('page_scripts')
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script>
+        // Global Silme Fonksiyonu
+        window.confirmDeleteTravel = function(id) {
+            Swal.fire({
+                title: 'Emin misiniz?',
+                text: "Bu seyahat planı silinecek! İşlem geri alınamaz.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Evet, Sil',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    axios.delete(`/travels/${id}`)
+                        .then(response => {
+                            if (response.data.status === 'success') {
+                                Swal.fire({
+                                    title: 'Silindi!',
+                                    text: response.data.message,
+                                    icon: 'success',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Silme hatası:', error);
+                            Swal.fire(
+                                'Hata!',
+                                error.response?.data?.message || 'Bir sorun oluştu.',
+                                'error'
+                            );
+                        });
+                }
+            });
+        }
+    </script>
 @endsection

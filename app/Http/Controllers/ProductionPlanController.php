@@ -63,7 +63,7 @@ class ProductionPlanController extends Controller
         $birimler = Birim::orderBy('ad')->get();
 
         // View'a birimleri gönder
-        return view('production.plans.create', compact('birimler'));
+        return view('production.plans.index', compact('birimler'));
     }
     /**
      * Store Metodu (HİBRİT YAPI GÜNCELLEMESİ YAPILDI)
@@ -101,12 +101,12 @@ class ProductionPlanController extends Controller
             ->with('success', 'Haftalık üretim planı başarıyla oluşturuldu!');
     }
 
-    public function edit(ProductionPlan $productionPlan)
+    public function edit(ProductionPlan $plan)
     {
 
         $this->authorize('access-department', 'uretim');
 
-        if (Auth::id() !== $productionPlan->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
+        if (Auth::id() !== $plan->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
             return redirect()->route('production.plans.index')
                 ->with('error', 'Bu planı sadece oluşturan kişi düzenleyebilir.');
         }
@@ -122,11 +122,11 @@ class ProductionPlanController extends Controller
     /**
      * Update Metodu (HİBRİT YAPI GÜNCELLEMESİ YAPILDI)
      */
-    public function update(Request $request, ProductionPlan $productionPlan)
+    public function update(Request $request, ProductionPlan $plan)
     {
         $this->authorize('access-department', 'uretim');
 
-        if (Auth::id() !== $productionPlan->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
+        if (Auth::id() !== $plan->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
             return redirect()->route('production.plans.index')
                 ->with('error', 'Bu planı sadece oluşturan kişi güncelleyebilir.');
         }
@@ -150,22 +150,22 @@ class ProductionPlanController extends Controller
 
         // 4. Güncelleme
         // $validatedData içinde 'extras' dizisi de var, model cast sayesinde JSON olur.
-        $productionPlan->update($validatedData);
+        $plan->update($validatedData);
 
         return redirect()->route('production.plans.index')
             ->with('success', 'Üretim planı başarıyla güncellendi.');
     }
 
-    public function destroy(ProductionPlan $productionPlan)
+    public function destroy(ProductionPlan $plan)
     {
         $this->authorize('access-department', 'uretim');
 
-        if (Auth::id() !== $productionPlan->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
+        if (Auth::id() !== $plan->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
             return redirect()->route('production.plans.index')
                 ->with('error', 'Bu planı sadece oluşturan kişi silebilir.');
         }
 
-        $productionPlan->delete();
+        $plan->delete();
 
         return redirect()->route('production.plans.index')
             ->with('success', 'Üretim planı başarıyla silindi.');
@@ -197,15 +197,15 @@ class ProductionPlanController extends Controller
      * 2. TEKİL İŞ EMRİ FİŞİ İNDİR (Excel)
      * Rota: /production/plans/{productionPlan}/export
      */
-    public function export(ProductionPlan $productionPlan)
+    public function export(ProductionPlan $plan)
     {
-        $fileName = 'is-emri-' . $productionPlan->id . '.csv';
+        $fileName = 'is-emri-' . $plan->id . '.csv';
 
         // Detay fişi olduğu için başlıkları yan yana değil, form gibi alt alta yapıyoruz
         // Bu yüzden callback içinde manuel yazacağız.
         $headers = ['Content-Type' => 'text/csv; charset=utf-8', 'Content-Disposition' => "attachment; filename=$fileName"];
 
-        $callback = function () use ($productionPlan) {
+        $callback = function () use ($plan) {
             $file = fopen('php://output', 'w');
             fputs($file, "\xEF\xBB\xBF"); // BOM
 
@@ -214,11 +214,11 @@ class ProductionPlanController extends Controller
             fputcsv($file, [], ';'); // Boş satır
 
             // TEMEL BİLGİLER (Alt alta)
-            fputcsv($file, ['Plan ID', $productionPlan->id], ';');
-            fputcsv($file, ['Başlık', $productionPlan->plan_title], ';');
-            fputcsv($file, ['Başlangıç Tarihi', $productionPlan->week_start_date], ';');
-            fputcsv($file, ['Oluşturan', $productionPlan->user->name ?? '-'], ';');
-            fputcsv($file, ['Önem Derecesi', $productionPlan->is_important ? 'YÜKSEK' : 'Normal'], ';');
+            fputcsv($file, ['Plan ID', $plan->id], ';');
+            fputcsv($file, ['Başlık', $plan->plan_title], ';');
+            fputcsv($file, ['Başlangıç Tarihi', $plan->week_start_date], ';');
+            fputcsv($file, ['Oluşturan', $plan->user->name ?? '-'], ';');
+            fputcsv($file, ['Önem Derecesi', $plan->is_important ? 'YÜKSEK' : 'Normal'], ';');
 
             fputcsv($file, [], ';');
             fputcsv($file, ['--- ÜRETİM DETAYLARI / REÇETE ---'], ';');
@@ -227,9 +227,9 @@ class ProductionPlanController extends Controller
             // Başlıklar
             fputcsv($file, ['Makine', 'Ürün', 'Miktar'], ';');
 
-            $details = is_string($productionPlan->plan_details)
-                ? json_decode($productionPlan->plan_details, true)
-                : $productionPlan->plan_details;
+            $details = is_string($plan->plan_details)
+                ? json_decode($plan->plan_details, true)
+                : $plan->plan_details;
 
             if ($details && is_array($details)) {
                 foreach ($details as $item) {

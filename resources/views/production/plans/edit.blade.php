@@ -99,11 +99,11 @@
 
     {{-- 
     Validasyon hatası durumunda 'old()' fonksiyonundan gelen verileri, 
-    normal durumda ise modelden ($productionPlan) gelen verileri kullanmak için
+    normal durumda ise modelden ($plan) gelen verileri kullanmak için
     bir değişken tanımlıyoruz.
 --}}
     @php
-        $details_data = old('plan_details', $productionPlan->plan_details ?? []);
+        $details_data = old('plan_details', $plan->plan_details ?? []);
     @endphp
 
     <div class="container">
@@ -119,7 +119,7 @@
 
                         {{-- Controller ve list.blade.php'deki 'admin' kuralı baz alındı --}}
                         @if (Auth::user()->role === 'admin')
-                            <form method="POST" action="{{ route('production.plans.destroy', $productionPlan->id) }}"
+                            <form method="POST" action="{{ route('production.plans.destroy', $plan->id) }}"
                                 onsubmit="return confirm('Bu üretim planını silmek istediğinizden emin misiniz?');"
                                 autocomplete="off">
                                 @csrf
@@ -135,8 +135,7 @@
                         @endif
 
                         {{-- Form action ve method güncellendi --}}
-                        <form method="POST" action="{{ route('production.plans.update', $productionPlan->id) }}"
-                            autocomplete="off">
+                        <form method="POST" action="{{ route('production.plans.update', $plan->id) }}" autocomplete="off">
                             @csrf
                             @method('PUT') {{-- GÜNCELLENDİ --}}
 
@@ -148,8 +147,7 @@
                                         {{-- Veri doldurma güncellendi --}}
                                         <input type="text" class="form-control @error('plan_title') is-invalid @enderror"
                                             id="plan_title" name="plan_title"
-                                            value="{{ old('plan_title', $productionPlan->plan_title) }}" required
-                                            autocomplete="off">
+                                            value="{{ old('plan_title', $plan->plan_title) }}" required autocomplete="off">
                                         @error('plan_title')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -160,7 +158,7 @@
                                         <input type="date"
                                             class="form-control @error('week_start_date') is-invalid @enderror"
                                             id="week_start_date" name="week_start_date"
-                                            value="{{ old('week_start_date', $productionPlan->week_start_date->format('Y-m-d')) }}"
+                                            value="{{ old('week_start_date', $plan->week_start_date->format('Y-m-d')) }}"
                                             required autocomplete="off">
                                         @error('week_start_date')
                                             <div class="invalid-feedback">{{ $message }}</div>
@@ -181,7 +179,7 @@
 
                                     <div id="plan-details-wrapper">
 
-                                        {{-- Döngü, hem 'old' hem de '$productionPlan' verisini işlemek için $details_data'yı kullanır --}}
+                                        {{-- Döngü, hem 'old' hem de '$plan' verisini işlemek için $details_data'yı kullanır --}}
                                         @foreach ($details_data as $index => $details)
                                             <div class="plan-detail-row">
                                                 <input type="text" name="plan_details[{{ $index }}][machine]"
@@ -221,7 +219,7 @@
                             </div>
                             {{-- DİNAMİK ALANLAR --}}
                             <div class="mb-3">
-                                <x-dynamic-fields :model="\App\Models\ProductionPlan::class" :entity="$productionPlan" />
+                                <x-dynamic-fields :model="\App\Models\ProductionPlan::class" :entity="$plan" />
                             </div>
 
                             <div class="text-end mt-4">

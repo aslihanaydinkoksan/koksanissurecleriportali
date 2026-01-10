@@ -100,7 +100,6 @@
 
         .booking-type.bus {
             background: linear-gradient(135deg, #FF6B6B20, #FF6B6B10);
-            /* Kırmızımsı/Turuncu ton */
             color: #FF6B6B;
         }
 
@@ -466,6 +465,238 @@
                         </div>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 <?php endif; ?>
+
+                
+                
+                
+                <div class="section-title mt-5 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                        <h5 class="mb-0">Masraflar</h5>
+                        <span class="badge bg-warning text-dark rounded-pill"><?php echo e($travel->expenses->count()); ?></span>
+                    </div>
+
+                    
+                    <button type="button" class="btn btn-warning btn-sm text-white" data-bs-toggle="modal"
+                        data-bs-target="#addExpenseModal">
+                        <i class="fa-solid fa-plus me-1"></i> Yeni Masraf Ekle
+                    </button>
+                </div>
+
+                <?php if($travel->expenses->isEmpty()): ?>
+                    <div class="empty-state">
+                        <i class="fa-solid fa-receipt"></i>
+                        <h5 class="text-muted">Henüz Masraf Girilmedi</h5>
+                        <p class="text-muted mb-0">Bu seyahate ait masraf kaydı bulunmuyor.</p>
+                    </div>
+                <?php else: ?>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 bg-white border rounded shadow-sm">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Kategori</th>
+                                    <th>Açıklama</th>
+                                    <th>Tarih</th>
+                                    <th class="text-end">Tutar</th>
+                                    <th class="text-end pe-4">İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php $__currentLoopData = $travel->expenses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $expense): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <tr>
+                                        <td class="ps-4">
+                                            <span class="badge bg-light text-dark border">
+                                                <?php echo e($expense->category); ?>
+
+                                            </span>
+                                        </td>
+                                        <td class="text-muted small"><?php echo e($expense->description ?? '-'); ?></td>
+                                        <td>
+                                            <?php if($expense->receipt_date): ?>
+                                                <i class="fa-regular fa-calendar me-1 text-muted"></i>
+                                                <?php echo e($expense->receipt_date->format('d.m.Y')); ?>
+
+                                            <?php else: ?>
+                                                -
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="text-end fw-bold">
+                                            <?php echo e(number_format($expense->amount, 2)); ?> <?php echo e($expense->currency); ?>
+
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <form action="<?php echo e(route('expenses.destroy', $expense->id)); ?>" method="POST"
+                                                class="d-inline"
+                                                onsubmit="return confirm('Bu masrafı silmek istediğinize emin misiniz?');">
+                                                <?php echo csrf_field(); ?>
+                                                <?php echo method_field('DELETE'); ?>
+                                                <button type="submit" class="btn btn-sm btn-link text-danger p-0">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                <?php if($travel->expenses->isNotEmpty()): ?>
+                                    
+                                    <tr class="border-top border-2">
+                                        <td colspan="5" class="p-0"></td>
+                                    </tr>
+
+                                    <?php $__currentLoopData = $travel->expenses->groupBy('currency'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $currency => $groupedExpenses): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php
+                                            $total = $groupedExpenses->sum('amount');
+                                            // Para birimi ikonunu belirleyelim
+                                            $symbol = match ($currency) {
+                                                'TRY' => '₺',
+                                                'USD' => '$',
+                                                'EUR' => '€',
+                                                'GBP' => '£',
+                                                default => $currency,
+                                            };
+                                        ?>
+                                        <tr class="bg-light fw-bold" style="font-size: 0.95rem;">
+                                            <td colspan="3" class="text-end text-muted">
+                                                Toplam (<?php echo e($currency); ?>):
+                                            </td>
+                                            <td class="text-end text-dark font-monospace">
+                                                <?php echo e(number_format($total, 2)); ?> <?php echo e($symbol); ?>
+
+                                            </td>
+                                            <td></td> 
+                                        </tr>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+
+                
+                <div class="modal fade" id="addExpenseModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg">
+                            <div class="modal-header bg-warning text-white">
+                                <h5 class="modal-title">
+                                    <i class="fa-solid fa-file-invoice-dollar me-2"></i>Yeni Masraf Ekle
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                    aria-label="Kapat"></button>
+                            </div>
+
+                            <form action="<?php echo e(route('expenses.store')); ?>" method="POST">
+                                <?php echo csrf_field(); ?>
+                                <input type="hidden" name="travel_id" value="<?php echo e($travel->id); ?>">
+
+                                <div class="modal-body p-4">
+                                    
+                                    <div class="mb-4">
+                                        <label for="expenseCategory"
+                                            class="form-label fw-bold text-secondary">Kategori</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-end-0"><i
+                                                    class="fa-solid fa-list text-muted"></i></span>
+                                            <select name="category" id="expenseCategory"
+                                                class="form-select border-start-0 ps-0" required>
+                                                <option value="" selected disabled>Lütfen bir kategori seçin...
+                                                </option>
+                                                <option value="Ulaşım">✈️ Ulaşım (Uçak, Taksi, Yakıt)</option>
+                                                <option value="Konaklama">🏨 Konaklama / Otel</option>
+                                                <option value="Yemek">🍽️ Yemek / Restoran</option>
+                                                <option value="Temsil">🤝 Temsil & Ağırlama</option>
+                                                <option value="Diğer">🔹 Diğer</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    
+                                    <div class="mb-4 d-none" id="otherDescriptionContainer">
+                                        <label for="expenseDescription" class="form-label fw-bold text-danger">
+                                            Masraf Detayı (Lütfen Belirtiniz) <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-danger text-white border-0"><i
+                                                    class="fa-solid fa-pen"></i></span>
+                                            <input type="text" name="description" id="expenseDescription"
+                                                class="form-control" placeholder="Örn: Vize ücreti, Otopark fişi...">
+                                        </div>
+                                    </div>
+
+                                    
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-8">
+                                            <label for="expenseAmount"
+                                                class="form-label fw-bold text-secondary">Tutar</label>
+                                            <div class="input-group">
+                                                <input type="number" step="0.01" name="amount" id="expenseAmount"
+                                                    class="form-control" placeholder="0.00" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <label for="expenseCurrency" class="form-label fw-bold text-secondary">Para
+                                                Birimi</label>
+                                            <select name="currency" id="expenseCurrency"
+                                                class="form-select font-monospace fw-bold">
+                                                <option value="TRY" selected>₺ TRY</option>
+                                                <option value="USD">$ USD</option>
+                                                <option value="EUR">€ EUR</option>
+                                                <option value="GBP">£ GBP</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    
+                                    <div class="mb-2">
+                                        <label for="expenseDate" class="form-label fw-bold text-secondary">Fiş / Fatura
+                                            Tarihi</label>
+                                        <input type="date" name="receipt_date" id="expenseDate" class="form-control"
+                                            value="<?php echo e(date('Y-m-d')); ?>">
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer bg-light border-0">
+                                    <button type="button" class="btn btn-outline-secondary"
+                                        data-bs-dismiss="modal">İptal</button>
+                                    <button type="submit" class="btn btn-warning text-white px-4">
+                                        <i class="fa-regular fa-save me-1"></i> Kaydet
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const categorySelect = document.getElementById('expenseCategory');
+                        const otherDescContainer = document.getElementById('otherDescriptionContainer');
+                        const otherDescInput = document.getElementById('expenseDescription');
+
+                        // Kategori değiştiğinde çalışacak fonksiyon
+                        categorySelect.addEventListener('change', function() {
+                            if (this.value === 'Diğer') {
+                                // "Diğer" seçildiyse alanı göster ve inputu zorunlu yap
+                                otherDescContainer.classList.remove('d-none');
+
+                                // Animasyonlu açılış efekti
+                                otherDescContainer.style.opacity = 0;
+                                setTimeout(() => {
+                                    otherDescContainer.style.opacity = 1;
+                                    otherDescContainer.style.transition = 'opacity 0.3s';
+                                }, 10);
+
+                                otherDescInput.setAttribute('required', 'required');
+                                otherDescInput.focus();
+                            } else {
+                                // Başka bir şey seçildiyse gizle ve zorunluluğu kaldır
+                                otherDescContainer.classList.add('d-none');
+                                otherDescInput.removeAttribute('required');
+                                otherDescInput.value = '';
+                            }
+                        });
+                    });
+                </script>
             </div>
         </div>
     </div>
