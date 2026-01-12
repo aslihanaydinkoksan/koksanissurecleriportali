@@ -451,89 +451,73 @@
 
                             <hr class="my-4" style="opacity: 0.2">
 
-                            {{-- 1. DEPARTMAN SEÇİMİ (ÇOKLU) --}}
+                            {{-- 1. DEPARTMAN SEÇİMİ (Artık Controller'dan gelen $userDepartments dizisini kullanıyor) --}}
                             <div class="mb-4">
                                 <label class="section-label">
-                                    <i class="fas fa-building section-icon"></i>
-                                    Bağlı Olduğu Departmanlar
+                                    <i class="fas fa-building section-icon"></i> Bağlı Olduğu Departmanlar
                                 </label>
                                 <div class="list-wrapper department-wrapper">
                                     <div class="row g-3">
-                                        @if ($departments->count() > 0)
-                                            @foreach ($departments as $dept)
-                                                <div class="col-md-6">
-                                                    <label class="list-item" for="dept_{{ $dept->id }}">
-                                                        <input type="checkbox" name="departments[]"
-                                                            id="dept_{{ $dept->id }}" value="{{ $dept->id }}"
-                                                            class="list-checkbox" {{-- 👇 İŞTE SİHİRLİ KISIM BURASI 👇 --}}
-                                                            @if (in_array($dept->id, old('departments', $userDepartments))) checked @endif>
-
-                                                        <span class="text-dark">{{ $dept->name }}</span>
-                                                    </label>
-                                                </div>
-                                            @endforeach
-                                        @else
-                                            <div class="col-12">
-                                                <div class="empty-state">
-                                                    <i class="fas fa-inbox empty-icon"></i>
-                                                    <p class="empty-text">Henüz departman eklenmemiş.</p>
-                                                </div>
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
-                                <div class="info-text">
-                                    <i class="fas fa-info-circle info-icon"></i> Kullanıcı birden fazla departmana bağlı
-                                    olabilir.
-                                </div>
-                            </div>
-
-                            {{-- 2. FABRİKA (BUSINESS UNIT) SEÇİMİ (YENİ) --}}
-                            <div class="mb-4">
-                                <label class="section-label">
-                                    <i class="fas fa-industry section-icon factory-icon"></i>
-                                    Yetkili Olduğu Fabrikalar / Lokasyonlar
-                                </label>
-                                <div class="list-wrapper factory-wrapper">
-                                    <div class="row g-3">
-                                        @foreach ($businessUnits as $unit)
+                                        @foreach ($departments as $dept)
                                             <div class="col-md-6">
-                                                <label class="list-item" for="unit_{{ $unit->id }}">
-                                                    <input type="checkbox" name="units[]" id="unit_{{ $unit->id }}"
-                                                        value="{{ $unit->id }}" class="list-checkbox"
-                                                        @if (in_array($unit->id, old('units', $userUnits))) checked @endif>
-                                                    <span class="fw-bold text-dark">{{ $unit->name }}</span>
+                                                <label class="list-item modern-checkbox-item"
+                                                    for="dept_{{ $dept->id }}">
+                                                    <input type="checkbox" name="departments[]"
+                                                        id="dept_{{ $dept->id }}" value="{{ $dept->id }}"
+                                                        class="modern-checkbox"
+                                                        {{ in_array($dept->id, old('departments', $userDepartments)) ? 'checked' : '' }}>
+                                                    <span class="checkbox-label">{{ $dept->name }}</span>
                                                 </label>
                                             </div>
                                         @endforeach
                                     </div>
                                 </div>
-                                <div class="info-text">
-                                    <i class="fas fa-shield-alt info-icon factory-icon"></i> Kullanıcı, panelde sadece
-                                    seçili fabrikaların verilerini görebilecektir.
+                            </div>
+
+                            {{-- 2. FABRİKA (BUSINESS UNIT) SEÇİMİ --}}
+                            <div class="mb-4">
+                                <label class="section-label">
+                                    <i class="fas fa-industry section-icon factory-icon"></i> Yetkili Olduğu Fabrikalar
+                                </label>
+                                <div class="list-wrapper factory-wrapper">
+                                    <div class="row g-3">
+                                        @foreach ($businessUnits as $unit)
+                                            <div class="col-md-6">
+                                                <label class="list-item modern-checkbox-item factory-item"
+                                                    for="unit_{{ $unit->id }}">
+                                                    <input type="checkbox" name="units[]" id="unit_{{ $unit->id }}"
+                                                        value="{{ $unit->id }}"
+                                                        class="modern-checkbox factory-checkbox"
+                                                        {{ in_array($unit->id, old('units', $userUnits)) ? 'checked' : '' }}>
+                                                    <span class="checkbox-label">{{ $unit->name }}</span>
+                                                </label>
+                                            </div>
+                                        @endforeach
+                                    </div>
                                 </div>
                             </div>
 
-                            {{-- 3. ROL SEÇİMİ (RADIO BUTTONS) --}}
+                            {{-- 3. ROL SEÇİMİ (Daha Açıklayıcı Hale Getirildi) --}}
                             <div class="mb-5">
-                                <label class="form-label text-muted fw-bold ms-1 d-block">Kullanıcı Rolü <span
-                                        class="text-danger">*</span></label>
+                                <label class="form-label text-muted fw-bold ms-1 d-block">
+                                    Sistem Erişim Yetkisi (Rol)
+                                </label>
                                 <div class="d-flex flex-wrap">
                                     @foreach ($roles as $role)
                                         <div>
                                             <input type="radio" name="role" id="role_{{ $role->id }}"
                                                 value="{{ $role->name }}" class="role-radio"
-                                                {{ old('role') == $role->name || (!old('role') && $user->hasRole($role->name)) ? 'checked' : '' }}>
-
+                                                {{ old('role', $user->roles->first()->name ?? '') == $role->name ? 'checked' : '' }}>
                                             <label for="role_{{ $role->id }}" class="role-label">
                                                 {{ __('roles.' . $role->name) }}
                                             </label>
                                         </div>
                                     @endforeach
                                 </div>
-                                @error('role')
-                                    <small class="text-danger ms-2">{{ $message }}</small>
-                                @enderror
+                                <small class="text-muted ms-2 mt-1 d-block">
+                                    <i class="fas fa-info-circle"></i> Rol, kullanıcının paneldeki işlem yetkisini
+                                    (düzenleme, silme vb.) belirler.
+                                </small>
                             </div>
 
                             {{-- BUTONLAR --}}

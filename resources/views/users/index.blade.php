@@ -283,8 +283,9 @@
                             <thead>
                                 <tr>
                                     <th>Kullanıcı</th>
-                                    <th>Roller</th>
-                                    <th>Birimler</th>
+                                    <th>Sistem Rolü</th>
+                                    <th>Bağlı Departmanlar</th> {{-- EKLENDİ --}}
+                                    <th>Yetkili Birimler</th>
                                     <th>Kayıt Tarihi</th>
                                     <th class="text-end">İşlemler</th>
                                 </tr>
@@ -294,8 +295,7 @@
                                     <tr>
                                         <td>
                                             <div class="user-meta">
-                                                <div class="avatar-initials">
-                                                    {{ strtoupper(substr($user->name, 0, 1)) }}
+                                                <div class="avatar-initials">{{ strtoupper(substr($user->name, 0, 1)) }}
                                                 </div>
                                                 <div class="user-info">
                                                     <h6>{{ $user->name }}</h6>
@@ -305,47 +305,37 @@
                                         </td>
                                         <td>
                                             @foreach ($user->roles as $role)
-                                                @php
-                                                    // Admin ise mor, değilse mavi badge rengi
-                                                    $badgeClass =
-                                                        $role->name == 'admin' ? 'badge-role-admin' : 'badge-role-user';
-                                                @endphp
-
-                                                <span class="badge-pill {{ $badgeClass }}">
-                                                    {{-- DEĞİŞİKLİK BURADA: roles.php dosyasından çeviriyi çekiyoruz --}}
+                                                <span
+                                                    class="badge-pill {{ $role->name == 'admin' ? 'badge-role-admin' : 'badge-role-user' }}">
                                                     {{ __('roles.' . $role->name) }}
                                                 </span>
                                             @endforeach
                                         </td>
-                                        <td>
-                                            @if ($user->businessUnits->count() > 0)
-                                                @foreach ($user->businessUnits as $unit)
-                                                    <span class="badge bg-secondary">{{ $unit->name }}</span>
-                                                @endforeach
-                                            @else
-                                                <span class="text-muted fst-italic">Birim Yok</span>
-                                            @endif
+                                        <td> {{-- DEPARTMANLAR KOLONU (YENİ) --}}
+                                            @forelse($user->departments as $dept)
+                                                <span class="badge bg-light text-dark border">{{ $dept->name }}</span>
+                                            @empty
+                                                <span class="text-muted small">Belirtilmemiş</span>
+                                            @endforelse
                                         </td>
                                         <td>
-                                            <span class="text-secondary small fw-medium">
-                                                {{ $user->created_at->format('d M, Y') }}
-                                            </span>
+                                            @forelse($user->businessUnits as $unit)
+                                                <span class="badge bg-secondary opacity-75">{{ $unit->name }}</span>
+                                            @empty
+                                                <span class="text-muted small">-</span>
+                                            @endforelse
+                                        </td>
+                                        <td><span
+                                                class="text-secondary small">{{ $user->created_at->format('d.m.Y') }}</span>
                                         </td>
                                         <td>
                                             <div class="action-group">
-                                                <a href="{{ route('users.edit', $user) }}" class="btn-icon" title="Düzenle">
-                                                    ✏️
-                                                </a>
-
+                                                <a href="{{ route('users.edit', $user) }}" class="btn-icon">✏️</a>
                                                 @if (Auth::id() !== $user->id)
                                                     <form action="{{ route('users.destroy', $user) }}" method="POST"
-                                                        class="d-inline"
-                                                        onsubmit="return confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?');">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn-icon delete" title="Sil">
-                                                            🗑️
-                                                        </button>
+                                                        class="d-inline" onsubmit="return confirm('Emin misiniz?');">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="btn-icon delete">🗑️</button>
                                                     </form>
                                                 @endif
                                             </div>

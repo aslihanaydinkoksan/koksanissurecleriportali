@@ -2,307 +2,163 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\Department;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Foundation\Auth\Access\Authorizable;
 use App\Traits\Loggable;
 use Illuminate\Support\Str;
-use App\Models\BusinessUnit;
 use Spatie\Permission\Traits\HasRoles;
 use App\Notifications\ResetPasswordNotification;
 
 class User extends Authenticatable
 {
-    // HasRoles trait'i buraya eklendi, artık roller buradan yönetiliyor
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, Authorizable, Loggable, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, Loggable, HasRoles;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
+     * Toplu atama yapılabilecek alanlar.
+     * Artık 'role' ve 'department_id' burada yok!
      */
     protected $fillable = [
         'name',
         'email',
         'password',
-        'role', // Eski string rol sütunu (yedek olarak durabilir)
-        'department_id',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
 
-    /**
-     * Kullanıcının ait olduğu birimi getirir.
-     */
-    public function department(): BelongsTo
-    {
-        return $this->belongsTo(Department::class);
-    }
-
-    public function travels()
-    {
-        return $this->hasMany(Travel::class);
-    }
-
-    public function assignments()
-    {
-        return $this->morphMany(VehicleAssignment::class, 'responsible');
-    }
-
-    public function teams()
-    {
-        return $this->belongsToMany(Team::class, 'team_user')
-            ->withTimestamps();
-    }
+    // --- İLİŞKİLER (RELATIONS) ---
 
     /**
-     * Kullanıcının oluşturduğu takımlar
+     * Kullanıcının dahil olduğu departmanlar (Çoklu).
      */
-    public function createdTeams()
-    {
-        return $this->hasMany(Team::class, 'created_by_user_id');
-    }
-
-    /**
-     * Kullanıcının oluşturduğu görevler
-     */
-    public function createdAssignments()
-    {
-        return $this->hasMany(VehicleAssignment::class, 'created_by_user_id');
-    }
-
-    /**
-     * Bana atanan tüm görevleri getir
-     * (Direkt bana atananlar + takım görevleri)
-     */
-    public function allAssignments()
-    {
-        return VehicleAssignment::query()
-            ->where(function ($query) {
-                // Direkt bana atanan görevler
-                $query->where('responsible_type', User::class)
-                    ->where('responsible_id', $this->id);
-            })
-            ->orWhere(function ($query) {
-                // Veya takımlarıma atanan görevler
-                $query->where('responsible_type', Team::class)
-                    ->whereHas('responsible.users', function ($q) {
-                    $q->where('users.id', $this->id);
-                });
-            });
-    }
-
-    /**
-     * Check: Bu takımın üyesi miyim?
-     */
-    public function isMemberOf($teamId): bool
-    {
-        return $this->teams()->where('teams.id', $teamId)->exists();
-    }
-
-    /**
-     * Check: Bu takımı ben oluşturdum mu?
-     */
-    public function isCreatorOf($teamId): bool
-    {
-        return $this->createdTeams()->where('id', $teamId)->exists();
-    }
-
-    public function getPendingAssignmentsCountAttribute(): int
-    {
-        // Kullanıcının sorumlu olduğu bekleyen görevleri sayar
-        $count = VehicleAssignment::whereIn('status', ['pending', 'in_progress'])
-            ->where(function ($query) {
-                // 1. Direkt bireysel atama
-                $query->where(function ($q) {
-                    $q->where('responsible_type', self::class) // User::class
-                        ->where('responsible_id', $this->id);
-                })
-                    // 2. Takım ataması
-                    ->orWhere(function ($q) {
-                    // Kullanıcının takımlarını al
-                    $teamIds = $this->teams()->pluck('teams.id');
-
-                    $q->where('responsible_type', \App\Models\Team::class) // Team::class
-                        ->whereIn('responsible_id', $teamIds);
-                });
-            })
-            ->count();
-
-        return $count;
-    }
-
-    /**
-     * Kullanıcı Admin mi? (GÜNCELLENDİ: Spatie Rol Kontrolü)
-     */
-    public function isAdmin(): bool
-    {
-        // Hem eski 'role' sütununa bak (yedek) hem de yeni Spatie sistemine bak
-        return $this->role === 'admin' || $this->hasRole('admin');
-    }
-
-    /**
-     * Kullanıcı Yönetici mi? (GÜNCELLENDİ)
-     */
-    public function isManager(): bool
-    {
-        return $this->role === 'yönetici' || $this->hasRole('yonetici');
-    }
-
-
-    public function departments()
+    public function departments(): BelongsToMany
     {
         return $this->belongsToMany(Department::class, 'department_user');
     }
 
-    public function hasDepartment($departmentName)
-    {
-        // 1. Admin ise her yeri görsün
-        if ($this->isAdmin()) {
-            return true;
-        }
-
-        // 2. Önce İSİM (name) ile kontrol et (Mevcut kodun bozulmasın diye)
-        if ($this->departments->contains('name', $departmentName)) {
-            return true;
-        }
-
-        // 3. Bulamazsa bir de SLUG ile kontrol et
-        $slug = Str::slug($departmentName);
-
-        return $this->departments->contains('slug', $slug);
-    }
-
-    // YARDIMCI FONKSİYON: Kullanıcı belirli bir departmanda mı?
-    public function inDepartment($deptSlug)
-    {
-        return $this->departments->contains('slug', $deptSlug);
-    }
-
     /**
-     * Kullanıcı Yönetici veya Müdür mü?
+     * Kullanıcının yetkili olduğu iş birimleri (Fabrikalar).
      */
-    public function isManagerOrDirector(): bool
-    {
-        // Eski yöntem + Yeni yöntem
-        if (in_array($this->role, ['yönetici', 'müdür']))
-            return true;
-        return $this->hasRole(['yonetici', 'mudur']);
-    }
-
-    // MÜŞTEREK ÇALIŞMA (Many to Many)
-    // Bir kullanıcı birden fazla fabrikada yetkili olabilir.
-    public function businessUnits()
+    public function businessUnits(): BelongsToMany
     {
         return $this->belongsToMany(BusinessUnit::class, 'business_unit_user')
             ->withPivot('role_in_unit')
-
             ->withTimestamps();
     }
-    // Admin ise tüm birimleri getir, değilse sadece yetkili olduklarını.
-    public function getBusinessUnitsAttribute()
-    {
-        // Admin veya Global Yetkili ise TÜM aktif birimleri döndür
-        if ($this->hasRole('admin') || $this->can('view_all_business_units')) {
-            return \App\Models\BusinessUnit::where('is_active', true)->get();
-        }
 
-        // Değilse normal ilişkiyi döndür
-        return $this->getRelationValue('businessUnits');
+    public function travels(): HasMany
+    {
+        return $this->hasMany(Travel::class);
     }
 
-    // Yardımcı Metod: Kullanıcının şu birime yetkisi var mı?
-    public function hasAccessToUnit($unitId)
+    public function assignments(): MorphMany
     {
-        // Admin her yere girer
-        if ($this->hasRole('admin')) { // 'admin' küçük harf kullandık seeder'da
-            return true;
-        }
-
-        return $this->businessUnits->contains('id', $unitId);
+        return $this->morphMany(VehicleAssignment::class, 'responsible');
     }
+
+    public function teams(): BelongsToMany
+    {
+        return $this->belongsToMany(Team::class, 'team_user')->withTimestamps();
+    }
+
+    public function createdTeams(): HasMany
+    {
+        return $this->hasMany(Team::class, 'created_by_user_id');
+    }
+
+    // --- YETKİ KONTROLLERİ (AUTHORIZATION) ---
+
     /**
-     * KÖKSAN YETKİ KONTROLÜ - ID TABANLI (GARANTİ)
+     * Kullanıcı Admin mi? (Sadece Spatie Rolüne Bakar)
+     */
+    public function isAdmin(): bool
+    {
+        return $this->hasRole('admin');
+    }
+
+    /**
+     * Kullanıcı Yönetici mi?
+     */
+    public function isManager(): bool
+    {
+        return $this->hasAnyRole(['yonetici', 'manager', 'müdür']);
+    }
+
+    /**
+     * KÖKSAN ÖZEL: Departman Bazlı Yetki Kontrolü (SLUG TABANLI)
+     * Bu metod, veritabanı ID'lerinden bağımsız çalışır, daha güvenlidir.
      */
     public function hasDepartmentPermission(string $permission): bool
     {
-        // 1. Admin Kontrolü
-        if ($this->hasRole(['admin', 'super-admin']) || trim($this->role) === 'admin') {
+        if ($this->isAdmin())
             return true;
-        }
 
-        // 2. Yönetici Kontrolü (Boşlukları temizleyerek kontrol ediyoruz)
-        $userRole = trim($this->role); // Veritabanındaki 'role' sütunu
-        $isManager = $this->hasRole(['yönetici', 'yonetici', 'manager']) ||
-            in_array($userRole, ['yönetici', 'yonetici', 'manager', 'müdür']);
-
-        // 3. ID Eşleşmesi (Kelime arama riskini ortadan kaldırıyoruz)
-        // Hangi izin, hangi ID'yi gerektiriyor?
+        // Yetki - Departman Slug Eşleşmesi
         $permissionMap = [
-            'view_logistics' => [1], // ID 1: Lojistik
-            'view_production' => [2], // ID 2: Üretim
-            'view_administrative' => [3], // ID 3: İdari İşler
-            'view_maintenance' => [4], // ID 4: Bakım
+            'view_logistics' => 'lojistik',
+            'view_production' => 'uretim',
+            'view_administrative' => 'idari-isler',
+            'view_maintenance' => 'bakim',
         ];
 
-        // Eğer sorgulanan yetki listemizde varsa (Örn: view_administrative)
         if (isset($permissionMap[$permission])) {
+            $requiredSlug = $permissionMap[$permission];
 
-            // Kullanıcının departman ID'si, izin verilen ID listesinde var mı?
-            // (int) diyerek sayıyı garantiye alıyoruz.
-            if ($this->department_id && in_array((int) $this->department_id, $permissionMap[$permission])) {
-                return true;
-            }
-
-            // ID uyuşmuyor!
-            // Eğer Genel Müdür ise (Yönetici + Dept ID yok) -> Göster
-            if ($isManager && is_null($this->department_id)) {
-                return true;
-            }
-
-            return false; // Departman ID'si tutmuyor, GİZLE.
+            // Kullanıcının departmanları arasında bu slug var mı?
+            return $this->departments()->where('slug', $requiredSlug)->exists();
         }
 
-        // Listede olmayan genel izinler için (eğer yöneticiyse veya spatie izni varsa geç)
-        if ($isManager)
-            return true;
-
+        // Eğer haritada yoksa, Spatie'nin standart izin kontrolünü yap
         return $this->can($permission);
     }
 
     /**
-     * Şifre sıfırlama bildirimi gönderir.
-     * Varsayılan metodu override ediyoruz.
-     *
-     * @param  string  $token
-     * @return void
+     * Kullanıcının bekleyen bireysel veya takım görevlerini sayar.
      */
-    public function sendPasswordResetNotification($token)
+    public function getPendingAssignmentsCountAttribute(): int
     {
-        // Kuyruğa atarak gönderir
+        return VehicleAssignment::whereIn('status', ['pending', 'in_progress'])
+            ->where(function ($query) {
+                $query->where(function ($q) {
+                    $q->where('responsible_type', self::class)
+                        ->where('responsible_id', $this->id);
+                })
+                    ->orWhere(function ($q) {
+                        $teamIds = $this->teams()->pluck('teams.id');
+                        $q->where('responsible_type', Team::class)
+                            ->whereIn('responsible_id', $teamIds);
+                    });
+            })
+            ->count();
+    }
+
+    // --- YARDIMCI METODLAR ---
+
+    public function sendPasswordResetNotification($token): void
+    {
         $this->notify(new ResetPasswordNotification($token));
+    }
+
+    /**
+     * Admin ise tüm birimleri, değilse sadece yetkili olduklarını döndürür.
+     */
+    public function getAuthorizedBusinessUnits()
+    {
+        if ($this->isAdmin() || $this->can('view_all_business_units')) {
+            return BusinessUnit::where('is_active', true)->get();
+        }
+        return $this->businessUnits;
     }
 }
