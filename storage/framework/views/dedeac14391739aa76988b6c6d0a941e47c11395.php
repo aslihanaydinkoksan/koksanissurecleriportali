@@ -1,109 +1,114 @@
-@extends('layouts.app')
 
-@section('title', 'Yeni Kanban Panosu Oluştur')
 
-@section('content')
+<?php $__env->startSection('title', 'Yeni Kanban Panosu Oluştur'); ?>
+
+<?php $__env->startSection('content'); ?>
     <div class="container-fluid py-4">
         <div class="d-sm-flex align-items-center justify-content-between mb-4">
             <h1 class="h3 mb-0 text-gray-800">
-                @if (auth()->user()->isAdmin())
+                <?php if(auth()->user()->isAdmin()): ?>
                     <i class="fa fa-shield-alt text-primary mr-2"></i> Yönetici Pano Oluşturma
-                @else
+                <?php else: ?>
                     Kişisel Kanban Panosu Oluştur
-                @endif
+                <?php endif; ?>
             </h1>
-            <a href="{{ route('kanban-boards.index') }}" class="btn btn-sm btn-secondary shadow-sm">
+            <a href="<?php echo e(route('kanban-boards.index')); ?>" class="btn btn-sm btn-secondary shadow-sm">
                 <i class="fa fa-arrow-left"></i> Geri Dön
             </a>
         </div>
 
-        <form action="{{ route('kanban-boards.store') }}" method="POST">
-            @csrf
+        <form action="<?php echo e(route('kanban-boards.store')); ?>" method="POST">
+            <?php echo csrf_field(); ?>
 
-            {{-- 1. GENEL AYARLAR --}}
+            
             <div class="card shadow mb-4">
                 <div class="card-header py-3 bg-white">
                     <h6 class="m-0 font-weight-bold text-primary"><i class="fa fa-cog mr-2"></i> Pano Bilgileri</h6>
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        {{-- Pano Sahibi Seçimi (Admin için Otomatik Tetikleyicili) --}}
-                        @if (auth()->user()->isAdmin())
+                        
+                        <?php if(auth()->user()->isAdmin()): ?>
                             <div class="col-md-3 mb-3">
                                 <label class="form-label font-weight-bold text-primary">Pano Sahibi (Kullanıcı)</label>
                                 <select name="user_id" id="admin_user_selector"
                                     class="form-control form-select shadow-sm border-primary">
-                                    <option value="{{ auth()->id() }}"
-                                        data-unit-id="{{ auth()->user()->businessUnits->first()?->id }}">Kendim (Admin)
+                                    <option value="<?php echo e(auth()->id()); ?>"
+                                        data-unit-id="<?php echo e(auth()->user()->businessUnits->first()?->id); ?>">Kendim (Admin)
                                     </option>
-                                    @foreach ($allUsers as $u)
-                                        @if ($u->id !== auth()->id())
-                                            {{-- data-unit-id ile kullanıcının birimini saklıyoruz --}}
-                                            <option value="{{ $u->id }}"
-                                                data-unit-id="{{ $u->businessUnits->first()?->id }}">
-                                                {{ $u->name }}
+                                    <?php $__currentLoopData = $allUsers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $u): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php if($u->id !== auth()->id()): ?>
+                                            
+                                            <option value="<?php echo e($u->id); ?>"
+                                                data-unit-id="<?php echo e($u->businessUnits->first()?->id); ?>">
+                                                <?php echo e($u->name); ?>
+
                                             </option>
-                                        @endif
-                                    @endforeach
+                                        <?php endif; ?>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select>
                                 <small class="text-primary font-weight-bold">Kullanıcı seçildiğinde fabrika otomatik
                                     güncellenir.</small>
                             </div>
-                        @endif
+                        <?php endif; ?>
 
-                        {{-- Pano Adı --}}
-                        <div class="{{ auth()->user()->isAdmin() ? 'col-md-3' : 'col-md-4' }} mb-3">
+                        
+                        <div class="<?php echo e(auth()->user()->isAdmin() ? 'col-md-3' : 'col-md-4'); ?> mb-3">
                             <label class="form-label font-weight-bold">Pano Adı</label>
                             <input type="text" name="name" id="board_name" class="form-control shadow-sm"
-                                placeholder="Örn: Sevkiyat Takibi" value="{{ old('name') }}" required>
+                                placeholder="Örn: Sevkiyat Takibi" value="<?php echo e(old('name')); ?>" required>
                         </div>
 
-                        {{-- Fabrika / Birim --}}
-                        <div class="{{ auth()->user()->isAdmin() ? 'col-md-3' : 'col-md-4' }} mb-3">
+                        
+                        <div class="<?php echo e(auth()->user()->isAdmin() ? 'col-md-3' : 'col-md-4'); ?> mb-3">
                             <label class="form-label font-weight-bold text-dark">Fabrika / Birim</label>
-                            @if (auth()->user()->isAdmin())
+                            <?php if(auth()->user()->isAdmin()): ?>
                                 <select name="business_unit_id" id="admin_unit_selector"
                                     class="form-control form-select shadow-sm">
-                                    @foreach (\App\Models\BusinessUnit::all() as $unit)
-                                        <option value="{{ $unit->id }}"
-                                            {{ $userUnit->id == $unit->id ? 'selected' : '' }}>
-                                            {{ $unit->name }}
+                                    <?php $__currentLoopData = \App\Models\BusinessUnit::all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $unit): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($unit->id); ?>"
+                                            <?php echo e($userUnit->id == $unit->id ? 'selected' : ''); ?>>
+                                            <?php echo e($unit->name); ?>
+
                                         </option>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select>
-                            @else
+                            <?php else: ?>
                                 <div class="form-control bg-light text-muted border-dashed" style="border-style: dashed;">
-                                    <i class="fa fa-lock mr-2 text-warning"></i> {{ $userUnit->name }}
+                                    <i class="fa fa-lock mr-2 text-warning"></i> <?php echo e($userUnit->name); ?>
+
                                 </div>
-                                <input type="hidden" name="business_unit_id" value="{{ $userUnit->id }}">
-                            @endif
+                                <input type="hidden" name="business_unit_id" value="<?php echo e($userUnit->id); ?>">
+                            <?php endif; ?>
                         </div>
 
-                        {{-- Modül / Scope --}}
-                        <div class="{{ auth()->user()->isAdmin() ? 'col-md-3' : 'col-md-4' }} mb-3">
+                        
+                        <div class="<?php echo e(auth()->user()->isAdmin() ? 'col-md-3' : 'col-md-4'); ?> mb-3">
                             <label class="form-label font-weight-bold text-dark">İş Akışı (Kapsam)</label>
-                            @if (auth()->user()->isAdmin())
+                            <?php if(auth()->user()->isAdmin()): ?>
                                 <select name="module_scope" class="form-control form-select shadow-sm">
                                     <option value="">-- Kapsam Seçiniz --</option>
-                                    @foreach ($modules as $key => $label)
-                                        <option value="{{ $key }}"
-                                            {{ (string) $scope == (string) $key ? 'selected' : '' }}>
-                                            {{ $label }}
+                                    <?php $__currentLoopData = $modules; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($key); ?>"
+                                            <?php echo e((string) $scope == (string) $key ? 'selected' : ''); ?>>
+                                            <?php echo e($label); ?>
+
                                         </option>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select>
-                            @else
+                            <?php else: ?>
                                 <div class="form-control bg-light text-muted border-dashed" style="border-style: dashed;">
-                                    {{ $modules[(string) $scope] ?? 'Genel' }}
+                                    <?php echo e($modules[(string) $scope] ?? 'Genel'); ?>
+
                                 </div>
-                                <input type="hidden" name="module_scope" value="{{ $scope }}">
-                            @endif
+                                <input type="hidden" name="module_scope" value="<?php echo e($scope); ?>">
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- 2. PANO SÜTUNLARI --}}
+            
             <div class="card shadow mb-4 border-left-success">
                 <div class="card-header py-3 bg-white d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold text-success"><i class="fa fa-columns mr-2"></i> Pano Sütunları</h6>
@@ -234,4 +239,6 @@
 
         window.onload = () => applyTemplate('standard', true);
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/admin/kanban/create.blade.php ENDPATH**/ ?>

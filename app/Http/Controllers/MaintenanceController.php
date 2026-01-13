@@ -24,12 +24,13 @@ class MaintenanceController extends Controller
     // 1. LİSTELEME EKRANI
     public function index(Request $request)
     {
-        // 1. Sorguyu Başlat (İlişkilerle Beraber)
+        $user = auth()->user();
+        $activeUnitId = session('active_unit_id') ?? $user->businessUnits->first()?->id;
+
+        // 1. Mevcut Sorgu (Olduğu gibi kalıyor)
         $query = MaintenancePlan::with(['type', 'asset', 'user', 'timeEntries']);
 
-        // 2. Filtreleme Mantığı
-
-        // A. Metin Arama (Başlık veya Açıklamada)
+        // 2. Filtreleme Mantığı (Olduğu gibi kalıyor)
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
@@ -37,23 +38,27 @@ class MaintenanceController extends Controller
                     ->orWhere('description', 'like', "%{$search}%");
             });
         }
-
-        // B. Durum Filtresi (SelectBox)
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
         }
-
-        // C. Tarih Filtresi (Datepicker)
         if ($request->filled('date')) {
             $query->whereDate('planned_start_date', $request->input('date'));
         }
 
         // 3. Sıralama ve Sayfalama
         $plans = $query->orderBy('planned_start_date', 'desc')
-            ->paginate(10) // Sayfada 10 kayıt göster
-            ->appends(request()->query()); // Sayfa değişince filtreler kaybolmasın
+            ->paginate(10)
+            ->appends(request()->query());
 
-        return view('maintenance.index', compact('plans'));
+        // --- YENİ: Bakım Modülüne Ait Dinamik Panoları Getir ---
+        $maintenanceBoards = \App\Models\KanbanBoard::where('user_id', $user->id)
+            ->where('business_unit_id', $activeUnitId)
+            ->where('module_scope', 'maintenance') // Burası 'maintenance' olmalı
+            ->orderBy('name', 'asc')
+            ->get();
+
+        // 4. Return Yapısı
+        return view('maintenance.index', compact('plans', 'maintenanceBoards'));
     }
 
     // 2. YENİ EKLEME FORMU

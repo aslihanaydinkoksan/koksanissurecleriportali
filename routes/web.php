@@ -48,14 +48,7 @@ use App\Models\Travel;
 
 // --- 1. GENEL ROTALAR (Auth Gerektirmeyenler) ---
 
-Route::get('/', function () {
-    if (Auth::check()) {
-        return Auth::user()->email === 'tv@koksan.com'
-            ? redirect()->route('tv.dashboard')
-            : view('welcome');
-    }
-    return redirect()->route('login');
-});
+Route::get('/', [HomeController::class, 'welcome'])->name('index');
 
 Auth::routes(['register' => false]);
 
@@ -107,6 +100,7 @@ Route::middleware(['auth'])->group(function () {
 
     // --- KANBAN PANOSU YÖNETİMİ ---
     // Panoyu Görüntüleme (Örn: /kanban/board?scope=maintenance)
+    Route::resource('kanban-boards', KanbanBoardController::class);
     Route::get('/kanban/board', [KanbanViewController::class, 'index'])->name('kanban.board');
     Route::get('/kanban/card/{kanbanCard}', [KanbanViewController::class, 'show'])->name('kanban.show');
     // Kart Taşıma (AJAX - API)
@@ -138,7 +132,7 @@ Route::middleware(['auth'])->group(function () {
             ->group(function () {
                 Route::resource('custom-fields', CustomFieldDefinitionController::class);
             });
-        Route::resource('kanban-boards', KanbanBoardController::class);
+
     });
 
     // Profil (Herkes)

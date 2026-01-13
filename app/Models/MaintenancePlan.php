@@ -140,4 +140,9 @@ class MaintenancePlan extends Model
             'is_badge' => true
         ];
     }
+    // Kanban kartlarıyla polimorfik ilişki (Bir işin birden fazla kartı olabilir - her kullanıcı için bir tane)
+    public function kanbanCard()
+    {
+        return $this->morphMany(KanbanCard::class, 'model');
+    }
 }

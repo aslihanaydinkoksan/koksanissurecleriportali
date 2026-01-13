@@ -15,9 +15,10 @@ class ProductionPlanController extends Controller
     {
         $this->authorize('access-department', 'uretim');
 
-        $query = ProductionPlan::with('user');
         $filters = $request->all();
         $user = Auth::user();
+        $activeUnitId = session('active_unit_id') ?? $user->businessUnits->first()?->id;
+        $query = ProductionPlan::with('user');
         $isImportantFilter = $request->input('is_important', 'all');
 
         if ($isImportantFilter !== 'all' && $user && in_array($user->role, ['admin', 'yönetici'])) {
@@ -51,8 +52,13 @@ class ProductionPlanController extends Controller
         $plans = $query->orderBy('week_start_date', 'desc')
             ->paginate(15);
         $filters = $request->only(['plan_title', 'date_from', 'date_to', 'is_important']);
+        $productionBoards = \App\Models\KanbanBoard::where('user_id', $user->id)
+            ->where('business_unit_id', $activeUnitId)
+            ->where('module_scope', 'production') // Kapsam: production
+            ->orderBy('name', 'asc')
+            ->get();
 
-        return view('production.plans.index', compact('plans', 'filters'));
+        return view('production.plans.index', compact('plans', 'filters', 'productionBoards'));
     }
 
     public function create()

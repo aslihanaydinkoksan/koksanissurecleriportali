@@ -97,4 +97,9 @@ class ProductionPlan extends Model
         // (Zaten Service katmanında Business Unit filtresi uygulanıyor)
         return $query;
     }
+    // Kanban kartlarıyla polimorfik ilişki (Bir işin birden fazla kartı olabilir - her kullanıcı için bir tane)
+    public function kanbanCard()
+    {
+        return $this->morphMany(KanbanCard::class, 'model');
+    }
 }

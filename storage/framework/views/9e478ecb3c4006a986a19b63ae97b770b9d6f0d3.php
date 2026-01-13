@@ -1,7 +1,7 @@
-@extends('layouts.app')
-@section('title', 'Etkinlik Listesi')
 
-@push('styles')
+<?php $__env->startSection('title', 'Etkinlik Listesi'); ?>
+
+<?php $__env->startPush('styles'); ?>
     <style>
         .page-hero {
             background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
@@ -316,114 +316,111 @@
             color: white;
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container py-4">
         <div class="row justify-content-center">
             <div class="col-lg-12">
 
-                {{-- Hero Section --}}
+                
                 <div class="page-hero">
                     <div class="page-hero-content">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                @if (request('event_type') == 'fuar')
+                                <?php if(request('event_type') == 'fuar'): ?>
                                     <h2 class="mb-1">🎟️ Fuar Yönetimi</h2>
                                     <p class="mb-0 opacity-90">Planlanmış fuar organizasyonlarını ve rezervasyonları buradan
                                         yönetebilirsiniz.</p>
-                                @else
+                                <?php else: ?>
                                     <h2 class="mb-1">📅 Etkinlik Listesi</h2>
                                     <p class="mb-0 opacity-90">Tüm toplantı, ziyaret ve organizasyon listesi.</p>
-                                @endif
+                                <?php endif; ?>
                             </div>
                             <div class="text-end d-none d-md-block">
-                                <h1 class="mb-0 display-6 fw-bold">{{ $events->total() }}</h1>
+                                <h1 class="mb-0 display-6 fw-bold"><?php echo e($events->total()); ?></h1>
                                 <span class="small opacity-75">Toplam Kayıt</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- Alert Mesajları --}}
-                @if (session('success'))
+                
+                <?php if(session('success')): ?>
                     <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert"
                         style="background: #dcfce7; color: #166534;">
-                        <i class="fa-solid fa-circle-check me-2"></i>{{ session('success') }}
+                        <i class="fa-solid fa-circle-check me-2"></i><?php echo e(session('success')); ?>
+
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
-                @endif
+                <?php endif; ?>
 
-                {{-- 
-                    ==================================================
-                    MOD 1: FUAR YÖNETİMİ (Travels Tarzı Kartlar)
-                    Adres: /service/events?event_type=fuar
-                    ==================================================
-                --}}
-                @if (request('event_type') == 'fuar')
+                
+                <?php if(request('event_type') == 'fuar'): ?>
 
                     <div class="d-flex justify-content-end mb-4">
-                        <a href="{{ route('service.events.export', request()->all()) }}" class="btn-export-global">
+                        <a href="<?php echo e(route('service.events.export', request()->all())); ?>" class="btn-export-global">
                             <i class="fas fa-file-excel me-2"></i> Listeyi Excel'e Aktar
                         </a>
-                        <a href="{{ route('service.events.create') }}" class="btn-gradient">
+                        <a href="<?php echo e(route('service.events.create')); ?>" class="btn-gradient">
                             <i class="fa-solid fa-plus me-2"></i> Yeni Fuar Ekle
                         </a>
                     </div>
 
-                    @if ($events->isEmpty())
+                    <?php if($events->isEmpty()): ?>
                         <div class="content-card empty-state">
                             <i class="fa-solid fa-ticket"></i>
                             <h4>Henüz Fuar Kaydı Yok</h4>
                             <p>Planlanmış bir fuar bulunmuyor. Yeni ekleyerek başlayabilirsiniz.</p>
                         </div>
-                    @else
-                        @foreach ($events as $event)
+                    <?php else: ?>
+                        <?php $__currentLoopData = $events; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $event): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <div class="travel-card">
                                 <div class="row align-items-center">
-                                    {{-- Önem Durumu --}}
+                                    
                                     <div class="col-md-1 text-center">
-                                        @if ($event->is_important)
+                                        <?php if($event->is_important): ?>
                                             <i class="fa-solid fa-star text-warning fs-5" title="Önemli"></i>
-                                        @else
+                                        <?php else: ?>
                                             <i class="fa-regular fa-star text-muted fs-5 opacity-50"></i>
-                                        @endif
+                                        <?php endif; ?>
                                     </div>
 
-                                    {{-- Başlık ve Oluşturan --}}
+                                    
                                     <div class="col-md-3">
-                                        <div class="fw-bold text-dark fs-5">{{ $event->title }}</div>
+                                        <div class="fw-bold text-dark fs-5"><?php echo e($event->title); ?></div>
                                         <div class="text-muted small mt-1">
                                             <i class="fa-solid fa-user-circle me-1"></i>
-                                            {{ $event->user->name ?? 'Bilinmiyor' }}
+                                            <?php echo e($event->user->name ?? 'Bilinmiyor'); ?>
+
                                         </div>
                                     </div>
 
-                                    {{-- Başlangıç --}}
+                                    
                                     <div class="col-md-2">
                                         <div class="text-muted small"
                                             style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
                                             Başlangıç</div>
                                         <div class="fw-bold text-dark">
-                                            {{ \Carbon\Carbon::parse($event->start_datetime)->format('d.m.Y') }}</div>
+                                            <?php echo e(\Carbon\Carbon::parse($event->start_datetime)->format('d.m.Y')); ?></div>
                                         <div class="small text-muted">
-                                            {{ \Carbon\Carbon::parse($event->start_datetime)->format('H:i') }}</div>
+                                            <?php echo e(\Carbon\Carbon::parse($event->start_datetime)->format('H:i')); ?></div>
                                     </div>
 
-                                    {{-- Bitiş --}}
+                                    
                                     <div class="col-md-2">
                                         <div class="text-muted small"
                                             style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
                                             Bitiş</div>
                                         <div class="fw-bold text-dark">
-                                            {{ \Carbon\Carbon::parse($event->end_datetime)->format('d.m.Y') }}</div>
+                                            <?php echo e(\Carbon\Carbon::parse($event->end_datetime)->format('d.m.Y')); ?></div>
                                         <div class="small text-muted">
-                                            {{ \Carbon\Carbon::parse($event->end_datetime)->format('H:i') }}</div>
+                                            <?php echo e(\Carbon\Carbon::parse($event->end_datetime)->format('H:i')); ?></div>
                                     </div>
 
-                                    {{-- Durum Badge --}}
+                                    
                                     <div class="col-md-2">
-                                        @php
+                                        <?php
                                             $statusClass = match ($event->visit_status) {
                                                 'planlandi' => 'planned',
                                                 'gerceklesti' => 'completed',
@@ -438,16 +435,17 @@
                                                 'ertelendi' => 'fa-hourglass-half',
                                                 default => 'fa-circle',
                                             };
-                                        @endphp
-                                        <span class="status-badge {{ $statusClass }}">
-                                            <i class="fa-solid {{ $statusIcon }}"></i>
-                                            {{ ucfirst($event->visit_status) }}
+                                        ?>
+                                        <span class="status-badge <?php echo e($statusClass); ?>">
+                                            <i class="fa-solid <?php echo e($statusIcon); ?>"></i>
+                                            <?php echo e(ucfirst($event->visit_status)); ?>
+
                                         </span>
                                     </div>
 
-                                    {{-- Butonlar --}}
+                                    
                                     <div class="col-md-2 text-end">
-                                        <a href="{{ route('service.events.show', $event) }}"
+                                        <a href="<?php echo e(route('service.events.show', $event)); ?>"
                                             class="btn btn-outline-primary w-100 rounded-pill fw-bold"
                                             style="border: 2px solid; padding: 0.5rem;">
                                             <i class="fa-solid fa-eye me-1"></i> Detaylar
@@ -455,58 +453,54 @@
                                     </div>
                                 </div>
                             </div>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
                         <div class="d-flex justify-content-center mt-4">
-                            {{ $events->appends(request()->query())->links('pagination::bootstrap-5') }}
-                        </div>
-                    @endif
+                            <?php echo e($events->appends(request()->query())->links('pagination::bootstrap-5')); ?>
 
-                    {{-- 
-                    ==================================================
-                    MOD 2: STANDART ETKİNLİK LİSTESİ (Bookings Tarzı Tablo)
-                    Adres: /service/events
-                    ==================================================
-                --}}
-                @else
-                    {{-- 1. Filtre Açma Butonu --}}
+                        </div>
+                    <?php endif; ?>
+
+                    
+                <?php else: ?>
+                    
                     <div class="d-flex justify-content-end mb-3">
                         <button class="btn btn-white border shadow-sm" type="button" data-bs-toggle="collapse"
                             data-bs-target="#eventFilters" aria-expanded="false" aria-controls="eventFilters">
                             <i class="fa-solid fa-filter me-1 text-primary"></i> Filtreleme Seçenekleri
 
-                            {{-- Eğer aktif bir filtre varsa Badge göster --}}
-                            @if (request()->hasAny(['title', 'event_type', 'visit_status', 'date_from', 'date_to']))
+                            
+                            <?php if(request()->hasAny(['title', 'event_type', 'visit_status', 'date_from', 'date_to'])): ?>
                                 <span class="badge bg-primary ms-1">Aktif</span>
-                            @endif
+                            <?php endif; ?>
                         </button>
                     </div>
 
-                    {{-- 2. Filtre Alanı (Collapse içine alındı) --}}
-                    {{-- Eğer filtre varsa 'show' class'ı eklenir ve açık gelir --}}
-                    <div class="collapse @if (request()->hasAny(['title', 'event_type', 'visit_status', 'date_from', 'date_to'])) show @endif" id="eventFilters">
+                    
+                    
+                    <div class="collapse <?php if(request()->hasAny(['title', 'event_type', 'visit_status', 'date_from', 'date_to'])): ?> show <?php endif; ?>" id="eventFilters">
                         <div class="filter-card">
                             <div class="section-title">
                                 <i class="fa-solid fa-filter"></i>
                                 <h5>Filtreleme Seçenekleri</h5>
                             </div>
 
-                            <form method="GET" action="{{ route('service.events.index') }}">
+                            <form method="GET" action="<?php echo e(route('service.events.index')); ?>">
                                 <div class="row g-3">
                                     <div class="col-lg-3 col-md-6">
                                         <label class="form-label small fw-bold text-muted">Etkinlik Başlığı</label>
                                         <input type="text" class="form-control" name="title"
-                                            value="{{ $filters['title'] ?? '' }}" placeholder="Ara...">
+                                            value="<?php echo e($filters['title'] ?? ''); ?>" placeholder="Ara...">
                                     </div>
                                     <div class="col-lg-2 col-md-6">
                                         <label class="form-label small fw-bold text-muted">Etkinlik Tipi</label>
                                         <select class="form-select" name="event_type">
                                             <option value="all">Tümü</option>
-                                            @foreach ($eventTypes as $key => $value)
-                                                <option value="{{ $key }}"
-                                                    {{ ($filters['event_type'] ?? '') == $key ? 'selected' : '' }}>
-                                                    {{ $value }}</option>
-                                            @endforeach
+                                            <?php $__currentLoopData = $eventTypes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $value): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <option value="<?php echo e($key); ?>"
+                                                    <?php echo e(($filters['event_type'] ?? '') == $key ? 'selected' : ''); ?>>
+                                                    <?php echo e($value); ?></option>
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </select>
                                     </div>
                                     <div class="col-lg-2 col-md-6">
@@ -514,28 +508,28 @@
                                         <select class="form-select" name="visit_status">
                                             <option value="all">Tümü</option>
                                             <option value="planlandi"
-                                                {{ ($filters['visit_status'] ?? '') == 'planlandi' ? 'selected' : '' }}>
+                                                <?php echo e(($filters['visit_status'] ?? '') == 'planlandi' ? 'selected' : ''); ?>>
                                                 Planlandı</option>
                                             <option value="gerceklesti"
-                                                {{ ($filters['visit_status'] ?? '') == 'gerceklesti' ? 'selected' : '' }}>
+                                                <?php echo e(($filters['visit_status'] ?? '') == 'gerceklesti' ? 'selected' : ''); ?>>
                                                 Gerçekleşti</option>
                                             <option value="iptal"
-                                                {{ ($filters['visit_status'] ?? '') == 'iptal' ? 'selected' : '' }}>İptal
+                                                <?php echo e(($filters['visit_status'] ?? '') == 'iptal' ? 'selected' : ''); ?>>İptal
                                             </option>
                                         </select>
                                     </div>
                                     <div class="col-lg-2 col-md-6">
                                         <label class="form-label small fw-bold text-muted">Başlangıç</label>
                                         <input type="date" class="form-control" name="date_from"
-                                            value="{{ $filters['date_from'] ?? '' }}">
+                                            value="<?php echo e($filters['date_from'] ?? ''); ?>">
                                     </div>
                                     <div class="col-lg-2 col-md-6">
                                         <label class="form-label small fw-bold text-muted">Bitiş</label>
                                         <input type="date" class="form-control" name="date_to"
-                                            value="{{ $filters['date_to'] ?? '' }}">
+                                            value="<?php echo e($filters['date_to'] ?? ''); ?>">
                                     </div>
 
-                                    {{-- Butonlar --}}
+                                    
                                     <div class="col-lg-1 d-flex align-items-end">
                                         <button type="submit" class="btn btn-primary w-100"
                                             style="background-color: #667EEA; border-color: #667EEA;">
@@ -544,21 +538,21 @@
                                     </div>
                                 </div>
 
-                                {{-- Temizle Butonu (Filtre varsa görünür) --}}
-                                @if (request()->hasAny(['title', 'event_type', 'visit_status', 'date_from', 'date_to']))
+                                
+                                <?php if(request()->hasAny(['title', 'event_type', 'visit_status', 'date_from', 'date_to'])): ?>
                                     <div class="row mt-3">
                                         <div class="col-12 text-end">
-                                            <a href="{{ route('service.events.index') }}" class="btn btn-sm text-muted">
+                                            <a href="<?php echo e(route('service.events.index')); ?>" class="btn btn-sm text-muted">
                                                 <i class="fa-solid fa-rotate-right me-1"></i> Filtreleri Temizle
                                             </a>
                                         </div>
                                     </div>
-                                @endif
+                                <?php endif; ?>
                             </form>
                         </div>
                     </div>
                     <div class="mb-4 text-end">
-                        <a href="{{ route('service.events.export', request()->all()) }}" class="btn-export-global">
+                        <a href="<?php echo e(route('service.events.export', request()->all())); ?>" class="btn-export-global">
                             <i class="fas fa-file-excel me-2"></i>Listeyi Excel'e Aktar
                         </a>
                         <div class="dropdown d-inline-block">
@@ -567,33 +561,34 @@
                                 <i class="fas fa-columns me-2"></i> Pano Görünümü
                             </button>
                             <ul class="dropdown-menu shadow border-0" aria-labelledby="serviceKanbanMenu">
-                                @forelse($serviceBoards as $board)
+                                <?php $__empty_1 = true; $__currentLoopData = $serviceBoards; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $board): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                     <li>
                                         <a class="dropdown-item py-2"
-                                            href="{{ route('kanban.board', ['board_id' => $board->id]) }}">
-                                            <i class="fas fa-calendar-check text-success me-2"></i> {{ $board->name }}
+                                            href="<?php echo e(route('kanban.board', ['board_id' => $board->id])); ?>">
+                                            <i class="fas fa-calendar-check text-success me-2"></i> <?php echo e($board->name); ?>
+
                                         </a>
                                     </li>
-                                @empty
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                     <li>
                                         <a class="dropdown-item py-2"
-                                            href="{{ route('kanban-boards.create', ['scope' => 'idari']) }}">
+                                            href="<?php echo e(route('kanban-boards.create', ['scope' => 'idari'])); ?>">
                                             <i class="fas fa-plus text-primary me-2"></i> Yeni İdari Pano Oluştur
                                         </a>
                                     </li>
-                                @endforelse
+                                <?php endif; ?>
                             </ul>
                         </div>
                     </div>
-                    {{-- Tablo Görünümü --}}
+                    
                     <div class="content-card">
-                        @if ($events->isEmpty())
+                        <?php if($events->isEmpty()): ?>
                             <div class="empty-state">
                                 <i class="fa-solid fa-calendar-xmark"></i>
                                 <h5>Kayıt Bulunamadı</h5>
                                 <p class="mb-0">Arama kriterlerinize uygun etkinlik yok.</p>
                             </div>
-                        @else
+                        <?php else: ?>
                             <div class="table-responsive">
                                 <table class="table mb-0">
                                     <thead>
@@ -607,13 +602,13 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($events as $event)
-                                            {{-- HATA ÇÖZÜMÜ: Satır etiketi (tr) eklendi ve hiza için class verildi --}}
+                                        <?php $__currentLoopData = $events; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $event): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            
                                             <tr class="align-middle">
 
-                                                {{-- 1. TİP SÜTUNU --}}
+                                                
                                                 <td class="text-center">
-                                                    @php
+                                                    <?php
                                                         $typeClass = match ($event->event_type) {
                                                             'fuar' => 'fuar',
                                                             'toplanti' => 'toplanti',
@@ -631,29 +626,31 @@
                                                         $typeName =
                                                             $eventTypes[$event->event_type] ??
                                                             ucfirst($event->event_type);
-                                                    @endphp
+                                                    ?>
 
                                                     <div class="d-inline-flex align-items-center">
-                                                        <div class="type-icon {{ $typeClass }} me-2"
-                                                            title="{{ $typeName }}">
-                                                            <i class="fa-solid {{ $typeIcon }}"></i>
+                                                        <div class="type-icon <?php echo e($typeClass); ?> me-2"
+                                                            title="<?php echo e($typeName); ?>">
+                                                            <i class="fa-solid <?php echo e($typeIcon); ?>"></i>
                                                         </div>
                                                         <span class="fw-bold text-dark small">
-                                                            {{ $typeName }}
+                                                            <?php echo e($typeName); ?>
+
                                                         </span>
                                                     </div>
                                                 </td>
 
-                                                {{-- 2. BAŞLIK SÜTUNU --}}
+                                                
                                                 <td>
-                                                    <div class="fw-bold text-dark">{{ $event->title }}</div>
-                                                    <div class="small text-muted">{{ $event->user->name ?? 'Bilinmiyor' }}
+                                                    <div class="fw-bold text-dark"><?php echo e($event->title); ?></div>
+                                                    <div class="small text-muted"><?php echo e($event->user->name ?? 'Bilinmiyor'); ?>
+
                                                     </div>
                                                 </td>
 
-                                                {{-- 3. DURUM SÜTUNU --}}
+                                                
                                                 <td>
-                                                    @php
+                                                    <?php
                                                         $statusClass = match ($event->visit_status) {
                                                             'planlandi' => 'planned',
                                                             'gerceklesti' => 'completed',
@@ -661,80 +658,88 @@
                                                             'ertelendi' => 'postponed',
                                                             default => 'secondary',
                                                         };
-                                                    @endphp
-                                                    <span class="status-badge {{ $statusClass }}">
-                                                        {{ ucfirst($event->visit_status) }}
+                                                    ?>
+                                                    <span class="status-badge <?php echo e($statusClass); ?>">
+                                                        <?php echo e(ucfirst($event->visit_status)); ?>
+
                                                     </span>
                                                 </td>
 
-                                                {{-- 4. KONUM SÜTUNU --}}
+                                                
                                                 <td>
-                                                    @if ($event->location)
+                                                    <?php if($event->location): ?>
                                                         <span class="text-dark">
                                                             <i class="fa-solid fa-location-dot me-1 text-muted"></i>
-                                                            {{ Str::limit($event->location, 20) }}
+                                                            <?php echo e(Str::limit($event->location, 20)); ?>
+
                                                         </span>
-                                                    @else
+                                                    <?php else: ?>
                                                         <span class="text-muted small">-</span>
-                                                    @endif
+                                                    <?php endif; ?>
                                                 </td>
 
-                                                {{-- 5. ZAMAN SÜTUNU --}}
+                                                
                                                 <td>
                                                     <div class="fw-bold text-dark">
-                                                        {{ \Carbon\Carbon::parse($event->start_datetime)->format('d.m.Y') }}
+                                                        <?php echo e(\Carbon\Carbon::parse($event->start_datetime)->format('d.m.Y')); ?>
+
                                                     </div>
                                                     <div class="small text-muted">
-                                                        {{ \Carbon\Carbon::parse($event->start_datetime)->format('H:i') }}
+                                                        <?php echo e(\Carbon\Carbon::parse($event->start_datetime)->format('H:i')); ?>
+
                                                         -
-                                                        {{ \Carbon\Carbon::parse($event->end_datetime)->format('H:i') }}
+                                                        <?php echo e(\Carbon\Carbon::parse($event->end_datetime)->format('H:i')); ?>
+
                                                     </div>
                                                 </td>
 
-                                                {{-- 6. İŞLEMLER SÜTUNU --}}
+                                                
                                                 <td class="text-end pe-4">
                                                     <div class="d-flex justify-content-end gap-2">
-                                                        <a href="{{ route('service.events.show', $event) }}"
+                                                        <a href="<?php echo e(route('service.events.show', $event)); ?>"
                                                             class="btn-action-with-text view">
                                                             <i class="fa-solid fa-eye"></i>
                                                             <span>Görüntüle</span>
                                                         </a>
 
-                                                        @if (!in_array(Auth::user()->role, ['izleyici']))
-                                                            <a href="{{ route('service.events.edit', $event) }}"
+                                                        <?php if(!in_array(Auth::user()->role, ['izleyici'])): ?>
+                                                            <a href="<?php echo e(route('service.events.edit', $event)); ?>"
                                                                 class="btn-action-with-text edit">
                                                                 <i class="fa-solid fa-pen"></i>
                                                                 <span>Düzenle</span>
                                                             </a>
 
 
-                                                            <form action="{{ route('service.events.destroy', $event) }}"
+                                                            <form action="<?php echo e(route('service.events.destroy', $event)); ?>"
                                                                 method="POST" class="d-inline"
                                                                 onsubmit="return confirm('Bu etkinliği silmek istediğinizden emin misiniz?');">
-                                                                @csrf
-                                                                @method('DELETE')
+                                                                <?php echo csrf_field(); ?>
+                                                                <?php echo method_field('DELETE'); ?>
                                                                 <button type="submit"
                                                                     class="btn-action-with-text delete">
                                                                     <i class="fa-solid fa-trash"></i>
                                                                     <span>Sil</span>
                                                                 </button>
                                                             </form>
-                                                        @endif
+                                                        <?php endif; ?>
                                                     </div>
                                                 </td>
-                                            </tr> {{-- HATA ÇÖZÜMÜ: Satır kapatıldı --}}
-                                        @endforeach
+                                            </tr> 
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </tbody>
                                 </table>
                             </div>
                             <div class="p-3 border-top">
-                                {{ $events->appends(request()->query())->links('pagination::bootstrap-5') }}
+                                <?php echo e($events->appends(request()->query())->links('pagination::bootstrap-5')); ?>
+
                             </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
-                @endif
+                <?php endif; ?>
 
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/service/events/index.blade.php ENDPATH**/ ?>

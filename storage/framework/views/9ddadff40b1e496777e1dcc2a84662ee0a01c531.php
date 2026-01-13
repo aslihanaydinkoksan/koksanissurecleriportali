@@ -1,21 +1,22 @@
-@extends('layouts.app')
 
-@section('title', 'Kanban Panosu Yönetimi')
-@section('content')
+
+<?php $__env->startSection('title', 'Kanban Panosu Yönetimi'); ?>
+<?php $__env->startSection('content'); ?>
     <div class="container-fluid py-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3 mb-0 text-gray-800">İş Süreçleri Panoları (Kanban)</h1>
-            <a href="{{ route('kanban-boards.create') }}" class="btn btn-primary">
+            <a href="<?php echo e(route('kanban-boards.create')); ?>" class="btn btn-primary">
                 <i class="fa fa-plus"></i> Yeni Pano Oluştur
             </a>
         </div>
 
-        @if (session('success'))
+        <?php if(session('success')): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
+                <?php echo e(session('success')); ?>
+
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-        @endif
+        <?php endif; ?>
 
         <div class="card shadow mb-4">
             <div class="card-header py-3">
@@ -35,33 +36,36 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($boards as $board)
+                            <?php $__currentLoopData = $boards; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $board): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <tr>
-                                    <td class="font-weight-bold">{{ $board->name }}</td>
-                                    <td>{{ $board->user->name ?? 'Sistem' }}</td>
+                                    <td class="font-weight-bold"><?php echo e($board->name); ?></td>
+                                    <td><?php echo e($board->user->name ?? 'Sistem'); ?></td>
                                     <td>
                                         <span class="badge bg-info text-white">
-                                            {{ $board->businessUnit->name ?? '-' }}
+                                            <?php echo e($board->businessUnit->name ?? '-'); ?>
+
                                         </span>
                                     </td>
-                                    <td>{{ strtoupper($board->module_scope) }}</td>
-                                    <td>{{ $board->columns->count() }}</td>
+                                    <td><?php echo e(strtoupper($board->module_scope)); ?></td>
+                                    <td><?php echo e($board->columns->count()); ?></td>
                                     <td class="text-right">
-                                        <a href="{{ route('kanban.board', ['board_id' => $board->id]) }}"
+                                        <a href="<?php echo e(route('kanban.board', ['board_id' => $board->id])); ?>"
                                             class="btn btn-sm btn-info text-white me-1" target="_blank">
                                             <i class="fa fa-columns"></i> Panoya Git
                                         </a>
-                                        <a href="{{ route('kanban-boards.edit', $board->id) }}"
+                                        <a href="<?php echo e(route('kanban-boards.edit', $board->id)); ?>"
                                             class="btn btn-sm btn-warning text-white">
                                             Panoyu Düzenle
                                         </a>
                                     </td>
                                 </tr>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/admin/kanban/index.blade.php ENDPATH**/ ?>

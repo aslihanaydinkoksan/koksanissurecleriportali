@@ -3,138 +3,110 @@
 namespace App\Observers;
 
 use App\Models\KanbanBoard;
+use App\Models\KanbanColumn;
 use Illuminate\Database\Eloquent\Model;
 
 class KanbanModelObserver
 {
     /**
-     * Handle the Model "created" event.
+     * Yeni bir iş (Bakım, Sevkiyat vb.) oluştuğunda tüm kullanıcıların panosuna ekle.
      */
     public function created(Model $model)
     {
-        // 1. Modelin hangi fabrika/birime ait olduğunu bul
-        // Senin standardın: $model->business_unit_id
         $factoryId = $model->business_unit_id;
-
-        if (!$factoryId)
-            return; // Fabrika yoksa işlem yapma
-
-        // 2. Bu modelin türüne göre (Bakım, Lojistik) hangi panoya gideceğini bul
-        // Model sınıf adından 'scope' çıkarımı yapıyoruz
         $scope = $this->determineScope($model);
 
-        if (!$scope)
-            return; // Tanımsız bir modelse çık
+        if (!$factoryId || !$scope)
+            return;
 
-        // 3. İlgili fabrikanın ve modülün panosunu bul
-        $board = KanbanBoard::where('business_unit_id', $factoryId)
+        // Bu birimdeki TÜM kullanıcıların panolarını çekiyoruz
+        $boards = KanbanBoard::where('business_unit_id', $factoryId)
             ->where('module_scope', $scope)
-            ->first();
+            ->get();
 
-        // 4. Panonun "Varsayılan" (is_default=1) sütununu veya ilk sütununu bul
-        if ($board) {
+        foreach ($boards as $board) {
+            // HATA ÇÖZÜMÜ: Property ->columns yerine ->columns() metodunu kullanıyoruz.
+            // Böylece bir Query Builder döner ve where/first metodları kesin çalışır.
             $defaultColumn = $board->columns()->where('is_default', true)->first()
                 ?? $board->columns()->orderBy('order_index')->first();
 
             if ($defaultColumn) {
-                // 5. Kartı Oluştur
+                // Kartı polimorfik olarak bağla
                 $model->kanbanCard()->create([
                     'column_id' => $defaultColumn->id,
-                    'sort_order' => 9999, // En sona ekle
+                    'sort_order' => 9999, // Sütun sonuna ekle
                 ]);
             }
         }
     }
 
     /**
-     * Hangi Modelin Hangi Modül (Scope) Olduğunu Belirle
-     */
-    private function determineScope(Model $model)
-    {
-        $class = get_class($model);
-
-        return match ($class) {
-            'App\Models\MaintenancePlan' => 'maintenance',
-            'App\Models\Shipment' => 'logistics',
-            'App\Models\ProductionPlan' => 'production',
-            'App\Models\Event' => 'admin', // İdari İşler
-            default => null,
-        };
-    }
-    /**
-     * Kayıt Güncellendiğinde Çalışır (Statü Eşitlemesi)
+     * İş güncellendiğinde (Statü değiştiğinde) tüm kullanıcıların kartlarını kaydır.
      */
     public function updated(Model $model)
     {
-        // 1. Bu kaydın bir Kanban kartı var mı?
-        $card = $model->kanbanCard;
-        if (!$card)
-            return;
-
-        // 2. Statü değişikliği var mı kontrol et
-        // Her modülün statü sütunu farklı olabilir, onları tanımlayalım:
+        // Modelin statü sütununu belirle
         $statusColumn = match (get_class($model)) {
-            'App\Models\MaintenancePlan' => 'status', // Bakım tablosundaki sütun adı
-            'App\Models\Shipment' => 'shipment_status', // Lojistik (tahmini)
-            'App\Models\VehicleAssignment' => 'status', // Ulaştırma
-            'App\Models\Event' => 'visit_status', // İdari İşler
+            'App\Models\MaintenancePlan' => 'status',
+            'App\Models\Shipment' => 'shipment_status',
+            'App\Models\Event' => 'visit_status',
             default => null,
         };
 
+        // Eğer statü değişmediyse işlem yapma
         if (!$statusColumn || !$model->isDirty($statusColumn))
             return;
 
-        // 3. Yeni statüye karşılık gelen Kanban Sütun Slug'ını bul
-        // BURASI ÖNEMLİ: Veritabanındaki statü kodlarınla, Kanban sütun slug'larını eşleştiriyoruz.
-        $newStatus = $model->{$statusColumn};
-        $targetSlug = $this->mapStatusToSlug(get_class($model), $newStatus);
-
+        $targetSlug = $this->mapStatusToSlug(get_class($model), $model->{$statusColumn});
         if (!$targetSlug)
             return;
 
-        // 4. Hedef sütunu bul (Aynı panoda olması şart)
-        $targetColumn = \App\Models\KanbanColumn::where('board_id', $card->column->board_id)
-            ->where('slug', $targetSlug)
-            ->first();
+        // Bu modele bağlı TÜM kartları bul (Tüm kullanıcıların panolarındakiler)
+        // Not: Bu ilişki için modellerine morphMany eklemiş olmalısın.
+        $cards = $model->kanbanCard;
 
-        // 5. Kartı taşı
-        if ($targetColumn && $targetColumn->id !== $card->column_id) {
-            $card->update([
-                'column_id' => $targetColumn->id,
-                // Sort order'ı güncellemiyoruz, olduğu sırada kalsın veya en başa/sona atabilirsin.
-            ]);
+        if ($cards) {
+            foreach ($cards as $card) {
+                // Kartın bulunduğu panoda hedef statüye uygun sütunu bul
+                $targetColumn = KanbanColumn::where('board_id', $card->column->board_id)
+                    ->where('slug', $targetSlug)
+                    ->first();
+
+                if ($targetColumn) {
+                    $card->update(['column_id' => $targetColumn->id]);
+                }
+            }
         }
     }
 
-    /**
-     * Statü Kodlarını Kanban Sluglarına Çeviren Sözlük
-     */
+    private function determineScope(Model $model)
+    {
+        return match (get_class($model)) {
+            'App\Models\MaintenancePlan' => 'maintenance',
+            'App\Models\Shipment' => 'logistics',
+            'App\Models\ProductionPlan' => 'production',
+            'App\Models\Event' => 'admin',
+            default => null,
+        };
+    }
+
     private function mapStatusToSlug($modelClass, $status)
     {
-        // Bakım Modülü Eşleştirmesi
         if ($modelClass === 'App\Models\MaintenancePlan') {
             return match ($status) {
                 'open', 'pending', 'new' => 'bekleyenler',
                 'in_progress', 'working' => 'islemde',
-                'completed', 'done' => 'bitti',
+                'completed', 'done' => 'tamamlandi',
                 default => null,
             };
         }
-
-        // Lojistik Modülü Eşleştirmesi (Örnek)
-        if ($modelClass === 'App\Models\Shipment') {
-            return match ($status) {
-                'pending' => 'siparis-alindi',
-                'on_road', 'transit' => 'yolda',
-                'delivered' => 'teslim-edildi',
-                default => null,
-            };
-        }
-
+        // Diğer modüller için mapping buraya eklenebilir...
         return null;
     }
+
     public function deleted(Model $model)
     {
+        // İş silindiğinde bağlı tüm kartları da sil
         $model->kanbanCard()->delete();
     }
 }

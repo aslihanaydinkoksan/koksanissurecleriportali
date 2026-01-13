@@ -3,10 +3,49 @@
 namespace App\Services;
 
 use App\Models\KanbanCard;
+use App\Models\KanbanBoard;
 use Illuminate\Support\Facades\DB;
 
 class KanbanService
 {
+    /**
+     * Sistemde tanımlı tüm modül kapsamları.
+     * Burası "Sistem Yetenekleri" listesidir.
+     */
+    public const MODULE_SCOPES = [
+        'maintenance' => 'Bakım Modülü',
+        'logistics' => 'Lojistik Modülü',
+        'production' => 'Üretim Modülü',
+        'idari' => 'İdari İşler / Hizmet',
+    ];
+
+    /**
+     * Kullanıcının departmanına bakarak hangi kanban modülünü
+     * kullanması gerektiğini veritabanından (dinamik) bulur.
+     */
+    public function resolveScopeFromUser($user): ?string
+    {
+        // Kullanıcının ilk departmanındaki 'kanban_scope' değerini oku.
+        // Eğer veritabanında bu alanı doldurduysan (Örn: 'logistics'), sistem onu döndürür.
+        return $user->departments->first()?->kanban_scope;
+    }
+
+    /**
+     * Verilen kapsamın sistemde tanımlı olup olmadığını kontrol eder.
+     */
+    public function isValidScope(?string $scope): bool
+    {
+        return $scope && array_key_exists($scope, self::MODULE_SCOPES);
+    }
+
+    /**
+     * Tüm modül listesini döndürür (View'lar için).
+     */
+    public function getAllModules(): array
+    {
+        return self::MODULE_SCOPES;
+    }
+
     /**
      * Bir kartı taşır ve eski/yeni sütunlardaki sıralamayı düzeltir.
      */
@@ -14,54 +53,39 @@ class KanbanService
     {
         return DB::transaction(function () use ($cardId, $targetColumnId, $newIndex) {
             $card = KanbanCard::findOrFail($cardId);
-
             $originalColumnId = $card->column_id;
             $originalIndex = $card->sort_order;
 
-            // -- AYNI SÜTUN İÇİNDE HAREKET --
             if ($originalColumnId == $targetColumnId) {
                 if ($originalIndex == $newIndex)
-                    return true; // Değişiklik yok
+                    return true;
 
-                // Aradaki kartları kaydır
                 if ($originalIndex < $newIndex) {
-                    // Aşağı taşıma: Aradakileri yukarı (-1) çek
                     KanbanCard::where('column_id', $originalColumnId)
                         ->whereBetween('sort_order', [$originalIndex + 1, $newIndex])
                         ->decrement('sort_order');
                 } else {
-                    // Yukarı taşıma: Aradakileri aşağı (+1) it
                     KanbanCard::where('column_id', $originalColumnId)
                         ->whereBetween('sort_order', [$newIndex, $originalIndex - 1])
                         ->increment('sort_order');
                 }
-
                 $card->sort_order = $newIndex;
                 $card->save();
-            }
-            // -- FARKLI SÜTUNA HAREKET --
-            else {
-                // 1. Hedef sütunda yer aç (Gireceği yerden sonrakileri it)
+            } else {
                 KanbanCard::where('column_id', $targetColumnId)
                     ->where('sort_order', '>=', $newIndex)
                     ->increment('sort_order');
 
-                // 2. Kartı taşı
                 $card->column_id = $targetColumnId;
                 $card->sort_order = $newIndex;
                 $card->save();
 
-                // 3. ESKİ SÜTUNDAKİ BOŞLUĞU KAPAT (Re-indexing)
                 $this->reorderColumn($originalColumnId);
             }
-
             return true;
         });
     }
 
-    /**
-     * Bir sütundaki tüm kartları 0'dan başlayarak yeniden sıralar (Gap Closing)
-     */
     private function reorderColumn($columnId)
     {
         $cards = KanbanCard::where('column_id', $columnId)
@@ -69,45 +93,52 @@ class KanbanService
             ->get();
 
         foreach ($cards as $index => $c) {
-            // Sadece sırası yanlış olanları güncelle (Performans)
             if ($c->sort_order !== $index) {
                 $c->update(['sort_order' => $index]);
             }
         }
     }
+
     /**
-     * Belirli bir fabrikanın tüm panolarını ve özet istatistiklerini getirir.
-     * Dashboard/Welcome ekranı için optimize edilmiştir.
+     * Kullanıcının o anki fabrikasındaki KENDİ panolarını ve özetlerini getirir.
      */
-    public function getDashboardSummary($businessUnitId)
+    public function getDashboardSummary($userId, $businessUnitId)
     {
-        return \App\Models\KanbanBoard::where('business_unit_id', $businessUnitId)
+        $user = \App\Models\User::find($userId);
+        $query = \App\Models\KanbanBoard::where('business_unit_id', $businessUnitId);
+
+        // Eğer God Mode olsun dersen bu satırı ekle:
+        if (!$user->isAdmin()) {
+            $query->where('user_id', $userId);
+        }
+        return \App\Models\KanbanBoard::where('user_id', $userId) // Sadece benim panolarım
+            ->where('business_unit_id', $businessUnitId)      // Sadece bu fabrikadaki
             ->with([
                 'columns' => function ($query) {
-                    // Her sütundaki kart sayısını veritabanı seviyesinde say (Performans)
                     $query->withCount('cards');
                 }
             ])
             ->get()
             ->map(function ($board) {
+                // Aktif işleri say (Bitti/İptal olmayanlar)
                 $activeTaskCount = $board->columns
                     ->filter(function ($col) {
-                        return !in_array($col->slug, ['done', 'completed', 'bitti', 'cancelled', 'iptal', 'teslim-edildi', 'siparis-iptal-edildi']);
-                    })
+                    return !in_array($col->slug, ['done', 'completed', 'bitti', 'cancelled', 'iptal', 'teslim-edildi']);
+                })
                     ->sum('cards_count');
+
                 return (object) [
                     'name' => $board->name,
                     'scope' => $board->module_scope,
                     'column_count' => $board->columns->count(),
-                    'total_tasks' => $activeTaskCount,// Toplam iş yükü
-                    'route' => route('kanban.board', ['scope' => $board->module_scope]),
-                    'icon' => $this->getIconForScope($board->module_scope), // Görsel ikon
-                    'color' => $this->getColorForScope($board->module_scope) // Görsel renk
+                    'total_tasks' => $activeTaskCount,
+                    'route' => route('kanban.board', ['board_id' => $board->id]), // Önceki adımda ID bazlı yapmıştık
+                    'icon' => $this->getIconForScope($board->module_scope),
+                    'color' => $this->getColorForScope($board->module_scope)
                 ];
             });
     }
 
-    // Yardımcı (Private) Metotlar - UI Mantığını serviste tutuyoruz
     private function getIconForScope($scope)
     {
         return match ($scope) {
@@ -122,10 +153,10 @@ class KanbanService
     private function getColorForScope($scope)
     {
         return match ($scope) {
-            'maintenance' => 'danger',   // Kırmızı
-            'logistics' => 'primary',    // Mavi
-            'production' => 'warning',   // Sarı
-            'admin' => 'success',        // Yeşil
+            'maintenance' => 'danger',
+            'logistics' => 'primary',
+            'production' => 'warning',
+            'admin' => 'success',
             default => 'secondary',
         };
     }

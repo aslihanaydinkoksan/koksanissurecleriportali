@@ -14,6 +14,7 @@ use App\Traits\Loggable;
 use Illuminate\Support\Str;
 use Spatie\Permission\Traits\HasRoles;
 use App\Notifications\ResetPasswordNotification;
+use App\Models\Department;
 
 class User extends Authenticatable
 {
@@ -95,6 +96,19 @@ class User extends Authenticatable
     {
         return $this->hasAnyRole(['yonetici', 'manager', 'müdür']);
     }
+    // 1. '$user->department' çağrıldığında çalışır
+    public function getDepartmentAttribute()
+    {
+        // Kullanıcının ilk departmanını sanki tekil bir özellikmiş gibi döndürür.
+        return $this->departments->first();
+    }
+
+    // 2. '$user->role' çağrıldığında çalışır
+    public function getRoleAttribute()
+    {
+        // Spatie'deki ilk rol ismini döndürür (admin, personel vb.)
+        return $this->roles->first()?->name;
+    }
 
     /**
      * KÖKSAN ÖZEL: Departman Bazlı Yetki Kontrolü (SLUG TABANLI)
@@ -105,23 +119,13 @@ class User extends Authenticatable
         if ($this->isAdmin())
             return true;
 
-        // Yetki - Departman Slug Eşleşmesi
-        $permissionMap = [
-            'view_logistics' => 'lojistik',
-            'view_production' => 'uretim',
-            'view_administrative' => 'idari-isler',
-            'view_maintenance' => 'bakim',
-        ];
+        // Yetki isminden kapsamı çıkar (Örn: view_logistics -> logistics)
+        $scope = str_replace('view_', '', $permission);
+        if ($scope === 'administrative')
+            $scope = 'idari';
 
-        if (isset($permissionMap[$permission])) {
-            $requiredSlug = $permissionMap[$permission];
-
-            // Kullanıcının departmanları arasında bu slug var mı?
-            return $this->departments()->where('slug', $requiredSlug)->exists();
-        }
-
-        // Eğer haritada yoksa, Spatie'nin standart izin kontrolünü yap
-        return $this->can($permission);
+        // Departmanların 'kanban_scope' sütununda bu kapsam var mı bak
+        return $this->departments()->where('kanban_scope', $scope)->exists();
     }
 
     /**
@@ -161,4 +165,9 @@ class User extends Authenticatable
         }
         return $this->businessUnits;
     }
+    public function kanbanBoards()
+    {
+        return $this->hasMany(KanbanBoard::class);
+    }
+
 }

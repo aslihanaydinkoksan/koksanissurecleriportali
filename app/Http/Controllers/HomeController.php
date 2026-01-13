@@ -42,8 +42,9 @@ class HomeController extends Controller
         $user = Auth::user();
 
         // Görünüm için departman bilgisi
-        $departmentSlug = $user->department ? strtolower(trim($user->department->slug)) : 'genel';
-        $departmentName = $user->department?->name ?? 'Genel';
+        $firstDept = $user->departments->first();
+        $departmentSlug = $firstDept ? strtolower(trim($firstDept->slug)) : 'genel';
+        $departmentName = $firstDept?->name ?? 'Genel';
 
         $kanbanBoards = collect();
         if ($user->business_unit_id) {
@@ -152,11 +153,14 @@ class HomeController extends Controller
     {
 
         $user = Auth::user();
+        $activeUnitId = session('active_unit_id') ?? $user->businessUnits->first()?->id;
+        if ($user && $user->email === 'tv@koksan.com') {
+            return redirect()->route('tv.dashboard');
+        }
         $kanbanBoards = collect();
-
-        // Constructor'da servisi zaten tanımlamıştık, direkt kullanabiliriz.
-        if ($user && $user->business_unit_id) {
-            $kanbanBoards = $this->kanbanService->getDashboardSummary($user->business_unit_id);
+        if ($user && $activeUnitId) {
+            // YENİ: Hem Kullanıcı ID hem Birim ID gönderiyoruz
+            $kanbanBoards = $this->kanbanService->getDashboardSummary($user->id, $activeUnitId);
         }
 
         // Önemli Öğeler (Sağ Sidebar)
@@ -165,7 +169,8 @@ class HomeController extends Controller
         $importantItemsCount = $allItems->count();
 
         // Dashboard Tipini Belirle
-        $departmentSlug = $user->department ? trim($user->department->slug) : null;
+        $firstDept = $user->departments->first();
+        $departmentSlug = $firstDept ? trim($firstDept->slug) : null;
 
         if ($user->hasRole(['admin', 'yonetici']) && !$departmentSlug) {
             $departmentSlug = 'admin';

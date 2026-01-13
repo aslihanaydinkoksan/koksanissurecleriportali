@@ -584,6 +584,12 @@
                                     <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i
                                                 class="fa-solid fa-user-pen" style="color: #4FD1C5;"></i> Profilimi
                                             Düzenle</a></li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('kanban-boards.index') }}">
+                                            <i class="fa-solid fa-chalkboard-user" style="color: #e65100;"></i>
+                                            İş Panoları (Kanban)
+                                        </a>
+                                    </li>
 
                                     {{-- YÖNETİCİ MENÜLERİ (Spatie Güncellemesi) --}}
                                     @role('admin')
@@ -616,12 +622,7 @@
                                             </a>
                                         </li>
 
-                                        <li>
-                                            <a class="dropdown-item" href="{{ route('kanban-boards.index') }}">
-                                                <i class="fa-solid fa-chalkboard-user" style="color: #e65100;"></i>
-                                                İş Panoları (Kanban)
-                                            </a>
-                                        </li>
+
 
                                         <li><a class="dropdown-item" href="{{ route('departments.index') }}"><i
                                                     class="fa-solid fa-building" style="color: #667EEA;"></i>

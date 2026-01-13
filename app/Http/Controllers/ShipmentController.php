@@ -358,8 +358,10 @@ class ShipmentController extends Controller
     {
         $this->authorize('access-department', 'lojistik');
 
+
         $query = Shipment::query();
         $user = Auth::user();
+        $activeUnitId = session('active_unit_id') ?? $user->businessUnits->first()?->id;
         $isImportantFilter = $request->input('is_important', 'all');
 
         if ($isImportantFilter !== 'all' && $user && in_array($user->role, ['admin', 'yönetici'])) {
@@ -406,13 +408,18 @@ class ShipmentController extends Controller
         $vehicleTypes = ShipmentsVehicleType::pluck('name');
         $cargoContents = Shipment::distinct()->pluck('kargo_icerigi')->filter()->sort()->values();
         $filters = $request->only(['shipment_type', 'vehicle_type', 'cargo_content', 'date_from', 'date_to', 'is_important']);
+        $logisticsBoards = \App\Models\KanbanBoard::where('user_id', $user->id)
+            ->where('business_unit_id', $activeUnitId)
+            ->where('module_scope', 'logistics')
+            ->orderBy('name', 'asc')
+            ->get();
 
-        return view('shipments.list', compact('shipments', 'vehicleTypes', 'cargoContents', 'filters'));
+        return view('shipments.list', compact('shipments', 'vehicleTypes', 'cargoContents', 'filters', 'logisticsBoards'));
     }
 
     public function show($id)
     {
-        // Yetki Kontrolü EKLENDİ
+        // Yetki Kontrolü 
         $this->authorize('access-department', 'lojistik');
 
         $shipment = Shipment::with('stops')->findOrFail($id);

@@ -54,8 +54,9 @@ class EventController extends Controller
         // GÜNCEL YETKİ KONTROLÜ
         $this->checkAuth();
 
-        $query = Event::with('user');
         $user = Auth::user();
+        $query = Event::with('user');
+        $activeUnitId = session('active_unit_id') ?? $user->businessUnits->first()?->id;
         $isImportantFilter = $request->input('is_important', 'all');
 
         // Rol kontrolünü güncelledik: 'yonetici' ve 'yönetici' ikisi de eklendi
@@ -104,8 +105,13 @@ class EventController extends Controller
         $events = $query->orderBy('start_datetime', 'desc')->paginate(15);
         $filters = $request->only(['title', 'event_type', 'date_from', 'date_to', 'is_important']);
         $eventTypes = $this->eventTypes;
+        $serviceBoards = \App\Models\KanbanBoard::where('user_id', $user->id)
+            ->where('business_unit_id', $activeUnitId)
+            ->where('module_scope', 'idari')
+            ->orderBy('name', 'asc')
+            ->get();
 
-        return view('service.events.index', compact('events', 'filters', 'eventTypes'));
+        return view('service.events.index', compact('events', 'filters', 'eventTypes', 'serviceBoards'));
     }
 
     public function create()

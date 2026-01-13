@@ -18,66 +18,63 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        // --- 1. DEPARTMAN ERİŞİM YETKİSİ (ANA MANTIK) ---
-        // Blade dosyasında @can('access-department', 'uretim') şeklinde kullanacağız.
-        Gate::define('access-department', function ($user, $departmentSlug) {
+        // --- 1. DEPARTMAN ERİŞİM YETKİSİ (ÇOKLU İLİŞKİ UYUMLU) ---
+        Gate::define('access-department', function (User $user, $departmentSlug) {
 
-            // Admin her yere girebilir
-            if ($user->role === 'admin') {
+            // Admin her yere girebilir (User modelindeki isAdmin metodunu kullanır)
+            if ($user->isAdmin()) {
                 return true;
             }
 
             // Global yönetici (departmanı olmayan yönetici) her yeri görebilir
-            if ($user->role === 'yönetici' && is_null($user->department_id)) {
+            if ($user->isManager() && $user->departments()->count() === 0) {
                 return true;
             }
 
-            // Kullanıcının departman ilişkisi yüklü mü kontrol et, yoksa yüklemeye çalış veya null dön
-            if (!$user->relationLoaded('department')) {
-                $user->load('department');
+            // İlişki yüklü mü kontrol et, hata almamak için çoğul (departments) yükle
+            if (!$user->relationLoaded('departments')) {
+                $user->load('departments');
             }
 
-            // Eğer kullanıcının departmanı yoksa hiç bir yere giremez (Admin hariç)
-            if (!$user->department) {
-                return false;
-            }
-
-            // SLUG KONTROLÜ (Veritabanındaki slug ile koddan gelen slug eşleşiyor mu?)
-            // Örn: Kullanıcının DB slug'ı 'uretim' ise ve $departmentSlug 'uretim' gelirse TRUE döner.
-            return $user->department->slug === $departmentSlug;
+            // SLUG KONTROLÜ: Kullanıcının departman listesinde (Collection) bu slug var mı?
+            return $user->departments->contains('slug', $departmentSlug);
         });
 
-        // --- 2. DİĞER YARDIMCI YETKİLER ---
+        // --- 2. YARDIMCI YETKİLER (MODERNE REVİZE EDİLDİ) ---
 
-        Gate::define('is-global-manager', function ($user) {
-            return $user->role === 'admin' || ($user->role === 'yönetici' && is_null($user->department_id));
+        Gate::define('is-global-manager', function (User $user) {
+            return $user->isAdmin() || ($user->isManager() && $user->departments()->count() === 0);
         });
 
-        Gate::define('access-admin-features', fn(User $user) => $user->role === 'admin');
+        Gate::define('access-admin-features', fn(User $user) => $user->isAdmin());
 
-        // Rezervasyon Yetkisi (AppServiceProvider'dan buraya taşıdık)
-        Gate::define('manage_bookings', function ($user) {
-            // User modelinde hasPermission fonksiyonu yoksa hata vermesin diye kontrol ekledik
-            return method_exists($user, 'hasPermission') ? $user->hasPermission('manage_bookings') : false;
+        // Rezervasyon Yetkisi
+        Gate::define('manage_bookings', function (User $user) {
+            return method_exists($user, 'hasPermissionTo') ? $user->hasPermissionTo('manage_bookings') : $user->isAdmin();
         });
 
         // Araç Görev Yönetimi
         Gate::define('manage-assignment', function (User $user, VehicleAssignment $assignment) {
-            if (in_array($user->role, ['admin', 'yönetici', 'müdür', 'mudur'])) {
+            // Admin veya Yönetici ise tam yetki
+            if ($user->isAdmin() || $user->isManager()) {
                 return true;
             }
+
+            // Kaydı oluşturan kişi ise
             if ($user->id === $assignment->user_id) {
                 return true;
             }
-            // Bireysel Atama
+
+            // Bireysel Sorumlu ise
             if ($assignment->responsible_type === User::class && $assignment->responsible_id === $user->id) {
                 return true;
             }
-            // Takım Ataması
+
+            // Takım Sorumlusu ise (User modelindeki teams() ilişkisine bakar)
             if ($assignment->responsible_type === Team::class) {
-                // teams ilişkisinin User modelinde tanımlı olduğundan emin olun
-                return $user->teams()->where('id', $assignment->responsible_id)->exists();
+                return $user->teams()->where('teams.id', $assignment->responsible_id)->exists();
             }
+
             return false;
         });
     }

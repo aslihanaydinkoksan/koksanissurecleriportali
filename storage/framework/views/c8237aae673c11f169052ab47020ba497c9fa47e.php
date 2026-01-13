@@ -1,7 +1,7 @@
-@extends('layouts.app')
-@section('title', 'Hoş Geldiniz')
 
-@push('styles')
+<?php $__env->startSection('title', 'Hoş Geldiniz'); ?>
+
+<?php $__env->startPush('styles'); ?>
     <style>
         /* --- GENEL BACKGROUND --- */
         #app>main.py-4 {
@@ -168,10 +168,10 @@
             padding-bottom: 10px;
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
-    {{-- Hızlı Seçim Modalı (Backend aynı kalıyor) --}}
+<?php $__env->startSection('content'); ?>
+    
     <div class="modal fade" id="createSelectionModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content"
@@ -181,56 +181,56 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
                 </div>
                 <div class="modal-body p-4">
-                    @php
+                    <?php
                         $currentUser = Auth::user();
                         // Eski $currentUser->department yerine departments->first() kullanıyoruz
                         $firstDept = $currentUser->departments->first();
                         $userDept = $firstDept ? $firstDept->slug : null;
                         $isAdmin = in_array($currentUser->role, ['admin', 'yönetici']);
-                    @endphp
+                    ?>
 
                     <div class="d-grid gap-3">
-                        @if (Route::has('production.plans.create') && ($isAdmin || $userDept === 'uretim'))
-                            <a href="{{ route('production.plans.create') }}"
+                        <?php if(Route::has('production.plans.create') && ($isAdmin || $userDept === 'uretim')): ?>
+                            <a href="<?php echo e(route('production.plans.create')); ?>"
                                 class="btn btn-lg btn-outline-success d-flex align-items-center justify-content-between p-3">
                                 <span><i class="fa-solid fa-industry me-2"></i> Yeni Üretim Planı</span> <i
                                     class="fa-solid fa-chevron-right"></i>
                             </a>
-                        @endif
-                        @if (Route::has('shipments.create') && ($isAdmin || $userDept === 'lojistik'))
-                            <a href="{{ route('shipments.create') }}"
+                        <?php endif; ?>
+                        <?php if(Route::has('shipments.create') && ($isAdmin || $userDept === 'lojistik')): ?>
+                            <a href="<?php echo e(route('shipments.create')); ?>"
                                 class="btn btn-lg btn-outline-primary d-flex align-items-center justify-content-between p-3">
                                 <span><i class="fa-solid fa-truck-fast me-2"></i> Yeni Sevkiyat</span> <i
                                     class="fa-solid fa-chevron-right"></i>
                             </a>
-                        @endif
-                        {{-- Etkinlik Butonu --}}
-                        @php
+                        <?php endif; ?>
+                        
+                        <?php
                             $eventRoute = Route::has('service.events.create') ? route('service.events.create') : '#';
-                        @endphp
-                        @if ($eventRoute !== '#' && ($isAdmin || $userDept === 'hizmet'))
-                            <a href="{{ $eventRoute }}"
+                        ?>
+                        <?php if($eventRoute !== '#' && ($isAdmin || $userDept === 'hizmet')): ?>
+                            <a href="<?php echo e($eventRoute); ?>"
                                 class="btn btn-lg btn-outline-warning d-flex align-items-center justify-content-between p-3"
                                 style="border-color: #F5576C; color: #F5576C; background: rgba(245, 87, 108, 0.05);">
                                 <span><i class="fa-solid fa-calendar-plus me-2"></i> Yeni Etkinlik / Ziyaret</span> <i
                                     class="fa-solid fa-chevron-right"></i>
                             </a>
-                        @endif
-                        @if (Route::has('service.assignments.create') && ($isAdmin || $userDept === 'ulastirma'))
-                            <a href="{{ route('service.assignments.create') }}"
+                        <?php endif; ?>
+                        <?php if(Route::has('service.assignments.create') && ($isAdmin || $userDept === 'ulastirma')): ?>
+                            <a href="<?php echo e(route('service.assignments.create')); ?>"
                                 class="btn btn-lg btn-outline-info d-flex align-items-center justify-content-between p-3">
                                 <span><i class="fa-solid fa-car-side me-2"></i> Yeni Araç Görevi</span> <i
                                     class="fa-solid fa-chevron-right"></i>
                             </a>
-                        @endif
-                        @if (Route::has('maintenance.create') && ($isAdmin || $userDept === 'bakim'))
-                            <a href="{{ route('maintenance.create') }}"
+                        <?php endif; ?>
+                        <?php if(Route::has('maintenance.create') && ($isAdmin || $userDept === 'bakim')): ?>
+                            <a href="<?php echo e(route('maintenance.create')); ?>"
                                 class="btn btn-lg btn-outline-secondary d-flex align-items-center justify-content-between p-3"
                                 style="border-color: #ED8936; color: #C05621; background-color: rgba(237, 137, 54, 0.05);">
                                 <span><i class="fa-solid fa-screwdriver-wrench me-2"></i> Yeni Bakım Planı</span> <i
                                     class="fa-solid fa-chevron-right"></i>
                             </a>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -240,30 +240,30 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-12">
-                {{-- ANA KART --}}
+                
                 <div class="card create-shipment-card mb-4 border-0">
                     <div class="card-body p-4">
 
-                        {{-- ÜST BİLGİ --}}
+                        
                         <div class="row align-items-center mb-4">
                             <div class="col-md-8">
                                 <h2 class="card-title mb-0 fw-bold" style="color: #1a202c;">
-                                    Hoş Geldiniz, {{ Auth::user()->name }}!
+                                    Hoş Geldiniz, <?php echo e(Auth::user()->name); ?>!
                                 </h2>
                                 <p class="mb-0 text-muted mt-1">
                                     <span
-                                        class="badge bg-dark bg-opacity-10 text-dark border">{{ ucwords(str_replace('_', ' ', Auth::user()->role)) }}</span>
-                                    @if ($firstDept)
+                                        class="badge bg-dark bg-opacity-10 text-dark border"><?php echo e(ucwords(str_replace('_', ' ', Auth::user()->role))); ?></span>
+                                    <?php if($firstDept): ?>
                                         <span class="text-muted ms-2"><i class="fa-solid fa-building me-1"></i>
-                                            {{ $firstDept->name }}</span>
-                                    @endif
+                                            <?php echo e($firstDept->name); ?></span>
+                                    <?php endif; ?>
                                 </p>
                             </div>
                         </div>
 
-                        {{-- ORİJİNAL MENÜ KARTLARI (RESTORE EDİLDİ) --}}
+                        
                         <div class="row g-4 mb-2">
-                            {{-- 1. Hızlı İşlem Menüsü --}}
+                            
                             <div class="col-md-4">
                                 <a href="#" data-bs-toggle="modal" data-bs-target="#createSelectionModal"
                                     class="text-decoration-none">
@@ -282,9 +282,9 @@
                                 </a>
                             </div>
 
-                            {{-- 2. Detaylı Raporlar --}}
+                            
                             <div class="col-md-4">
-                                <a href="{{ route('statistics.index') }}" class="text-decoration-none">
+                                <a href="<?php echo e(route('statistics.index')); ?>" class="text-decoration-none">
                                     <div class="card create-shipment-card h-100 hover-effect bg-white border">
                                         <div class="card-body d-flex align-items-center">
                                             <div class="rounded-circle p-3 me-3 d-flex align-items-center justify-content-center"
@@ -300,9 +300,9 @@
                                 </a>
                             </div>
 
-                            {{-- 3. Takvim & Planlama --}}
+                            
                             <div class="col-md-4">
-                                <a href="{{ route('home') }}" class="text-decoration-none">
+                                <a href="<?php echo e(route('home')); ?>" class="text-decoration-none">
                                     <div class="card create-shipment-card h-100 hover-effect bg-white border">
                                         <div class="card-body d-flex align-items-center">
                                             <div class="rounded-circle p-3 me-3 d-flex align-items-center justify-content-center"
@@ -322,16 +322,16 @@
                     </div>
                 </div>
 
-                {{-- ÖNEMLİ BİLDİRİMLER (Varsa) --}}
-                @if (isset($importantItems) && $importantItems->isNotEmpty())
+                
+                <?php if(isset($importantItems) && $importantItems->isNotEmpty()): ?>
                     <div class="card create-shipment-card mb-4 border-0">
                         <div class="card-header bg-white border-bottom pt-3 pb-2">
                             <h6 class="mb-0 text-danger fw-bold"><i class="fas fa-bell me-2"></i> Önemli Bildirimler</h6>
                         </div>
                         <div class="card-body">
                             <div class="list-group list-group-flush">
-                                @foreach ($importantItems as $item)
-                                    @php
+                                <?php $__currentLoopData = $importantItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <?php
                                         $params = [];
                                         if ($item->date) {
                                             $params['date'] = $item->date->format('Y-m-d');
@@ -340,28 +340,28 @@
                                         $params['open_modal_type'] = $item->model_type;
                                         $url = route('general.calendar', $params);
                                         $isOverdue = $item->is_overdue ?? false;
-                                    @endphp
-                                    <a href="{{ $url }}"
+                                    ?>
+                                    <a href="<?php echo e($url); ?>"
                                         class="list-group-item list-group-item-action event-important-pulse-welcome d-flex align-items-center justify-content-between">
                                         <div class="d-flex align-items-center overflow-hidden">
                                             <i
-                                                class="fas {{ $isOverdue ? 'fa-exclamation-circle' : 'fa-exclamation-triangle' }} text-danger me-3"></i>
-                                            <span class="fw-bold text-dark text-truncate">{{ $item->title }}</span>
+                                                class="fas <?php echo e($isOverdue ? 'fa-exclamation-circle' : 'fa-exclamation-triangle'); ?> text-danger me-3"></i>
+                                            <span class="fw-bold text-dark text-truncate"><?php echo e($item->title); ?></span>
                                         </div>
-                                        @if ($item->date)
+                                        <?php if($item->date): ?>
                                             <div class="text-end ms-3">
-                                                <div class="fw-bold text-danger">{{ $item->date->format('H:i') }}</div>
-                                                <small class="text-muted">{{ $item->date->format('d.m.Y') }}</small>
+                                                <div class="fw-bold text-danger"><?php echo e($item->date->format('H:i')); ?></div>
+                                                <small class="text-muted"><?php echo e($item->date->format('d.m.Y')); ?></small>
                                             </div>
-                                        @endif
+                                        <?php endif; ?>
                                     </a>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </div>
                         </div>
                     </div>
-                @endif
+                <?php endif; ?>
 
-                {{-- TO-DO WIDGET --}}
+                
                 <div class="card shadow-sm border-0 mb-4" style="border-radius: 1rem; overflow: hidden;">
                     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                         <h6 class="mb-0 fw-bold text-primary"><i class="fas fa-check-square me-2"></i> Yapılacaklar</h6>
@@ -371,47 +371,49 @@
                         </button>
                     </div>
                     <div class="card-body p-0">
-                        @php
+                        <?php
                             $myTodos = \App\Models\Todo::where('user_id', auth()->id())
                                 ->where('is_completed', false)
                                 ->orderBy('priority', 'desc') // High -> Low
                                 ->orderBy('due_date', 'asc')
                                 ->take(5)
                                 ->get();
-                        @endphp
+                        ?>
 
                         <ul class="list-group list-group-flush" id="todo-list-widget">
-                            @forelse($myTodos as $todo)
+                            <?php $__empty_1 = true; $__currentLoopData = $myTodos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $todo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                 <li class="list-group-item d-flex align-items-center justify-content-between px-4 py-3"
-                                    id="todo-item-{{ $todo->id }}">
+                                    id="todo-item-<?php echo e($todo->id); ?>">
                                     <div class="d-flex align-items-center">
                                         <input class="form-check-input me-3 todo-checkbox" type="checkbox"
-                                            value="{{ $todo->id }}"
+                                            value="<?php echo e($todo->id); ?>"
                                             style="width: 1.2em; height: 1.2em; cursor: pointer;">
                                         <div>
                                             <div
-                                                class="fw-semibold text-dark {{ $todo->priority == 'high' ? 'text-danger' : '' }}">
-                                                {{ $todo->title }}
+                                                class="fw-semibold text-dark <?php echo e($todo->priority == 'high' ? 'text-danger' : ''); ?>">
+                                                <?php echo e($todo->title); ?>
+
                                             </div>
-                                            @if ($todo->due_date)
+                                            <?php if($todo->due_date): ?>
                                                 <small class="text-muted" style="font-size: 0.75rem">
                                                     <i class="far fa-clock me-1"></i>
-                                                    {{ $todo->due_date->format('d.m H:i') }}
+                                                    <?php echo e($todo->due_date->format('d.m H:i')); ?>
+
                                                 </small>
-                                            @endif
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 </li>
-                            @empty
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                 <li class="list-group-item text-center text-muted py-4">
                                     <small>Harika! Yapılacak işin yok.</small>
                                 </li>
-                            @endforelse
+                            <?php endif; ?>
                         </ul>
                     </div>
                 </div>
 
-                {{-- TO-DO EKLEME MODALI --}}
+                
                 <div class="modal fade" id="addTodoModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content border-0 shadow-lg" style="border-radius: 1rem;">
@@ -452,162 +454,164 @@
                     </div>
                 </div>
 
-                {{-- KPI KARTLARI (OPERASYON ÖZETİ) --}}
-                @if (isset($kpiData) && !empty($kpiData))
+                
+                <?php if(isset($kpiData) && !empty($kpiData)): ?>
                     <div class="mb-4">
                         <h5 class="fw-bold text-dark mb-3 ps-1 opacity-75">
                             <i class="fa-solid fa-chart-line me-2 text-primary"></i>Günlük Operasyon Özeti
                         </h5>
                         <div class="row g-4">
-                            @php
+                            <?php
                                 $showAll = (isset($isAdmin) && $isAdmin) || empty($userDept);
-                            @endphp
+                            ?>
 
-                            {{-- HİZMET / İDARİ İŞLER ÖZEL KARTLARI --}}
-                            @if ($showAll || $userDept === 'hizmet')
+                            
+                            <?php if($showAll || $userDept === 'hizmet'): ?>
                                 <div class="col-lg col-md-4 col-6">
                                     <div class="kpi-card kpi-hizmet">
                                         <div class="kpi-icon"><i class="fa-solid fa-calendar-days"></i></div>
-                                        <div class="kpi-value">{{ $kpiData['etkinlik_sayisi'] ?? 0 }}</div>
+                                        <div class="kpi-value"><?php echo e($kpiData['etkinlik_sayisi'] ?? 0); ?></div>
                                         <div class="kpi-label">Aktif Etkinlik</div>
                                     </div>
                                 </div>
                                 <div class="col-lg col-md-4 col-6">
                                     <div class="kpi-card kpi-hizmet-seyahat">
                                         <div class="kpi-icon"><i class="fa-solid fa-plane-departure"></i></div>
-                                        <div class="kpi-value">{{ $kpiData['rezervasyon_sayisi'] ?? 0 }}</div>
+                                        <div class="kpi-value"><?php echo e($kpiData['rezervasyon_sayisi'] ?? 0); ?></div>
                                         <div class="kpi-label">Seyahat Planı</div>
                                     </div>
                                 </div>
                                 <div class="col-lg col-md-4 col-6">
                                     <div class="kpi-card kpi-hizmet">
                                         <div class="kpi-icon"><i class="fa-solid fa-briefcase"></i></div>
-                                        <div class="kpi-value">{{ $kpiData['musteri_ziyareti'] ?? 0 }}</div>
+                                        <div class="kpi-value"><?php echo e($kpiData['musteri_ziyareti'] ?? 0); ?></div>
                                         <div class="kpi-label">Müşteri Ziyareti</div>
                                     </div>
                                 </div>
-                            @endif
+                            <?php endif; ?>
 
-                            {{-- ULAŞTIRMA KARTLARI --}}
-                            @if ($userDept === 'ulastirma')
+                            
+                            <?php if($userDept === 'ulastirma'): ?>
                                 <div class="col-lg col-md-4 col-6">
                                     <div class="kpi-card kpi-ulastirma">
                                         <div class="kpi-icon"><i class="fa-solid fa-road"></i></div>
-                                        <div class="kpi-value">{{ $kpiData['aktif_gorev'] ?? 0 }}</div>
+                                        <div class="kpi-value"><?php echo e($kpiData['aktif_gorev'] ?? 0); ?></div>
                                         <div class="kpi-label">Yoldaki Araçlar</div>
                                     </div>
                                 </div>
                                 <div class="col-lg col-md-4 col-6">
                                     <div class="kpi-card kpi-ulastirma">
                                         <div class="kpi-icon"><i class="fa-solid fa-clock"></i></div>
-                                        <div class="kpi-value">{{ $kpiData['bekleyen_talep'] ?? 0 }}</div>
+                                        <div class="kpi-value"><?php echo e($kpiData['bekleyen_talep'] ?? 0); ?></div>
                                         <div class="kpi-label">Bekleyen Talep</div>
                                     </div>
                                 </div>
                                 <div class="col-lg col-md-4 col-6">
                                     <div class="kpi-card kpi-ulastirma">
                                         <div class="kpi-icon"><i class="fa-solid fa-car"></i></div>
-                                        <div class="kpi-value">{{ $kpiData['toplam_arac'] ?? 0 }}</div>
+                                        <div class="kpi-value"><?php echo e($kpiData['toplam_arac'] ?? 0); ?></div>
                                         <div class="kpi-label">Araç Filosu</div>
                                     </div>
                                 </div>
-                            @endif
+                            <?php endif; ?>
 
-                            {{-- GENEL / ADMİN KARTLARI --}}
-                            @if ($showAll && $userDept !== 'hizmet')
+                            
+                            <?php if($showAll && $userDept !== 'hizmet'): ?>
                                 <div class="col-lg col-md-4 col-6">
                                     <div class="kpi-card kpi-lojistik">
                                         <div class="kpi-icon"><i class="fa-solid fa-truck-fast"></i></div>
-                                        <div class="kpi-value">{{ $kpiData['sevkiyat_sayisi'] ?? 0 }}</div>
+                                        <div class="kpi-value"><?php echo e($kpiData['sevkiyat_sayisi'] ?? 0); ?></div>
                                         <div class="kpi-label">Sevkiyat</div>
                                     </div>
                                 </div>
                                 <div class="col-lg col-md-4 col-6">
                                     <div class="kpi-card kpi-uretim">
                                         <div class="kpi-icon"><i class="fa-solid fa-industry"></i></div>
-                                        <div class="kpi-value">{{ $kpiData['plan_sayisi'] ?? 0 }}</div>
+                                        <div class="kpi-value"><?php echo e($kpiData['plan_sayisi'] ?? 0); ?></div>
                                         <div class="kpi-label">Üretim Planı</div>
                                     </div>
                                 </div>
-                            @endif
+                            <?php endif; ?>
                         </div>
                     </div>
-                @endif
+                <?php endif; ?>
 
-                {{-- -KANBAN KARTLARI --}}
+                
                 <div class="row mb-4">
                     <div class="col-12">
                         <h4 class="text-gray-800 mb-3"><i class="fa fa-th-large"></i> İş Takip Panoları</h4>
                     </div>
 
-                    @forelse($kanbanBoards as $board)
+                    <?php $__empty_1 = true; $__currentLoopData = $kanbanBoards; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $board): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-{{ $board->color }} shadow h-100 py-2">
+                            <div class="card border-left-<?php echo e($board->color); ?> shadow h-100 py-2">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div
-                                                class="text-xs font-weight-bold text-{{ $board->color }} text-uppercase mb-1">
-                                                {{ $board->name }}
+                                                class="text-xs font-weight-bold text-<?php echo e($board->color); ?> text-uppercase mb-1">
+                                                <?php echo e($board->name); ?>
+
                                             </div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                                {{ $board->total_tasks }} Aktif İş
+                                                <?php echo e($board->total_tasks); ?> Aktif İş
                                             </div>
                                             <div class="text-xs text-muted mt-1">
-                                                {{ $board->column_count }} farklı aşama mevcut
+                                                <?php echo e($board->column_count); ?> farklı aşama mevcut
                                             </div>
                                         </div>
                                         <div class="col-auto">
-                                            <i class="fas {{ $board->icon }} fa-2x text-gray-300"></i>
+                                            <i class="fas <?php echo e($board->icon); ?> fa-2x text-gray-300"></i>
                                         </div>
                                     </div>
-                                    <a href="{{ $board->route }}"
-                                        class="btn btn-sm btn-outline-{{ $board->color }} mt-3 w-100 stretched-link">
+                                    <a href="<?php echo e($board->route); ?>"
+                                        class="btn btn-sm btn-outline-<?php echo e($board->color); ?> mt-3 w-100 stretched-link">
                                         Panoya Git <i class="fa fa-arrow-right"></i>
                                     </a>
                                 </div>
                             </div>
                         </div>
-                    @empty
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <div class="col-12">
                             <div class="alert alert-info">
                                 Henüz tanımlı bir iş panonuz yok. Yönetim panelinden oluşturabilirsiniz.
                             </div>
                         </div>
-                    @endforelse
+                    <?php endif; ?>
                 </div>
 
-                {{-- GRAFİK KARTI (SANKEY) --}}
-                @if (isset($chartData) && !empty($chartData))
+                
+                <?php if(isset($chartData) && !empty($chartData)): ?>
                     <div class="card create-shipment-card border-0 mb-4">
                         <div
                             class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
                             <h6 class="mb-0 fw-bold text-dark">
-                                @if ($userDept === 'hizmet')
+                                <?php if($userDept === 'hizmet'): ?>
                                     <i class="fa-solid fa-route me-2 text-warning"></i> Etkinlik & Seyahat Akışı
-                                @else
+                                <?php else: ?>
                                     <i class="fa-solid fa-chart-line me-2 text-primary"></i>
-                                    {{ $chartTitle ?? 'Veri Akışı' }}
-                                @endif
+                                    <?php echo e($chartTitle ?? 'Veri Akışı'); ?>
+
+                                <?php endif; ?>
                             </h6>
                         </div>
                         <div class="card-body bg-white rounded-bottom">
                             <div class="sankey-container-wrapper">
-                                <div id="sankey-chart" data-sankey='@json($chartData)'
+                                <div id="sankey-chart" data-sankey='<?php echo json_encode($chartData, 15, 512) ?>'
                                     style="width: 100%; height: 500px;">
                                     <p class="text-center text-muted p-5">Grafik yükleniyor...</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                @endif
+                <?php endif; ?>
 
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('page_scripts')
+<?php $__env->startSection('page_scripts'); ?>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function() {
@@ -692,7 +696,7 @@
             e.preventDefault();
             let formData = new FormData(this);
 
-            fetch("{{ route('todos.store') }}", {
+            fetch("<?php echo e(route('todos.store')); ?>", {
                     method: "POST",
                     body: formData,
                     headers: {
@@ -733,4 +737,6 @@
             });
         });
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/welcome.blade.php ENDPATH**/ ?>

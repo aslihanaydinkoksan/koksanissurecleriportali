@@ -39,7 +39,7 @@ use App\Traits\Loggable;
 class Department extends Model
 {
     use HasFactory, SoftDeletes, Loggable;
-    protected $fillable = ['name', 'slug'];
+    protected $fillable = ['name', 'slug', 'kanban_scope'];
 
     /**
      * Bu birime ait kullanıcıları getirir.
