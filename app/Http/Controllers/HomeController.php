@@ -130,7 +130,7 @@ class HomeController extends Controller
         // Kullanıcı Listesi
         $users = collect();
         if ($user->hasRole(['admin', 'yonetici', 'mudur'])) {
-            $users = User::with('department')->orderBy('name')->get();
+            $users = User::with('departments')->orderBy('name')->get();
         }
         $allEvents = collect($allEvents)->unique(function ($item) {
             return $item['extendedProps']['model_type'] . '-' . $item['extendedProps']['id'];
