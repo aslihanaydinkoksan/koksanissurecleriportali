@@ -20,8 +20,7 @@ class DynamicReportMail extends Mailable
     public function __construct($reportName, $filePath, $fileName, $fileFormat)
     {
         $this->reportName = $reportName;
-        $this->fileFormat = $fileFormat; // Atama yapıldığından emin ol
-        $this->filePath = $filePath;
+        $this->fileFormat = $fileFormat;
         $this->fileName = $fileName;
     }
 
@@ -34,8 +33,8 @@ class DynamicReportMail extends Mailable
         return $this->subject('📊 Rapor: ' . $this->reportName)
             ->markdown('emails.reports.scheduled')
             ->attach($this->filePath, [
-                'as' => $this->fileName,
-                'mime' => $mimeType,
-            ]);
+                    'as' => $this->fileName,
+                    'mime' => $mimeType,
+                ]);
     }
 }

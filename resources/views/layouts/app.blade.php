@@ -456,7 +456,12 @@
 
                             {{-- BUSINESS UNIT SWITCHER (BİRİM DEĞİŞTİRİCİ) --}}
                             @auth
-                                @if (auth()->user()->businessUnits->count() > 1)
+                                @php
+                                    // Admin ise tüm aktif birimleri, değilse sadece bağlı olduklarını getirir
+                                    $authorizedUnits = auth()->user()->getAuthorizedBusinessUnits();
+                                @endphp
+
+                                @if ($authorizedUnits->count() > 1)
                                     <li class="nav-item dropdown me-3 d-flex align-items-center">
                                         <a class="nav-link dropdown-toggle btn btn-sm shadow-sm border" href="#"
                                             role="button" data-bs-toggle="dropdown"
@@ -473,7 +478,7 @@
                                             <li>
                                                 <hr class="dropdown-divider my-0">
                                             </li>
-                                            @foreach (auth()->user()->businessUnits as $unit)
+                                            @foreach ($authorizedUnits as $unit)
                                                 <li>
                                                     <form action="{{ route('switch.unit') }}" method="POST">
                                                         @csrf
@@ -491,15 +496,16 @@
                                             @endforeach
                                         </ul>
                                     </li>
-                                @elseif(auth()->user()->businessUnits->count() == 1)
+                                @elseif($authorizedUnits->count() == 1)
                                     <li class="nav-item me-3 d-flex align-items-center">
                                         <span class="badge bg-white text-primary border px-3 py-2 rounded-pill shadow-sm"
                                             style="font-size: 0.8rem;">
                                             <i class="fa-solid fa-industry me-1"></i>
-                                            {{ auth()->user()->businessUnits->first()->name }}
+                                            {{ $authorizedUnits->first()->name }}
                                         </span>
                                     </li>
                                 @else
+                                    {{-- Sadece Admin OLMAYAN ve hiçbir birime atanmamış personelde burası gözükür --}}
                                     <li class="nav-item me-3 d-flex align-items-center">
                                         <span class="badge bg-danger text-white border px-3 py-2 rounded-pill shadow-sm">
                                             <i class="fa-solid fa-triangle-exclamation me-1"></i>

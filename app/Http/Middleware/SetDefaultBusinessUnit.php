@@ -16,12 +16,9 @@ class SetDefaultBusinessUnit
     {
         $user = Auth::user();
 
-        // Kullanıcı giriş yapmışsa VE session'da birim seçili değilse
         if ($user && !session()->has('active_unit_id')) {
-
-            // Kullanıcının yetkili olduğu ilk birimi al
-            // (User modelinde 'businessUnits' ilişkisi tanımlı olmalı)
-            $firstUnit = $user->businessUnits->first();
+            $authorizedUnits = $user->getAuthorizedBusinessUnits();
+            $firstUnit = $authorizedUnits->first();
 
             if ($firstUnit) {
                 session(['active_unit_id' => $firstUnit->id]);
