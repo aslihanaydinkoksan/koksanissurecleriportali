@@ -40,6 +40,7 @@ class HomeController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        $activeUnitId = session('active_unit_id') ?? $user->business_unit_id;
 
         // Görünüm için departman bilgisi
         $firstDept = $user->departments->first();
@@ -47,8 +48,8 @@ class HomeController extends Controller
         $departmentName = $firstDept?->name ?? 'Genel';
 
         $kanbanBoards = collect();
-        if ($user->business_unit_id) {
-            $kanbanBoards = $this->kanbanService->getDashboardSummary($user->business_unit_id);
+        if ($activeUnitId) {
+            $kanbanBoards = $this->kanbanService->getDashboardSummary($user->id, $activeUnitId);
         }
 
         $allEvents = [];
@@ -151,150 +152,39 @@ class HomeController extends Controller
      */
     public function welcome(Request $request)
     {
-
         $user = Auth::user();
-        $activeUnitId = session('active_unit_id') ?? $user->businessUnits->first()?->id;
+
+        // TV ekranı yönlendirmesi
         if ($user && $user->email === 'tv@koksan.com') {
             return redirect()->route('tv.dashboard');
         }
-        $kanbanBoards = collect();
-        if ($user && $activeUnitId) {
-            // YENİ: Hem Kullanıcı ID hem Birim ID gönderiyoruz
-            $kanbanBoards = $this->kanbanService->getDashboardSummary($user->id, $activeUnitId);
-        }
+
+        $activeUnitId = session('active_unit_id') ?? $user->businessUnits->first()?->id;
+
+        // Kanban özeti yükle (Doğru parametrelerle)
+        $kanboards = $user && $activeUnitId
+            ? $this->kanbanService->getDashboardSummary($user->id, $activeUnitId)
+            : collect();
 
         // Önemli Öğeler (Sağ Sidebar)
         $allItems = $this->getMappedImportantItems($request);
         $importantItems = $allItems->take(4);
         $importantItemsCount = $allItems->count();
 
-        // Dashboard Tipini Belirle
+        // Departman slug tespiti
         $firstDept = $user->departments->first();
-        $departmentSlug = $firstDept ? trim($firstDept->slug) : null;
+        $departmentSlug = $firstDept ? trim($firstDept->slug) : ($user->isAdmin() ? 'admin' : null);
 
-        if ($user->hasRole(['admin', 'yonetici']) && !$departmentSlug) {
-            $departmentSlug = 'admin';
-        }
+        // MİMARİ REFAKTÖR: Veri toplama mantığını ayırarak karmaşıklığı düşürüyoruz
+        $dashboardData = $this->resolveDashboardData($user, $departmentSlug);
 
-        if ($user->email === 'tv@koksan.com') {
-            $departmentSlug = 'admin';
-        }
-
-        // Tarihler
-        $today = Carbon::today();
-        $weekStart = Carbon::now()->startOfWeek();
-        $weekEnd = Carbon::now()->endOfWeek();
-        $monthStart = Carbon::now()->startOfMonth();
-        $monthEnd = Carbon::now()->endOfMonth();
-
-        // Varsayılan Değerler
-        $welcomeTitle = "Hoş Geldiniz";
-        $chartTitle = "Genel Bakış";
-        $chartData = [];
-        $kpiData = [];
-        $todayItems = collect();
-        $weeklyItems = collect();
-        $monthlyItems = collect();
-
-        // --- DASHBOARD VERİLERİNİ DOLDUR ---
-
-        if ($departmentSlug === 'uretim') {
-            list($welcomeTitle, $chartTitle, $dummyToday, $chartData) = $this->getProductionWelcomeData($user);
-            // DÜZELTME: forUser kaldırıldı, query() kullanıldı
-            $query = ProductionPlan::query();
-            $todayItems = (clone $query)->whereDate('week_start_date', $today)->get();
-            $weeklyItems = (clone $query)->whereBetween('week_start_date', [$weekStart, $weekEnd])->get();
-            $monthlyItems = (clone $query)->whereBetween('week_start_date', [$monthStart, $monthEnd])->get();
-
-        } elseif ($departmentSlug === 'hizmet') {
-            list($welcomeTitle, $chartTitle, $dummyToday, $chartData) = $this->getServiceWelcomeData($user);
-
-            // DÜZELTME: forUser kaldırıldı
-            $eventQ = Event::query();
-            $tEvents = (clone $eventQ)->whereDate('start_datetime', $today)->get();
-            $wEvents = (clone $eventQ)->whereBetween('start_datetime', [$weekStart, $weekEnd])->get();
-            $mEvents = (clone $eventQ)->whereBetween('start_datetime', [$monthStart, $monthEnd])->get();
-
-            // Araç Görevleri (DÜZELTME: forUser kaldırıldı)
-            $vehicleQ = VehicleAssignment::whereIn('status', ['pending', 'in_progress', 'approved']);
-            $tVehicle = (clone $vehicleQ)->whereDate('start_time', $today)->get();
-            $wVehicle = (clone $vehicleQ)->whereBetween('start_time', [$weekStart, $weekEnd])->get();
-            $mVehicle = (clone $vehicleQ)->whereBetween('start_time', [$monthStart, $monthEnd])->get();
-
-            $todayItems = $tEvents->merge($tVehicle)->sortBy('start_datetime');
-            $weeklyItems = $wEvents->merge($wVehicle)->sortBy('start_datetime');
-            $monthlyItems = $mEvents->merge($mVehicle)->sortBy('start_datetime');
-
-            // Hizmet KPI (DÜZELTME: forUser kaldırıldı)
-            $kpiData = [
-                'etkinlik_sayisi' => Event::whereDate('start_datetime', '>=', $today)
-                    ->where('visit_status', '!=', 'iptal')->count(),
-                'musteri_ziyareti' => Event::has('customerVisit')->count(),
-                'rezervasyon_sayisi' => DB::table('bookings')->count(),
-                'toplam_arac' => \App\Models\Vehicle::count(),
-            ];
-
-        } elseif ($departmentSlug === 'ulastirma') {
-            $welcomeTitle = "Ulaştırma Yönetimi";
-            $chartTitle = "Araç Görev Durumları";
-
-            // DÜZELTME: Scope otomatik çalıştığı için direkt where ile başlıyoruz
-            $query = VehicleAssignment::whereIn('status', ['pending', 'approved', 'in_progress']);
-            $todayItems = (clone $query)->whereDate('start_time', $today)->orderBy('start_time')->get();
-            $weeklyItems = (clone $query)->whereBetween('start_time', [$weekStart, $weekEnd])->orderBy('start_time')->get();
-            $monthlyItems = (clone $query)->whereBetween('start_time', [$monthStart, $monthEnd])->orderBy('start_time')->get();
-
-            $kpiData = [
-                'aktif_gorev' => VehicleAssignment::where('status', 'in_progress')->count(),
-                'bekleyen_talep' => VehicleAssignment::where('status', 'pending')->count(),
-                'toplam_arac' => \App\Models\Vehicle::count(),
-                'bugunku_gorev' => $todayItems->count()
-            ];
-
-        } elseif ($departmentSlug === 'lojistik') {
-            list($welcomeTitle, $chartTitle, $dummyToday, $chartData) = $this->getLogisticsWelcomeData($user);
-            // DÜZELTME: forUser kaldırıldı
-            $query = Shipment::query();
-            $todayItems = (clone $query)->whereDate('tahmini_varis_tarihi', $today)->get();
-            $weeklyItems = (clone $query)->whereBetween('tahmini_varis_tarihi', [$weekStart, $weekEnd])->get();
-            $monthlyItems = (clone $query)->whereBetween('tahmini_varis_tarihi', [$monthStart, $monthEnd])->get();
-
-        } elseif ($departmentSlug === 'bakim') {
-            list($welcomeTitle, $chartTitle, $dummyToday, $chartData) = $this->getMaintenanceWelcomeData($user);
-            // DÜZELTME: forUser kaldırıldı
-            $query = MaintenancePlan::with('asset');
-            $todayItems = (clone $query)->whereDate('planned_start_date', $today)->get();
-            $weeklyItems = (clone $query)->whereBetween('planned_start_date', [$weekStart, $weekEnd])->get();
-            $monthlyItems = (clone $query)->whereBetween('planned_start_date', [$monthStart, $monthEnd])->get();
-
-        } else {
-            // ADMIN / GENEL DASHBOARD
-            $adminData = $this->getAdminDashboardData($user, $today, $weekStart, $weekEnd, $monthStart, $monthEnd);
-            $welcomeTitle = $adminData['welcomeTitle'];
-            $chartTitle = $adminData['chartTitle'];
-            $todayItems = $adminData['todayItems'];
-            $weeklyItems = $adminData['weeklyItems'];
-            $monthlyItems = $adminData['monthlyItems'];
-            $kpiData = $adminData['kpiData'];
-            $chartData = $adminData['chartData'];
-        }
-
-        $chartType = 'sankey';
-
-        return view('welcome', compact(
-            'importantItems',
-            'importantItemsCount',
-            'welcomeTitle',
-            'todayItems',
-            'weeklyItems',
-            'monthlyItems',
-            'chartType',
-            'chartData',
-            'chartTitle',
-            'departmentSlug',
-            'kpiData',
-            'kanbanBoards'
-        ));
+        return view('welcome', array_merge([
+            'importantItems' => $importantItems,
+            'importantItemsCount' => $importantItemsCount,
+            'kanbanBoards' => $kanboards,
+            'departmentSlug' => $departmentSlug,
+            'chartType' => 'sankey',
+        ], $dashboardData));
     }
 
     /**
@@ -1008,16 +898,19 @@ class HomeController extends Controller
         ]);
 
         $user = auth()->user();
+        $unitId = $request->unit_id;
+        $isAuthorized = $user->isAdmin() || $user->businessUnits->contains('id', $unitId);
 
-        // Güvenlik: Kullanıcı gerçekten bu birime yetkili mi?
-        if (!$user->businessUnits->contains('id', $request->unit_id)) {
+        if (!$isAuthorized) {
             abort(403, 'Bu birime erişim yetkiniz yok.');
         }
 
-        // Seçimi kaydet
-        $unit = $user->businessUnits->find($request->unit_id);
-        session(['active_unit_id' => $unit->id]);
-        session(['active_unit_name' => $unit->name]);
+        $unit = \App\Models\BusinessUnit::findOrFail($unitId);
+
+        session([
+            'active_unit_id' => $unit->id,
+            'active_unit_name' => $unit->name
+        ]);
 
         return back()->with('success', "Çalışma alanı {$unit->name} olarak değiştirildi.");
     }
@@ -1060,5 +953,51 @@ class HomeController extends Controller
         ];
 
         return $mapping[$normalized] ?? $normalized;
+    }
+    /**
+     * Dashboard verilerini departmana göre çözen yardımcı metod (Complexity Reducer)
+     */
+    private function resolveDashboardData($user, $departmentSlug): array
+    {
+        $today = Carbon::today();
+        $weekStart = Carbon::now()->startOfWeek();
+        $weekEnd = Carbon::now()->endOfWeek();
+        $monthStart = Carbon::now()->startOfMonth();
+        $monthEnd = Carbon::now()->endOfMonth();
+
+        // Varsayılan değerler
+        $data = [
+            'welcomeTitle' => "Hoş Geldiniz",
+            'chartTitle' => "Genel Bakış",
+            'chartData' => [],
+            'kpiData' => [],
+            'todayItems' => collect(),
+            'weeklyItems' => collect(),
+            'monthlyItems' => collect(),
+        ];
+
+        // Departman bazlı veri yükleme logic'ini private metodlara dağıtıyoruz
+        switch ($departmentSlug) {
+            case 'uretim':
+                list($data['welcomeTitle'], $data['chartTitle'], $data['todayItems'], $data['chartData']) = $this->getProductionWelcomeData($user);
+                break;
+            case 'hizmet':
+            case 'ulastirma':
+                // Hizmet ve ulaştırma verilerini getServiceWelcomeData metodundan alıyoruz
+                list($data['welcomeTitle'], $data['chartTitle'], $data['todayItems'], $data['chartData']) = $this->getServiceWelcomeData($user);
+                break;
+            case 'lojistik':
+                list($data['welcomeTitle'], $data['chartTitle'], $data['todayItems'], $data['chartData']) = $this->getLogisticsWelcomeData($user);
+                break;
+            case 'bakim':
+                list($data['welcomeTitle'], $data['chartTitle'], $data['todayItems'], $data['chartData']) = $this->getMaintenanceWelcomeData($user);
+                break;
+            default:
+                $adminData = $this->getAdminDashboardData($user, $today, $weekStart, $weekEnd, $monthStart, $monthEnd);
+                $data = array_merge($data, $adminData);
+                break;
+        }
+
+        return $data;
     }
 }

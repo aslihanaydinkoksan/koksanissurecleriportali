@@ -456,7 +456,12 @@
 
                             
                             <?php if(auth()->guard()->check()): ?>
-                                <?php if(auth()->user()->businessUnits->count() > 1): ?>
+                                <?php
+                                    // Admin ise tüm aktif birimleri, değilse sadece bağlı olduklarını getirir
+                                    $authorizedUnits = auth()->user()->getAuthorizedBusinessUnits();
+                                ?>
+
+                                <?php if($authorizedUnits->count() > 1): ?>
                                     <li class="nav-item dropdown me-3 d-flex align-items-center">
                                         <a class="nav-link dropdown-toggle btn btn-sm shadow-sm border" href="#"
                                             role="button" data-bs-toggle="dropdown"
@@ -474,7 +479,7 @@
                                             <li>
                                                 <hr class="dropdown-divider my-0">
                                             </li>
-                                            <?php $__currentLoopData = auth()->user()->businessUnits; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $unit): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <?php $__currentLoopData = $authorizedUnits; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $unit): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                 <li>
                                                     <form action="<?php echo e(route('switch.unit')); ?>" method="POST">
                                                         <?php echo csrf_field(); ?>
@@ -492,16 +497,17 @@
                                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </ul>
                                     </li>
-                                <?php elseif(auth()->user()->businessUnits->count() == 1): ?>
+                                <?php elseif($authorizedUnits->count() == 1): ?>
                                     <li class="nav-item me-3 d-flex align-items-center">
                                         <span class="badge bg-white text-primary border px-3 py-2 rounded-pill shadow-sm"
                                             style="font-size: 0.8rem;">
                                             <i class="fa-solid fa-industry me-1"></i>
-                                            <?php echo e(auth()->user()->businessUnits->first()->name); ?>
+                                            <?php echo e($authorizedUnits->first()->name); ?>
 
                                         </span>
                                     </li>
                                 <?php else: ?>
+                                    
                                     <li class="nav-item me-3 d-flex align-items-center">
                                         <span class="badge bg-danger text-white border px-3 py-2 rounded-pill shadow-sm">
                                             <i class="fa-solid fa-triangle-exclamation me-1"></i>
