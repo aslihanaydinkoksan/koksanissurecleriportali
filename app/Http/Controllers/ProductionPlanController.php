@@ -64,12 +64,9 @@ class ProductionPlanController extends Controller
     public function create()
     {
         $this->authorize('access-department', 'uretim');
-
-        // YENİ EKLENDİ: Birimleri veritabanından çek
         $birimler = Birim::orderBy('ad')->get();
 
-        // View'a birimleri gönder
-        return view('production.plans.index', compact('birimler'));
+        return view('production.plans.create', compact('birimler'));
     }
     /**
      * Store Metodu (HİBRİT YAPI GÜNCELLEMESİ YAPILDI)
@@ -120,8 +117,7 @@ class ProductionPlanController extends Controller
         // YENİ EKLENDİ: Birimleri düzenleme formu için de çek
         $birimler = Birim::orderBy('ad')->get();
 
-        // View'a birimleri gönder
-        return view('production.plans.edit', compact('productionPlan', 'birimler'));
+        return view('production.plans.edit', compact('plan', 'birimler'));
     }
 
 

@@ -169,5 +169,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(KanbanBoard::class);
     }
+    public function isInDepartment(string $slug): bool
+    {
+        return $this->departments->contains('slug', $slug);
+    }
 
 }

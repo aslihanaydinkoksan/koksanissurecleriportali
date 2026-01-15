@@ -77,8 +77,8 @@ class TravelController extends Controller
         if ($canViewAll) {
             // Seyahat oluşturma potansiyeli olan herkesi listele (Hizmet ve Adminler)
             // Ulaştırma Müdürü de filtreleme yapabilsin diye bu listeyi görüyor
-            $users = User::whereHas('department', fn($q) => $q->where('slug', 'hizmet'))
-                ->orWhere('role', 'admin')
+            $users = User::whereHas('departments', fn($q) => $q->where('slug', 'hizmet'))
+                ->orWhereHas('roles', fn($q) => $q->where('name', 'admin')) // roles ilişkisi içinde name = admin olanları ara
                 ->orderBy('name')
                 ->get();
         }
@@ -89,8 +89,8 @@ class TravelController extends Controller
     public function create()
     {
         $user = Auth::user();
-        if ($user->role !== 'admin' && (!$user->department || $user->department->slug !== 'hizmet')) {
-            abort(403, 'Seyahat planı oluşturma yetkiniz bulunmamaktadır. Lütfen İdari İşler ile görüşün.');
+        if (!$user->hasRole('admin') && !$user->departments->contains('slug', 'hizmet')) {
+            abort(403, 'Seyahat planı oluşturma yetkiniz bulunmamaktadır.');
         }
         return view('travels.create');
     }
@@ -117,15 +117,11 @@ class TravelController extends Controller
         // 3. Bildirim Gönderme (Temiz Hali)
         try {
             // Bildirimi alacaklar: Adminler + Ulaştırma Müdürleri
-            $recipients = User::where(function ($query) {
-                $query->where('role', 'admin')
-                    ->orWhere(function ($q) {
-                        $q->where('role', 'müdür')
-                            ->whereHas('department', function ($d) {
-                                $d->where('slug', 'ulastirma');
-                            });
-                    });
-            })->get();
+            $recipients = User::whereHas('roles', fn($q) => $q->where('name', 'admin')) // Adminler
+                ->orWhere(function ($query) {
+                    $query->whereHas('roles', fn($q) => $q->where('name', 'müdür')) // Müdür olup
+                        ->whereHas('departments', fn($q) => $q->where('slug', 'ulastirma')); // Ulaştırma departmanında olanlar
+                })->get();
 
             if ($recipients->count() > 0) {
                 Notification::send($recipients, new NewTravelPlanNotification($travel));
@@ -147,7 +143,10 @@ class TravelController extends Controller
         $canView = $user->id === $travel->user_id ||
             $user->can('is-global-manager') ||
             $user->role === 'admin' ||
-            ($user->role === 'müdür' && $user->department && $user->department->slug === 'ulastirma');
+            $canView = $user->id === $travel->user_id ||
+            $user->can('is-global-manager') ||
+            $user->role === 'admin' ||
+            ($user->role === 'müdür' && $user->departments->contains('slug', 'ulastirma'));
 
         if (!$canView) {
             abort(403, 'Bu seyahati görüntüleme yetkiniz yok.');

@@ -61,6 +61,9 @@ class Booking extends Model implements HasMedia
         'user_id',
         'type',
         'provider_name',
+        'origin',
+        'destination',
+        'location',
         'confirmation_code',
         'cost',
         'start_datetime',
@@ -130,5 +133,12 @@ class Booking extends Model implements HasMedia
 
         // Aksi halde izin ver
         return true;
+    }
+    /**
+     * Etkinliğe bağlı polimorfik harcamalar.
+     */
+    public function expenses()
+    {
+        return $this->morphMany(Expense::class, 'expensable');
     }
 }

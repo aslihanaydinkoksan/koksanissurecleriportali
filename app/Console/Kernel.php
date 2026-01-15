@@ -34,6 +34,10 @@ class Kernel extends ConsoleKernel
         // 4. Üretim Planları (Planlama) - 07:30
         // Üretim genelde erken başlar.
         $schedule->command('production:check-upcoming')->dailyAt('07:30');
+
+        $schedule->command('reports:send-scheduled')
+            ->everyMinute()
+            ->withoutOverlapping();
     }
     /**
      * Register the commands for the application.
@@ -46,5 +50,6 @@ class Kernel extends ConsoleKernel
 
         require base_path('routes/console.php');
     }
+
 
 }

@@ -5,7 +5,7 @@
 @section('content')
     <div class="container py-4">
 
-        {{-- 1. PHP Mantığı: Verileri Hazırla --}}
+        {{-- 1. PHP Mantığı: Bağlam Duyarlı (Context-Aware) Verileri Hazırlama --}}
         @php
             $backRoute = '#';
             $planTitle = 'Belirsiz Plan';
@@ -14,65 +14,94 @@
             if ($booking->bookable) {
                 if ($booking->bookable_type === 'App\Models\Travel') {
                     $backRoute = route('travels.show', $booking->bookable_id);
-                    $planTitle = $booking->bookable->title ?? 'İsimsiz Seyahat';
+                    // Seyahat modelinde isim sütunu genellikle 'name'dir
+                    $planTitle = $booking->bookable->name ?? 'İsimsiz Seyahat';
                     $contextLabel = 'Seyahat';
-                } else {
+                } elseif ($booking->bookable_type === 'App\Models\Event') {
                     $backRoute = route('service.events.show', $booking->bookable_id);
-                    $planTitle = $booking->bookable->name ?? 'İsimsiz Etkinlik';
+                    // Etkinlik modelinde isim sütunu genellikle 'title'dır
+                    $planTitle = $booking->bookable->title ?? 'İsimsiz Etkinlik';
                     $contextLabel = 'Etkinlik';
                 }
             }
         @endphp
 
         <div class="row justify-content-center">
-            <div class="col-lg-10">
+            <div class="col-lg-11">
 
-                {{-- 2. Üst Başlık Alanı (Header dışında, sade metin) --}}
+                {{-- 2. Üst Başlık Alanı --}}
                 <div class="d-flex justify-content-between align-items-end mb-4">
                     <div>
-                        <h6 class="text-uppercase text-muted fw-bold mb-1" style="font-size: 0.75rem; letter-spacing: 1px;">
-                            {{ $contextLabel }} YÖNETİMİ
+                        <h6 class="text-uppercase text-muted fw-bold mb-1" style="font-size: 0.75rem; letter-spacing: 1.2px;">
+                            <i class="fa-solid fa-chevron-right me-1 small text-primary"></i> {{ $contextLabel }} YÖNETİMİ
                         </h6>
-                        <h2 class="fw-bold text-dark mb-0">Rezervasyon Düzenle</h2>
+                        <h2 class="fw-bold text-dark mb-0">Rezervasyonu Güncelle</h2>
                         <div class="d-flex align-items-center text-secondary mt-2">
-                            <i class="fa-solid fa-layer-group me-2"></i>
-                            <span>{{ $planTitle }}</span>
+                            <span class="badge bg-light text-dark border shadow-sm px-3 py-2">
+                                <i class="fa-solid fa-layer-group me-2 text-primary"></i>
+                                {{ $planTitle }}
+                            </span>
                         </div>
                     </div>
                     <div>
-                        <a href="{{ $backRoute }}" class="btn btn-light border bg-white shadow-sm text-muted">
-                            <i class="fa-solid fa-arrow-left me-1"></i> Vazgeç ve Dön
+                        <a href="{{ $backRoute }}" class="btn btn-white border shadow-sm text-muted rounded-pill px-4">
+                            <i class="fa-solid fa-arrow-left-long me-2"></i> Vazgeç ve Dön
                         </a>
                     </div>
                 </div>
 
                 {{-- 3. Ana Form Kartı --}}
-                <div class="card border-0 shadow-sm rounded-3">
-                    {{-- Üst kısma ince bir renkli çizgi (Kurumsal Mavi) --}}
-                    <div class="card-header bg-white border-0 pt-0"></div>
-                    <div class="card-body p-4 p-md-5">
+                <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                    {{-- Kurumsal Aksan Çizgisi --}}
+                    <div style="height: 5px; background: linear-gradient(90deg, #667EEA 0%, #764BA2 100%); border: none;">
+                    </div>
 
-                        <form action="{{ route('bookings.update', $booking) }}" method="POST"
-                            enctype="multipart/form-data">
+                    <div class="card-body p-4 p-md-5 bg-white">
+
+                        <form action="{{ route('bookings.update', $booking) }}" method="POST" enctype="multipart/form-data"
+                            autocomplete="off">
                             @csrf
                             @method('PUT')
 
-                            {{-- Form Parçası --}}
+                            {{-- Merkezi Form Parçası --}}
+                            {{-- Bu dosya artık origin, destination ve location alanlarını otomatik yönetiyor --}}
                             @include('bookings._form', ['booking' => $booking])
 
-                            <hr class="my-4 text-muted opacity-25">
-
-                            {{-- Alt Aksiyon Butonları --}}
-                            <div class="d-flex justify-content-end align-items-center gap-2">
-                                <a href="{{ $backRoute }}" class="btn btn-link text-decoration-none text-muted">
-                                    İptal
-                                </a>
-                                <button type="submit" class="btn btn-primary px-4 py-2 fw-medium">
-                                    <i class="fa-regular fa-floppy-disk me-2"></i> Değişiklikleri Kaydet
-                                </button>
+                            <div class="mt-5 pt-4 border-top">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6 text-muted small">
+                                        <i class="fa-solid fa-circle-info me-1"></i>
+                                        Bu rezervasyon en son
+                                        <strong>{{ $booking->updated_at->format('d.m.Y H:i') }}</strong> tarihinde
+                                        güncellendi.
+                                    </div>
+                                    <div class="col-md-6 text-end">
+                                        <div class="d-flex justify-content-end align-items-center gap-3">
+                                            <a href="{{ $backRoute }}"
+                                                class="text-decoration-none text-secondary fw-medium">
+                                                İptal Et
+                                            </a>
+                                            <button type="submit"
+                                                class="btn btn-primary shadow px-5 py-2 rounded-pill fw-bold">
+                                                <i class="fa-solid fa-check-double me-2"></i> Değişiklikleri Uygula
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </form>
 
+                    </div>
+                </div>
+
+                {{-- Ek Bilgi Paneli (Opsiyonel) --}}
+                <div class="mt-4 p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between">
+                    <div class="small text-muted">
+                        <i class="fa-solid fa-user-clock me-2 text-primary"></i>
+                        Kayıt Sahibi: <strong>{{ $booking->user->name ?? 'Sistem' }}</strong>
+                    </div>
+                    <div class="small text-muted">
+                        Oluşturulma: {{ $booking->created_at->format('d.m.Y H:i') }}
                     </div>
                 </div>
 

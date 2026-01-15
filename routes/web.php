@@ -39,6 +39,7 @@ use App\Http\Controllers\ExpenseController;
 use App\Services\KanbanService;
 use App\Models\Event;
 use App\Models\Travel;
+use App\Http\Controllers\ScheduledReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -132,6 +133,16 @@ Route::middleware(['auth'])->group(function () {
             ->group(function () {
                 Route::resource('custom-fields', CustomFieldDefinitionController::class);
             });
+
+        Route::get('/report-settings/create', [ScheduledReportController::class, 'create'])->name('report-settings.create');
+        Route::post('/report-settings', [ScheduledReportController::class, 'store'])->name('report-settings.store');
+        Route::get('/report-settings', [ScheduledReportController::class, 'index'])->name('report-settings.index');
+        Route::get('/report-settings/create', [ScheduledReportController::class, 'create'])->name('report-settings.create');
+        Route::post('/report-settings', [ScheduledReportController::class, 'store'])->name('report-settings.store');
+        Route::get('/report-settings/{report}/edit', [ScheduledReportController::class, 'edit'])->name('report-settings.edit');
+        Route::put('/report-settings/{report}', [ScheduledReportController::class, 'update'])->name('report-settings.update');
+        Route::post('/report-settings/{report}/toggle', [ScheduledReportController::class, 'toggleStatus'])->name('report-settings.toggle');
+        Route::delete('/report-settings/{report}', [ScheduledReportController::class, 'destroy'])->name('report-settings.destroy');
 
     });
 

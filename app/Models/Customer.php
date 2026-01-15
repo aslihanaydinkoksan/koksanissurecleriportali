@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Loggable;
+use App\Traits\HasBusinessUnit;
 
 /**
  * App\Models\Customer
@@ -49,8 +50,9 @@ use App\Traits\Loggable;
  */
 class Customer extends Model
 {
-    use HasFactory, SoftDeletes, Loggable;
+    use HasFactory, SoftDeletes, Loggable, HasBusinessUnit;
     protected $fillable = [
+        'business_unit_id',
         'name',
         'contact_person',
         'email',

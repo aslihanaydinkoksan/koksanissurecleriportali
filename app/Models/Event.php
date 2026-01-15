@@ -10,6 +10,8 @@ use App\Traits\Loggable;
 use App\Traits\HasBusinessUnit; // <--- 1. Use ekle
 use App\Traits\HasDynamicAttributes;
 use App\Traits\HasKanban;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * App\Models\Event
@@ -51,9 +53,9 @@ use App\Traits\HasKanban;
  * @mixin \Eloquent
  * @mixin IdeHelperEvent
  */
-class Event extends Model
+class Event extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes, Loggable, HasBusinessUnit, HasDynamicAttributes, HasKanban; // <--- 2. Trait ekle
+    use HasFactory, SoftDeletes, Loggable, HasBusinessUnit, HasDynamicAttributes, HasKanban, InteractsWithMedia; // <--- 2. Trait ekle
     /**
      * Toplu atanabilir alanlar.
      */
@@ -139,5 +141,12 @@ class Event extends Model
     public function kanbanCard()
     {
         return $this->morphMany(KanbanCard::class, 'model');
+    }
+    /**
+     * Etkinliğe bağlı polimorfik harcamalar.
+     */
+    public function expenses()
+    {
+        return $this->morphMany(Expense::class, 'expensable');
     }
 }

@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use App\Traits\Loggable;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Traits\HasBusinessUnit; // <--- 1. Use ekle
+use App\Traits\HasBusinessUnit;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * App\Models\Travel
@@ -43,14 +45,15 @@ use App\Traits\HasBusinessUnit; // <--- 1. Use ekle
  * @mixin \Eloquent
  * @mixin IdeHelperTravel
  */
-class Travel extends Model
+class Travel extends Model implements HasMedia
 {
-    use HasFactory, Loggable, HasBusinessUnit; // <--- 2. Trait ekle
+    use HasFactory, Loggable, HasBusinessUnit, InteractsWithMedia; // <--- 2. Trait ekle
 
     protected $table = 'travels';
     protected $fillable = [
         'user_id',
         'name',
+        'location',
         'start_date',
         'start_time',
         'end_date',
@@ -101,5 +104,9 @@ class Travel extends Model
     public function expenses()
     {
         return $this->morphMany(Expense::class, 'expensable');
+    }
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
     }
 }

@@ -53,26 +53,23 @@ class BookingController extends Controller
         $validated = $request->validate([
             'type' => 'required|string|in:flight,bus,hotel,car_rental,train,other',
             'provider_name' => 'required|string|max:255',
+            'origin' => 'nullable|required_if:type,flight,bus,train|string|max:255', // Ulaşım ise zorunlu
+            'destination' => 'nullable|required_if:type,flight,bus,train|string|max:255', // Ulaşım ise zorunlu
+            'location' => 'nullable|required_if:type,hotel|string|max:255', // Otel ise zorunlu
             'confirmation_code' => 'nullable|string|max:255',
             'start_datetime' => 'required|date',
             'end_datetime' => 'nullable|date|after_or_equal:start_datetime',
             'cost' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
-            'booking_files.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,msg,eml|max:10240', // 10MB limit
             'status' => 'nullable|string|in:planned,completed,cancelled,postponed',
+            'booking_files.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,msg,eml|max:10240',
         ]);
 
         // Seyahate bağlı rezervasyonu oluştur
-        $booking = $model->bookings()->create([
+        $booking = $model->bookings()->create(array_merge($validated, [
             'user_id' => Auth::id(),
-            'type' => $validated['type'],
-            'provider_name' => $validated['provider_name'],
-            'confirmation_code' => $validated['confirmation_code'],
-            'cost' => $validated['cost'] ?? null,
-            'start_datetime' => $validated['start_datetime'],
-            'end_datetime' => $validated['end_datetime'],
-            'notes' => $validated['notes'],
-        ]);
+            'status' => $validated['status'] ?? 'planned', // Eğer boş gelirse 'planned' yap
+        ]));
 
         // Spatie MediaLibrary ile Dosyaları Ekle
         if ($request->hasFile('booking_files')) {
@@ -140,37 +137,26 @@ class BookingController extends Controller
      * @param  \App\Models\Booking  $booking
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, Booking $booking)
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Booking $booking) // $modelId parametresini sildik
     {
-        // 24 Saat Kontrolü
-        if (!$booking->is_editable && !Auth::user()->can('is-global-manager')) {
-            return redirect()->back()
-                ->with('error', 'Süre dolduğu için güncelleme yapılamaz!');
-        }
+        // 1. Yetki ve Zaman Kontrolü
+        $canManage = auth()->user()->can('manage all bookings') || auth()->user()->can('is-global-manager');
         $isOwner = auth()->id() == $booking->user_id;
 
-        // 2. Kullanıcının özel yetkisi var mı? (Özgül Hanım vb.)
-        $canManage = auth()->user()->can('manage all bookings') || auth()->user()->can('is-global-manager');
-
-        // Eğer ne sahip ne de yönetici ise -> HATA VER
-        if (!$isOwner && !$canManage) {
-            abort(403, 'Bu rezervasyonu düzenleme yetkiniz yok.');
+        if (!$canManage && (!$isOwner || !$booking->is_editable)) {
+            return redirect()->back()->with('error', 'Bu rezervasyon üzerinde işlem yapma yetkiniz yok veya süre (24 saat) dolmuş.');
         }
 
-        // Eğer sadece sahipse (yönetici değilse), 24 saat kuralına takılıyor mu?
-        // Yöneticiyse ($canManage) süreye takılmadan geçebilir.
-        if (!$canManage && !$booking->is_editable) {
-            abort(403, 'Düzenleme süresi (24 saat) dolmuştur.');
-        }
-
-        if (Auth::id() !== $booking->user_id && !Auth::user()->can('is-global-manager')) {
-            abort(403, 'Bu eylemi gerçekleştirme yetkiniz yok.');
-        }
-
-        // Validasyon (store ile aynı)
+        // 2. Validasyon (Yeni sütunlar eklendi)
         $validated = $request->validate([
-            'type' => 'required|string|in:flight,hotel,car_rental,train,other',
+            'type' => 'required|string|in:flight,bus,hotel,car_rental,train,other',
             'provider_name' => 'required|string|max:255',
+            'origin' => 'nullable|string|max:255',      // Kalkış
+            'destination' => 'nullable|string|max:255', // Varış
+            'location' => 'nullable|string|max:255',    // Sabit lokasyon
             'confirmation_code' => 'nullable|string|max:255',
             'start_datetime' => 'required|date',
             'end_datetime' => 'nullable|date|after_or_equal:start_datetime',
@@ -180,23 +166,22 @@ class BookingController extends Controller
             'status' => 'nullable|string|in:planned,completed,cancelled,postponed',
         ]);
 
-        // Rezervasyonu güncelle
+        // 3. Güncelleme
         $booking->update($validated);
 
-        // YENİ dosyalar varsa, mevcutların üzerine ekle (eskileri silme)
+        // 4. Dosya Yönetimi
         if ($request->hasFile('booking_files')) {
             foreach ($request->file('booking_files') as $file) {
                 $booking->addMedia($file)->toMediaCollection('attachments');
             }
         }
 
-        $model = $booking->bookable; // Travel veya Event modelini al
+        // 5. Yönlendirme (Polimorfik ilişki üzerinden ana modele dön)
+        $model = $booking->bookable;
+        $routePrefix = ($booking->bookable_type === 'App\Models\Travel') ? 'travels' : 'service.events';
 
-        // Model tipine göre doğru rotayı belirle
-        $routePrefix = ($model instanceof \App\Models\Travel) ? 'travels' : 'service.events';
-
-        return redirect()->route($routePrefix . '.show', $model)
-            ->with('success', 'Rezervasyon durumu güncellendi!');
+        return redirect()->route($routePrefix . '.show', $model->id)
+            ->with('success', 'Rezervasyon başarıyla güncellendi.');
     }
 
     /**

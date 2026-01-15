@@ -68,4 +68,9 @@ class CustomerVisit extends Model
     {
         return $this->morphMany(File::class, 'fileable');
     }
+
+    public function machine()
+    {
+        return $this->belongsTo(CustomerMachine::class, 'customer_machine_id');
+    }
 }

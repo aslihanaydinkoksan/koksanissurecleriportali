@@ -626,6 +626,13 @@
                                             </a>
                                         </li>
 
+                                        <li>
+                                            <a class="dropdown-item" href="<?php echo e(route('report-settings.index')); ?>">
+                                                <i class="fa-solid  fa-cogs" style="color: #8b8fa3;"></i>
+                                                Rapor Yönetimi
+                                            </a>
+                                        </li>
+
 
 
                                         <li><a class="dropdown-item" href="<?php echo e(route('departments.index')); ?>"><i

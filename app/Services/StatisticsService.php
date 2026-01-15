@@ -377,11 +377,11 @@ class StatisticsService
     {
         $user = Auth::user();
 
-        // Filtre Eklendi
         $eventsForFiltering = Event::forUser($user)
             ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId))
             ->whereBetween('start_datetime', [$startDate, $endDate])
             ->get(['event_type', 'location'])
+            ->toBase() // <--- Eloquent Collection'ı temel Collection'a çeviriyoruz
             ->map(function ($event) use ($eventTypesList) {
                 return [
                     'type_name' => $eventTypesList[$event->event_type] ?? ucfirst($event->event_type),
@@ -390,11 +390,11 @@ class StatisticsService
                 ];
             });
 
-        // Filtre Eklendi
         $travelsForFiltering = Travel::forUser($user)
             ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId))
             ->whereBetween('start_date', [$startDate, $endDate])
             ->get(['name'])
+            ->toBase() // <--- Güvenlik için burada da çeviriyoruz
             ->map(function ($travel) {
                 return [
                     'type_name' => 'Seyahat Planı',
@@ -403,6 +403,7 @@ class StatisticsService
                 ];
             });
 
+        // Artık iki koleksiyon da standart Support\Collection olduğu için merge sorunsuz çalışacaktır.
         return $eventsForFiltering->merge($travelsForFiltering)->all();
     }
 

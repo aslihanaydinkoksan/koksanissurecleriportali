@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', 'Seyahat Detayı')
 
-@section('content')
+<?php $__env->startSection('title', 'Seyahat Detayı'); ?>
+
+<?php $__env->startSection('content'); ?>
     <style>
         .travel-hero {
             background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
@@ -183,36 +183,38 @@
     <div class="container py-4">
         <div class="row justify-content-center">
             <div class="col-lg-11">
-                {{-- Hero Section --}}
+                
                 <div class="travel-hero shadow-lg">
                     <div class="travel-hero-content">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
-                                <h2 class="mb-2 fw-bold">✈️ {{ $travel->name }}</h2>
+                                <h2 class="mb-2 fw-bold">✈️ <?php echo e($travel->name); ?></h2>
                                 <p class="mb-0 fs-5 opacity-90">
                                     <i class="fa-solid fa-calendar-days me-2"></i>
-                                    {{ \Carbon\Carbon::parse($travel->start_date)->format('d/m/Y') }} -
-                                    {{ \Carbon\Carbon::parse($travel->end_date)->format('d/m/Y') }}
+                                    <?php echo e(\Carbon\Carbon::parse($travel->start_date)->format('d/m/Y')); ?> -
+                                    <?php echo e(\Carbon\Carbon::parse($travel->end_date)->format('d/m/Y')); ?>
+
                                 </p>
                             </div>
-                            @if (Auth::id() == $travel->user_id || Auth::user()->can('is-global-manager'))
-                                <a href="{{ route('travels.edit', $travel) }}" class="btn btn-edit text-white shadow-sm">
+                            <?php if(Auth::id() == $travel->user_id || Auth::user()->can('is-global-manager')): ?>
+                                <a href="<?php echo e(route('travels.edit', $travel)); ?>" class="btn btn-edit text-white shadow-sm">
                                     <i class="fa-solid fa-pen me-1"></i> Düzenle
                                 </a>
-                            @endif
+                            <?php endif; ?>
                         </div>
 
                         <div class="d-flex gap-3 mt-4">
                             <div class="stat-box">
-                                <h4>{{ $travel->bookings->count() }}</h4>
+                                <h4><?php echo e($travel->bookings->count()); ?></h4>
                                 <p>Rezervasyon</p>
                             </div>
                             <div class="stat-box">
-                                <h4>{{ $travel->customerVisits->count() }}</h4>
+                                <h4><?php echo e($travel->customerVisits->count()); ?></h4>
                                 <p>Ziyaret</p>
                             </div>
                             <div class="stat-box">
-                                <h4>{{ \Carbon\Carbon::parse($travel->start_date)->diffInDays(\Carbon\Carbon::parse($travel->end_date)) + 1 }}
+                                <h4><?php echo e(\Carbon\Carbon::parse($travel->start_date)->diffInDays(\Carbon\Carbon::parse($travel->end_date)) + 1); ?>
+
                                 </h4>
                                 <p>Gün</p>
                             </div>
@@ -220,23 +222,24 @@
                     </div>
                 </div>
 
-                {{-- Bildirimler --}}
-                @if (session('success'))
+                
+                <?php if(session('success')): ?>
                     <div class="alert alert-success border-0 shadow-sm mb-4">
-                        <i class="fa-solid fa-circle-check me-2"></i> {{ session('success') }}
-                    </div>
-                @endif
+                        <i class="fa-solid fa-circle-check me-2"></i> <?php echo e(session('success')); ?>
 
-                {{-- Hızlı Rezervasyon Ekleme --}}
+                    </div>
+                <?php endif; ?>
+
+                
                 <div class="quick-add-card shadow-sm border-0">
                     <div class="section-title">
                         <i class="fa-solid fa-circle-plus text-primary"></i>
                         <h5 class="mb-0 fw-bold">Yeni Rezervasyon Ekle</h5>
                     </div>
-                    <form action="{{ route('travels.bookings.store', $travel) }}" method="POST"
+                    <form action="<?php echo e(route('travels.bookings.store', $travel)); ?>" method="POST"
                         enctype="multipart/form-data">
-                        @csrf
-                        @include('bookings._form', ['booking' => null])
+                        <?php echo csrf_field(); ?>
+                        <?php echo $__env->make('bookings._form', ['booking' => null], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                         <div class="text-end mt-2">
                             <button type="submit" class="btn btn-gradient px-5 shadow">
                                 <i class="fa-solid fa-plus me-2"></i>Rezervasyonu Kaydet
@@ -245,88 +248,93 @@
                     </form>
                 </div>
 
-                {{-- Rezervasyon Listesi --}}
+                
                 <div class="section-title">
                     <i class="fa-solid fa-ticket text-indigo"></i>
                     <h5 class="mb-0 fw-bold">Kayıtlı Rezervasyonlar <span
-                            class="badge bg-primary ms-2">{{ $travel->bookings->count() }}</span></h5>
+                            class="badge bg-primary ms-2"><?php echo e($travel->bookings->count()); ?></span></h5>
                 </div>
 
-                @forelse ($travel->bookings->sortBy('start_datetime') as $booking)
+                <?php $__empty_1 = true; $__currentLoopData = $travel->bookings->sortBy('start_datetime'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $booking): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                     <div class="booking-card">
                         <div class="row align-items-center">
                             <div class="col-md-2">
-                                <span class="booking-type {{ $booking->type }}">
-                                    @switch($booking->type)
-                                        @case('flight')
+                                <span class="booking-type <?php echo e($booking->type); ?>">
+                                    <?php switch($booking->type):
+                                        case ('flight'): ?>
                                             ✈️ Uçuş
-                                        @break
+                                        <?php break; ?>
 
-                                        @case('bus')
+                                        <?php case ('bus'): ?>
                                             🚌 Otobüs
-                                        @break
+                                        <?php break; ?>
 
-                                        @case('hotel')
+                                        <?php case ('hotel'): ?>
                                             🏨 Otel
-                                        @break
+                                        <?php break; ?>
 
-                                        @case('car_rental')
+                                        <?php case ('car_rental'): ?>
                                             🚗 Araç
-                                        @break
+                                        <?php break; ?>
 
-                                        @case('train')
+                                        <?php case ('train'): ?>
                                             🚆 Tren
-                                        @break
+                                        <?php break; ?>
 
-                                        @default
+                                        <?php default: ?>
                                             📋 Diğer
-                                    @endswitch
+                                    <?php endswitch; ?>
                                 </span>
                             </div>
                             <div class="col-md-4">
-                                <h6 class="mb-1 fw-bold text-dark">{{ $booking->provider_name }}</h6>
+                                <h6 class="mb-1 fw-bold text-dark"><?php echo e($booking->provider_name); ?></h6>
                                 <div class="text-muted small">
-                                    @if (in_array($booking->type, ['flight', 'bus', 'train']))
-                                        <i class="fa-solid fa-location-dot text-primary"></i> {{ $booking->origin ?? '?' }}
+                                    <?php if(in_array($booking->type, ['flight', 'bus', 'train'])): ?>
+                                        <i class="fa-solid fa-location-dot text-primary"></i> <?php echo e($booking->origin ?? '?'); ?>
+
                                         <i class="fa-solid fa-arrow-right mx-1 text-muted"></i>
                                         <i class="fa-solid fa-location-arrow text-success"></i>
-                                        {{ $booking->destination ?? '?' }}
-                                    @else
+                                        <?php echo e($booking->destination ?? '?'); ?>
+
+                                    <?php else: ?>
                                         <i class="fa-solid fa-map-pin text-info"></i>
-                                        {{ $booking->location ?? 'Lokasyon Belirtilmedi' }}
-                                    @endif
+                                        <?php echo e($booking->location ?? 'Lokasyon Belirtilmedi'); ?>
+
+                                    <?php endif; ?>
                                 </div>
-                                @if ($booking->confirmation_code)
+                                <?php if($booking->confirmation_code): ?>
                                     <div class="text-primary small mt-1 fw-500"><i class="fa-solid fa-hashtag me-1"></i>PNR:
-                                        {{ $booking->confirmation_code }}</div>
-                                @endif
+                                        <?php echo e($booking->confirmation_code); ?></div>
+                                <?php endif; ?>
                             </div>
                             <div class="col-md-2 text-center">
                                 <div class="text-muted small">Tarih / Saat</div>
                                 <div class="fw-bold">
-                                    {{ $booking->start_datetime ? \Carbon\Carbon::parse($booking->start_datetime)->format('d.m.Y H:i') : '-' }}
+                                    <?php echo e($booking->start_datetime ? \Carbon\Carbon::parse($booking->start_datetime)->format('d.m.Y H:i') : '-'); ?>
+
                                 </div>
                             </div>
                             <div class="col-md-2">
-                                @if ($booking->getMedia('attachments')->isNotEmpty())
+                                <?php if($booking->getMedia('attachments')->isNotEmpty()): ?>
                                     <div class="d-flex flex-wrap gap-1">
-                                        @foreach ($booking->getMedia('attachments') as $media)
-                                            <a href="{{ $media->getUrl() }}" target="_blank" class="file-badge"
-                                                title="{{ $media->file_name }}">
+                                        <?php $__currentLoopData = $booking->getMedia('attachments'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $media): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <a href="<?php echo e($media->getUrl()); ?>" target="_blank" class="file-badge"
+                                                title="<?php echo e($media->file_name); ?>">
                                                 <i class="fa-solid fa-paperclip"></i>
-                                                {{ Str::limit($media->file_name, 10) }}
+                                                <?php echo e(Str::limit($media->file_name, 10)); ?>
+
                                             </a>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </div>
-                                @endif
+                                <?php endif; ?>
                             </div>
                             <div class="col-md-2 text-end">
                                 <div class="btn-group">
-                                    <a href="{{ route('bookings.edit', $booking) }}"
+                                    <a href="<?php echo e(route('bookings.edit', $booking)); ?>"
                                         class="btn btn-sm btn-outline-primary border-0"><i class="fa-solid fa-pen"></i></a>
-                                    <form action="{{ route('bookings.destroy', $booking) }}" method="POST"
+                                    <form action="<?php echo e(route('bookings.destroy', $booking)); ?>" method="POST"
                                         class="d-inline" onsubmit="return confirm('Emin misiniz?');">
-                                        @csrf @method('DELETE')
+                                        <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
                                         <button type="submit" class="btn btn-sm btn-outline-danger border-0"><i
                                                 class="fa-solid fa-trash"></i></button>
                                     </form>
@@ -334,51 +342,52 @@
                             </div>
                         </div>
                     </div>
-                    @empty
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <div class="empty-state mb-5">
                             <i class="fa-solid fa-inbox mb-3 d-block fs-1 text-muted"></i>
                             <h6 class="text-muted">Bu seyahate ait kayıtlı rezervasyon bulunmuyor.</h6>
                         </div>
-                    @endforelse
+                    <?php endif; ?>
 
-                    {{-- Ziyaretler Bölümü --}}
+                    
                     <div class="section-title mt-5">
                         <i class="fa-solid fa-handshake text-primary"></i>
                         <h5 class="mb-0 fw-bold">Bağlı Ziyaretler <span
-                                class="badge bg-primary rounded-pill ms-2">{{ $travel->customerVisits->count() }}</span></h5>
+                                class="badge bg-primary rounded-pill ms-2"><?php echo e($travel->customerVisits->count()); ?></span></h5>
                     </div>
 
-                    @forelse ($travel->customerVisits as $visit)
+                    <?php $__empty_1 = true; $__currentLoopData = $travel->customerVisits; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $visit): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                         <div class="visit-card">
                             <div class="row align-items-center">
                                 <div class="col-md-3">
                                     <div class="text-muted small">Müşteri</div>
-                                    <a href="{{ route('customers.show', $visit->customer) }}"
+                                    <a href="<?php echo e(route('customers.show', $visit->customer)); ?>"
                                         class="fw-bold text-decoration-none" style="color: #667EEA;">
-                                        {{ $visit->customer->name ?? 'Silinmiş Müşteri' }}
+                                        <?php echo e($visit->customer->name ?? 'Silinmiş Müşteri'); ?>
+
                                     </a>
                                 </div>
                                 <div class="col-md-3">
                                     <div class="text-muted small">Etkinlik</div>
-                                    <strong>{{ $visit->event->title ?? 'N/A' }}</strong>
+                                    <strong><?php echo e($visit->event->title ?? 'N/A'); ?></strong>
                                 </div>
                                 <div class="col-md-3">
                                     <div class="text-muted small">Tarih</div>
-                                    <strong>{{ $visit->event ? \Carbon\Carbon::parse($visit->event->start_datetime)->format('d.m.Y H:i') : '-' }}</strong>
+                                    <strong><?php echo e($visit->event ? \Carbon\Carbon::parse($visit->event->start_datetime)->format('d.m.Y H:i') : '-'); ?></strong>
                                 </div>
                                 <div class="col-md-3 text-end">
-                                    <div class="badge bg-light text-dark border">{{ $visit->visit_purpose }}</div>
+                                    <div class="badge bg-light text-dark border"><?php echo e($visit->visit_purpose); ?></div>
                                 </div>
                             </div>
                         </div>
-                    @empty
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <div class="empty-state">
                             <i class="fa-solid fa-calendar-xmark mb-3 d-block fs-1 text-muted"></i>
                             <h6 class="text-muted">Henüz bu seyahate bağlı bir ziyaret kaydı yok.</h6>
                         </div>
-                    @endforelse
+                    <?php endif; ?>
 
-                    {{-- Masraf Yönetimi --}}
+                    
                     <div class="section-title mt-5 d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center gap-2">
                             <i class="fa-solid fa-file-invoice-dollar text-warning"></i>
@@ -390,12 +399,12 @@
                         </button>
                     </div>
 
-                    @if ($travel->expenses->isEmpty())
+                    <?php if($travel->expenses->isEmpty()): ?>
                         <div class="empty-state">
                             <i class="fa-solid fa-receipt mb-3 d-block fs-1 text-muted"></i>
                             <h6 class="text-muted">Henüz masraf kaydı girilmedi.</h6>
                         </div>
-                    @else
+                    <?php else: ?>
                         <div class="table-responsive">
                             <table class="table table-hover align-middle bg-white border rounded shadow-sm">
                                 <thead class="bg-light">
@@ -408,45 +417,48 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($travel->expenses as $expense)
+                                    <?php $__currentLoopData = $travel->expenses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $expense): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <tr>
                                             <td class="ps-4"><span
-                                                    class="badge bg-light text-dark border">{{ $expense->category }}</span>
+                                                    class="badge bg-light text-dark border"><?php echo e($expense->category); ?></span>
                                             </td>
-                                            <td><small class="text-muted">{{ $expense->description ?? '-' }}</small></td>
-                                            <td>{{ $expense->receipt_date ? $expense->receipt_date->format('d.m.Y') : '-' }}
+                                            <td><small class="text-muted"><?php echo e($expense->description ?? '-'); ?></small></td>
+                                            <td><?php echo e($expense->receipt_date ? $expense->receipt_date->format('d.m.Y') : '-'); ?>
+
                                             </td>
-                                            <td class="text-end fw-bold">{{ number_format($expense->amount, 2) }}
-                                                {{ $expense->currency }}</td>
+                                            <td class="text-end fw-bold"><?php echo e(number_format($expense->amount, 2)); ?>
+
+                                                <?php echo e($expense->currency); ?></td>
                                             <td class="text-end pe-4">
-                                                <form action="{{ route('expenses.destroy', $expense->id) }}" method="POST"
+                                                <form action="<?php echo e(route('expenses.destroy', $expense->id)); ?>" method="POST"
                                                     onsubmit="return confirm('Silinsin mi?');">
-                                                    @csrf @method('DELETE')
+                                                    <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
                                                     <button type="submit" class="btn btn-link text-danger p-0"><i
                                                             class="fa-solid fa-trash-can"></i></button>
                                                 </form>
                                             </td>
                                         </tr>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     <tr class="bg-light fw-bold border-top border-2">
                                         <td colspan="3" class="text-end">GENEL TOPLAM:</td>
                                         <td class="text-end">
-                                            @foreach ($travel->expenses->groupBy('currency') as $curr => $items)
-                                                <div class="text-dark">{{ number_format($items->sum('amount'), 2) }}
-                                                    {{ $curr }}</div>
-                                            @endforeach
+                                            <?php $__currentLoopData = $travel->expenses->groupBy('currency'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $curr => $items): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <div class="text-dark"><?php echo e(number_format($items->sum('amount'), 2)); ?>
+
+                                                    <?php echo e($curr); ?></div>
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </td>
                                         <td></td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
 
-        {{-- Masraf Ekleme Modalı --}}
+        
         <div class="modal fade" id="addExpenseModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow-lg">
@@ -454,9 +466,9 @@
                         <h5 class="modal-title fw-bold"><i class="fa-solid fa-receipt me-2"></i>Yeni Masraf Kaydı</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
-                    <form action="{{ route('expenses.store') }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="travel_id" value="{{ $travel->id }}">
+                    <form action="<?php echo e(route('expenses.store')); ?>" method="POST">
+                        <?php echo csrf_field(); ?>
+                        <input type="hidden" name="travel_id" value="<?php echo e($travel->id); ?>">
                         <div class="modal-body p-4">
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Kategori</label>
@@ -491,7 +503,7 @@
                             </div>
                             <div class="mt-3">
                                 <label class="form-label fw-bold">Fiş/Fatura Tarihi</label>
-                                <input type="date" name="receipt_date" class="form-control" value="{{ date('Y-m-d') }}">
+                                <input type="date" name="receipt_date" class="form-control" value="<?php echo e(date('Y-m-d')); ?>">
                             </div>
                         </div>
                         <div class="modal-footer bg-light">
@@ -523,4 +535,6 @@
                 }
             });
         </script>
-    @endsection
+    <?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/travels/show.blade.php ENDPATH**/ ?>

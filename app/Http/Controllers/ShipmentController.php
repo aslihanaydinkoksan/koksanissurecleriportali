@@ -289,30 +289,42 @@ class ShipmentController extends Controller
 
     public function destroy(Shipment $shipment)
     {
+        // 1. Yetki Kontrolü
         $this->authorize('access-department', 'lojistik');
 
         if (Auth::id() !== $shipment->user_id && !in_array(Auth::user()->role, ['admin', 'yönetici'])) {
-            return redirect()->route('home')->with('error', 'Bu sevkiyatı sadece oluşturan kişi silebilir.');
+            return response()->json(['error' => 'Bu sevkiyatı sadece oluşturan kişi silebilir.'], 403);
         }
 
-        // Silme işlemi de Transaction içine alındı
-        DB::transaction(function () use ($shipment) {
-            // 1. Fiziksel dosyayı sil (Çöp dosya oluşmaması için)
-            if ($shipment->dosya_yolu && Storage::disk('public')->exists($shipment->dosya_yolu)) {
-                Storage::disk('public')->delete($shipment->dosya_yolu);
-            }
+        try {
+            DB::transaction(function () use ($shipment) {
+                // 2. İlişkili Durakları Sil (Soft Delete ise onlar da işaretlenir)
+                $shipment->stops()->delete();
 
-            // 2. Files tablosundaki yetim kaydı temizle
-            DB::table('files')
-                ->where('fileable_id', $shipment->id)
-                ->where('fileable_type', get_class($shipment))
-                ->delete();
+                // 3. Fiziksel Dosyaları ve Polimorfik Kayıtları Sil
+                foreach ($shipment->files as $file) {
+                    if (Storage::disk('public')->exists($file->path)) {
+                        Storage::disk('public')->delete($file->path);
+                    }
+                    $file->delete(); // İlişki üzerinden güvenli silme
+                }
 
-            // 3. Sevkiyatı sil
-            $shipment->delete();
-        });
+                // 4. Kanban Kartını Sil
+                $shipment->kanbanCard()->delete();
 
-        return redirect()->route('home')->with('success', 'Sevkiyat kaydı ve ilişkili dosyalar başarıyla silindi.');
+                // 5. Sevkiyatı Sil (Soft Delete)
+                $shipment->delete();
+            });
+
+            // AJAX isteği olduğu için JSON dönmek daha sağlıklıdır
+            return response()->json(['success' => 'Sevkiyat ve ilişkili tüm veriler başarıyla silindi.']);
+
+        } catch (\Exception $e) {
+            // Hatanın detayını logla ki architect olarak inceleyebileyim
+            \Log::error("Shipment Silme Hatası ID {$shipment->id}: " . $e->getMessage());
+
+            return response()->json(['error' => 'Silme işlemi sırasında bir veritabanı hatası oluştu.'], 500);
+        }
     }
 
     public function onayla(Request $request, Shipment $shipment)
