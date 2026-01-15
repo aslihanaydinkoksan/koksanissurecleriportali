@@ -228,4 +228,8 @@ class VehicleAssignment extends Model
         // (Zaten Service katmanında Business Unit filtresi uygulanıyor)
         return $query;
     }
+    public function driver()
+    {
+        return $this->belongsTo(User::class, 'driver_id');
+    }
 }
