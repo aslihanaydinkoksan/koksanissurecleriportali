@@ -49,10 +49,19 @@ class DynamicReportSheet implements FromCollection, WithHeadings, WithTitle, Sho
         $sheet->getStyle($sheet->calculateWorksheetDimension())->getAlignment()->setWrapText(true);
         $sheet->getStyle($sheet->calculateWorksheetDimension())->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
 
+        // PDF'de karakterlerin düzelmesi için tüm tabloya fontu dayatıyoruz
+        $sheet->getStyle($sheet->calculateWorksheetDimension())->getFont()->setName('DejaVu Sans');
+        $sheet->getStyle($sheet->calculateWorksheetDimension())->getFont()->setSize(9); // PDF'de taşma olmaması için 9 idealdir
+
         return [
             // Başlık Satırı (Koyu Mavi)
             1 => [
-                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                'font' => [
+                    'bold' => true,
+                    'color' => ['rgb' => 'FFFFFF'],
+                    'name' => 'DejaVu Sans',
+                    'size' => 10
+                ],
                 'fill' => [
                     'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
                     'startColor' => ['rgb' => '1D3557']

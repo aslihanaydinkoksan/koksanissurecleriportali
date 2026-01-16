@@ -77,7 +77,7 @@ class SendScheduledReports extends Command
                 // Başlıkların karşısına "VERİ GİRİŞİ YAPILMAMIŞ" yazan bir satır oluşturuyoruz
                 $warningRow = [];
                 foreach ($headers as $header) {
-                    $warningRow[$header] = '--- VERİ GİRİŞİ YOK ---';
+                    $warningRow[$header] = '--- VERI GIRISI YOK ---';
                 }
                 $data = collect([$warningRow]);
             }
