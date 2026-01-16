@@ -73,6 +73,15 @@ class SendScheduledReports extends Command
             $data = $instance->getData($report->frequency);
             $headers = $instance->getHeaders();
 
+            if ($data->isEmpty()) {
+                // Başlıkların karşısına "VERİ GİRİŞİ YAPILMAMIŞ" yazan bir satır oluşturuyoruz
+                $warningRow = [];
+                foreach ($headers as $header) {
+                    $warningRow[$header] = '--- VERİ GİRİŞİ YOK ---';
+                }
+                $data = collect([$warningRow]);
+            }
+
             if (!Storage::disk('local')->exists('temp_reports')) {
                 Storage::disk('local')->makeDirectory('temp_reports');
             }
