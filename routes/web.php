@@ -58,7 +58,7 @@ Route::match(['get', 'post'], '/logout', function () {
     request()->session()->invalidate();
     request()->session()->regenerateToken();
     return redirect('/login');
-})->name('logout');
+})->name('logout.get');
 
 Route::view('/kvkk-aydinlatma-metni', 'auth.kvkk')->name('kvkk.show');
 
