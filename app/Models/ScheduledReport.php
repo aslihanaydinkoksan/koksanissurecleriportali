@@ -16,7 +16,8 @@ class ScheduledReport extends Model
         'send_time',
         'recipients',
         'file_format',
-        'is_active'
+        'is_active',
+        'last_sent_at'
     ];
 
     protected $casts = [
