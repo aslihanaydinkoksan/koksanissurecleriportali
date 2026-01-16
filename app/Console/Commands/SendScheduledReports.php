@@ -73,6 +73,10 @@ class SendScheduledReports extends Command
             $data = $instance->getData($report->frequency);
             $headers = $instance->getHeaders();
 
+            if (!Storage::disk('local')->exists('temp_reports')) {
+                Storage::disk('local')->makeDirectory('temp_reports');
+            }
+
             // Uzantıyı ve Export Formatını belirle
             $extension = ($report->file_format === 'pdf') ? 'pdf' : 'xlsx';
             $exportFormat = ($report->file_format === 'pdf')
@@ -89,6 +93,10 @@ class SendScheduledReports extends Command
                 'local',
                 $exportFormat
             );
+
+            if (!Storage::disk('local')->exists($tempPath)) {
+                throw new \Exception("Dosya diskte oluşturulamadı: " . $tempPath);
+            }
 
             $fullPath = storage_path('app/' . $tempPath);
 
