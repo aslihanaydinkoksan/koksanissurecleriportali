@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Raporları Listele')
+@section('title', 'Rapor Planları')
+
+@push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+@endpush
 
 @section('content')
     <div class="container py-5">
@@ -9,24 +13,25 @@
                 <div class="card shadow border-0 report-card">
                     <div class="card-header bg-primary text-white p-4 d-flex justify-content-between align-items-center">
                         <div>
-                            <h3 class="mb-0 fw-bold"><i class="bi bi-list-stars me-2"></i>Rapor Planları</h3>
-                            <small class="opacity-75">Aktif otomasyon süreçlerini buradan yönetebilirsiniz.</small>
+                            <h3 class="mb-0 fw-bold"><i class="bi bi-gear me-2"></i>Otomatik Rapor Planları</h3>
+                            <small class="opacity-75">Sistem periyodik olarak bu yapılandırmalara göre rapor üretir.</small>
                         </div>
-                        <a href="{{ route('report-settings.create') }}" class="btn btn-light rounded-pill px-4 shadow-sm">
-                            <i class="bi bi-plus-lg me-1"></i> Yeni Plan Oluştur
+                        <a href="{{ route('report-settings.create') }}"
+                            class="btn btn-light rounded-pill px-4 shadow-sm fw-bold">
+                            <i class="bi bi-plus-circle me-2"></i>Yeni Plan Oluştur
                         </a>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0">
-                                <thead class="bg-light text-secondary small uppercase">
+                                <thead class="bg-light text-secondary small text-uppercase">
                                     <tr>
-                                        <th class="ps-4">Rapor / Modül</th>
-                                        <th>Gönderim Sıklığı</th>
+                                        <th class="ps-4">Rapor ve Modül</th>
+                                        <th>Gönderim / Sıklık</th>
                                         <th>Veri Kapsamı</th>
                                         <th>Alıcılar</th>
-                                        <th>Son Gönderim</th>
-                                        <th>Durum</th>
+                                        <th>Son Durum</th>
+                                        <th>Aktif</th>
                                         <th class="text-end pe-4">İşlemler</th>
                                     </tr>
                                 </thead>
@@ -37,62 +42,55 @@
                                                 <div class="fw-bold text-dark">{{ $report->report_name }}</div>
                                                 <div class="text-muted small">
                                                     <i
-                                                        class="bi bi-box me-1"></i>{{ basename(str_replace('\\', '/', $report->report_class)) }}
+                                                        class="bi bi-collection me-1"></i>{{ basename(str_replace('\\', '/', $report->report_class)) }}
                                                 </div>
                                             </td>
                                             <td>
-                                                <span
-                                                    class="badge bg-soft-info text-info border border-info rounded-pill px-3">
+                                                <span class="badge bg-info text-white rounded-pill px-3">
                                                     {{ ucfirst($report->frequency) }}
                                                 </span>
                                                 <div class="small mt-1 text-secondary">
-                                                    <i class="bi bi-alarm me-1"></i>{{ $report->send_time }}
+                                                    <i class="bi bi-clock me-1"></i>{{ $report->send_time }}
                                                 </div>
                                             </td>
                                             <td>
                                                 @php
-                                                    $filterLabel = match ($report->filter_frequency) {
-                                                        'daily' => ['label' => 'Günlük', 'color' => 'bg-secondary'],
-                                                        'weekly' => ['label' => 'Haftalık', 'color' => 'bg-secondary'],
-                                                        'monthly' => ['label' => 'Aylık', 'color' => 'bg-primary'],
+                                                    $filter = match ($report->filter_frequency) {
+                                                        'daily' => ['l' => 'Günlük', 'c' => 'bg-secondary'],
+                                                        'weekly' => ['l' => 'Haftalık', 'c' => 'bg-secondary'],
+                                                        'monthly' => ['l' => 'Aylık', 'c' => 'bg-primary'],
                                                         'last_3_months' => [
-                                                            'label' => 'Son 3 Ay',
-                                                            'color' => 'bg-warning text-dark',
+                                                            'l' => 'Son 3 Ay',
+                                                            'c' => 'bg-warning text-dark',
                                                         ],
                                                         'last_6_months' => [
-                                                            'label' => 'Son 6 Ay',
-                                                            'color' => 'bg-orange text-white',
+                                                            'l' => 'Son 6 Ay',
+                                                            'c' => 'bg-warning text-dark',
                                                         ],
-                                                        'yearly' => ['label' => 'Yıllık', 'color' => 'bg-danger'],
-                                                        'minute' => [
-                                                            'label' => '2 Dakika (Test)',
-                                                            'color' => 'bg-dark',
-                                                        ],
+                                                        'yearly' => ['l' => 'Yıllık', 'c' => 'bg-danger'],
+                                                        'minute' => ['l' => 'Test (2dk)', 'c' => 'bg-dark'],
                                                         default => [
-                                                            'label' => 'Belirtilmedi',
-                                                            'color' => 'bg-light text-muted',
+                                                            'l' => 'Belirtilmedi',
+                                                            'c' => 'bg-light text-muted',
                                                         ],
                                                     };
                                                 @endphp
-                                                <span class="badge {{ $filterLabel['color'] }} rounded-pill px-3">
-                                                    <i class="bi bi-calendar3 me-1"></i> {{ $filterLabel['label'] }}
+                                                <span class="badge {{ $filter['c'] }} rounded-pill px-3">
+                                                    <i class="bi bi-calendar3 me-1"></i> {{ $filter['l'] }}
                                                 </span>
                                             </td>
                                             <td>
                                                 <div class="d-flex flex-wrap gap-1">
                                                     @php
-                                                        $recipients = is_array($report->recipients)
+                                                        $mails = is_array($report->recipients)
                                                             ? $report->recipients
                                                             : explode(',', $report->recipients);
                                                     @endphp
-                                                    @foreach (array_slice($recipients, 0, 2) as $email)
+                                                    <span
+                                                        class="badge border text-dark fw-normal bg-light">{{ Str::limit($mails[0], 15) }}</span>
+                                                    @if (count($mails) > 1)
                                                         <span
-                                                            class="badge border text-dark fw-normal small bg-light">{{ $email }}</span>
-                                                    @endforeach
-                                                    @if (count($recipients) > 2)
-                                                        <span
-                                                            class="badge border text-primary fw-normal small bg-white">+{{ count($recipients) - 2 }}
-                                                            kişi</span>
+                                                            class="badge border text-primary fw-normal bg-white">+{{ count($mails) - 1 }}</span>
                                                     @endif
                                                 </div>
                                             </td>
@@ -108,26 +106,23 @@
                                                     <div class="form-check form-switch">
                                                         <input class="form-check-input" type="checkbox" role="switch"
                                                             {{ $report->is_active ? 'checked' : '' }}
-                                                            onchange="this.form.submit()">
+                                                            onchange="this.form.submit()" style="cursor: pointer">
                                                     </div>
                                                 </form>
                                             </td>
                                             <td class="text-end pe-4">
-                                                <div class="d-flex justify-content-end align-items-center gap-2">
+                                                <div class="d-flex justify-content-end gap-2">
                                                     <a href="{{ route('report-settings.edit', $report) }}"
-                                                        class="btn btn-sm btn-outline-primary border-0" title="Düzenle">
-                                                        <i class="bi bi-pencil-square"></i>
+                                                        class="btn btn-sm btn-primary" title="Düzenle">
+                                                        <i class="bi bi-pencil"></i>
                                                     </a>
-
                                                     <form action="{{ route('report-settings.destroy', $report) }}"
-                                                        method="POST"
-                                                        onsubmit="return confirm('Bu planı silmek istediğinize emin misiniz?')"
-                                                        style="display:inline;">
+                                                        method="POST" onsubmit="return confirm('Emin misiniz?')"
+                                                        class="d-inline">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit"
-                                                            class="btn btn-sm btn-outline-danger border-0" title="Sil">
-                                                            <i class="bi bi-trash3"></i>
+                                                        <button type="submit" class="btn btn-sm btn-danger" title="Sil">
+                                                            <i class="bi bi-trash"></i>
                                                         </button>
                                                     </form>
                                                 </div>
@@ -136,7 +131,6 @@
                                     @empty
                                         <tr>
                                             <td colspan="7" class="text-center py-5 text-muted small">
-                                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                                                 Henüz planlanmış bir rapor bulunmuyor.
                                             </td>
                                         </tr>
@@ -145,11 +139,6 @@
                             </table>
                         </div>
                     </div>
-                    @if ($reports->hasPages())
-                        <div class="card-footer bg-white p-3">
-                            {{ $reports->links() }}
-                        </div>
-                    @endif
                 </div>
             </div>
         </div>
@@ -157,16 +146,8 @@
 
     <style>
         .report-card {
-            border-radius: 1.5rem;
+            border-radius: 1rem;
             overflow: hidden;
-        }
-
-        .bg-soft-info {
-            background-color: rgba(13, 202, 240, 0.1);
-        }
-
-        .bg-orange {
-            background-color: #fd7e14;
         }
 
         .table thead th {
@@ -177,13 +158,8 @@
         }
 
         .table tbody td {
-            border-bottom: 1px solid #f2f2f2;
-            padding-top: 1.2rem;
-            padding-bottom: 1.2rem;
-        }
-
-        .badge {
-            font-weight: 500;
+            border-bottom: 1px solid #eee;
+            padding: 1rem 0.5rem;
         }
     </style>
 @endsection

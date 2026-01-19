@@ -70,7 +70,7 @@ class SendScheduledReports extends Command
                 return;
 
             $instance = new $reportClass();
-            $data = $instance->getData($report->frequency);
+            $data = $instance->getData($report->filter_frequency);
             $headers = $instance->getHeaders();
 
             if ($data->isEmpty()) {
