@@ -14,20 +14,24 @@ class MaintenanceReport implements ReportInterface
         return "Bakım: Arıza ve Periyodik Bakım Takip Raporu";
     }
 
+    /**
+     * Bakım verilerini belirlenen frekansa göre filtreler.
+     */
     public function getData(string $frequency): Collection
     {
-        // Frekansa göre filtreleme mantığı
-        $days = match ($frequency) {
-            'daily' => 1,
-            'weekly' => 7,
-            'monthly' => 30,
-            'minute' => 2,
-            default => 7
+        // UI tarafındaki select değerleriyle tam uyumlu match yapısı
+        $startDate = match ($frequency) {
+            'daily' => Carbon::now()->subDay(),
+            'weekly' => Carbon::now()->subDays(7),
+            'monthly' => Carbon::now()->subMonth(),
+            'last_3_months' => Carbon::now()->subMonths(3),
+            'last_6_months' => Carbon::now()->subMonths(6),
+            'yearly' => Carbon::now()->subYear(),
+            'minute' => Carbon::now()->subMinutes(2), // Test amaçlı
+            default => Carbon::now()->subDays(7),
         };
 
-        $startDate = Carbon::now()->subDays($days);
-
-        // İlişkili modellerle (Asset, Type, User, BusinessUnit) veriyi çekiyoruz
+        // İlişkili modellerle (Asset, Type, User, BusinessUnit) Eager Loading yapıyoruz
         return MaintenancePlan::with(['asset', 'type', 'user', 'businessUnit'])
             ->where('created_at', '>=', $startDate)
             ->latest()
@@ -35,7 +39,7 @@ class MaintenanceReport implements ReportInterface
             ->map(fn($p) => [
                 'Bakım No' => $p->id,
                 'İş Birimi' => $p->businessUnit?->name ?? 'Merkez',
-                'Varlık / Makine' => $p->asset?->name . ' (' . ($p->asset?->serial_number ?? '-') . ')',
+                'Varlık / Makine' => ($p->asset?->name ?? 'Bilinmeyen') . ' (' . ($p->asset?->serial_number ?? '-') . ')',
                 'Bakım Türü' => $p->type?->name ?? 'Belirtilmedi',
                 'Başlık' => $p->title,
                 'Öncelik' => $this->translatePriority($p->priority),
@@ -66,6 +70,9 @@ class MaintenanceReport implements ReportInterface
         ];
     }
 
+    /**
+     * Veritabanı statülerini kullanıcı dostu metne çevirir.
+     */
     private function translateStatus(?string $status): string
     {
         return match ($status) {
@@ -78,6 +85,9 @@ class MaintenanceReport implements ReportInterface
         };
     }
 
+    /**
+     * Öncelik seviyelerini görselleştirilmiş metne çevirir.
+     */
     private function translatePriority(?string $priority): string
     {
         return match ($priority) {

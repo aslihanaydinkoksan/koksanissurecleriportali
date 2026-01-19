@@ -22,7 +22,8 @@
                                 <thead class="bg-light text-secondary small uppercase">
                                     <tr>
                                         <th class="ps-4">Rapor / Modül</th>
-                                        <th>Zamanlama</th>
+                                        <th>Gönderim Sıklığı</th>
+                                        <th>Veri Kapsamı</th>
                                         <th>Alıcılar</th>
                                         <th>Son Gönderim</th>
                                         <th>Durum</th>
@@ -34,20 +35,65 @@
                                         <tr>
                                             <td class="ps-4">
                                                 <div class="fw-bold text-dark">{{ $report->report_name }}</div>
-                                                <div class="text-muted small">{{ basename($report->report_class) }}</div>
+                                                <div class="text-muted small">
+                                                    <i
+                                                        class="bi bi-box me-1"></i>{{ basename(str_replace('\\', '/', $report->report_class)) }}
+                                                </div>
                                             </td>
                                             <td>
                                                 <span
-                                                    class="badge bg-info text-white rounded-pill px-3">{{ ucfirst($report->frequency) }}</span>
-                                                <div class="small mt-1 text-secondary"><i
-                                                        class="bi bi-alarm me-1"></i>{{ $report->send_time }}</div>
+                                                    class="badge bg-soft-info text-info border border-info rounded-pill px-3">
+                                                    {{ ucfirst($report->frequency) }}
+                                                </span>
+                                                <div class="small mt-1 text-secondary">
+                                                    <i class="bi bi-alarm me-1"></i>{{ $report->send_time }}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @php
+                                                    $filterLabel = match ($report->filter_frequency) {
+                                                        'daily' => ['label' => 'Günlük', 'color' => 'bg-secondary'],
+                                                        'weekly' => ['label' => 'Haftalık', 'color' => 'bg-secondary'],
+                                                        'monthly' => ['label' => 'Aylık', 'color' => 'bg-primary'],
+                                                        'last_3_months' => [
+                                                            'label' => 'Son 3 Ay',
+                                                            'color' => 'bg-warning text-dark',
+                                                        ],
+                                                        'last_6_months' => [
+                                                            'label' => 'Son 6 Ay',
+                                                            'color' => 'bg-orange text-white',
+                                                        ],
+                                                        'yearly' => ['label' => 'Yıllık', 'color' => 'bg-danger'],
+                                                        'minute' => [
+                                                            'label' => '2 Dakika (Test)',
+                                                            'color' => 'bg-dark',
+                                                        ],
+                                                        default => [
+                                                            'label' => 'Belirtilmedi',
+                                                            'color' => 'bg-light text-muted',
+                                                        ],
+                                                    };
+                                                @endphp
+                                                <span class="badge {{ $filterLabel['color'] }} rounded-pill px-3">
+                                                    <i class="bi bi-calendar3 me-1"></i> {{ $filterLabel['label'] }}
+                                                </span>
                                             </td>
                                             <td>
                                                 <div class="d-flex flex-wrap gap-1">
-                                                    @foreach ($report->recipients as $email)
+                                                    @php
+                                                        $recipients = is_array($report->recipients)
+                                                            ? $report->recipients
+                                                            : explode(',', $report->recipients);
+                                                    @endphp
+                                                    @foreach (array_slice($recipients, 0, 2) as $email)
                                                         <span
                                                             class="badge border text-dark fw-normal small bg-light">{{ $email }}</span>
                                                     @endforeach
+                                                    @if (count($recipients) > 2)
+                                                        <span
+                                                            class="badge border text-primary fw-normal small bg-white">+{{ count($recipients) - 2 }}
+                                                            kişi</span>
+                                                    @endif
                                                 </div>
                                             </td>
                                             <td>
@@ -70,8 +116,7 @@
                                                 <div class="d-flex justify-content-end align-items-center gap-2">
                                                     <a href="{{ route('report-settings.edit', $report) }}"
                                                         class="btn btn-sm btn-outline-primary border-0" title="Düzenle">
-                                                        <i class="bi bi-pencil-square"></i> <span
-                                                            class="small">Düzenle</span>
+                                                        <i class="bi bi-pencil-square"></i>
                                                     </a>
 
                                                     <form action="{{ route('report-settings.destroy', $report) }}"
@@ -82,7 +127,7 @@
                                                         @method('DELETE')
                                                         <button type="submit"
                                                             class="btn btn-sm btn-outline-danger border-0" title="Sil">
-                                                            <i class="bi bi-trash3"></i> <span class="small">Sil</span>
+                                                            <i class="bi bi-trash3"></i>
                                                         </button>
                                                     </form>
                                                 </div>
@@ -90,7 +135,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="text-center py-5 text-muted small">
+                                            <td colspan="7" class="text-center py-5 text-muted small">
                                                 <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                                                 Henüz planlanmış bir rapor bulunmuyor.
                                             </td>
@@ -116,6 +161,14 @@
             overflow: hidden;
         }
 
+        .bg-soft-info {
+            background-color: rgba(13, 202, 240, 0.1);
+        }
+
+        .bg-orange {
+            background-color: #fd7e14;
+        }
+
         .table thead th {
             font-weight: 600;
             font-size: 0.75rem;
@@ -127,6 +180,10 @@
             border-bottom: 1px solid #f2f2f2;
             padding-top: 1.2rem;
             padding-bottom: 1.2rem;
+        }
+
+        .badge {
+            font-weight: 500;
         }
     </style>
 @endsection

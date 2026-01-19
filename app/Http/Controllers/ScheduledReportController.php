@@ -30,6 +30,7 @@ class ScheduledReportController extends Controller
             'report_name' => 'required|string|max:255',
             'report_class' => 'required|string',
             'frequency_preset' => 'required|string',
+            'filter_frequency' => 'required|string|in:daily,weekly,monthly,last_3_months,last_6_months,yearly,minute',
             'recipients' => 'required|string',
             'file_format' => 'required|in:excel,pdf'
         ]);
@@ -45,6 +46,7 @@ class ScheduledReportController extends Controller
             'report_name' => $request->report_name,
             'report_class' => $request->report_class,
             'frequency' => $selectedPreset['frequency'],
+            'filter_frequency' => $request->filter_frequency,
             'send_time' => $selectedPreset['time'],
             'file_format' => $request->file_format,
             'recipients' => array_map('trim', explode(',', $request->recipients)),
@@ -74,6 +76,7 @@ class ScheduledReportController extends Controller
             'report_name' => 'required|string|max:255',
             'report_class' => 'required|string',
             'frequency_preset' => 'required|string',
+            'filter_frequency' => 'required|string|in:daily,weekly,monthly,last_3_months,last_6_months,yearly,minute',
             'recipients' => 'required|string',
             'file_format' => 'required|in:excel,pdf'
         ]);
@@ -89,6 +92,7 @@ class ScheduledReportController extends Controller
             'report_name' => $request->report_name,
             'report_class' => $request->report_class,
             'frequency' => $selectedPreset['frequency'],
+            'filter_frequency' => $request->filter_frequency,
             'send_time' => $selectedPreset['time'],
             'file_format' => $request->file_format,
             // String olarak gelen mailleri temizleyip array'e çeviriyoruz

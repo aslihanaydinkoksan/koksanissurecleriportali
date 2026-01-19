@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', 'Yeni Rapor Panosu Oluştur')
 
-@section('content')
+<?php $__env->startSection('title', 'Yeni Rapor Panosu Oluştur'); ?>
+
+<?php $__env->startSection('content'); ?>
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-lg-10">
@@ -12,11 +12,11 @@
                             <h3 class="mb-0 fw-bold"><i class="bi bi-gear-wide-connected me-2"></i>Otomatik Rapor Motoru</h3>
                             <small class="opacity-75">Sistem verilerini periyodik olarak Excel/PDF formatında iletin.</small>
                         </div>
-                        <a href="{{ url()->previous() }}" class="btn btn-light btn-sm rounded-pill px-3">Geri Dön</a>
+                        <a href="<?php echo e(url()->previous()); ?>" class="btn btn-light btn-sm rounded-pill px-3">Geri Dön</a>
                     </div>
                     <div class="card-body p-5">
-                        <form action="{{ route('report-settings.store') }}" method="POST">
-                            @csrf
+                        <form action="<?php echo e(route('report-settings.store')); ?>" method="POST">
+                            <?php echo csrf_field(); ?>
                             <div class="row g-4">
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold text-secondary">Raporun Adı / Başlığı</label>
@@ -29,9 +29,9 @@
                                     <label class="form-label fw-bold text-secondary">Hangi Modül Raporlanacak?</label>
                                     <select name="report_class" class="form-select form-control-lg custom-input" required>
                                         <option value="" disabled selected>Rapor Seçiniz...</option>
-                                        @foreach ($reports as $class => $name)
-                                            <option value="{{ $class }}">{{ $name }}</option>
-                                        @endforeach
+                                        <?php $__currentLoopData = $reports; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $class => $name): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <option value="<?php echo e($class); ?>"><?php echo e($name); ?></option>
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </select>
                                 </div>
 
@@ -40,12 +40,13 @@
                                     <select name="frequency_preset" class="form-select form-control-lg custom-input"
                                         required>
                                         <option value="" disabled selected>Gönderim Zamanı...</option>
-                                        @foreach ($presets as $key => $preset)
-                                            <option value="{{ $key }}"
-                                                class="{{ $key == 'minute' ? 'text-warning' : '' }}">
-                                                {{ $preset['label'] }}
+                                        <?php $__currentLoopData = $presets; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $preset): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <option value="<?php echo e($key); ?>"
+                                                class="<?php echo e($key == 'minute' ? 'text-warning' : ''); ?>">
+                                                <?php echo e($preset['label']); ?>
+
                                             </option>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </select>
                                     <small class="text-muted">Raporun ne zaman oluşturulup mail atılacağını
                                         belirler.</small>
@@ -126,4 +127,6 @@
             letter-spacing: 1px;
         }
     </style>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/admin/reports/create.blade.php ENDPATH**/ ?>

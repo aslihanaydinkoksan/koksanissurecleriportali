@@ -13,6 +13,7 @@ class ScheduledReport extends Model
         'report_name',
         'report_class',
         'frequency',
+        'filter_frequency',
         'send_time',
         'recipients',
         'file_format',

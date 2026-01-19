@@ -11,22 +11,30 @@ class CustomerManagementReport implements ReportInterface
 {
     public function getName(): string
     {
-        return " Müşteri Ziyaretleri ve Makine Faaliyet Raporu";
+        return "Müşteri Ziyaretleri ve Makine Faaliyet Raporu";
     }
 
+    /**
+     * Rapor verilerini belirlenen frekansa göre çeker.
+     * * @param string $frequency
+     * @return Collection
+     */
     public function getData(string $frequency): Collection
     {
-        $days = match ($frequency) {
-            'daily' => 1,
-            'weekly' => 7,
-            'monthly' => 30,
-            'minute' => 2,
-            default => 7
+        // Tarih aralığını Carbon'un akıcı metodlarıyla belirliyoruz
+        $startDate = match ($frequency) {
+            'daily' => Carbon::now()->subDay(),
+            'weekly' => Carbon::now()->subDays(7),
+            'monthly' => Carbon::now()->subMonth(),
+            'last_3_months' => Carbon::now()->subMonths(3),
+            'last_6_months' => Carbon::now()->subMonths(6),
+            'yearly' => Carbon::now()->subYear(),
+            'minute' => Carbon::now()->subMinutes(2), // Test/Debug amaçlı korunmuştur
+            default => Carbon::now()->subDays(7),
         };
 
-        $startDate = Carbon::now()->subDays($days);
-
         // İlişkili modellerle birlikte (Eager Loading) veriyi çekiyoruz
+        // Performans için sadece gerekli sütunları seçmek (select) ileride düşünülebilir
         return CustomerVisit::with(['customer', 'machine', 'businessUnit'])
             ->where('created_at', '>=', $startDate)
             ->latest()
@@ -45,6 +53,10 @@ class CustomerManagementReport implements ReportInterface
                 'Ziyaret Tarihi' => $v->created_at->format('d.m.Y H:i'),
             ]);
     }
+
+    /**
+     * Ziyaret amacını kullanıcı dostu metne dönüştürür.
+     */
     private function translateVisitPurpose(?string $purpose): string
     {
         return match (strtolower($purpose ?? '')) {

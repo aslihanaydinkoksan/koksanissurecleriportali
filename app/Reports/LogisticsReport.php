@@ -16,18 +16,19 @@ class LogisticsReport implements ReportInterface
 
     public function getData(string $frequency): Collection
     {
-        // Frekansa göre tarih filtresini belirle
-        $days = match ($frequency) {
-            'daily' => 1,
-            'weekly' => 7,
-            'monthly' => 30,
-            'minute' => 1, // Test amaçlı son 24 saat
-            default => 7
+        // Tarih aralığını akıcı (fluent) Carbon metodlarıyla belirliyoruz
+        $startDate = match ($frequency) {
+            'daily' => Carbon::now()->subDay(),
+            'weekly' => Carbon::now()->subDays(7),
+            'monthly' => Carbon::now()->subMonth(),
+            'last_3_months' => Carbon::now()->subMonths(3),
+            'last_6_months' => Carbon::now()->subMonths(6),
+            'yearly' => Carbon::now()->subYear(),
+            'minute' => Carbon::now()->subMinutes(2), // Debug/Test amaçlı
+            default => Carbon::now()->subDays(7),
         };
 
-        $startDate = Carbon::now()->subDays($days);
-
-        // Tablo sütunlarınla tam uyumlu sorgu ve eşleme
+        // Eager Loading ile ilişkili verileri çekiyoruz
         return Shipment::with('businessUnit')
             ->where('created_at', '>=', $startDate)
             ->orderBy('cikis_tarihi', 'desc')
@@ -65,6 +66,7 @@ class LogisticsReport implements ReportInterface
             'Tahmini Varış'
         ];
     }
+
     private function translateType(?string $type): string
     {
         return match ($type) {
@@ -74,9 +76,6 @@ class LogisticsReport implements ReportInterface
         };
     }
 
-    /**
-     * Veritabanındaki statüleri kullanıcı dostu Türkçe metinlere çevirir.
-     */
     private function translateStatus(?string $status): string
     {
         return match ($status) {

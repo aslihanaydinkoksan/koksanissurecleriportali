@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', 'Rapor Düzenle')
 
-@section('content')
+<?php $__env->startSection('title', 'Rapor Düzenle'); ?>
+
+<?php $__env->startSection('content'); ?>
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-lg-10">
@@ -10,33 +10,34 @@
                     <div class="card-header bg-primary text-white p-4 d-flex justify-content-between align-items-center">
                         <div>
                             <h3 class="mb-0 fw-bold"><i class="bi bi-pencil-square me-2"></i>Rapor Planını Düzenle</h3>
-                            <small class="opacity-75">"{{ $report->report_name }}" yapılandırmasını güncelliyorsunuz.</small>
+                            <small class="opacity-75">"<?php echo e($report->report_name); ?>" yapılandırmasını güncelliyorsunuz.</small>
                         </div>
-                        <a href="{{ route('report-settings.index') }}" class="btn btn-light btn-sm rounded-pill px-3">İptal
+                        <a href="<?php echo e(route('report-settings.index')); ?>" class="btn btn-light btn-sm rounded-pill px-3">İptal
                             Et</a>
                     </div>
                     <div class="card-body p-5">
-                        <form action="{{ route('report-settings.update', $report) }}" method="POST">
-                            @csrf
-                            @method('PUT')
+                        <form action="<?php echo e(route('report-settings.update', $report)); ?>" method="POST">
+                            <?php echo csrf_field(); ?>
+                            <?php echo method_field('PUT'); ?>
 
                             <div class="row g-4">
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold text-secondary">Raporun Adı / Başlığı</label>
                                     <input type="text" name="report_name"
                                         class="form-control form-control-lg custom-input"
-                                        value="{{ old('report_name', $report->report_name) }}" required>
+                                        value="<?php echo e(old('report_name', $report->report_name)); ?>" required>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold text-secondary">Hangi Modül Raporlanacak?</label>
                                     <select name="report_class" class="form-select form-control-lg custom-input" required>
-                                        @foreach ($reports as $class => $name)
-                                            <option value="{{ $class }}"
-                                                {{ old('report_class', $report->report_class) == $class ? 'selected' : '' }}>
-                                                {{ $name }}
+                                        <?php $__currentLoopData = $reports; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $class => $name): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <option value="<?php echo e($class); ?>"
+                                                <?php echo e(old('report_class', $report->report_class) == $class ? 'selected' : ''); ?>>
+                                                <?php echo e($name); ?>
+
                                             </option>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </select>
                                 </div>
 
@@ -44,18 +45,20 @@
                                     <label class="form-label fw-bold text-secondary">E-Posta Gönderim Sıklığı</label>
                                     <select name="frequency_preset" class="form-select form-control-lg custom-input"
                                         required>
-                                        @foreach ($presets as $key => $preset)
-                                            @php
+                                        <?php $__currentLoopData = $presets; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $preset): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <?php
                                                 // Modeldeki frequency ve send_time değerlerini preset anahtarıyla eşleştiriyoruz
                                                 $isCurrent =
                                                     $report->frequency == $preset['frequency'] &&
                                                     $report->send_time == $preset['time'];
-                                            @endphp
-                                            <option value="{{ $key }}" {{ $isCurrent ? 'selected' : '' }}
-                                                class="{{ $key == 'minute' ? 'text-warning' : '' }}">
-                                                {{ $preset['label'] }}
+                                            ?>
+                                            <option value="<?php echo e($key); ?>" <?php echo e($isCurrent ? 'selected' : ''); ?>
+
+                                                class="<?php echo e($key == 'minute' ? 'text-warning' : ''); ?>">
+                                                <?php echo e($preset['label']); ?>
+
                                             </option>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </select>
                                     <small class="text-muted">Gönderim periyodu.</small>
                                 </div>
@@ -64,20 +67,20 @@
                                     <label class="form-label fw-bold text-secondary">Rapor Veri Kapsamı</label>
                                     <select name="filter_frequency" class="form-select form-control-lg custom-input"
                                         required>
-                                        @php
+                                        <?php
                                             $selectedFilter = old('filter_frequency', $report->filter_frequency);
-                                        @endphp
-                                        <option value="daily" {{ $selectedFilter == 'daily' ? 'selected' : '' }}>Günlük
+                                        ?>
+                                        <option value="daily" <?php echo e($selectedFilter == 'daily' ? 'selected' : ''); ?>>Günlük
                                             (Son 24 Saat)</option>
-                                        <option value="weekly" {{ $selectedFilter == 'weekly' ? 'selected' : '' }}>Haftalık
+                                        <option value="weekly" <?php echo e($selectedFilter == 'weekly' ? 'selected' : ''); ?>>Haftalık
                                             (Son 7 Gün)</option>
-                                        <option value="monthly" {{ $selectedFilter == 'monthly' ? 'selected' : '' }}>Aylık
+                                        <option value="monthly" <?php echo e($selectedFilter == 'monthly' ? 'selected' : ''); ?>>Aylık
                                             (Son 30 Gün)</option>
                                         <option value="last_3_months"
-                                            {{ $selectedFilter == 'last_3_months' ? 'selected' : '' }}>Son 3 Ay</option>
+                                            <?php echo e($selectedFilter == 'last_3_months' ? 'selected' : ''); ?>>Son 3 Ay</option>
                                         <option value="last_6_months"
-                                            {{ $selectedFilter == 'last_6_months' ? 'selected' : '' }}>Son 6 Ay</option>
-                                        <option value="yearly" {{ $selectedFilter == 'yearly' ? 'selected' : '' }}>Yıllık
+                                            <?php echo e($selectedFilter == 'last_6_months' ? 'selected' : ''); ?>>Son 6 Ay</option>
+                                        <option value="yearly" <?php echo e($selectedFilter == 'yearly' ? 'selected' : ''); ?>>Yıllık
                                             (Son 1 Yıl)</option>
                                     </select>
                                     <small class="text-muted">Tablodaki verilerin geçmişi.</small>
@@ -89,13 +92,13 @@
                                         <div class="form-check">
                                             <input class="form-check-input" type="radio" name="file_format" value="excel"
                                                 id="fmtExcel"
-                                                {{ old('file_format', $report->file_format) == 'excel' ? 'checked' : '' }}>
+                                                <?php echo e(old('file_format', $report->file_format) == 'excel' ? 'checked' : ''); ?>>
                                             <label class="form-check-label" for="fmtExcel">Excel (.xlsx)</label>
                                         </div>
                                         <div class="form-check">
                                             <input class="form-check-input" type="radio" name="file_format" value="pdf"
                                                 id="fmtPdf"
-                                                {{ old('file_format', $report->file_format) == 'pdf' ? 'checked' : '' }}>
+                                                <?php echo e(old('file_format', $report->file_format) == 'pdf' ? 'checked' : ''); ?>>
                                             <label class="form-check-label" for="fmtPdf">PDF (.pdf)</label>
                                         </div>
                                     </div>
@@ -104,7 +107,7 @@
                                 <div class="col-12">
                                     <label class="form-label fw-bold text-secondary">E-posta Alıcıları</label>
                                     <textarea name="recipients" class="form-control custom-input" rows="3"
-                                        placeholder="Her mailin arasına virgül koyun..." required>{{ old('recipients', is_array($report->recipients) ? implode(', ', $report->recipients) : $report->recipients) }}</textarea>
+                                        placeholder="Her mailin arasına virgül koyun..." required><?php echo e(old('recipients', is_array($report->recipients) ? implode(', ', $report->recipients) : $report->recipients)); ?></textarea>
                                     <small class="text-muted">Mailleri virgül (,) ile ayırın.</small>
                                 </div>
                             </div>
@@ -145,4 +148,6 @@
             letter-spacing: 1px;
         }
     </style>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/admin/reports/edit.blade.php ENDPATH**/ ?>

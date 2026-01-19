@@ -17,18 +17,21 @@ class ServicesReport implements ReportInterface
     }
 
     /**
-     * Rapor verilerini Collection içinde sekmeler halinde döndürür.
+     * Rapor verilerini belirlenen tarih frekansına göre sekmeler halinde döndürür.
      */
     public function getData(string $frequency): Collection
     {
-        $days = match ($frequency) {
-            'daily' => 1,
-            'weekly' => 7,
-            'monthly' => 30,
-            default => 7
+        // Standart frekans anahtarlarıyla tarih aralığını belirliyoruz
+        $startDate = match ($frequency) {
+            'daily' => Carbon::now()->subDay(),
+            'weekly' => Carbon::now()->subDays(7),
+            'monthly' => Carbon::now()->subMonth(),
+            'last_3_months' => Carbon::now()->subMonths(3),
+            'last_6_months' => Carbon::now()->subMonths(6),
+            'yearly' => Carbon::now()->subYear(),
+            'minute' => Carbon::now()->subMinutes(2), // Debug amaçlı
+            default => Carbon::now()->subDays(7),
         };
-
-        $startDate = Carbon::now()->subDays($days);
 
         return collect([
             'Etkinlikler ve Ziyaretler' => $this->getEventsData($startDate),
@@ -44,6 +47,7 @@ class ServicesReport implements ReportInterface
     {
         return Event::with(['businessUnit', 'expenses', 'customer', 'media'])
             ->where('created_at', '>=', $startDate)
+            ->latest()
             ->get()
             ->map(fn($e) => [
                 'ID' => 'EVT-' . $e->id,
@@ -68,6 +72,7 @@ class ServicesReport implements ReportInterface
     {
         return Booking::with(['businessUnit', 'expenses', 'bookable.customer', 'media'])
             ->where('created_at', '>=', $startDate)
+            ->latest()
             ->get()
             ->map(function ($b) {
                 $inheritedCustomer = ($b->bookable_type === Event::class)
@@ -100,6 +105,7 @@ class ServicesReport implements ReportInterface
     {
         return Travel::with(['businessUnit', 'expenses', 'bookings.media', 'customerVisits.customer', 'media'])
             ->where('created_at', '>=', $startDate)
+            ->latest()
             ->get()
             ->map(fn($t) => [
                 'ID' => 'TRV-' . $t->id,
@@ -163,7 +169,7 @@ class ServicesReport implements ReportInterface
         ];
     }
 
-    // --- YARDIMCI METOTLAR (HELPERS) ---
+    // --- YARDIMCI METOTLAR (Mimari Tutarlılık İçin Korunmuştur) ---
 
     private function formatDateRange($start, $end, $isDateOnly = false): string
     {
@@ -230,46 +236,24 @@ class ServicesReport implements ReportInterface
         return $locs->filter()->unique()->implode(', ') ?: '-';
     }
 
-    private function formatEventPurpose($purpose): string
-    {
-        if (is_array($purpose))
-            return implode(', ', $purpose);
-        return $purpose ?? '-';
-    }
-
     private function getFileNames($model): string
     {
-        if (!$model->media || $model->media->isEmpty()) {
+        if (!$model->media || $model->media->isEmpty())
             return "Dosya Yok";
-        }
-
-        return $model->media->map(function ($m) {
-            return $m->file_name . " (" . $m->getFullUrl() . ")";
-        })->implode("\n");
+        return $model->media->map(fn($m) => $m->file_name . " (" . $m->getFullUrl() . ")")->implode("\n");
     }
 
     private function getDeepFileSummary($travel): string
     {
         $allFiles = collect();
-
-        // 1. Seyahatin kendi dosyaları
         if ($travel->media) {
-            $travel->media->each(function ($m) use ($allFiles) {
-                $allFiles->push($m->file_name . " (" . $m->getFullUrl() . ")");
-            });
+            $travel->media->each(fn($m) => $allFiles->push($m->file_name . " (" . $m->getFullUrl() . ")"));
         }
-
-        // 2. Seyahate bağlı alt rezervasyonların (Booking) dosyaları
         $travel->bookings->each(function ($b) use ($allFiles) {
-            if ($b->media) {
-                $b->media->each(function ($m) use ($allFiles) {
-                    $allFiles->push($m->file_name . " (" . $m->getFullUrl() . ")");
-                });
-            }
+            if ($b->media)
+                $b->media->each(fn($m) => $allFiles->push($m->file_name . " (" . $m->getFullUrl() . ")"));
         });
-
         $result = $allFiles->unique();
-
         return $result->isEmpty() ? "Dosya Yok" : $result->implode("\n");
     }
 }
