@@ -79,6 +79,7 @@ class ProductionPlanController extends Controller
         $rules = [
             'plan_title' => 'required|string|max:255',
             'week_start_date' => 'required|date',
+            'is_important' => 'sometimes|boolean',
             'plan_details' => 'nullable|array',
             'plan_details.*.machine' => 'required_with:plan_details|string|max:255',
             'plan_details.*.product' => 'required_with:plan_details|string|max:255',
@@ -94,6 +95,7 @@ class ProductionPlanController extends Controller
         $validatedData = $request->validate($rules);
 
         $validatedData['user_id'] = Auth::id();
+        $validatedData['is_important'] = $request->boolean('is_important');
 
         // 4. Kayıt
         // ProductionPlan modelinde 'extras' => 'array' cast olduğu için
@@ -137,6 +139,7 @@ class ProductionPlanController extends Controller
         $rules = [
             'plan_title' => 'required|string|max:255',
             'week_start_date' => 'required|date',
+            'is_important' => 'sometimes|boolean',
             'plan_details' => 'nullable|array',
             'plan_details.*.machine' => 'required_with:plan_details|string|max:255',
             'plan_details.*.product' => 'required_with:plan_details|string|max:255',
@@ -149,6 +152,7 @@ class ProductionPlanController extends Controller
 
         // 3. Validasyon
         $validatedData = $request->validate($rules);
+        $validatedData['is_important'] = $request->boolean('is_important');
 
         // 4. Güncelleme
         // $validatedData içinde 'extras' dizisi de var, model cast sayesinde JSON olur.

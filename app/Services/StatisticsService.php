@@ -131,96 +131,74 @@ class StatisticsService
      */
     public function getUretimStatsData(Carbon $startDate, Carbon $endDate, string $viewLevel = 'basic', $unitId = null): StatisticsData
     {
-        $chartData = [];
         $user = Auth::user();
 
-        // Filtre Eklendi
         $productionQuery = ProductionPlan::forUser($user)
             ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId))
             ->whereBetween('week_start_date', [$startDate, $endDate])
             ->whereNotNull('week_start_date');
 
-        // 1. Haftalık Plan Sayısı
-        $weeklyPlanCounts = (clone $productionQuery)->select([DB::raw('YEARWEEK(week_start_date, 1) as year_week'), DB::raw('COUNT(*) as count')])
-            ->groupBy('year_week')->orderBy('year_week')->pluck('count', 'year_week');
-        $weeklyLabels = [];
-        $weeklyData = [];
-        $currentWeek = $startDate->copy()->startOfWeek();
-        while ($currentWeek->lte($endDate)) {
-            $yearWeek = $currentWeek->format('oW');
-            $weeklyLabels[] = $currentWeek->format('W') . '. Hafta';
-            $weeklyData[] = $weeklyPlanCounts[$yearWeek] ?? 0;
-            $currentWeek->addWeek();
-        }
-        $chartData['weekly_prod'] = ['labels' => $weeklyLabels, 'data' => $weeklyData, 'title' => '📅 Haftalık Üretim Planı Sayısı'];
+        // 1. Trend Grafiklerini Hazırla (Haftalık/Aylık)
+        $chartData = $this->prepareProductionBaseCharts($productionQuery, $startDate, $endDate, $viewLevel);
 
-        // 2. Stratejik Veriler
-        if ($viewLevel === 'full') {
-            $monthlyPlanCounts = (clone $productionQuery)->select([DB::raw('YEAR(week_start_date) as year'), DB::raw('MONTH(week_start_date) as month'), DB::raw('COUNT(*) as count')])
-                ->groupBy('year', 'month')->orderBy('year')->orderBy('month')->get();
-            $monthlyLabels = [];
-            $monthlyData = [];
-            $currentMonth = $startDate->copy()->startOfMonth();
-            while ($currentMonth->lte($endDate)) {
-                $year = $currentMonth->year;
-                $month = $currentMonth->month;
-                $count = $monthlyPlanCounts->where('year', $year)->where('month', $month)->first()?->count ?? 0;
-                $monthlyLabels[] = $currentMonth->translatedFormat('M Y');
-                $monthlyData[] = $count;
-                $currentMonth->addMonth();
-            }
-            $chartData['monthly_prod'] = ['labels' => $monthlyLabels, 'data' => $monthlyData, 'title' => '🗓️ Aylık Üretim Planı Trendi'];
-        } else {
-            $chartData['monthly_prod'] = null;
-        }
+        // 2. Detaylı Veri Aggregation (Makine ve Ürün Dağılımı)
+        $detailsData = $this->aggregateProductionDetails($productionQuery);
 
-        // 3. Filtreleme Listesi
-        $allPlansRaw = (clone $productionQuery)->whereNotNull('plan_details')->get(['plan_details']);
-        $flatDetails = [];
-        foreach ($allPlansRaw as $plan) {
-            if (is_array($plan->plan_details)) {
-                foreach ($plan->plan_details as $detail) {
-                    $machine = trim(strval($detail['machine'] ?? 'Bilinmiyor'));
-                    $product = is_numeric($detail['product'] ?? 'Bilinmiyor') ? 'Ürün-' . $detail['product'] : trim(strval($detail['product'] ?? 'Bilinmiyor'));
-                    if ($machine !== 'Bilinmiyor' && $product !== 'Bilinmiyor') {
-                        $flatDetails[] = [
-                            'machine' => $machine,
-                            'product' => $product,
-                            'quantity' => (int) ($detail['quantity'] ?? 0)
-                        ];
-                    }
-                }
-            }
-        }
+        // Verileri birleştir
+        $chartData = array_merge($chartData, $detailsData['charts']);
 
         return new StatisticsData(
             chartData: $chartData,
-            productionPlansForFiltering: $flatDetails
+            productionPlansForFiltering: $detailsData['flatDetails']
         );
     }
 
     /**
-     * HİZMET (İDARİ İŞLER) VERİLERİ
+     * HİZMET (İDARİ İŞLER) VERİLERİ - Geliştirilmiş
      */
     public function getHizmetStatsData(Carbon $startDate, Carbon $endDate, string $viewLevel = 'basic', $unitId = null): StatisticsData
     {
+        $user = Auth::user();
         $eventTypesList = $this->getEventTypes();
 
-        // Helper fonksiyonlara $unitId gönderiyoruz
+        // 1. Etkinlik Dağılımı (Mevcut)
         $pieChartData = $this->getHizmetPieChartData($startDate, $endDate, $eventTypesList, $unitId);
+
+        // 2. Masraf Analizi (YENİ)
+        // Masrafları, bağlı oldukları modelin business_unit_id'sine göre filtreleyerek çekiyoruz
+        $expenses = \App\Models\Expense::whereBetween('receipt_date', [$startDate, $endDate])
+            ->where(function ($query) use ($unitId) {
+                $query->whereHasMorph('expensable', [\App\Models\Travel::class, \App\Models\Event::class], function ($q) use ($unitId) {
+                    $q->when($unitId, fn($sq) => $sq->where('business_unit_id', $unitId));
+                });
+            })->get();
+
+        // Para birimi bazlı toplamlar (Bar Grafiği için)
+        $currencySummary = $expenses->groupBy('currency')->map(fn($group) => $group->sum('amount'));
+
+        // Kategori bazlı toplamlar (Pasta Grafiği için)
+        // NOT: Kategorileri daha şık görünmesi için normalize ediyoruz
+        $categorySummary = $expenses->groupBy('category')->map(fn($group) => $group->sum('amount'))->sortDesc();
 
         $chartData = [
             'event_type_pie' => $pieChartData,
+            'expense_currency' => [
+                'labels' => $currencySummary->keys()->all(),
+                'data' => $currencySummary->values()->all(),
+                'title' => '💰 Harcama Özeti (Para Birimi)'
+            ],
+            'expense_categories' => [
+                'labels' => $categorySummary->keys()->map(fn($c) => ucfirst($c))->all(),
+                'data' => $categorySummary->values()->all(),
+                'title' => '📂 Masraf Kategorileri Dağılımı'
+            ]
         ];
 
         $eventsForFiltering = $this->getHizmetEventFilterData($startDate, $endDate, $eventTypesList, $unitId);
 
         return new StatisticsData(
             chartData: $chartData,
-            eventsForFiltering: $eventsForFiltering,
-            assignmentsForFiltering: [],
-            vehiclesForFiltering: [],
-            monthlyLabels: []
+            eventsForFiltering: $eventsForFiltering
         );
     }
 
@@ -341,6 +319,104 @@ class StatisticsService
     }
 
     // --- YARDIMCI METODLAR ---
+    /**
+     * Üretim Planı Detaylarını (JSON) Kümeleyen Yardımcı Metod
+     */
+    private function aggregateProductionDetails($query): array
+    {
+        $allPlansRaw = (clone $query)->whereNotNull('plan_details')->get(['plan_details']);
+        $flatDetails = [];
+
+        foreach ($allPlansRaw as $plan) {
+            if (is_array($plan->plan_details)) {
+                foreach ($plan->plan_details as $detail) {
+                    $machine = trim(strval($detail['machine'] ?? 'Bilinmiyor'));
+                    $product = is_numeric($detail['product'] ?? 'Bilinmiyor') ? 'Ürün-' . $detail['product'] : trim(strval($detail['product'] ?? 'Bilinmiyor'));
+                    // Miktar yoksa 1 kabul et (Adet sayımı için)
+                    $qty = isset($detail['quantity']) && is_numeric($detail['quantity']) ? (int) $detail['quantity'] : 1;
+
+                    if ($machine !== 'Bilinmiyor' || $product !== 'Bilinmiyor') {
+                        $flatDetails[] = [
+                            'machine' => $machine,
+                            'product' => $product,
+                            'quantity' => $qty
+                        ];
+                    }
+                }
+            }
+        }
+
+        $col = collect($flatDetails);
+
+        // Makine Kullanımı
+        $machineUsage = $col->groupBy('machine')->map(fn($g) => $g->sum('quantity'))->sortDesc()->take(10);
+
+        // Ürün Dağılımı
+        $productDist = $col->groupBy('product')->map(fn($g) => $g->sum('quantity'))->sortDesc()->take(10);
+
+        return [
+            'flatDetails' => $flatDetails,
+            'charts' => [
+                'machine_usage' => [
+                    'labels' => $machineUsage->keys()->all(),
+                    'data' => $machineUsage->values()->all(),
+                    'title' => '⚙️ Makine Kullanım Yoğunluğu'
+                ],
+                'product_dist' => [
+                    'labels' => $productDist->keys()->all(),
+                    'data' => $productDist->values()->all(),
+                    'title' => '📊 Üretilen Ürün Dağılımı'
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * Haftalık ve Aylık Trend Grafiklerini Hazırlayan Eksik Metod
+     */
+    private function prepareProductionBaseCharts($query, $startDate, $endDate, $viewLevel): array
+    {
+        $charts = [];
+
+        // Haftalık Plan Sayısı
+        $weeklyCounts = (clone $query)->select([
+            DB::raw('YEARWEEK(week_start_date, 1) as year_week'),
+            DB::raw('COUNT(*) as count')
+        ])->groupBy('year_week')->orderBy('year_week')->pluck('count', 'year_week');
+
+        $wLabels = [];
+        $wData = [];
+        $curr = $startDate->copy()->startOfWeek();
+        while ($curr->lte($endDate)) {
+            $key = $curr->format('oW');
+            $wLabels[] = $curr->format('W') . '. Hafta';
+            $wData[] = $weeklyCounts[$key] ?? 0;
+            $curr->addWeek();
+        }
+        $charts['weekly_prod'] = ['labels' => $wLabels, 'data' => $wData, 'title' => '📅 Haftalık Üretim Planı Sayısı'];
+
+        // Aylık Trend (Full View)
+        if ($viewLevel === 'full') {
+            $monthlyCounts = (clone $query)->select([
+                DB::raw('YEAR(week_start_date) as year'),
+                DB::raw('MONTH(week_start_date) as month'),
+                DB::raw('COUNT(*) as count')
+            ])->groupBy('year', 'month')->get();
+
+            $mLabels = [];
+            $mData = [];
+            $currM = $startDate->copy()->startOfMonth();
+            while ($currM->lte($endDate)) {
+                $count = $monthlyCounts->where('year', $currM->year)->where('month', $currM->month)->first()?->count ?? 0;
+                $mLabels[] = $currM->translatedFormat('M Y');
+                $mData[] = $count;
+                $currM->addMonth();
+            }
+            $charts['monthly_prod'] = ['labels' => $mLabels, 'data' => $mData, 'title' => '🗓️ Aylık Üretim Trendi'];
+        }
+
+        return $charts;
+    }
 
     public function getHizmetPieChartData($startDate, $endDate, array $eventTypesList, $unitId = null): array
     {
@@ -552,6 +628,22 @@ class StatisticsService
             ->map(fn($group) => $group->sum('count'));
 
         $chartData['pie'] = ['labels' => $vehicleTypeData->keys()->map(fn($tip) => $tip ?? 'Bilinmiyor')->all(), 'data' => $vehicleTypeData->values()->all(), 'title' => 'Araç Tipi Dağılımı'];
+        $cargoData = (clone $shipmentQuery)
+            ->select(['kargo_icerigi', DB::raw('COUNT(*) as count')])
+            ->whereNotNull('kargo_icerigi')
+            ->groupBy('kargo_icerigi')
+            ->get()
+            // Daha önce tanımladığın normalizasyon metodunu kullanıyoruz
+            ->groupBy(fn($item) => $this->normalizeCargoContent($item->kargo_icerigi))
+            ->map(fn($group) => $group->sum('count'))
+            ->sortDesc()
+            ->take(10); // İlk 10 içeriği getir
+
+        $chartData['cargo_pie'] = [
+            'labels' => $cargoData->keys()->all(),
+            'data' => $cargoData->values()->all(),
+            'title' => '📦 Kargo İçeriği Dağılımı'
+        ];
 
         return $chartData;
     }

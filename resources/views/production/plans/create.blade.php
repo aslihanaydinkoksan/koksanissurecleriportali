@@ -100,6 +100,16 @@
             transform: scale(1.05);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
+
+        /* Önemli Switch Özel Tasarımı */
+        .custom-switch .form-check-input:checked {
+            background-color: #ffc107;
+            border-color: #ffc107;
+        }
+
+        .custom-switch .form-check-input:focus {
+            box-shadow: 0 0 0 0.25rem rgba(255, 193, 7, 0.25);
+        }
     </style>
 @endpush
 
@@ -130,6 +140,18 @@
                                         @error('plan_title')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
+                                    </div>
+                                    <div class="mb-4">
+                                        <div class="form-check form-switch custom-switch-lg">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="is_important"
+                                                name="is_important" value="1"
+                                                {{ old('is_important') ? 'checked' : '' }}>
+                                            <label class="form-check-label fw-bold text-primary" for="is_important">
+                                                <i class="fas fa-exclamation-circle me-1"></i> Bu Plan Önemli / Öncelikli
+                                            </label>
+                                        </div>
+                                        <small class="text-muted ms-5">İşaretlenirse panolarda ve takvimde
+                                            vurgulanır.</small>
                                     </div>
                                     <div class="mb-3">
                                         <label for="week_start_date" class="form-label">Hafta Başlangıç Tarihi (*)</label>

@@ -468,70 +468,95 @@
                                 </div>
                                 <div class="card-body bg-light bg-opacity-25">
                                     <form action="{{ route('service.events.bookings.store', $event->id) }}"
-                                        method="POST" enctype="multipart/form-data" autocomplete="off">
+                                        method="POST" enctype="multipart/form-data">
                                         @csrf
+                                        {{-- Hata Mesajlarını Göster --}}
+                                        @if ($errors->any())
+                                            <div class="alert alert-danger p-2 small mb-3">
+                                                <ul class="mb-0">
+                                                    @foreach ($errors->all() as $error)
+                                                        <li>{{ $error }}</li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        @endif
 
                                         <div class="row g-3 align-items-end">
-                                            {{-- 1. Satır: Temel Bilgiler --}}
                                             <div class="col-md-2">
-                                                <label class="form-label small fw-bold text-muted">Tip (*)</label>
-                                                <select name="type" class="form-select" required>
+                                                <label class="form-label small fw-bold">Tip (*)</label>
+                                                <select name="type" id="booking_type" class="form-select" required>
                                                     <option value="flight">Uçak</option>
                                                     <option value="hotel">Otel</option>
                                                     <option value="bus">Otobüs/Transfer</option>
+                                                    <option value="other">Diğer</option>
                                                 </select>
                                             </div>
 
                                             <div class="col-md-3">
-                                                <label class="form-label small fw-bold text-muted">Sağlayıcı (*)</label>
+                                                <label class="form-label small fw-bold">Sağlayıcı (*)</label>
                                                 <input type="text" name="provider_name" class="form-control"
                                                     placeholder="Örn: THY, Hilton" required>
                                             </div>
 
-                                            <div class="col-md-2">
-                                                <label class="form-label small fw-bold text-muted">Rezervasyon Kodu</label>
-                                                <input type="text" name="confirmation_code" class="form-control"
-                                                    placeholder="PNR / Kod">
+                                            {{-- Ulaşım İçin Kalkış/Varış (Flight/Bus) --}}
+                                            <div class="col-md-2 transport-fields">
+                                                <label class="form-label small fw-bold">Kalkış</label>
+                                                <input type="text" name="origin" class="form-control"
+                                                    placeholder="Şehir/Havalimanı">
+                                            </div>
+                                            <div class="col-md-2 transport-fields">
+                                                <label class="form-label small fw-bold">Varış</label>
+                                                <input type="text" name="destination" class="form-control"
+                                                    placeholder="Hedef">
                                             </div>
 
-                                            <div class="col-md-3">
-                                                <label class="form-label small fw-bold text-muted">Başlangıç Tarihi
-                                                    (*)</label>
+                                            {{-- Konaklama İçin Lokasyon (Hotel) --}}
+                                            <div class="col-md-4 hotel-fields d-none">
+                                                <label class="form-label small fw-bold">Otel Lokasyonu</label>
+                                                <input type="text" name="location" class="form-control"
+                                                    placeholder="Adres/Bölge">
+                                            </div>
+
+                                            <div class="col-md-2">
+                                                <label class="form-label small fw-bold">Rez. Kodu</label>
+                                                <input type="text" name="confirmation_code" class="form-control">
+                                            </div>
+
+                                            <div class="col-md-2">
+                                                <label class="form-label small fw-bold">Başlangıç (*)</label>
                                                 <input type="datetime-local" name="start_datetime" class="form-control"
                                                     required>
                                             </div>
 
                                             <div class="col-md-2">
-                                                <label class="form-label small fw-bold text-muted">Tutar</label>
-                                                <div class="input-group">
-                                                    <input type="number" step="0.01" name="cost"
-                                                        class="form-control" placeholder="0.00">
-                                                    <span class="input-group-text bg-white">₺</span>
-                                                </div>
-                                            </div>
-
-                                            {{-- 2. Satır: Detaylar ve Buton --}}
-                                            <div class="col-md-3">
-                                                <label class="form-label small fw-bold text-muted">Bitiş Tarihi</label>
+                                                <label class="form-label small fw-bold">Bitiş</label>
                                                 <input type="datetime-local" name="end_datetime" class="form-control">
                                             </div>
 
-                                            <div class="col-md-3">
-                                                <label class="form-label small fw-bold text-muted">Dosya
-                                                    (Bilet/Voucher)</label>
-                                                <input type="file" name="files[]" class="form-control" multiple>
-                                            </div>
-
-                                            <div class="col-md-4">
-                                                <label class="form-label small fw-bold text-muted">Notlar</label>
-                                                <input type="text" name="notes" class="form-control"
-                                                    placeholder="Örn: Bagaj hakkı, oda tipi vb.">
+                                            <div class="col-md-2">
+                                                <label class="form-label small fw-bold">Tutar</label>
+                                                <div class="input-group">
+                                                    <input type="number" step="0.01" name="cost"
+                                                        class="form-control">
+                                                    <span class="input-group-text">₺</span>
+                                                </div>
                                             </div>
 
                                             <div class="col-md-2">
-                                                <button type="submit" class="btn btn-primary w-100 fw-bold">
-                                                    <i class="fa-solid fa-save me-1"></i> Kaydet
-                                                </button>
+                                                <label class="form-label small fw-bold">Dosya</label>
+                                                {{-- DÜZELTİLDİ: booking_files[] --}}
+                                                <input type="file" name="booking_files[]" class="form-control"
+                                                    multiple>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <label class="form-label small fw-bold">Notlar</label>
+                                                <input type="text" name="notes" class="form-control">
+                                            </div>
+
+                                            <div class="col-md-2">
+                                                <button type="submit"
+                                                    class="btn btn-primary w-100 fw-bold">Kaydet</button>
                                             </div>
                                         </div>
                                     </form>
@@ -654,3 +679,30 @@
         </div>
     </div>
 @endsection
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const typeSelect = document.getElementById('booking_type');
+            const transportDivs = document.querySelectorAll('.d-transport');
+            const hotelDivs = document.querySelectorAll('.d-hotel');
+
+            function updateFields() {
+                const val = typeSelect.value;
+
+                // Tüm özel alanları gizle
+                transportDivs.forEach(el => el.classList.add('d-none'));
+                hotelDivs.forEach(el => el.classList.add('d-none'));
+
+                // Seçime göre göster
+                if (val === 'flight' || val === 'bus') {
+                    transportDivs.forEach(el => el.classList.remove('d-none'));
+                } else if (val === 'hotel') {
+                    hotelDivs.forEach(el => el.classList.remove('d-none'));
+                }
+            }
+
+            typeSelect.addEventListener('change', updateFields);
+            updateFields(); // Sayfa açılışında tetikle
+        });
+    </script>
+@endpush

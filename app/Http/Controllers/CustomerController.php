@@ -145,20 +145,20 @@ class CustomerController extends Controller
      */
     public function destroy(Customer $customer): RedirectResponse
     {
-        // Yetki kontrolü (gerekirse) eklenebilir
-        // $this->authorize('delete', $customer);
+        $customerName = $customer->name;
 
         try {
-            $customer->delete(); // Bu artık soft delete yapacak
 
+            $customer->delete();
             return redirect()->route('customers.index')
-                ->with('success', "'{$customer->name}' isimli müşteri başarıyla silindi (arşivlendi).");
+                ->with('success', "'{$customerName}' isimli müşteri kaydı arşive taşındı.");
+
         } catch (\Exception $e) {
 
-            // Eğer müşteriye bağlı (ve silinemeyen) kayıtlar varsa
-            // ve bir foreign key hatası alınırsa burası çalışır.
-            return redirect()->route('customers.show', $customer)
-                ->with('error', 'Müşteri silinirken bir hata oluştu: ' . $e->getMessage());
+            \Log::error("Müşteri Silme Hatası: " . $e->getMessage());
+
+            return redirect()->route('customers.index')
+                ->with('error', "Müşteri silinirken bir teknik hata oluştu. Bağlı makineler veya aktif lojistik kayıtları silmeyi engelliyor olabilir.");
         }
     }
     public function getMachinesJson(Customer $customer)

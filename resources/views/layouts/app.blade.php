@@ -830,7 +830,12 @@
                                                 await Swal.fire('Silindi!',
                                                     'Kayıt başarıyla silindi.',
                                                     'success');
-                                                window.location.reload();
+                                                if (response.url && response.url !== window
+                                                    .location.href) {
+                                                    window.location.href = response.url;
+                                                } else {
+                                                    window.location.reload();
+                                                }
                                             }
                                         }
                                     } else {
