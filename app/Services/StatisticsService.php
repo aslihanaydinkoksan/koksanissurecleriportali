@@ -63,6 +63,12 @@ class StatisticsService
                     ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId))
                     ->whereBetween('planned_start_date', [$startDate, $endDate])
                     ->count();
+            } elseif ($slug === 'ulastirma') {
+                // Ulaştırma birimi için Araç Atamaları (VehicleAssignment) sayısını alıyoruz
+                $count = VehicleAssignment::forUser($user)
+                    ->when($unitId, fn($q) => $q->where('business_unit_id', $unitId))
+                    ->whereBetween('start_time', [$startDate, $endDate])
+                    ->count();
             }
 
             $labels[] = $dept->name;

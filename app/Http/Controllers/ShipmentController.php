@@ -39,6 +39,7 @@ class ShipmentController extends Controller
             'sofor_adi' => 'nullable|string|max:255',
             'imo_numarasi' => 'required_if:arac_tipi,gemi|nullable|string|max:255',
             'gemi_adi' => 'required_if:arac_tipi,gemi|nullable|string|max:255',
+            'is_important' => 'nullable|boolean',
             'kalkis_limani' => 'required_if:arac_tipi,gemi|nullable|string|max:255',
             'varis_limani' => 'required_if:arac_tipi,gemi|nullable|string|max:255',
             'kalkis_noktasi' => 'required_if:arac_tipi,tır,kamyon|nullable|string|max:255',
@@ -55,6 +56,8 @@ class ShipmentController extends Controller
         $rules = array_merge($rules, Shipment::getDynamicValidationRules());
         $validatedData = $request->validate($rules);
         $validatedData['user_id'] = Auth::id();
+        $validatedData['business_unit_id'] = session('active_unit_id') ?? Auth::user()->businessUnits->first()?->id;
+        $validatedData['is_important'] = $request->has('is_important');
 
         // Veri bütünlüğü için Transaction başlatıyoruz
         DB::transaction(function () use ($request, $validatedData) {

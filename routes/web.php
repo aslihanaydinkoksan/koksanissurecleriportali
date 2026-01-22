@@ -80,6 +80,9 @@ Route::middleware(['auth'])->group(function () {
     // --- SİSTEM KONTROLLERİ ---
     Route::get('/system/check-updates', [SystemController::class, 'checkUpdates'])->name('system.check_updates');
     Route::get('/statistics', [StatisticsController::class, 'index'])->name('statistics.index');
+    Route::get('/statistics/finance', [App\Http\Controllers\StatisticsController::class, 'financeDashboard'])
+        ->name('statistics.finance')
+        ->middleware(['auth', 'role:admin|yonetici']);
 
     // --- BİLDİRİMLER ---
     Route::prefix('notifications')->name('notifications.')->group(function () {

@@ -297,51 +297,39 @@
 
                             {{-- SİSTEM ROLÜ --}}
                             <div class="mb-5">
-                                <label class="form-label text-muted fw-bold d-block">
-                                    <i class="fas fa-shield-alt text-primary me-1"></i> Sistem Erişim Seviyesi (Yetki)
+                                <label class="form-label text-muted fw-bold ms-1 d-block">
+                                    <i class="fas fa-shield-alt text-primary me-1"></i> Yetki Seviyesi
                                 </label>
                                 <div class="d-flex flex-wrap">
-                                    @foreach ($roles as $role)
-                                        @php
-                                            // Filtreleme: Departman bazlı eski rolleri gösterme (Sadece temiz roller)
-                                            $ignoredRoles = [
-                                                'lojistik_personeli',
-                                                'uretim_personeli',
-                                                'bakim_personeli',
-                                                'idari_isler_personeli',
-                                            ];
-                                            if (in_array($role->name, $ignoredRoles)) {
-                                                continue;
-                                            }
-                                        @endphp
-                                        <div>
+                                    @php
+                                        // Sadece ana rollerimizi listeliyoruz
+                                        $mainRoles = ['admin', 'yonetici', 'user'];
+                                    @endphp
+
+                                    @foreach ($roles->whereIn('name', $mainRoles) as $role)
+                                        <div class="me-2 mb-2">
                                             <input type="radio" name="role" id="role_{{ $role->id }}"
                                                 value="{{ $role->name }}" class="role-radio"
-                                                {{ old('role', 'personel') == $role->name ? 'checked' : '' }}>
+                                                {{ old('role', $user->roles->first()->name ?? 'user') == $role->name ? 'checked' : '' }}>
                                             <label for="role_{{ $role->id }}" class="role-label">
                                                 {{ __('roles.' . $role->name) }}
                                             </label>
                                         </div>
                                     @endforeach
                                 </div>
-                                <div class="alert alert-light border-0 small mt-3 text-secondary"
-                                    style="background: #f8fafc">
-                                    <b>Rol Ne İşe Yarar?</b> Kullanıcının sistem üzerinde kayıt silme, düzenleme veya onay
-                                    verme gibi aksiyon yetkilerini belirler. Departman kısıtlaması için yukarıdaki listeyi
-                                    kullanın.
-                                </div>
-                            </div>
-
-                            <div class="d-grid">
-                                <button type="submit" class="btn-magic py-3 shadow">
-                                    ✨ Kullanıcı Kaydını Tamamla
-                                </button>
-                            </div>
-                        </form>
+                            </div>iv>
                     </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn-magic py-3 shadow">
+                            ✨ Kullanıcı Kaydını Tamamla
+                        </button>
+                    </div>
+                    </form>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 @endsection
 

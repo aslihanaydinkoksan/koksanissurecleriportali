@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', $pageTitle)
 
-@push('styles')
+<?php $__env->startSection('title', $pageTitle); ?>
+
+<?php $__env->startPush('styles'); ?>
     <style>
         /* === 1. SAYFA ARKA PLANI === */
         #app>main.py-4 {
@@ -135,68 +135,68 @@
             font-weight: 800;
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="dashboard-wrapper">
-        {{-- Page Header --}}
+        
         <div class="page-header">
             <div class="row align-items-center">
                 <div class="col-md-8">
                     <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
-                        <span class="unit-badge"><i class="fa-solid fa-industry me-1"></i> {{ $activeUnitName }}</span>
+                        <span class="unit-badge"><i class="fa-solid fa-industry me-1"></i> <?php echo e($activeUnitName); ?></span>
                         <span class="role-badge"><i class="fa-solid fa-user-tie me-1"></i>
-                            {{ $viewLevel === 'full' ? 'Yönetici Görünümü' : 'Personel Görünümü' }}</span>
+                            <?php echo e($viewLevel === 'full' ? 'Yönetici Görünümü' : 'Personel Görünümü'); ?></span>
                     </div>
-                    <h1 class="page-title">{{ $pageTitle }}</h1>
-                    @if ($departmentSlug !== 'genel')
+                    <h1 class="page-title"><?php echo e($pageTitle); ?></h1>
+                    <?php if($departmentSlug !== 'genel'): ?>
                         <div class="mt-2">
-                            <span class="dept-badge"><i class="fa-solid fa-building me-1"></i> {{ $departmentName }}</span>
+                            <span class="dept-badge"><i class="fa-solid fa-building me-1"></i> <?php echo e($departmentName); ?></span>
                         </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
                 <div class="col-md-4 text-md-end mt-4 mt-md-0">
-                    <a href="{{ route('home') }}" class="btn btn-light rounded-pill px-4 shadow-sm">
+                    <a href="<?php echo e(route('home')); ?>" class="btn btn-light rounded-pill px-4 shadow-sm">
                         <i class="fa-solid fa-arrow-left me-2"></i> Takvime Dön
                     </a>
                 </div>
             </div>
         </div>
 
-        {{-- Filtre Paneli --}}
+        
         <div
-            class="{{ $isManager || $isSuperUser || (isset($allowedDepartments) && $allowedDepartments->count() > 1) ? 'admin-filter-panel' : 'modern-card p-4' }}">
-            <form method="GET" action="{{ route('statistics.index') }}" id="filterForm">
+            class="<?php echo e($isManager || $isSuperUser || (isset($allowedDepartments) && $allowedDepartments->count() > 1) ? 'admin-filter-panel' : 'modern-card p-4'); ?>">
+            <form method="GET" action="<?php echo e(route('statistics.index')); ?>" id="filterForm">
                 <div class="row g-3 align-items-end">
-                    @if ($isManager || $isSuperUser || (isset($allowedDepartments) && $allowedDepartments->count() > 1))
+                    <?php if($isManager || $isSuperUser || (isset($allowedDepartments) && $allowedDepartments->count() > 1)): ?>
                         <div class="col-md-3">
                             <label class="small fw-bold text-muted mb-1">Departman Seçimi</label>
                             <select name="target_dept" id="deptSelect" class="form-select border-0 shadow-sm rounded-3">
-                                @if ($isSuperUser)
-                                    <option value="genel" {{ $departmentSlug == 'genel' ? 'selected' : '' }}>📊 Genel Bakış
+                                <?php if($isSuperUser): ?>
+                                    <option value="genel" <?php echo e($departmentSlug == 'genel' ? 'selected' : ''); ?>>📊 Genel Bakış
                                     </option>
-                                @endif
-                                @foreach ($allowedDepartments as $dept)
-                                    <option value="{{ $dept->slug }}"
-                                        {{ $departmentSlug == $dept->slug ? 'selected' : '' }}>{{ $dept->name }}</option>
-                                @endforeach
+                                <?php endif; ?>
+                                <?php $__currentLoopData = $allowedDepartments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dept): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($dept->slug); ?>"
+                                        <?php echo e($departmentSlug == $dept->slug ? 'selected' : ''); ?>><?php echo e($dept->name); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
-                    @else
-                        <input type="hidden" name="target_dept" value="{{ $departmentSlug }}">
-                    @endif
+                    <?php else: ?>
+                        <input type="hidden" name="target_dept" value="<?php echo e($departmentSlug); ?>">
+                    <?php endif; ?>
                     <div class="col-md-3">
                         <label class="small fw-bold text-muted mb-1">Başlangıç Tarihi</label>
                         <input type="date" name="date_from" id="dateFrom"
-                            class="form-control border-0 shadow-sm rounded-3" value="{{ $filters['date_from'] }}">
+                            class="form-control border-0 shadow-sm rounded-3" value="<?php echo e($filters['date_from']); ?>">
                     </div>
                     <div class="col-md-3">
                         <label class="small fw-bold text-muted mb-1">Bitiş Tarihi</label>
                         <input type="date" name="date_to" id="dateTo"
-                            class="form-control border-0 shadow-sm rounded-3" value="{{ $filters['date_to'] }}">
+                            class="form-control border-0 shadow-sm rounded-3" value="<?php echo e($filters['date_to']); ?>">
                     </div>
                     <div class="col-md-3">
-                        <a href="{{ route('statistics.index') }}"
+                        <a href="<?php echo e(route('statistics.index')); ?>"
                             class="btn btn-outline-secondary w-100 rounded-3 shadow-sm">
                             <i class="fa-solid fa-rotate-right me-2"></i> Sıfırla
                         </a>
@@ -205,13 +205,13 @@
             </form>
         </div>
 
-        {{-- Gizli Veri Taşıyıcı --}}
-        <div id="stats-data-container" style="display: none;" data-chart-data='@json($chartData ?? [])'
-            data-department-slug="{{ $departmentSlug ?? '' }}">
+        
+        <div id="stats-data-container" style="display: none;" data-chart-data='<?php echo json_encode($chartData ?? [], 15, 512) ?>'
+            data-department-slug="<?php echo e($departmentSlug ?? ''); ?>">
         </div>
 
-        {{-- Grafik Alanları --}}
-        @if ($departmentSlug === 'genel')
+        
+        <?php if($departmentSlug === 'genel'): ?>
             <div class="row g-4">
                 <div class="col-lg-8">
                     <div class="chart-container">
@@ -223,17 +223,18 @@
                     <div class="stat-card mb-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                         <div class="stat-label">Toplam Kayıt</div>
                         <div class="stat-value">
-                            {{ isset($chartData['departmentSummary']['data']) ? array_sum($chartData['departmentSummary']['data']) : 0 }}
+                            <?php echo e(isset($chartData['departmentSummary']['data']) ? array_sum($chartData['departmentSummary']['data']) : 0); ?>
+
                         </div>
                     </div>
                     <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
                         <div class="stat-label">Rapor Aralığı</div>
-                        <div class="stat-value" style="font-size: 1.1rem;">{{ $filters['date_from'] }} /
-                            {{ $filters['date_to'] }}</div>
+                        <div class="stat-value" style="font-size: 1.1rem;"><?php echo e($filters['date_from']); ?> /
+                            <?php echo e($filters['date_to']); ?></div>
                     </div>
                 </div>
             </div>
-        @elseif ($departmentSlug === 'lojistik')
+        <?php elseif($departmentSlug === 'lojistik'): ?>
             <div class="row g-4 mb-4">
                 <div class="col-md-6">
                     <div class="chart-container">
@@ -262,7 +263,7 @@
                     </div>
                 </div>
             </div>
-        @elseif ($departmentSlug === 'uretim')
+        <?php elseif($departmentSlug === 'uretim'): ?>
             <div class="row g-4 mb-4">
                 <div class="col-lg-6">
                     <div class="chart-container">
@@ -285,7 +286,7 @@
                     </div>
                 </div>
             </div>
-        @elseif ($departmentSlug === 'hizmet')
+        <?php elseif($departmentSlug === 'hizmet'): ?>
             <div class="row g-4 mb-4">
                 <div class="col-lg-6">
                     <div class="chart-container">
@@ -313,14 +314,14 @@
                             <h5>Finansal İçgörü</h5>
                             <p class="mb-0">Masraf verileri, onaylanmış seyahat ve etkinlik planlarından polimorfik
                                 olarak çekilmektedir.</p>
-                            <a href="{{ route('statistics.finance') }}" class="btn btn-success shadow-sm">
+                            <a href="<?php echo e(route('statistics.finance')); ?>" class="btn btn-success shadow-sm">
                                 <i class="fa-solid fa-file-invoice-dollar me-2"></i> Finansal Dashboard
                             </a>
                         </div>
                     </div>
                 </div>
             </div>
-        @elseif ($departmentSlug === 'ulastirma')
+        <?php elseif($departmentSlug === 'ulastirma'): ?>
             <div class="row g-4 mb-4">
                 <div class="col-lg-6">
                     <div class="chart-container">
@@ -329,15 +330,15 @@
                     </div>
                 </div>
                 <div class="col-lg-6">
-                    @if (!empty($chartData['top_vehicles']))
+                    <?php if(!empty($chartData['top_vehicles'])): ?>
                         <div class="chart-container">
                             <div class="chart-header">🚗 En Çok Görev Yapan Araçlar</div>
                             <div id="top-vehicles-chart"></div>
                         </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
-        @elseif ($departmentSlug === 'bakim')
+        <?php elseif($departmentSlug === 'bakim'): ?>
             <div class="row g-4 mb-4">
                 <div class="col-12">
                     <div class="chart-container">
@@ -348,27 +349,27 @@
             </div>
             <div class="row g-4">
                 <div class="col-md-6">
-                    @if (!empty($chartData['top_assets']))
+                    <?php if(!empty($chartData['top_assets'])): ?>
                         <div class="chart-container">
                             <div class="chart-header">⚠️ En Sık Bakım Yapılan Varlıklar</div>
                             <div id="top-assets-chart"></div>
                         </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
                 <div class="col-md-6">
-                    @if (!empty($chartData['monthly_maintenance']))
+                    <?php if(!empty($chartData['monthly_maintenance'])): ?>
                         <div class="chart-container">
                             <div class="chart-header">📅 Aylık Bakım Yükü</div>
                             <div id="monthly-maintenance-chart"></div>
                         </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
-        @endif
+        <?php endif; ?>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('page_scripts')
+<?php $__env->startSection('page_scripts'); ?>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -590,4 +591,6 @@
             autoSubmit('dateTo');
         });
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/statistics/index.blade.php ENDPATH**/ ?>

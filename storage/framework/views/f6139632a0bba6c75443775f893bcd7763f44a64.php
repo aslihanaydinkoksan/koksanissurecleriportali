@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', 'Yeni Etkinlik Oluştur')
 
-@push('styles')
+<?php $__env->startSection('title', 'Yeni Etkinlik Oluştur'); ?>
+
+<?php $__env->startPush('styles'); ?>
     <style>
         /* Ana içerik alanına (main) animasyonlu arka planı uygula */
         #app>main.py-4 {
@@ -90,70 +90,92 @@
             font-size: 0.9rem;
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
-    @if ($errors->any())
+<?php $__env->startSection('content'); ?>
+    <?php if($errors->any()): ?>
         <div class="alert alert-danger">
             <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
+                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <li><?php echo e($error); ?></li>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </ul>
         </div>
-    @endif
+    <?php endif; ?>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-10">
-                {{-- CSS Sınıfı güncellendi --}}
+                
                 <div class="card create-event-card">
-                    {{-- Başlık güncellendi --}}
-                    <div class="card-header h4 bg-transparent border-0 pt-4">{{ __('Yeni Etkinlik Oluştur') }}</div>
+                    
+                    <div class="card-header h4 bg-transparent border-0 pt-4"><?php echo e(__('Yeni Etkinlik Oluştur')); ?></div>
                     <div class="card-body p-4">
-                        @if (session('success'))
-                            <div class="alert alert-success" role="alert">{{ session('success') }}</div>
-                        @endif
+                        <?php if(session('success')): ?>
+                            <div class="alert alert-success" role="alert"><?php echo e(session('success')); ?></div>
+                        <?php endif; ?>
 
-                        {{-- Form action güncellendi --}}
-                        <form method="POST" action="{{ route('service.events.store') }}" enctype="multipart/form-data">
-                            @csrf
+                        
+                        <form method="POST" action="<?php echo e(route('service.events.store')); ?>" enctype="multipart/form-data">
+                            <?php echo csrf_field(); ?>
                             <div class="row">
-                                {{-- Sol Sütun (Ana Etkinlik Bilgileri) --}}
+                                
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="title" class="form-label">Etkinlik Başlığı (*)</label>
                                         <div class="form-check form-switch float-end">
                                             <input class="form-check-input" type="checkbox" role="switch" id="is_important"
                                                 name="is_important" value="1"
-                                                {{ old('is_important') ? 'checked' : '' }}>
+                                                <?php echo e(old('is_important') ? 'checked' : ''); ?>>
                                             <label class="form-check-label text-danger fw-bold" for="is_important">
                                                 <i class="bi bi-exclamation-circle-fill"></i> Önemli
                                             </label>
                                         </div>
-                                        <input type="text" class="form-control @error('title') is-invalid @enderror"
-                                            id="title" name="title" value="{{ old('title') }}" required>
-                                        @error('title')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                        <input type="text" class="form-control <?php $__errorArgs = ['title'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                            id="title" name="title" value="<?php echo e(old('title')); ?>" required>
+                                        <?php $__errorArgs = ['title'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                            <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                     </div>
 
                                     <div class="mb-3">
                                         <label for="event_type" class="form-label">Etkinlik Tipi (*)</label>
-                                        {{-- Controller'dan gelen $eventTypes değişkenini kullanıyoruz --}}
+                                        
                                         <select name="event_type" id="event_type"
-                                            class="form-select @error('event_type') is-invalid @enderror" required>
+                                            class="form-select <?php $__errorArgs = ['event_type'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" required>
                                             <option value="">Seçiniz...</option>
-                                            @foreach ($eventTypes as $key => $value)
-                                                <option value="{{ $key }}"
-                                                    @if (old('event_type') == $key) selected @endif>{{ $value }}
+                                            <?php $__currentLoopData = $eventTypes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $value): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <option value="<?php echo e($key); ?>"
+                                                    <?php if(old('event_type') == $key): ?> selected <?php endif; ?>><?php echo e($value); ?>
+
                                                 </option>
-                                            @endforeach
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </select>
                                         <div id="crm-details-wrapper" style="display: none;">
                                             <hr class="my-4">
 
                                             <div class="row">
-                                                {{-- SEYAHAT SEÇİMİ (OPSİYONEL) --}}
+                                                
                                                 <div class="col-md-6">
                                                     <div class="mb-3">
                                                         <label for="travel_id" class="form-label">Bağlı Olduğu Seyahat
@@ -161,140 +183,219 @@
                                                             (Opsiyonel)</label>
                                                         <select name="travel_id" id="travel_id" class="form-select">
                                                             <option value="">Bağımsız Ziyaret</option>
-                                                            @foreach ($availableTravels as $travel)
-                                                                <option value="{{ $travel->id }}"
-                                                                    @if (old('travel_id') == $travel->id) selected @endif>
-                                                                    {{ $travel->name }}
-                                                                    ({{ \Carbon\Carbon::parse($travel->start_date)->format('d/m/Y') }})
+                                                            <?php $__currentLoopData = $availableTravels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $travel): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                                <option value="<?php echo e($travel->id); ?>"
+                                                                    <?php if(old('travel_id') == $travel->id): ?> selected <?php endif; ?>>
+                                                                    <?php echo e($travel->name); ?>
+
+                                                                    (<?php echo e(\Carbon\Carbon::parse($travel->start_date)->format('d/m/Y')); ?>)
                                                                 </option>
-                                                            @endforeach
+                                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                         </select>
                                                     </div>
                                                 </div>
 
-                                                {{-- MÜŞTERİ SEÇİMİ (ZORUNLU) --}}
+                                                
                                                 <div class="col-md-6">
                                                     <div class="mb-3">
                                                         <label for="customer_id" class="form-label">Hangi Müşteri Ziyaret
                                                             Edildi?
                                                             (*)</label>
                                                         <select name="customer_id" id="customer_id"
-                                                            class="form-select @error('customer_id') is-invalid @enderror">
+                                                            class="form-select <?php $__errorArgs = ['customer_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>">
                                                             <option value="">Müşteri Seçiniz...</option>
-                                                            @foreach ($customers as $customer)
-                                                                <option value="{{ $customer->id }}"
-                                                                    @if (old('customer_id') == $customer->id) selected @endif>
-                                                                    {{ $customer->name }}
+                                                            <?php $__currentLoopData = $customers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $customer): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                                <option value="<?php echo e($customer->id); ?>"
+                                                                    <?php if(old('customer_id') == $customer->id): ?> selected <?php endif; ?>>
+                                                                    <?php echo e($customer->name); ?>
+
                                                                 </option>
-                                                            @endforeach
+                                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                         </select>
-                                                        @error('customer_id')
-                                                            <div class="invalid-feedback">{{ $message }}</div>
-                                                        @enderror
+                                                        <?php $__errorArgs = ['customer_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                                            <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <div class="row">
-                                                {{-- ZİYARET AMACI (ZORUNLU) --}}
+                                                
                                                 <div class="col-md-6">
                                                     <div class="mb-3">
                                                         <label for="visit_purpose" class="form-label">Ziyaret Amacı
                                                             (*)</label>
                                                         <select name="visit_purpose" id="visit_purpose"
-                                                            class="form-select @error('visit_purpose') is-invalid @enderror">
+                                                            class="form-select <?php $__errorArgs = ['visit_purpose'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>">
                                                             <option value="">Seçiniz...</option>
                                                             <option value="satis_sonrasi_hizmet"
-                                                                @if (old('visit_purpose') == 'satis_sonrasi_hizmet') selected @endif>Satış
+                                                                <?php if(old('visit_purpose') == 'satis_sonrasi_hizmet'): ?> selected <?php endif; ?>>Satış
                                                                 Sonrası Hizmet
                                                             </option>
                                                             <option value="egitim"
-                                                                @if (old('visit_purpose') == 'egitim') selected @endif>
+                                                                <?php if(old('visit_purpose') == 'egitim'): ?> selected <?php endif; ?>>
                                                                 Eğitim</option>
                                                             <option value="rutin_ziyaret"
-                                                                @if (old('visit_purpose') == 'rutin_ziyaret') selected @endif>Rutin
+                                                                <?php if(old('visit_purpose') == 'rutin_ziyaret'): ?> selected <?php endif; ?>>Rutin
                                                                 Ziyaret
                                                             </option>
                                                             <option value="pazarlama"
-                                                                @if (old('visit_purpose') == 'pazarlama') selected @endif>Pazarlama
+                                                                <?php if(old('visit_purpose') == 'pazarlama'): ?> selected <?php endif; ?>>Pazarlama
                                                                 Amaçlı
                                                                 Ziyaret</option>
                                                             <option value="diger"
-                                                                @if (old('visit_purpose') == 'diger') selected @endif>
+                                                                <?php if(old('visit_purpose') == 'diger'): ?> selected <?php endif; ?>>
                                                                 Diğer</option>
                                                         </select>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            {{-- 'Satış Sonrası Hizmet' seçilince görünecek alan --}}
+                                            
                                             <div id="after-sales-details" style="display: none;">
                                                 <div class="row">
-                                                    {{-- İLGİLİ MAKİNE (AJAX ile dolacak) --}}
+                                                    
                                                     <div class="col-md-6">
                                                         <div class="mb-3">
                                                             <label for="customer_machine_id" class="form-label">İlgili
                                                                 Makine (Opsiyonel)</label>
                                                             <select name="customer_machine_id" id="customer_machine_id"
-                                                                class="form-select" disabled> {{-- Başlangıçta devre dışı --}}
+                                                                class="form-select" disabled> 
                                                                 <option value="">Önce bir müşteri seçiniz...</option>
                                                             </select>
-                                                            @error('customer_machine_id')
-                                                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                                                            @enderror
+                                                            <?php $__errorArgs = ['customer_machine_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                                                <div class="invalid-feedback d-block"><?php echo e($message); ?></div>
+                                                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                                         </div>
                                                     </div>
 
-                                                    {{-- SATIŞ SONRASI NOTLARI (hep görünür, 'has_machine' kalktı) --}}
+                                                    
                                                     <div class="col-md-6">
                                                         <div class="mb-3">
                                                             <label for="after_sales_notes" class="form-label">Satış Sonrası
                                                                 Notları</label>
-                                                            <textarea class="form-control" id="after_sales_notes" name="after_sales_notes" rows="3">{{ old('after_sales_notes') }}</textarea>
+                                                            <textarea class="form-control" id="after_sales_notes" name="after_sales_notes" rows="3"><?php echo e(old('after_sales_notes')); ?></textarea>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        @error('event_type')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                        <?php $__errorArgs = ['event_type'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                            <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                     </div>
 
                                     <div class="mb-3">
                                         <label for="location" class="form-label">Konum / Yer</label>
                                         <input type="text"
-                                            class="form-control @error('location') is-invalid @enderror" id="location"
-                                            name="location" value="{{ old('location') }}">
-                                        @error('location')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                            class="form-control <?php $__errorArgs = ['location'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="location"
+                                            name="location" value="<?php echo e(old('location')); ?>">
+                                        <?php $__errorArgs = ['location'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                            <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                     </div>
                                 </div>
 
-                                {{-- Sağ Sütun (Tarih ve Açıklama) --}}
+                                
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="start_datetime" class="form-label">Başlangıç Tarihi ve Saati
                                             (*)</label>
                                         <input type="datetime-local"
-                                            class="form-control @error('start_datetime') is-invalid @enderror"
+                                            class="form-control <?php $__errorArgs = ['start_datetime'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
                                             id="start_datetime" name="start_datetime"
-                                            value="{{ old('start_datetime') }}" required>
-                                        @error('start_datetime')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                            value="<?php echo e(old('start_datetime')); ?>" required>
+                                        <?php $__errorArgs = ['start_datetime'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                            <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                     </div>
 
                                     <div class="mb-3">
                                         <label for="end_datetime" class="form-label">Bitiş Tarihi ve Saati (*)</label>
                                         <input type="datetime-local"
-                                            class="form-control @error('end_datetime') is-invalid @enderror"
-                                            id="end_datetime" name="end_datetime" value="{{ old('end_datetime') }}"
+                                            class="form-control <?php $__errorArgs = ['end_datetime'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                            id="end_datetime" name="end_datetime" value="<?php echo e(old('end_datetime')); ?>"
                                             required>
-                                        @error('end_datetime')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                        <?php $__errorArgs = ['end_datetime'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                            <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                     </div>
                                     <div class="col-12 mt-3">
                                         <div class="card border-0 bg-light shadow-sm">
@@ -314,21 +415,49 @@
 
                                 <div class="mb-3">
                                     <label for="description" class="form-label">Açıklama</label>
-                                    <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description"
-                                        rows="3">{{ old('description') }}</textarea>
-                                    @error('description')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                    <textarea class="form-control <?php $__errorArgs = ['description'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="description" name="description"
+                                        rows="3"><?php echo e(old('description')); ?></textarea>
+                                    <?php $__errorArgs = ['description'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </div>
                             </div>
                     </div>
 
-                    {{-- DİNAMİK ALANLAR --}}
+                    
                     <div class="col-span-12">
-                        <x-dynamic-fields :model="\App\Models\Event::class" />
+                        <?php if (isset($component)) { $__componentOriginal560f029fe080d8d8e90f45a1a078f632c53e6b00 = $component; } ?>
+<?php $component = App\View\Components\DynamicFields::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
+<?php $component->withName('dynamic-fields'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(App\View\Components\DynamicFields::class))->getConstructor()): ?>
+<?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['model' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(\App\Models\Event::class)]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal560f029fe080d8d8e90f45a1a078f632c53e6b00)): ?>
+<?php $component = $__componentOriginal560f029fe080d8d8e90f45a1a078f632c53e6b00; ?>
+<?php unset($__componentOriginal560f029fe080d8d8e90f45a1a078f632c53e6b00); ?>
+<?php endif; ?>
                     </div>
                     <div class="text-end mt-4">
-                        {{-- Buton metni güncellendi --}}
+                        
                         <button type="submit" class="btn btn-animated-gradient rounded-3 px-4 py-2">Etkinliği
                             Oluştur</button>
                     </div>
@@ -338,8 +467,8 @@
         </div>
     </div>
     </div>
-@endsection
-@section('page_scripts')
+<?php $__env->stopSection(); ?>
+<?php $__env->startSection('page_scripts'); ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Ana elemanlar
@@ -444,4 +573,6 @@
             toggleCrmWrapper();
         });
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/service/events/create.blade.php ENDPATH**/ ?>

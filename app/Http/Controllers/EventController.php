@@ -140,9 +140,10 @@ class EventController extends Controller
         $rules = [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'is_important' => 'nullable|boolean',
             'start_datetime' => 'required|date',
             'end_datetime' => 'required|date|after_or_equal:start_datetime',
-            'location' => 'nullable|string|max:255',
+            'location' => 'required_if:event_type,hotel|nullable|string|max:255',
             'event_type' => ['required', Rule::in(array_keys($this->eventTypes))],
             'travel_id' => 'nullable|integer|exists:travels,id',
             'customer_id' => [
@@ -160,6 +161,8 @@ class EventController extends Controller
             'after_sales_notes' => 'nullable|string',
             'visit_status' => 'nullable|string|in:planlandi,gerceklesti,ertelendi,iptal',
             'cancellation_reason' => 'nullable|required_if:visit_status,iptal,ertelendi|string',
+            'attachments' => 'nullable|array',
+            'attachments.*' => 'nullable|file|mimes:jpeg,jpg,png,pdf,doc,docx,xls,xlsx|max:20480', // Her dosya max 20MB
         ];
 
         // 2. [HİBRİT] Dinamik Kuralları Birleştir
@@ -176,6 +179,7 @@ class EventController extends Controller
                 'user_id' => Auth::id(),
                 'title' => $validatedData['title'],
                 'description' => $validatedData['description'],
+                'is_important' => $request->boolean('is_important'),
                 'start_datetime' => $validatedData['start_datetime'],
                 'end_datetime' => $validatedData['end_datetime'],
                 'location' => $validatedData['location'],
@@ -186,7 +190,12 @@ class EventController extends Controller
                 // [HİBRİT] Formdan gelen extras array'ini buraya ekliyoruz
                 'extras' => $validatedData['extras'] ?? [],
             ]);
-
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    $event->addMedia($file)
+                        ->toMediaCollection('event_attachments'); // 'media' tablosundaki collection_name
+                }
+            }
             if ($event->event_type === 'musteri_ziyareti') {
                 CustomerVisit::create([
                     'event_id' => $event->id,
@@ -221,8 +230,9 @@ class EventController extends Controller
         // GÜNCEL YETKİ KONTROLÜ
         $this->checkAuth();
 
-        $event->load(['user', 'bookings.media', 'customerVisit.customer']);
-        return view('service.events.show', compact('event'));
+        $event->load(['user', 'bookings.media', 'customerVisit.customer', 'expenses']);
+        $eventTypes = $this->eventTypes;
+        return view('service.events.show', compact('event', 'eventTypes'));
     }
 
     public function edit(Event $event)

@@ -15,7 +15,8 @@ class ExpenseController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'travel_id' => 'required|exists:travels,id', // Hangi seyahate ekleniyor?
+            'expensable_id' => 'required|integer',
+            'expensable_type' => 'required|string', // App\Models\Travel veya App\Models\Event
             'category' => 'required|string',
             'amount' => 'required|numeric|min:0',
             'currency' => 'required|in:TRY,USD,EUR,GBP',
@@ -23,10 +24,13 @@ class ExpenseController extends Controller
             'description' => 'nullable|string|max:255',
         ]);
 
-        $travel = Travel::findOrFail($validated['travel_id']);
+        // Polimorfik modeli çözümle (Resolve)
+        $modelType = $validated['expensable_type'];
+        $model = $modelType::findOrFail($validated['expensable_id']);
 
-        // Polymorphic Kayıt
-        $travel->expenses()->create([
+        // Kayıt İşlemi
+        $model->expenses()->create([
+            'business_unit_id' => $model->business_unit_id,
             'category' => $validated['category'],
             'amount' => $validated['amount'],
             'currency' => $validated['currency'],

@@ -12,7 +12,8 @@ use Illuminate\Auth\Events\Logout;
 use App\Listeners\LogSuccessfulLogin;
 use App\Listeners\LogFailedLogin;
 use App\Listeners\LogLogout;
-
+use App\Models\Booking;
+use App\Observers\BookingObserver;
 class EventServiceProvider extends ServiceProvider
 {
     /**
@@ -51,7 +52,7 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        Booking::observe(BookingObserver::class);
     }
 
     /**

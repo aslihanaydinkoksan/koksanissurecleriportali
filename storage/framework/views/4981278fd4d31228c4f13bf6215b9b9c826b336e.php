@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', $event->title . ' Detayları')
 
-@push('styles')
+<?php $__env->startSection('title', $event->title . ' Detayları'); ?>
+
+<?php $__env->startPush('styles'); ?>
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
@@ -139,60 +139,63 @@
             transform: scale(1.02);
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container py-4">
         <div class="row justify-content-center">
             <div class="col-lg-11">
 
-                @if (session('success'))
+                <?php if(session('success')): ?>
                     <div class="alert alert-success border-0 shadow-sm rounded-3 mb-4 d-flex align-items-center">
                         <i class="fa-solid fa-circle-check fa-lg me-3"></i>
-                        <div>{{ session('success') }}</div>
+                        <div><?php echo e(session('success')); ?></div>
                         <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
                     </div>
-                @endif
+                <?php endif; ?>
 
-                {{-- 1. HERO SECTION --}}
+                
                 <div class="event-hero">
                     <div class="row align-items-center">
                         <div class="col-lg-8">
                             <div class="d-flex align-items-center gap-3 mb-3">
                                 <span class="hero-badge"><i class="fa-solid fa-tag me-1"></i>
-                                    {{ $eventTypes[$event->event_type] ?? ucfirst($event->event_type) }}</span>
+                                    <?php echo e($eventTypes[$event->event_type] ?? ucfirst($event->event_type)); ?></span>
 
-                                {{-- ÖNEMLİ İŞARETİ --}}
-                                @if ($event->is_important)
+                                
+                                <?php if($event->is_important): ?>
                                     <span
                                         class="badge bg-danger rounded-pill px-3 shadow-sm border border-white border-opacity-25">
                                         <i class="fa-solid fa-circle-exclamation me-1"></i> ÖNEMLİ
                                     </span>
-                                @endif
+                                <?php endif; ?>
 
-                                @if ($event->visit_status == 'gerceklesti')
+                                <?php if($event->visit_status == 'gerceklesti'): ?>
                                     <span
                                         class="badge bg-success bg-opacity-25 border border-success text-white rounded-pill px-3">Tamamlandı</span>
-                                @endif
+                                <?php endif; ?>
                             </div>
                             <h1 class="hero-title mb-2">
-                                {{ $event->title }}
+                                <?php echo e($event->title); ?>
+
                             </h1>
                             <p class="mb-0 opacity-75 fs-5">
                                 <i class="fa-regular fa-calendar me-2"></i>
-                                {{ $event->start_datetime->format('d F Y, H:i') }}
+                                <?php echo e($event->start_datetime->format('d F Y, H:i')); ?>
+
                                 <i class="fa-solid fa-arrow-right mx-2 text-white-50"></i>
-                                {{ $event->end_datetime->format('d F Y, H:i') }}
+                                <?php echo e($event->end_datetime->format('d F Y, H:i')); ?>
+
                             </p>
                         </div>
                         <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
-                            <a href="{{ route('service.events.index') }}" class="btn-glass"><i
+                            <a href="<?php echo e(route('service.events.index')); ?>" class="btn-glass"><i
                                     class="fa-solid fa-arrow-left"></i> Listeye Dön</a>
                         </div>
                     </div>
                 </div>
 
-                {{-- 2. CONTENT CARDS --}}
+                
                 <div class="content-container mt-5 pt-3">
                     <div class="row g-4 mb-5">
                         <div class="col-lg-8">
@@ -201,52 +204,52 @@
                                     <div class="col-md-6">
                                         <div class="detail-item">
                                             <div class="detail-label">Konum</div>
-                                            <div class="detail-value">{{ $event->location ?? '-' }}</div>
+                                            <div class="detail-value"><?php echo e($event->location ?? '-'); ?></div>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="detail-item">
                                             <div class="detail-label">Oluşturan</div>
-                                            <div class="detail-value">{{ $event->user->name }}</div>
+                                            <div class="detail-value"><?php echo e($event->user->name); ?></div>
                                         </div>
                                     </div>
                                     <div class="col-12">
                                         <div class="detail-item">
                                             <div class="detail-label">Açıklama</div>
                                             <div class="detail-value text-muted" style="white-space: pre-wrap;">
-                                                {{ $event->description ?? 'Girilmemiş.' }}</div>
+                                                <?php echo e($event->description ?? 'Girilmemiş.'); ?></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- SAĞ SÜTUN: DURUM VE DOSYALAR --}}
+                        
                         <div class="col-lg-4">
                             <div class="row g-4">
-                                {{-- DURUM KARTI --}}
+                                
                                 <div class="col-12">
                                     <div
                                         class="custom-card p-4 text-center d-flex flex-column align-items-center justify-content-center">
                                         <div class="status-icon-wrapper text-info"><i class="fa-solid fa-circle-info"></i>
                                         </div>
-                                        <h4 class="fw-bold mb-1">{{ ucfirst($event->visit_status) }}</h4>
+                                        <h4 class="fw-bold mb-1"><?php echo e(ucfirst($event->visit_status)); ?></h4>
                                         <p class="text-muted small mb-0">Etkinlik Durumu</p>
                                     </div>
                                 </div>
 
-                                {{-- DOSYALAR KARTI --}}
+                                
                                 <div class="col-12">
                                     <div class="custom-card p-4">
                                         <h6 class="fw-bold mb-3"><i class="fa-solid fa-paperclip text-primary me-2"></i>Ek
                                             Dosyalar</h6>
                                         <div class="attachment-list">
-                                            @php
+                                            <?php
                                                 $attachments = $event->getMedia('event_attachments');
-                                            @endphp
+                                            ?>
 
-                                            @forelse($attachments as $media)
-                                                @php
+                                            <?php $__empty_1 = true; $__currentLoopData = $attachments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $media): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                                                <?php
                                                     $ext = strtolower($media->extension);
                                                     $icon = match ($ext) {
                                                         'pdf' => 'fa-file-pdf text-danger',
@@ -255,25 +258,25 @@
                                                         'jpg', 'jpeg', 'png' => 'fa-file-image text-info',
                                                         default => 'fa-file-lines text-secondary',
                                                     };
-                                                @endphp
-                                                <a href="{{ $media->getUrl() }}" target="_blank"
+                                                ?>
+                                                <a href="<?php echo e($media->getUrl()); ?>" target="_blank"
                                                     class="attachment-item d-flex align-items-center p-2 mb-2 bg-light rounded border border-light shadow-sm">
                                                     <div class="me-3 fs-3">
-                                                        <i class="fa-solid {{ $icon }}"></i>
+                                                        <i class="fa-solid <?php echo e($icon); ?>"></i>
                                                     </div>
                                                     <div class="overflow-hidden">
                                                         <div class="text-dark fw-bold text-truncate small">
-                                                            {{ $media->file_name }}</div>
+                                                            <?php echo e($media->file_name); ?></div>
                                                         <div class="text-muted" style="font-size: 0.7rem;">
-                                                            {{ $media->human_readable_size }}</div>
+                                                            <?php echo e($media->human_readable_size); ?></div>
                                                     </div>
                                                     <i class="fa-solid fa-download ms-auto text-muted small"></i>
                                                 </a>
-                                            @empty
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                                 <div class="text-center py-3">
                                                     <p class="text-muted small mb-0 italic">Dosya bulunmuyor.</p>
                                                 </div>
-                                            @endforelse
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 </div>
@@ -281,23 +284,23 @@
                         </div>
                     </div>
 
-                    {{-- 3. REZERVASYON YÖNETİMİ --}}
-                    @if ($event->event_type === 'fuar')
+                    
+                    <?php if($event->event_type === 'fuar'): ?>
                         <div class="booking-section mt-4">
-                            {{-- Mevcut rezervasyon içeriğin --}}
+                            
                             <div class="section-title mb-4">
                                 <h4 class="fw-bold"><i class="fa-solid fa-plane-departure text-primary me-2"></i>Seyahat &
                                     Konaklama</h4>
                             </div>
-                            {{-- ... Geri kalan form ve liste kodların ... --}}
+                            
                             <div class="card border-0 shadow-sm mb-5 bg-light bg-opacity-50">
                                 <div class="card-body p-4">
                                     <h6 class="fw-bold mb-3 text-primary"><i class="fa-solid fa-circle-plus me-2"></i>Yeni
                                         Rezervasyon Ekle</h6>
-                                    <form action="{{ route('service.events.bookings.store', $event->id) }}" method="POST"
+                                    <form action="<?php echo e(route('service.events.bookings.store', $event->id)); ?>" method="POST"
                                         enctype="multipart/form-data">
-                                        @csrf
-                                        @include('bookings._form', ['booking' => null])
+                                        <?php echo csrf_field(); ?>
+                                        <?php echo $__env->make('bookings._form', ['booking' => null], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                                         <div class="text-end mt-3">
                                             <button type="submit" class="btn btn-gradient px-5 shadow">
                                                 <i class="fa-solid fa-save me-2"></i>Rezervasyonu Kaydet
@@ -307,10 +310,10 @@
                                 </div>
                             </div>
 
-                            {{-- LİSTELEME --}}
+                            
                             <div class="row g-3">
-                                @forelse ($event->bookings->sortBy('start_datetime') as $booking)
-                                    @php
+                                <?php $__empty_1 = true; $__currentLoopData = $event->bookings->sortBy('start_datetime'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $booking): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                                    <?php
                                         $typeClass = match ($booking->type) {
                                             'flight' => 'border-primary',
                                             'hotel' => 'border-success',
@@ -323,59 +326,65 @@
                                             'bus' => 'fa-bus',
                                             default => 'fa-ticket',
                                         };
-                                    @endphp
+                                    ?>
                                     <div class="col-md-6 col-xl-4">
                                         <div
-                                            class="card h-100 border-0 shadow-sm {{ $typeClass }} border-start border-start-5">
+                                            class="card h-100 border-0 shadow-sm <?php echo e($typeClass); ?> border-start border-start-5">
                                             <div class="card-body">
                                                 <div class="d-flex justify-content-between mb-2">
-                                                    <h6 class="fw-bold mb-0 text-dark">{{ $booking->provider_name }}</h6>
-                                                    <form action="{{ route('bookings.destroy', $booking) }}" method="POST"
+                                                    <h6 class="fw-bold mb-0 text-dark"><?php echo e($booking->provider_name); ?></h6>
+                                                    <form action="<?php echo e(route('bookings.destroy', $booking)); ?>" method="POST"
                                                         onsubmit="return confirm('Emin misiniz?')">
-                                                        @csrf @method('DELETE')
+                                                        <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
                                                         <button type="submit" class="btn btn-link text-danger p-0">
                                                             <i class="fa-solid fa-trash-can"></i>
                                                         </button>
                                                     </form>
                                                 </div>
                                                 <div class="small text-muted mb-2">
-                                                    <i class="fa-solid {{ $icon }} me-1"></i>
-                                                    {{ ucfirst($booking->type) }} |
-                                                    {{ $booking->start_datetime->format('d.m.Y H:i') }}
+                                                    <i class="fa-solid <?php echo e($icon); ?> me-1"></i>
+                                                    <?php echo e(ucfirst($booking->type)); ?> |
+                                                    <?php echo e($booking->start_datetime->format('d.m.Y H:i')); ?>
+
                                                 </div>
-                                                @if ($booking->origin || $booking->destination)
+                                                <?php if($booking->origin || $booking->destination): ?>
                                                     <div class="small mb-2 text-dark">
-                                                        {{ $booking->origin ?? '?' }} <i
+                                                        <?php echo e($booking->origin ?? '?'); ?> <i
                                                             class="fa-solid fa-arrow-right mx-1 small"></i>
-                                                        {{ $booking->destination ?? '?' }}
+                                                        <?php echo e($booking->destination ?? '?'); ?>
+
                                                     </div>
-                                                @elseif($booking->location)
+                                                <?php elseif($booking->location): ?>
                                                     <div class="small mb-2 text-dark italic"><i
-                                                            class="fa-solid fa-location-dot me-1"></i>{{ $booking->location }}
+                                                            class="fa-solid fa-location-dot me-1"></i><?php echo e($booking->location); ?>
+
                                                     </div>
-                                                @endif
+                                                <?php endif; ?>
                                                 <div class="d-flex justify-content-between align-items-center mt-2">
                                                     <span
-                                                        class="badge bg-light text-dark border small">{{ $booking->confirmation_code ?? '-' }}</span>
+                                                        class="badge bg-light text-dark border small"><?php echo e($booking->confirmation_code ?? '-'); ?></span>
                                                     <span
-                                                        class="fw-bold text-success">{{ number_format($booking->cost, 2) }}
-                                                        {{ $booking->currency ?? 'TRY' }}</span>
+                                                        class="fw-bold text-success"><?php echo e(number_format($booking->cost, 2)); ?>
+
+                                                        <?php echo e($booking->currency ?? 'TRY'); ?></span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                @empty
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                     <div class="col-12 text-center py-4 text-muted border rounded bg-white">Henüz
                                         rezervasyon eklenmedi.</div>
-                                @endforelse
+                                <?php endif; ?>
                             </div>
                         </div>
 
-                        {{-- 4. MASRAFLAR --}}
-                        @include('partials._expense_section', ['model' => $event])
-                    @endif
+                        
+                        <?php echo $__env->make('partials._expense_section', ['model' => $event], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/service/events/show.blade.php ENDPATH**/ ?>

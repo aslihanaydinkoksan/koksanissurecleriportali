@@ -173,5 +173,16 @@ class User extends Authenticatable
     {
         return $this->departments->contains('slug', $slug);
     }
+    /**
+     * Kullanıcının ana birim ID'sini pivot tablodaki ilk kayıtla senkronize eder.
+     * Bu metod veri tutarlılığı için kritiktir.
+     */
+    public function syncPrimaryBusinessUnit(): void
+    {
+        $firstUnitId = $this->businessUnits()->first()?->id;
+        if ($this->business_unit_id !== $firstUnitId) {
+            $this->update(['business_unit_id' => $firstUnitId]);
+        }
+    }
 
 }

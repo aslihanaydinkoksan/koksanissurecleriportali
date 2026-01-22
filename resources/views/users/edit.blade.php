@@ -500,24 +500,25 @@
                             {{-- 3. ROL SEÇİMİ (Daha Açıklayıcı Hale Getirildi) --}}
                             <div class="mb-5">
                                 <label class="form-label text-muted fw-bold ms-1 d-block">
-                                    Sistem Erişim Yetkisi (Rol)
+                                    <i class="fas fa-shield-alt text-primary me-1"></i> Yetki Seviyesi
                                 </label>
                                 <div class="d-flex flex-wrap">
-                                    @foreach ($roles as $role)
-                                        <div>
+                                    @php
+                                        // Sadece ana rollerimizi listeliyoruz
+                                        $mainRoles = ['admin', 'yonetici', 'user'];
+                                    @endphp
+
+                                    @foreach ($roles->whereIn('name', $mainRoles) as $role)
+                                        <div class="me-2 mb-2">
                                             <input type="radio" name="role" id="role_{{ $role->id }}"
                                                 value="{{ $role->name }}" class="role-radio"
-                                                {{ old('role', $user->roles->first()->name ?? '') == $role->name ? 'checked' : '' }}>
+                                                {{ old('role', $user->roles->first()->name ?? 'user') == $role->name ? 'checked' : '' }}>
                                             <label for="role_{{ $role->id }}" class="role-label">
                                                 {{ __('roles.' . $role->name) }}
                                             </label>
                                         </div>
                                     @endforeach
                                 </div>
-                                <small class="text-muted ms-2 mt-1 d-block">
-                                    <i class="fas fa-info-circle"></i> Rol, kullanıcının paneldeki işlem yetkisini
-                                    (düzenleme, silme vb.) belirler.
-                                </small>
                             </div>
 
                             {{-- BUTONLAR --}}

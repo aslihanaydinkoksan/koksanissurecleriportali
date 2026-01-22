@@ -1,11 +1,7 @@
 <?php
 
 return [
-    'admin' => 'Sistem Yöneticisi',
-    'yonetici' => 'Birim Yöneticisi',
-    'mudur' => 'Müdür / Direktör',
+    'admin' => 'Admin',
+    'yonetici' => 'Birim Yöneticisi ',
     'user' => 'Kullanıcı',
-    'personel' => 'Saha Personeli',
-    'booking_manager' => 'Rezervasyon Sorumlusu',
-    'fleet_manager' => 'Filo Yöneticisi',
 ];

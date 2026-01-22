@@ -5,51 +5,60 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-use App\Models\User;
+use Spatie\Permission\PermissionRegistrar;
 
 class RolePermissionSeeder extends Seeder
 {
     public function run()
     {
-        // 1. Cache Temizliği
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // 2. İZİNLER (Yetkiler) - Senin görseldeki 'manage_bookings'i de ekledim
-        $permissions = [
+        // 1. TÜM İZİNLER (Modül bazlı görünüm yetkileri dahil)
+        $allPermissions = [
             'view_dashboard',
             'view_logistics',
             'view_production',
             'view_maintenance',
             'view_administrative',
+            'view_customers',
+            'manage_shipments',
             'manage_users',
-            'manage_bookings', // Rezervasyon yönetimi
-            'manage_fleet',    // Filo yönetimi
+            'approve_shipments',
             'approve_maintenance',
+            'manage_fleet' // vb.
         ];
 
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission]);
+        foreach ($allPermissions as $p) {
+            Permission::firstOrCreate(['name' => $p, 'guard_name' => 'web']);
         }
 
-        // 3. ROLLER - Görselindeki verileri buraya işledim
-        $roles = [
-            'admin' => Permission::all(), // Admin her şeyi yapar
-            'yonetici' => Permission::all(),
-            'mudur' => ['view_logistics', 'view_production'],
-            'lojistik_personeli' => ['view_logistics'],
-            'uretim_personeli' => ['view_production'],
-            'idari_isler_personeli' => ['view_administrative'],
-            'bakim_personeli' => ['view_maintenance'],
-            'booking_manager' => ['view_administrative', 'manage_bookings'], // Rezervasyon Sorumlusu
-            'fleet_manager' => ['view_administrative', 'manage_fleet'],      // Filo Sorumlusu
-            'user' => ['view_dashboard'], // Standart kullanıcı
-        ];
+        // 2. SADECE 3 ROL OLUŞTURUYORUZ
 
-        foreach ($roles as $roleName => $rolePermissions) {
-            // Rolü oluştur
-            $role = Role::firstOrCreate(['name' => $roleName]);
-            // Yetkileri ata
-            $role->givePermissionTo($rolePermissions);
-        }
+        // A. ADMIN: Sınırsız yetki
+        $admin = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        $admin->syncPermissions(Permission::all());
+
+        // B. YONETICI: Tüm modülleri "Görür" ve "Onaylar" ama sistem ayarlarını yapamaz
+        $yonetici = Role::firstOrCreate(['name' => 'yonetici', 'guard_name' => 'web']);
+        $yonetici->syncPermissions([
+            'view_dashboard',
+            'view_logistics',
+            'view_production',
+            'view_maintenance',
+            'view_administrative',
+            'view_customers',
+            'approve_shipments',
+            'approve_maintenance'
+        ]);
+
+        // C. USER (STANDART KULLANICI): Sadece temel görüntüleme ve işlem yetkileri
+        $userRole = Role::firstOrCreate(['name' => 'user']);
+        $userRole->syncPermissions([
+            'view_dashboard',
+            'view_logistics',    // BU EKSİK OLABİLİR
+            'view_production',
+            'view_maintenance',
+            'view_administrative'
+        ]);
     }
 }

@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -20,11 +21,14 @@ class UserController extends Controller
     public function index()
     {
         if (!Auth::user()->can('manage_users')) {
-            abort(403, 'Kullanıcıları görme yetkiniz yok.');
+            abort(403);
         }
 
-        // 'department' (tekil) yerine 'departments' (çoğul) ilişkisini yüklüyoruz
-        $users = User::with(['departments', 'roles', 'businessUnits'])->latest()->paginate(10);
+        // Eager Loading ile tüm ilişkileri tek sorguda çekiyoruz
+        $users = User::with(['roles', 'departments', 'businessUnits'])
+            ->latest()
+            ->paginate(15);
+
         return view('users.index', compact('users'));
     }
 
@@ -64,27 +68,24 @@ class UserController extends Controller
             'units.*' => ['exists:business_units,id'],
         ]);
 
-        // 1. Temel Kullanıcı Oluşturma (Sadece users tablosu sütunları)
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        return DB::transaction(function () use ($request) {
+            // 1. Kullanıcıyı oluştur
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+            ]);
 
-        // 2. Rol Ataması (Spatie)
-        $user->assignRole($request->role);
+            // 2. Rol, Departman ve Birim senkronizasyonu
+            $user->assignRole($request->role);
+            $user->departments()->sync($request->departments ?? []);
+            $user->businessUnits()->sync($request->units ?? []);
 
-        // 3. Çoklu Departman Ataması (Pivot)
-        if ($request->filled('departments')) {
-            $user->departments()->sync($request->departments);
-        }
+            // 3. Veri bütünlüğünü sağla (Kritik!)
+            $user->syncPrimaryBusinessUnit();
 
-        // 4. Çoklu Birim (Fabrika) Ataması (Pivot)
-        if ($request->filled('units')) {
-            $user->businessUnits()->sync($request->units);
-        }
-
-        return redirect()->route('users.index')->with('success', 'Kullanıcı başarıyla oluşturuldu.');
+            return redirect()->route('users.index')->with('success', 'Kullanıcı ve yetkileri başarıyla tanımlandı.');
+        });
     }
 
     /**
@@ -133,22 +134,29 @@ class UserController extends Controller
             'units.*' => ['exists:business_units,id'],
         ]);
 
-        // 1. Temel Bilgi Güncelleme
-        $userData = $request->only('name', 'email');
+        return DB::transaction(function () use ($request, $user) {
+            // 1. Temel Bilgiler
+            $userData = $request->only('name', 'email');
+            if ($request->filled('password')) {
+                $userData['password'] = Hash::make($request->password);
+            }
+            $user->update($userData);
 
-        if ($request->filled('password')) {
-            $request->validate(['password' => ['confirmed', Rules\Password::defaults()]]);
-            $userData['password'] = Hash::make($request->password);
-        }
+            // 2. Yetki (Sadece 3 rolden biri)
+            $user->syncRoles([$request->role]);
 
-        $user->update($userData);
+            // 3. Departmanlar (Hangi modülleri göreceği)
+            $user->departments()->sync($request->departments ?? []);
 
-        // 2. İlişkileri Senkronize Et (Sync eskiyi siler yeniyi yazar)
-        $user->syncRoles([$request->role]);
-        $user->departments()->sync($request->departments ?? []);
-        $user->businessUnits()->sync($request->units ?? []);
+            // 4. Fabrikalar (Scope - Hangi verileri göreceği)
+            $user->businessUnits()->sync($request->units ?? []);
 
-        return redirect()->route('users.index')->with('success', 'Kullanıcı başarıyla güncellendi.');
+            // 5. KRİTİK: Ana tablodaki business_unit_id'yi pivotun ilkiyle eşle
+            $firstUnitId = $user->businessUnits()->first()?->id;
+            $user->update(['business_unit_id' => $firstUnitId]);
+
+            return redirect()->route('users.index')->with('success', 'Kullanıcı mimariye uygun olarak güncellendi.');
+        });
     }
 
     /**

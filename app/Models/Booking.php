@@ -66,6 +66,7 @@ class Booking extends Model implements HasMedia
         'location',
         'confirmation_code',
         'cost',
+        'currency',
         'start_datetime',
         'end_datetime',
         'status',

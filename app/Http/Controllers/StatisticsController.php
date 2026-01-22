@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\StatisticsService;
+use App\Services\FinanceStatisticsService; // Yeni servis eklendi
 use Illuminate\Support\Facades\Auth;
 use App\Models\Department;
 use App\Models\BusinessUnit;
+use App\Models\User; // User modelini ekledik
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class StatisticsController extends Controller
 {
@@ -24,10 +27,10 @@ class StatisticsController extends Controller
      */
     public function index(Request $request)
     {
+        /** @var User $user */
         $user = Auth::user();
 
         // 1. KULLANICININ YETKİ SEVİYESİNİ BELİRLE (Spatie)
-        // Admin, Yönetici veya Global yetkisi olanlar
         $isGlobalAdmin = $user->hasRole(['admin', 'yonetici']) || $user->can('view_all_business_units');
 
         // Müdür yetkisi (veya birden fazla departmana bakanlar)
@@ -42,11 +45,11 @@ class StatisticsController extends Controller
         if ($isGlobalAdmin) {
             $allowedDepartments = Department::orderBy('name')->get();
         } else {
-            // Kullanıcının pivot tablodaki departmanlarını al
             $allowedDepartments = $user->departments;
 
-            // Fallback: Eğer pivot boşsa ve eski usul department_id varsa onu ekle
-            if ($allowedDepartments->isEmpty() && $user->department) {
+            // HATA DÜZELTME (PHP0416): Undefined property: User::$department
+            // magic property yerine relationship kontrolü veya optional kullanımı
+            if ($allowedDepartments->isEmpty() && isset($user->department)) {
                 $allowedDepartments = collect([$user->department]);
             }
         }
@@ -54,29 +57,21 @@ class StatisticsController extends Controller
         // 3. HEDEF DEPARTMANI BELİRLE VE DOĞRULA
         $requestedSlug = $request->input('target_dept');
 
-        // Varsayılan slug belirleme
         if (!$requestedSlug) {
-            if ($isGlobalAdmin) {
-                $requestedSlug = 'genel';
-            } else {
-                $requestedSlug = $allowedDepartments->first()?->slug ?? 'genel';
-            }
+            $requestedSlug = $isGlobalAdmin ? 'genel' : ($allowedDepartments->first()?->slug ?? 'genel');
         }
 
-        // Güvenlik: Yetkisiz departman erişimini engelle
         if (!$isGlobalAdmin && $requestedSlug !== 'genel' && !$allowedDepartments->contains('slug', $requestedSlug)) {
             $requestedSlug = $allowedDepartments->first()?->slug ?? 'genel';
         }
 
-        // Standart çalışan "genel" bakışı göremez, kendi departmanına zorla
         if ($requestedSlug === 'genel' && !$isGlobalAdmin && !$isManager) {
             $requestedSlug = $allowedDepartments->first()?->slug;
         }
 
         $departmentSlug = $requestedSlug;
 
-        // AKTİF FABRİKA BİLGİSİ (Başlık İçin)
-        // Middleware tarafından session'a atılan veriyi alıyoruz
+        // AKTİF FABRİKA BİLGİSİ
         $activeUnitId = session('active_unit_id');
         $activeUnitName = session('active_unit_name', 'Tüm Fabrikalar');
 
@@ -86,26 +81,23 @@ class StatisticsController extends Controller
             $pageTitle = "$activeUnitName - Yönetici Paneli";
         } else {
             $targetDeptObj = Department::where('slug', $departmentSlug)->first();
-            $departmentName = $targetDeptObj ? $targetDeptObj->name : ucfirst($departmentSlug);
+            // HATA DÜZELTME (PHP0416): Undefined property: Model::$name
+            $departmentName = ($targetDeptObj instanceof Department) ? $targetDeptObj->name : ucfirst($departmentSlug);
             $pageTitle = "$activeUnitName - $departmentName Raporu";
         }
 
         // Tarih Filtreleri
-        $defaultStartDate = Carbon::now()->startOfYear();
-        $defaultEndDate = Carbon::now()->endOfYear();
         $filters = [
-            'date_from' => $request->input('date_from', $defaultStartDate->toDateString()),
-            'date_to' => $request->input('date_to', $defaultEndDate->toDateString())
+            'date_from' => $request->input('date_from', Carbon::now()->startOfYear()->toDateString()),
+            'date_to' => $request->input('date_to', Carbon::now()->endOfYear()->toDateString())
         ];
         $startDate = Carbon::parse($filters['date_from'])->startOfDay();
         $endDate = Carbon::parse($filters['date_to'])->endOfDay();
-
 
         $statsData = [];
         try {
             switch ($departmentSlug) {
                 case 'lojistik':
-                    // $activeUnitId parametresini ekledik
                     $statsData = $this->statsService->getLojistikStatsData($startDate, $endDate, $viewLevel, $activeUnitId)->toArray();
                     break;
                 case 'uretim':
@@ -121,7 +113,6 @@ class StatisticsController extends Controller
                     $statsData = $this->statsService->getUlastirmaStatsData($startDate, $endDate, $viewLevel, $activeUnitId)->toArray();
                     break;
                 case 'genel':
-                    // Genel bakış için de gönderiyoruz
                     $statsData = $this->statsService->getGenelBakisData($startDate, $endDate, $allowedDepartments, $activeUnitId)->toArray();
                     break;
                 default:
@@ -129,7 +120,7 @@ class StatisticsController extends Controller
                     break;
             }
         } catch (\Exception $e) {
-            \Log::error('İstatistik Hatası: ' . $e->getMessage());
+            Log::error('İstatistik Hatası: ' . $e->getMessage());
             $statsData = [];
         }
 
@@ -150,5 +141,25 @@ class StatisticsController extends Controller
             ],
             $statsData
         ));
+    }
+
+    /**
+     * Finansal Dashboard - Masrafların Analizi
+     */
+    public function financeDashboard(Request $request, FinanceStatisticsService $service)
+    {
+        // Sadece yönetici ve admin görebilmeli
+        if (!Auth::user()->hasAnyRole(['admin', 'yonetici'])) {
+            abort(403, 'Bu sayfayı görüntüleme yetkiniz yok.');
+        }
+
+        $filters = [
+            'date_from' => $request->get('date_from', now()->startOfYear()->toDateString()),
+            'date_to' => $request->get('date_to', now()->endOfYear()->toDateString()),
+        ];
+
+        $data = $service->getGeneralOverview($filters);
+
+        return view('statistics.finance', compact('data', 'filters'));
     }
 }

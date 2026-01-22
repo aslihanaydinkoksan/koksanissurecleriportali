@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', 'Yeni Sevkiyat Kaydı')
 
-@push('styles')
+<?php $__env->startSection('title', 'Yeni Sevkiyat Kaydı'); ?>
+
+<?php $__env->startPush('styles'); ?>
     <style>
         /* Ana içerik alanına animasyonlu arka plan */
         #app>main.py-4 {
@@ -81,9 +81,9 @@
             height: 1.5em;
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-11">
@@ -92,10 +92,10 @@
                         class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                         <h3 class="fw-bold text-dark mb-0"><i class="fas fa-shipping-fast me-2"></i>Yeni Sevkiyat Planla</h3>
 
-                        {{-- Kritik Sevkiyat Switch --}}
+                        
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" name="is_important" id="is_important"
-                                form="mainShipmentForm" value="1" {{ old('is_important') ? 'checked' : '' }}>
+                                form="mainShipmentForm" value="1" <?php echo e(old('is_important') ? 'checked' : ''); ?>>
                             <label class="form-check-label fw-bold text-danger ms-2" for="is_important">
                                 <i class="fas fa-exclamation-triangle me-1"></i> KRİTİK SEVKİYAT
                             </label>
@@ -103,18 +103,19 @@
                     </div>
 
                     <div class="card-body p-4">
-                        @if (session('success'))
+                        <?php if(session('success')): ?>
                             <div class="alert alert-success border-0 shadow-sm mb-4" role="alert">
-                                <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                            </div>
-                        @endif
+                                <i class="fas fa-check-circle me-2"></i><?php echo e(session('success')); ?>
 
-                        <form method="POST" action="{{ route('shipments.store') }}" id="mainShipmentForm"
+                            </div>
+                        <?php endif; ?>
+
+                        <form method="POST" action="<?php echo e(route('shipments.store')); ?>" id="mainShipmentForm"
                             enctype="multipart/form-data" autocomplete="off">
-                            @csrf
+                            <?php echo csrf_field(); ?>
 
                             <div class="row">
-                                {{-- 1. BÖLÜM: GENEL VE ARAÇ --}}
+                                
                                 <div class="col-md-6 border-end">
                                     <div class="section-header">1. Operasyon & Araç Bilgileri</div>
 
@@ -124,13 +125,13 @@
                                             <div class="form-check custom-radio">
                                                 <input class="form-check-input" type="radio" name="shipment_type"
                                                     id="type_import" value="import"
-                                                    {{ old('shipment_type', 'import') == 'import' ? 'checked' : '' }}>
+                                                    <?php echo e(old('shipment_type', 'import') == 'import' ? 'checked' : ''); ?>>
                                                 <label class="form-check-label" for="type_import">İthalat</label>
                                             </div>
                                             <div class="form-check custom-radio">
                                                 <input class="form-check-input" type="radio" name="shipment_type"
                                                     id="type_export" value="export"
-                                                    {{ old('shipment_type') == 'export' ? 'checked' : '' }}>
+                                                    <?php echo e(old('shipment_type') == 'export' ? 'checked' : ''); ?>>
                                                 <label class="form-check-label" for="type_export">İhracat</label>
                                             </div>
                                         </div>
@@ -139,83 +140,97 @@
                                     <div class="mb-3">
                                         <label for="arac_tipi" class="form-label fw-bold">Araç Tipi (*)</label>
                                         <select name="arac_tipi" id="arac_tipi"
-                                            class="form-select @error('arac_tipi') is-invalid @enderror" required>
+                                            class="form-select <?php $__errorArgs = ['arac_tipi'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" required>
                                             <option value="">Seçiniz...</option>
-                                            <option value="tır" {{ old('arac_tipi') == 'tır' ? 'selected' : '' }}>Tır
+                                            <option value="tır" <?php echo e(old('arac_tipi') == 'tır' ? 'selected' : ''); ?>>Tır
                                             </option>
-                                            <option value="kamyon" {{ old('arac_tipi') == 'kamyon' ? 'selected' : '' }}>
+                                            <option value="kamyon" <?php echo e(old('arac_tipi') == 'kamyon' ? 'selected' : ''); ?>>
                                                 Kamyon</option>
-                                            <option value="gemi" {{ old('arac_tipi') == 'gemi' ? 'selected' : '' }}>Gemi
+                                            <option value="gemi" <?php echo e(old('arac_tipi') == 'gemi' ? 'selected' : ''); ?>>Gemi
                                             </option>
                                         </select>
-                                        @error('arac_tipi')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                        <?php $__errorArgs = ['arac_tipi'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                            <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                     </div>
 
-                                    {{-- Kara Aracı Dinamik Alanlar --}}
+                                    
                                     <div id="karaAraciAlanlari" style="display: none;">
                                         <div class="row g-2 mb-3">
                                             <div class="col-md-6">
                                                 <label for="plaka" class="form-label">Plaka (*)</label>
                                                 <input type="text" class="form-control" id="plaka" name="plaka"
-                                                    value="{{ old('plaka') }}" placeholder="34 ABC 123">
+                                                    value="<?php echo e(old('plaka')); ?>" placeholder="34 ABC 123">
                                             </div>
                                             <div class="col-md-6" id="dorse_plakasi_div">
                                                 <label for="dorse_plakasi" class="form-label">Dorse Plakası (*)</label>
                                                 <input type="text" class="form-control" id="dorse_plakasi"
-                                                    name="dorse_plakasi" value="{{ old('dorse_plakasi') }}">
+                                                    name="dorse_plakasi" value="<?php echo e(old('dorse_plakasi')); ?>">
                                             </div>
                                         </div>
                                         <div class="mb-3">
                                             <label for="sofor_adi" class="form-label">Şoför Adı & Soyadı</label>
                                             <input type="text" class="form-control" id="sofor_adi" name="sofor_adi"
-                                                value="{{ old('sofor_adi') }}">
+                                                value="<?php echo e(old('sofor_adi')); ?>">
                                         </div>
                                         <div class="row g-2 mb-3">
                                             <div class="col-md-6">
                                                 <label for="kalkis_noktasi" class="form-label">Kalkış Noktası</label>
                                                 <input type="text" class="form-control" name="kalkis_noktasi"
-                                                    value="{{ old('kalkis_noktasi') }}">
+                                                    value="<?php echo e(old('kalkis_noktasi')); ?>">
                                             </div>
                                             <div class="col-md-6">
                                                 <label for="varis_noktasi" class="form-label">Varış Noktası</label>
                                                 <input type="text" class="form-control" name="varis_noktasi"
-                                                    value="{{ old('varis_noktasi') }}">
+                                                    value="<?php echo e(old('varis_noktasi')); ?>">
                                             </div>
                                         </div>
                                     </div>
 
-                                    {{-- Gemi Dinamik Alanlar --}}
+                                    
                                     <div id="gemiAlanlari" style="display: none;">
                                         <div class="row g-2 mb-3">
                                             <div class="col-md-6">
                                                 <label for="imo_numarasi" class="form-label">IMO Numarası (*)</label>
                                                 <input type="text" class="form-control" id="imo_numarasi"
-                                                    name="imo_numarasi" value="{{ old('imo_numarasi') }}">
+                                                    name="imo_numarasi" value="<?php echo e(old('imo_numarasi')); ?>">
                                             </div>
                                             <div class="col-md-6">
                                                 <label for="gemi_adi" class="form-label">Gemi Adı (*)</label>
                                                 <input type="text" class="form-control" id="gemi_adi"
-                                                    name="gemi_adi" value="{{ old('gemi_adi') }}">
+                                                    name="gemi_adi" value="<?php echo e(old('gemi_adi')); ?>">
                                             </div>
                                         </div>
                                         <div class="row g-2 mb-3">
                                             <div class="col-md-6">
                                                 <label for="kalkis_limani" class="form-label">Kalkış Limanı (*)</label>
                                                 <input type="text" class="form-control" id="kalkis_limani"
-                                                    name="kalkis_limani" value="{{ old('kalkis_limani') }}">
+                                                    name="kalkis_limani" value="<?php echo e(old('kalkis_limani')); ?>">
                                             </div>
                                             <div class="col-md-6">
                                                 <label for="varis_limani" class="form-label">Varış Limanı (*)</label>
                                                 <input type="text" class="form-control" id="varis_limani"
-                                                    name="varis_limani" value="{{ old('varis_limani') }}">
+                                                    name="varis_limani" value="<?php echo e(old('varis_limani')); ?>">
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {{-- 2. BÖLÜM: KARGO VE TAKVİM --}}
+                                
                                 <div class="col-md-6">
                                     <div class="section-header ms-md-3">2. Kargo & Zamanlama</div>
                                     <div class="ms-md-3">
@@ -223,25 +238,39 @@
                                             <label for="kargo_icerigi" class="form-label fw-bold">Kargo İçeriği
                                                 (*)</label>
                                             <input type="text" name="kargo_icerigi"
-                                                class="form-control border-2 @error('kargo_icerigi') is-invalid @enderror"
-                                                value="{{ old('kargo_icerigi') }}" required>
+                                                class="form-control border-2 <?php $__errorArgs = ['kargo_icerigi'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                                value="<?php echo e(old('kargo_icerigi')); ?>" required>
                                         </div>
 
                                         <div class="row g-2 mb-3">
                                             <div class="col-md-7">
                                                 <label for="kargo_miktari" class="form-label fw-bold">Miktar (*)</label>
                                                 <input type="text" name="kargo_miktari"
-                                                    class="form-control @error('kargo_miktari') is-invalid @enderror"
-                                                    value="{{ old('kargo_miktari') }}" required>
+                                                    class="form-control <?php $__errorArgs = ['kargo_miktari'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                                    value="<?php echo e(old('kargo_miktari')); ?>" required>
                                             </div>
                                             <div class="col-md-5">
                                                 <label for="kargo_tipi" class="form-label fw-bold">Birim (*)</label>
                                                 <select name="kargo_tipi" class="form-select" required>
-                                                    @foreach ($birimler as $birim)
-                                                        <option value="{{ $birim->ad }}"
-                                                            {{ old('kargo_tipi') == $birim->ad ? 'selected' : '' }}>
-                                                            {{ $birim->ad }}</option>
-                                                    @endforeach
+                                                    <?php $__currentLoopData = $birimler; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $birim): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <option value="<?php echo e($birim->ad); ?>"
+                                                            <?php echo e(old('kargo_tipi') == $birim->ad ? 'selected' : ''); ?>>
+                                                            <?php echo e($birim->ad); ?></option>
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                 </select>
                                             </div>
                                         </div>
@@ -251,15 +280,29 @@
                                                 <label for="cikis_tarihi" class="form-label fw-bold">Çıkış Tarihi
                                                     (*)</label>
                                                 <input type="datetime-local"
-                                                    class="form-control @error('cikis_tarihi') is-invalid @enderror"
-                                                    name="cikis_tarihi" value="{{ old('cikis_tarihi') }}" required>
+                                                    class="form-control <?php $__errorArgs = ['cikis_tarihi'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                                    name="cikis_tarihi" value="<?php echo e(old('cikis_tarihi')); ?>" required>
                                             </div>
                                             <div class="col-md-6">
                                                 <label for="tahmini_varis_tarihi" class="form-label fw-bold">Planlanan
                                                     Varış (*)</label>
                                                 <input type="datetime-local"
-                                                    class="form-control @error('tahmini_varis_tarihi') is-invalid @enderror"
-                                                    name="tahmini_varis_tarihi" value="{{ old('tahmini_varis_tarihi') }}"
+                                                    class="form-control <?php $__errorArgs = ['tahmini_varis_tarihi'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                                    name="tahmini_varis_tarihi" value="<?php echo e(old('tahmini_varis_tarihi')); ?>"
                                                     required>
                                             </div>
                                         </div>
@@ -275,15 +318,29 @@
 
                             <hr class="my-4">
 
-                            {{-- DİNAMİK ALANLAR (Polimorfik Custom Fields) --}}
+                            
                             <div class="row mb-4">
                                 <div class="col-12">
                                     <div class="section-header">3. Ekstra Veriler & Açıklamalar</div>
-                                    <x-dynamic-fields :model="\App\Models\Shipment::class" />
+                                    <?php if (isset($component)) { $__componentOriginal560f029fe080d8d8e90f45a1a078f632c53e6b00 = $component; } ?>
+<?php $component = App\View\Components\DynamicFields::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
+<?php $component->withName('dynamic-fields'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(App\View\Components\DynamicFields::class))->getConstructor()): ?>
+<?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['model' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(\App\Models\Shipment::class)]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal560f029fe080d8d8e90f45a1a078f632c53e6b00)): ?>
+<?php $component = $__componentOriginal560f029fe080d8d8e90f45a1a078f632c53e6b00; ?>
+<?php unset($__componentOriginal560f029fe080d8d8e90f45a1a078f632c53e6b00); ?>
+<?php endif; ?>
                                 </div>
                                 <div class="col-12 mt-3">
                                     <label for="aciklamalar" class="form-label fw-bold">Detaylı Açıklama</label>
-                                    <textarea class="form-control" id="aciklamalar" name="aciklamalar" rows="4">{{ old('aciklamalar') }}</textarea>
+                                    <textarea class="form-control" id="aciklamalar" name="aciklamalar" rows="4"><?php echo e(old('aciklamalar')); ?></textarea>
                                 </div>
                             </div>
 
@@ -299,9 +356,9 @@
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('page_scripts')
+<?php $__env->startSection('page_scripts'); ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const aracTipiDropdown = document.getElementById('arac_tipi');
@@ -351,4 +408,6 @@
             updateVehicleFields(); // Initial run
         });
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/shipments/create.blade.php ENDPATH**/ ?>
