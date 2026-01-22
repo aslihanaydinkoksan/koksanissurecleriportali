@@ -1,8 +1,8 @@
-@extends('layouts.app')
 
-@section('title', 'Sevkiyat Kaydını Düzenle')
 
-@push('styles')
+<?php $__env->startSection('title', 'Sevkiyat Kaydını Düzenle'); ?>
+
+<?php $__env->startPush('styles'); ?>
     <style>
         /* Ana içerik alanına animasyonlu arka plan */
         #app>main.py-4 {
@@ -76,9 +76,9 @@
             color: white;
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-11">
@@ -87,37 +87,37 @@
                         class="card-header d-flex justify-content-between align-items-center bg-transparent border-0 pt-4 px-4">
                         <div>
                             <h3 class="fw-bold mb-0">Sevkiyat Düzenle</h3>
-                            <small class="text-muted">ID: #{{ $shipment->id }} | Oluşturan:
-                                {{ $shipment->user->name }}</small>
+                            <small class="text-muted">ID: #<?php echo e($shipment->id); ?> | Oluşturan:
+                                <?php echo e($shipment->user->name); ?></small>
                         </div>
 
                         <div class="d-flex gap-2">
                             <div class="form-check form-switch me-3">
                                 <input class="form-check-input" type="checkbox" name="is_important" id="is_important"
                                     form="editShipmentForm" value="1"
-                                    {{ old('is_important', $shipment->is_important) ? 'checked' : '' }}>
+                                    <?php echo e(old('is_important', $shipment->is_important) ? 'checked' : ''); ?>>
                                 <label class="form-check-label fw-bold text-danger" for="is_important">Önemli</label>
                             </div>
-                            @if (Auth::user()->hasRole(['admin', 'yönetici']))
-                                <form method="POST" action="{{ route('shipments.destroy', $shipment->id) }}"
+                            <?php if(Auth::user()->hasRole(['admin', 'yönetici'])): ?>
+                                <form method="POST" action="<?php echo e(route('shipments.destroy', $shipment->id)); ?>"
                                     onsubmit="return confirm('Bu kaydı ve bağlı tüm durakları silmek istediğinizden emin misiniz?');">
-                                    @csrf @method('DELETE')
+                                    <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
                                     <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
                                         <i class="fas fa-trash me-1"></i> Kaydı Sil
                                     </button>
                                 </form>
-                            @endif
+                            <?php endif; ?>
                         </div>
                     </div>
 
                     <div class="card-body p-4">
-                        <form method="POST" action="{{ route('shipments.update', $shipment->id) }}" id="editShipmentForm"
+                        <form method="POST" action="<?php echo e(route('shipments.update', $shipment->id)); ?>" id="editShipmentForm"
                             enctype="multipart/form-data" autocomplete="off">
-                            @csrf
-                            @method('PUT')
+                            <?php echo csrf_field(); ?>
+                            <?php echo method_field('PUT'); ?>
 
                             <div class="row">
-                                {{-- SOL SÜTUN: OPERASYON VE DURUM --}}
+                                
                                 <div class="col-md-6 border-end">
                                     <div class="section-header">1. Durum ve Operasyon</div>
 
@@ -128,13 +128,13 @@
                                         <select name="shipment_status" id="shipment_status"
                                             class="form-select border-2 border-primary text-center fw-bold">
                                             <option value="pending"
-                                                {{ $shipment->shipment_status == 'pending' ? 'selected' : '' }}>📋 BEKLİYOR
+                                                <?php echo e($shipment->shipment_status == 'pending' ? 'selected' : ''); ?>>📋 BEKLİYOR
                                                 / HAZIRLANIYOR</option>
                                             <option value="on_road"
-                                                {{ $shipment->shipment_status == 'on_road' ? 'selected' : '' }}>🚚 YOLDA
+                                                <?php echo e($shipment->shipment_status == 'on_road' ? 'selected' : ''); ?>>🚚 YOLDA
                                                 (TRANSIT)</option>
                                             <option value="delivered"
-                                                {{ $shipment->shipment_status == 'delivered' ? 'selected' : '' }}>✅ TESLİM
+                                                <?php echo e($shipment->shipment_status == 'delivered' ? 'selected' : ''); ?>>✅ TESLİM
                                                 EDİLDİ</option>
                                         </select>
                                         <p class="small text-muted mt-2 mb-0">Statü değişikliği Kanban kartını otomatik
@@ -146,11 +146,11 @@
                                         <div class="btn-group w-100" role="group">
                                             <input type="radio" class="btn-check" name="shipment_type" id="type_import"
                                                 value="import"
-                                                {{ old('shipment_type', $shipment->shipment_type) == 'import' ? 'checked' : '' }}>
+                                                <?php echo e(old('shipment_type', $shipment->shipment_type) == 'import' ? 'checked' : ''); ?>>
                                             <label class="btn btn-outline-primary" for="type_import">İthalat</label>
                                             <input type="radio" class="btn-check" name="shipment_type" id="type_export"
                                                 value="export"
-                                                {{ old('shipment_type', $shipment->shipment_type) == 'export' ? 'checked' : '' }}>
+                                                <?php echo e(old('shipment_type', $shipment->shipment_type) == 'export' ? 'checked' : ''); ?>>
                                             <label class="btn btn-outline-primary" for="type_export">İhracat</label>
                                         </div>
                                     </div>
@@ -159,87 +159,87 @@
                                         <label for="arac_tipi" class="form-label fw-bold">Araç Tipi (*)</label>
                                         <select name="arac_tipi" id="arac_tipi" class="form-select" required>
                                             <option value="tır"
-                                                {{ old('arac_tipi', $shipment->arac_tipi) == 'tır' ? 'selected' : '' }}>Tır
+                                                <?php echo e(old('arac_tipi', $shipment->arac_tipi) == 'tır' ? 'selected' : ''); ?>>Tır
                                             </option>
                                             <option value="kamyon"
-                                                {{ old('arac_tipi', $shipment->arac_tipi) == 'kamyon' ? 'selected' : '' }}>
+                                                <?php echo e(old('arac_tipi', $shipment->arac_tipi) == 'kamyon' ? 'selected' : ''); ?>>
                                                 Kamyon</option>
                                             <option value="gemi"
-                                                {{ old('arac_tipi', $shipment->arac_tipi) == 'gemi' ? 'selected' : '' }}>
+                                                <?php echo e(old('arac_tipi', $shipment->arac_tipi) == 'gemi' ? 'selected' : ''); ?>>
                                                 Gemi</option>
                                         </select>
                                     </div>
 
-                                    {{-- Kara Aracı --}}
+                                    
                                     <div id="karaAraciAlanlari" style="display: none;">
                                         <div class="row g-2 mb-3">
                                             <div class="col-md-6">
                                                 <label for="plaka" class="form-label">Plaka</label>
                                                 <input type="text" class="form-control" name="plaka" id="plaka"
-                                                    value="{{ old('plaka', $shipment->plaka) }}">
+                                                    value="<?php echo e(old('plaka', $shipment->plaka)); ?>">
                                             </div>
                                             <div class="col-md-6" id="dorse_plakasi_div">
                                                 <label for="dorse_plakasi" class="form-label">Dorse Plakası</label>
                                                 <input type="text" class="form-control" name="dorse_plakasi"
                                                     id="dorse_plakasi"
-                                                    value="{{ old('dorse_plakasi', $shipment->dorse_plakasi) }}">
+                                                    value="<?php echo e(old('dorse_plakasi', $shipment->dorse_plakasi)); ?>">
                                             </div>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">Kalkış / Varış Noktası</label>
                                             <div class="input-group">
                                                 <input type="text" class="form-control" name="kalkis_noktasi"
-                                                    value="{{ old('kalkis_noktasi', $shipment->kalkis_noktasi) }}"
+                                                    value="<?php echo e(old('kalkis_noktasi', $shipment->kalkis_noktasi)); ?>"
                                                     placeholder="Kalkış">
                                                 <span class="input-group-text"><i class="fas fa-arrow-right"></i></span>
                                                 <input type="text" class="form-control" name="varis_noktasi"
-                                                    value="{{ old('varis_noktasi', $shipment->varis_noktasi) }}"
+                                                    value="<?php echo e(old('varis_noktasi', $shipment->varis_noktasi)); ?>"
                                                     placeholder="Varış">
                                             </div>
                                         </div>
                                     </div>
 
-                                    {{-- Gemi --}}
+                                    
                                     <div id="gemiAlanlari" style="display: none;">
                                         <div class="row g-2 mb-3">
                                             <div class="col-md-6">
                                                 <label class="form-label">Gemi Adı</label>
                                                 <input type="text" class="form-control" name="gemi_adi"
-                                                    id="gemi_adi" value="{{ old('gemi_adi', $shipment->gemi_adi) }}">
+                                                    id="gemi_adi" value="<?php echo e(old('gemi_adi', $shipment->gemi_adi)); ?>">
                                             </div>
                                             <div class="col-md-6">
                                                 <label class="form-label">IMO No</label>
                                                 <input type="text" class="form-control" name="imo_numarasi"
                                                     id="imo_numarasi"
-                                                    value="{{ old('imo_numarasi', $shipment->imo_numarasi) }}">
+                                                    value="<?php echo e(old('imo_numarasi', $shipment->imo_numarasi)); ?>">
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {{-- SAĞ SÜTUN: KARGO VE DOSYA --}}
+                                
                                 <div class="col-md-6">
                                     <div class="section-header ms-md-3">2. Kargo Bilgileri & Ekler</div>
                                     <div class="ms-md-3">
                                         <div class="mb-3">
                                             <label class="form-label fw-bold">Yük İçeriği</label>
                                             <input type="text" name="kargo_icerigi" class="form-control"
-                                                value="{{ old('kargo_icerigi', $shipment->kargo_icerigi) }}" required>
+                                                value="<?php echo e(old('kargo_icerigi', $shipment->kargo_icerigi)); ?>" required>
                                         </div>
                                         <div class="row g-2 mb-3">
                                             <div class="col-md-7">
                                                 <label class="form-label fw-bold">Miktar</label>
                                                 <input type="text" name="kargo_miktari" class="form-control"
-                                                    value="{{ old('kargo_miktari', $shipment->kargo_miktari) }}" required>
+                                                    value="<?php echo e(old('kargo_miktari', $shipment->kargo_miktari)); ?>" required>
                                             </div>
                                             <div class="col-md-5">
                                                 <label class="form-label fw-bold">Birim</label>
                                                 <select name="kargo_tipi" class="form-select">
-                                                    @foreach ($birimler as $birim)
-                                                        <option value="{{ $birim->ad }}"
-                                                            {{ $shipment->kargo_tipi == $birim->ad ? 'selected' : '' }}>
-                                                            {{ $birim->ad }}</option>
-                                                    @endforeach
+                                                    <?php $__currentLoopData = $birimler; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $birim): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <option value="<?php echo e($birim->ad); ?>"
+                                                            <?php echo e($shipment->kargo_tipi == $birim->ad ? 'selected' : ''); ?>>
+                                                            <?php echo e($birim->ad); ?></option>
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                 </select>
                                             </div>
                                         </div>
@@ -247,23 +247,23 @@
                                             <div class="col-md-6">
                                                 <label class="form-label">Çıkış Tarihi</label>
                                                 <input type="datetime-local" class="form-control" name="cikis_tarihi"
-                                                    value="{{ old('cikis_tarihi', $shipment->cikis_tarihi?->format('Y-m-d\TH:i')) }}">
+                                                    value="<?php echo e(old('cikis_tarihi', $shipment->cikis_tarihi?->format('Y-m-d\TH:i'))); ?>">
                                             </div>
                                             <div class="col-md-6">
                                                 <label class="form-label">Planlanan Varış</label>
                                                 <input type="datetime-local" class="form-control"
                                                     name="tahmini_varis_tarihi"
-                                                    value="{{ old('tahmini_varis_tarihi', $shipment->tahmini_varis_tarihi?->format('Y-m-d\TH:i')) }}">
+                                                    value="<?php echo e(old('tahmini_varis_tarihi', $shipment->tahmini_varis_tarihi?->format('Y-m-d\TH:i'))); ?>">
                                             </div>
                                         </div>
 
-                                        {{-- DOSYA ALANI --}}
+                                        
                                         <div class="p-3 rounded bg-light border mb-3">
                                             <label class="form-label fw-bold">Dosya Yönetimi</label>
-                                            @if ($shipment->dosya_yolu)
+                                            <?php if($shipment->dosya_yolu): ?>
                                                 <div class="d-flex align-items-center mb-2">
                                                     <i class="fas fa-file-pdf fa-2x text-danger me-2"></i>
-                                                    <a href="{{ asset('storage/' . $shipment->dosya_yolu) }}"
+                                                    <a href="<?php echo e(asset('storage/' . $shipment->dosya_yolu)); ?>"
                                                         target="_blank" class="text-decoration-none fw-bold">Mevcut
                                                         Dosyayı Gör</a>
                                                     <div class="form-check ms-auto">
@@ -273,7 +273,7 @@
                                                             for="dosya_sil">Sil</label>
                                                     </div>
                                                 </div>
-                                            @endif
+                                            <?php endif; ?>
                                             <input type="file" name="ek_dosya" class="form-control form-control-sm">
                                         </div>
                                     </div>
@@ -282,15 +282,29 @@
 
                             <hr class="my-4">
 
-                            {{-- DİNAMİK ALANLAR (Polimorfik Custom Fields Entegrasyonu) --}}
+                            
                             <div class="row mb-4">
                                 <div class="col-12">
                                     <div class="section-header">3. Ekstra Veriler & Detaylar</div>
-                                    <x-dynamic-fields :model="\App\Models\Shipment::class" :entity="$shipment" />
+                                    <?php if (isset($component)) { $__componentOriginal560f029fe080d8d8e90f45a1a078f632c53e6b00 = $component; } ?>
+<?php $component = App\View\Components\DynamicFields::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
+<?php $component->withName('dynamic-fields'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(App\View\Components\DynamicFields::class))->getConstructor()): ?>
+<?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['model' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(\App\Models\Shipment::class),'entity' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($shipment)]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal560f029fe080d8d8e90f45a1a078f632c53e6b00)): ?>
+<?php $component = $__componentOriginal560f029fe080d8d8e90f45a1a078f632c53e6b00; ?>
+<?php unset($__componentOriginal560f029fe080d8d8e90f45a1a078f632c53e6b00); ?>
+<?php endif; ?>
                                 </div>
                                 <div class="col-12 mt-3">
                                     <label class="form-label fw-bold text-muted">Açıklamalar</label>
-                                    <textarea class="form-control" name="aciklamalar" rows="3">{{ old('aciklamalar', $shipment->aciklamalar) }}</textarea>
+                                    <textarea class="form-control" name="aciklamalar" rows="3"><?php echo e(old('aciklamalar', $shipment->aciklamalar)); ?></textarea>
                                 </div>
                             </div>
 
@@ -305,9 +319,9 @@
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('page_scripts')
+<?php $__env->startSection('page_scripts'); ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const typeSelect = document.getElementById('arac_tipi');
@@ -344,4 +358,6 @@
             toggleSections();
         });
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/shipments/edit.blade.php ENDPATH**/ ?>
