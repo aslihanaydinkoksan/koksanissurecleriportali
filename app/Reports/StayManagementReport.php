@@ -16,27 +16,34 @@ class StayManagementReport implements ReportInterface
 
     public function getData(string $scope): \Illuminate\Support\Collection
     {
-        // Hangi scope gelmiş loglayalım (Hata ayıklamak için)
         \Log::info("Rapor Scope: " . $scope);
 
+        // Başlangıç tarihini hesapla
         $startDate = match ($scope) {
             'last_24h' => now()->subDay(),
             'last_7d' => now()->subDays(7),
             'last_30d' => now()->subDays(30),
             'last_3m' => now()->subMonths(3),
             'last_6m' => now()->subMonths(6),
-            'last_1y' => now()->subYear(), // Parametresiz kullanım
-            default => now()->subYears(5), // Hatalı yer burasıydı, subYears(5) yaptık
+            'last_1y' => now()->subYear(),
+            default => now()->subYears(2),
         };
 
-        $query = \App\Models\Stay::with(['resident', 'location'])
-            ->where('check_in_date', '>=', $startDate->format('Y-m-d H:i:s'));
+        // DB::raw kullanarak veritabanı seviyesinde tarih dönüşümü yapalım
+        // Bu, sütun tipi ne olursa olsun (string/datetime) karşılaştırmayı zorlar
+        $data = \App\Models\Stay::with(['resident', 'location'])
+            ->whereRaw("STR_TO_DATE(check_in_date, '%Y-%m-%d') >= ?", [$startDate->format('Y-m-d')])
+            ->latest()
+            ->get();
 
-        $data = $query->latest()->get();
-
-        // Log ile kontrol
-        \Log::info("Başlangıç Tarihi: " . $startDate->toDateTimeString());
+        \Log::info("Sorgulanan Tarih: " . $startDate->format('Y-m-d'));
         \Log::info("Bulunan Kayıt Sayısı: " . $data->count());
+
+        // Eğer hala 0 çıkıyorsa, test amaçlı tüm verileri çekip çekmediğine bakalım
+        if ($data->isEmpty()) {
+            $totalCount = \App\Models\Stay::count();
+            \Log::warning("Filtreli sonuç 0 ama tabloda toplam {$totalCount} kayıt var.");
+        }
 
         return $data->map(fn($s) => [
             'Giriş Tarihi' => $s->check_in_date ? \Carbon\Carbon::parse($s->check_in_date)->format('d.m.Y') : '-',
