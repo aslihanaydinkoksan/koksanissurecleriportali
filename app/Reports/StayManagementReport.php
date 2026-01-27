@@ -25,9 +25,10 @@ class StayManagementReport implements ReportInterface
             'last_1y' => Carbon::now()->subYear(),
             default => Carbon::now()->subDays(7),
         };
-
+        $data = Stay::with(['resident', 'location'])->whereDate('check_in_date', '>=', $startDate)->get();
+        \Log::info("Rapor verisi çekildi. Satır sayısı: " . $data->count());
         return Stay::with(['resident', 'location'])
-            ->where('check_in_date', '>=', $startDate)
+            ->whereDate('check_in_date', '>=', $startDate)
             ->latest()
             ->get()
             ->map(fn($s) => [
@@ -37,6 +38,7 @@ class StayManagementReport implements ReportInterface
                 'Durum' => $s->check_out_date ? 'Çıkış Yapıldı' : 'Konaklıyor',
                 'Çıkış Tarihi' => $s->check_out_date ? $s->check_out_date->format('d.m.Y') : '-',
             ]);
+
     }
 
     public function getHeaders(): array
