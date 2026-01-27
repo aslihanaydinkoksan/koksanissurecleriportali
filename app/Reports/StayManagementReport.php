@@ -14,31 +14,37 @@ class StayManagementReport implements ReportInterface
         return "Misafirhane Konaklama Hareketleri Raporu";
     }
 
-    public function getData(string $scope): Collection
+    public function getData(string $scope): \Illuminate\Support\Collection
     {
-        $startDate = match ($scope) {
-            'last_24h' => Carbon::now()->subDay(),
-            'last_7d' => Carbon::now()->subDays(7),
-            'last_30d' => Carbon::now()->subDays(30),
-            'last_3m' => Carbon::now()->subMonths(3),
-            'last_6m' => Carbon::now()->subMonths(6),
-            'last_1y' => Carbon::now()->subYear(),
-            default => Carbon::now()->subDays(7),
-        };
-        $data = Stay::with(['resident', 'location'])->whereDate('check_in_date', '>=', $startDate)->get();
-        \Log::info("Rapor verisi çekildi. Satır sayısı: " . $data->count());
-        return Stay::with(['resident', 'location'])
-            ->whereDate('check_in_date', '>=', $startDate)
-            ->latest()
-            ->get()
-            ->map(fn($s) => [
-                'Giriş Tarihi' => $s->check_in_date ? $s->check_in_date->format('d.m.Y') : '-',
-                'Misafir' => ($s->resident->first_name ?? '') . ' ' . ($s->resident->last_name ?? ''),
-                'Lokasyon' => $s->location->name ?? '-',
-                'Durum' => $s->check_out_date ? 'Çıkış Yapıldı' : 'Konaklıyor',
-                'Çıkış Tarihi' => $s->check_out_date ? $s->check_out_date->format('d.m.Y') : '-',
-            ]);
+        // Hangi scope gelmiş loglayalım (Hata ayıklamak için)
+        \Log::info("Rapor Scope: " . $scope);
 
+        $startDate = match ($scope) {
+            'last_24h' => now()->subDay(),
+            'last_7d' => now()->subDays(7),
+            'last_30d' => now()->subDays(30),
+            'last_3m' => now()->subMonths(3),
+            'last_6m' => now()->subMonths(6),
+            'last_1y' => now()->subYear(), // Parametresiz kullanım
+            default => now()->subYears(5), // Hatalı yer burasıydı, subYears(5) yaptık
+        };
+
+        $query = \App\Models\Stay::with(['resident', 'location'])
+            ->where('check_in_date', '>=', $startDate->format('Y-m-d H:i:s'));
+
+        $data = $query->latest()->get();
+
+        // Log ile kontrol
+        \Log::info("Başlangıç Tarihi: " . $startDate->toDateTimeString());
+        \Log::info("Bulunan Kayıt Sayısı: " . $data->count());
+
+        return $data->map(fn($s) => [
+            'Giriş Tarihi' => $s->check_in_date ? \Carbon\Carbon::parse($s->check_in_date)->format('d.m.Y') : '-',
+            'Misafir' => ($s->resident->first_name ?? '') . ' ' . ($s->resident->last_name ?? ''),
+            'Lokasyon' => $s->location->name ?? '-',
+            'Durum' => $s->check_out_date ? 'Çıkış Yapıldı' : 'Konaklıyor',
+            'Çıkış Tarihi' => $s->check_out_date ? \Carbon\Carbon::parse($s->check_out_date)->format('d.m.Y') : '-',
+        ]);
     }
 
     public function getHeaders(): array
