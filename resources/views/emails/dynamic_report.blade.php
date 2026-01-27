@@ -51,15 +51,35 @@
 
 <body>
     <div class="header">
-        <h2>{{ $reportName }}</h2>
+        <h2 style="margin:0;">{{ $reportName }}</h2>
+        <div style="font-size: 14px; opacity: 0.9; margin-top:5px;">Köksan Otomatik Bilgilendirme Servisi</div>
     </div>
-    <div class="content">
-        <p>Sistem tarafından otomatik oluşturulan periyodik rapor ektedir.</p>
 
+    <div class="content">
+        <p>Sayın İlgili,</p>
+
+        <p><strong>Köksan Misafirhane Yönetim Sistemi</strong> tarafından hazırlanan periyodik raporunuz oluşturulmuş ve
+            ekte sunulmuştur.</p>
+
+        <div
+            style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #1D3557;">
+            <ul style="list-style: none; padding: 0; margin: 0; font-size: 13px; line-height: 1.6;">
+                <li><strong>Rapor Adı:</strong> {{ $reportName }}</li>
+                <li><strong>Oluşturulma:</strong> {{ date('d.m.Y H:i') }}</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="https://kys.koksan.com/koksan_misafirhane/"
+                style="background-color: #1D3557; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 14px; display: inline-block;">
+                <i class="fas fa-external-link-alt"></i> Uygulamaya Git
+            </a>
+        </div>
+
+        <p style="font-size: 12px; color: #777; border-top: 1px solid #eee; pt-15px; margin-top: 20px;">
+            * Detaylı analiz ve veri girişi için yukarıdaki butonu kullanarak sisteme giriş yapabilirsiniz.<br>
+            * Bu e-posta sistem tarafından otomatik gönderilmiştir, lütfen bu adrese yanıt dönmeyiniz.
+        </p>
     </div>
-    <div class="footer">
-        Köksan Misafirhane Yönetim Sistemi &copy; {{ date('Y') }}
-    </div>
-</body>
 
 </html>
