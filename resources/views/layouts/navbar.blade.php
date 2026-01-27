@@ -128,6 +128,12 @@
                                             <i class="fa fa-clipboard-list text-warning me-2"></i> Log Kayıtları
                                         </a>
                                     </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {{ request()->routeIs('report-settings.*') ? 'active' : '' }}"
+                                            href="{{ route('report-settings.index') }}">
+                                            <i class="fas fa-envelope-open-text me-1"></i> Rapor Yönetimi
+                                        </a>
+                                    </li>
                                 @endcan
 
                                 <li>

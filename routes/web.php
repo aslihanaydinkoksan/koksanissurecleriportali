@@ -11,6 +11,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\LogController;
+use App\Http\Controllers\ReportSettingController;
 
 // --- MİSAFİR ROTALARI (Giriş yapmamışlar görebilir) ---
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -82,6 +83,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
 
+    // --- MAIL ---
+    Route::resource('report-settings', ReportSettingController::class);
     // Çıkış Yap
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 

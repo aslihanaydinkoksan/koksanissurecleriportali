@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Stay;
 use App\Models\Location;
+use App\Models\ReportSchedule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -99,6 +100,7 @@ class ReportController extends Controller
             ->groupBy('month_year')
             ->orderBy('month_year')
             ->pluck('count', 'month_year');
+        $reportSchedules = ReportSchedule::orderBy('created_at', 'desc')->get();
 
         // View'e gönderme
         return view('reports.index', compact(
@@ -106,7 +108,95 @@ class ReportController extends Controller
             'locations',
             'ownershipData',
             'typeData',
-            'monthlyData'
+            'monthlyData',
+            'reportSchedules'
         ));
+    }
+    /**
+     * Otomatik Rapor Ayarını Kaydet
+     */
+    public function storeSchedule(Request $request)
+    {
+        $validated = $request->validate([
+            'report_name' => 'required|string|max:255',
+            'type' => 'required|in:stays,assets',
+            'frequency' => 'required|in:daily,weekly,monthly',
+            'scope' => 'required|string',
+            'recipients' => 'required|string', // Virgülle ayrılmış string alıp array yapacağız
+        ]);
+
+        // E-postaları temizleyip diziye çeviriyoruz
+        $emails = array_map('trim', explode(',', $request->recipients));
+
+        ReportSchedule::create([
+            'report_name' => $request->report_name,
+            'type' => $request->type,
+            'frequency' => $request->frequency,
+            'scope' => $request->scope,
+            'recipients' => $emails,
+            'is_active' => true
+        ]);
+
+        return redirect()->back()->with('success', 'Otomatik rapor ayarı başarıyla eklendi.');
+    }
+
+    /**
+     * Rapor Ayarını Sil
+     */
+    public function destroySchedule($id)
+    {
+        $schedule = ReportSchedule::findOrFail($id);
+        $schedule->delete();
+
+        return redirect()->back()->with('success', 'Rapor ayarı kaldırıldı.');
+    }
+    /**
+     * Rapor Ayarını Düzenleme (Veri çekme)
+     */
+    public function editSchedule($id)
+    {
+        $schedule = \App\Models\ReportSchedule::findOrFail($id);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'id' => $schedule->id,
+                'report_name' => $schedule->report_name,
+                'type' => $schedule->type,
+                'frequency' => $schedule->frequency,
+                'scope' => $schedule->scope,
+                'recipients' => implode(', ', $schedule->recipients),
+                'is_active' => $schedule->is_active
+            ]
+        ]);
+    }
+
+    /**
+     * Rapor Ayarını Güncelleme
+     */
+    public function updateSchedule(Request $request, $id)
+    {
+        $schedule = ReportSchedule::findOrFail($id);
+
+        $validated = $request->validate([
+            'report_name' => 'required|string|max:255',
+            'type' => 'required|in:stays,assets',
+            'frequency' => 'required|in:daily,weekly,monthly',
+            'scope' => 'required|string',
+            'recipients' => 'required|string',
+        ]);
+
+        $emails = array_map('trim', explode(',', $request->recipients));
+
+        $schedule->update([
+            'report_name' => $request->report_name,
+            'type' => $request->type,
+            'frequency' => $request->frequency,
+            'scope' => $request->scope,
+            'recipients' => $emails,
+            'is_active' => $request->boolean('is_active', true)
+        ]);
+
+        return redirect()->back()->with('success', 'Rapor ayarı başarıyla güncellendi.');
     }
 }
