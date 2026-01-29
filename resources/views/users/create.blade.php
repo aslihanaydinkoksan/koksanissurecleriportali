@@ -310,7 +310,7 @@
                                         <div class="me-2 mb-2">
                                             <input type="radio" name="role" id="role_{{ $role->id }}"
                                                 value="{{ $role->name }}" class="role-radio"
-                                                {{ old('role', $user->roles->first()->name ?? 'user') == $role->name ? 'checked' : '' }}>
+                                                {{ old('role', 'user') == $role->name ? 'checked' : '' }}>
                                             <label for="role_{{ $role->id }}" class="role-label">
                                                 {{ __('roles.' . $role->name) }}
                                             </label>
