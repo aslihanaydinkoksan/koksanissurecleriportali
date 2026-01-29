@@ -149,6 +149,7 @@ class KanbanBoardController extends Controller
                         'is_default' => (isset($columnData['is_default']) && $columnData['is_default'] == '1'),
                     ]);
                 }
+                $this->kanbanService->syncExistingData($board);
             });
 
             return redirect()->route('kanban-boards.index')->with('success', 'Kişisel panonuz başarıyla oluşturuldu.');
