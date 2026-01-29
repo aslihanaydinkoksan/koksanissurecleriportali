@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Resident;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ResidentController extends Controller
 {
@@ -15,17 +16,18 @@ class ResidentController extends Controller
         $query = Resident::query();
 
         // Arama yapılmışsa filtrele
-        if ($request->has('search')) {
-            $search = $request->get('search');
+        if ($request->filled('search')) {
+            $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
+                $q->where(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$search}%")
+                    ->orWhere('first_name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%")
                     ->orWhere('tc_no', 'like', "%{$search}%")
                     ->orWhere('employee_id', 'like', "%{$search}%");
             });
         }
 
-        $residents = $query->orderBy('first_name')->paginate(10);
+        $residents = $query->orderBy('first_name')->paginate(10)->withQueryString();
 
         return view('residents.index', compact('residents'));
     }

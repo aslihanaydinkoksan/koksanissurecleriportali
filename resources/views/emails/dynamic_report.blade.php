@@ -75,11 +75,6 @@
                 <i class="fas fa-external-link-alt"></i> Uygulamaya Git
             </a>
         </div>
-
-        <p style="font-size: 12px; color: #777; border-top: 1px solid #eee; pt-15px; margin-top: 20px;">
-            * Detaylı analiz ve veri girişi için yukarıdaki butonu kullanarak sisteme giriş yapabilirsiniz.<br>
-            * Bu e-posta sistem tarafından otomatik gönderilmiştir, lütfen bu adrese yanıt dönmeyiniz.
-        </p>
     </div>
 
 </html>

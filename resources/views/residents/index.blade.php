@@ -39,25 +39,34 @@
                 <x-info-card title="{{ $person->first_name }} {{ $person->last_name }}"
                     subtitle="{{ $person->department ?? 'Departman Yok' }}" badge="{{ $badgeText }}"
                     badgeColor="{{ $badgeColor }}">
+
                     {{-- Kart İçeriği --}}
-                    <div class="d-flex flex-column gap-2 mt-2 text-secondary small">
+                    <div class="d-flex flex-column gap-2 mt-3">
 
                         {{-- Sicil No --}}
-                        <div class="d-flex justify-content-between align-items-center border-bottom border-light pb-1">
-                            <span><i class="fa fa-id-badge me-2 opacity-50"></i>Sicil No:</span>
-                            <span class="fw-medium text-dark font-monospace">{{ $person->employee_id ?? '-' }}</span>
-                        </div>
+                        <x-info-row label="Sicil No" :value="$person->employee_id" icon="id-badge" color="primary" />
 
                         {{-- Telefon --}}
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span><i class="fa fa-phone me-2 opacity-50"></i>Telefon:</span>
-                            <span class="fw-medium text-dark">{{ $person->phone ?? '-' }}</span>
-                        </div>
+                        <x-info-row label="Telefon" :value="$person->phone" icon="phone" color="success" />
+
+                        {{-- TC No --}}
+                        <x-info-row label="TC No" :value="$person->tc_no" icon="fingerprint" color="info" />
+
+                        {{-- Departman (Örnek olarak, eğer farklı bir yerde göstermek istersen) --}}
+                        {{-- 
+    <x-info-row 
+        label="Birim" 
+        :value="$person->department" 
+        icon="building" 
+        color="warning" 
+    /> 
+    --}}
+
                     </div>
 
                     {{-- Aksiyon Butonları --}}
                     <x-slot:actions>
-                        {{-- Geçmiş (View butonu olarak kullanıyoruz ama ikonu değiştiriyoruz) --}}
+                        {{-- Geçmiş --}}
                         <a href="{{ route('reports.index', ['search' => $person->first_name . ' ' . $person->last_name]) }}"
                             class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2 flex-fill justify-content-center">
                             <i class="fa fa-history"></i> Geçmiş
