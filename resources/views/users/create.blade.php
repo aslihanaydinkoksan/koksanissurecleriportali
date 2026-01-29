@@ -317,7 +317,7 @@
                                         </div>
                                     @endforeach
                                 </div>
-                            </div>iv>
+                            </div>
                     </div>
 
                     <div class="d-grid">
