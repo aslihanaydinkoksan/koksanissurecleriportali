@@ -10,18 +10,14 @@ use Carbon\Carbon;
 
 class ReportController extends Controller
 {
-    /**
-     * Kurumsal Dashboard ve Raporlama
-     */
     public function index(Request $request)
     {
-        // 1. TABLO SORGUSU VE GELİŞMİŞ ARAMA
+        // --- 1. TABLO SORGUSU (Aynen Kalıyor) ---
         $query = Stay::with(['resident', 'location']);
 
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                // Ad + Soyad kombinasyonu ile ara (Ercan EREN yazınca çıkması için)
                 $q->whereHas('resident', function ($subQ) use ($search) {
                     $subQ->where(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$search}%")
                         ->orWhere('first_name', 'like', "%{$search}%")
@@ -33,7 +29,6 @@ class ReportController extends Controller
             });
         }
 
-        // Filtreler
         if ($request->filled('start_date'))
             $query->whereDate('check_in_date', '>=', $request->start_date);
         if ($request->filled('end_date'))
@@ -44,51 +39,70 @@ class ReportController extends Controller
         $stays = $query->orderBy('check_in_date', 'desc')->paginate(20)->withQueryString();
         $locations = Location::whereIn('type', ['site', 'block', 'campus', 'apartment'])->orderBy('name')->get();
 
-        // ---------------------------------------------
-        // 2. DASHBOARD VERİLERİ (KURUMSAL ANALİZ)
-        // ---------------------------------------------
 
-        // Özet Kartlar
+        // --- 2. DASHBOARD VERİLERİ (YENİLENDİ) ---
+
+        // A) Özet Kartlar
         $totalUnits = Location::whereIn('type', ['apartment', 'room'])->count();
         $occupiedCount = Stay::whereNull('check_out_date')->distinct('location_id')->count();
         $activeGuests = Stay::whereNull('check_out_date')->count();
 
-        // GRAFİK 1: Mülkiyet Durumu (Dairesel)
+        // B) Mülkiyet Durumu (Şirket Mülkü vs Kiralık)
         $ownershipData = Location::whereIn('type', ['apartment', 'room'])
             ->select('ownership', DB::raw('count(*) as total'))
             ->groupBy('ownership')
             ->pluck('total', 'ownership')
             ->mapWithKeys(fn($val, $key) => [$key == 'owned' ? 'Şirket Mülkü' : 'Kiralık' => $val]);
 
-        // GRAFİK 2: Departman Bazlı Kullanım (Hangi departman tesisleri ne kadar kullanıyor?)
-        $deptData = Stay::join('residents', 'stays.resident_id', '=', 'residents.id')
-            ->select('residents.department', DB::raw('count(*) as count'))
-            ->groupBy('residents.department')
-            ->orderByDesc('count')
-            ->limit(10)
-            ->pluck('count', 'department');
-
-        // GRAFİK 3: Konaklama Süresi Dağılımı (Segmentasyon)
-        $staysForDuration = Stay::whereNotNull('check_out_date')->get();
-        $durationBuckets = [
-            '1-3 Gün' => 0,
-            '4-7 Gün' => 0,
-            '8-15 Gün' => 0,
-            '15+ Gün' => 0
-        ];
-        foreach ($staysForDuration as $s) {
-            $days = $s->check_in_date->diffInDays($s->check_out_date);
-            if ($days <= 3)
-                $durationBuckets['1-3 Gün']++;
-            elseif ($days <= 7)
-                $durationBuckets['4-7 Gün']++;
-            elseif ($days <= 15)
-                $durationBuckets['8-15 Gün']++;
-            else
-                $durationBuckets['15+ Gün']++;
+        // C) GRAFİK 2 (YENİ): Son 7 Günlük Hareketlilik (Giriş vs Çıkış)
+        // Son 7 günü tek tek dönüp o günkü giriş ve çıkış sayılarını alıyoruz.
+        $dates = collect();
+        for ($i = 6; $i >= 0; $i--) {
+            $dates->push(Carbon::today()->subDays($i));
         }
 
-        // GRAFİK 4: Aylık Giriş Yoğunluğu
+        $movementLabels = [];
+        $checkInCounts = [];
+        $checkOutCounts = [];
+
+        foreach ($dates as $date) {
+            $dayLabel = $date->format('d/m'); // Örn: 25/05
+            $movementLabels[] = $dayLabel;
+
+            // O gün giriş yapanlar
+            $checkInCounts[] = Stay::whereDate('check_in_date', $date)->count();
+
+            // O gün çıkış yapanlar
+            $checkOutCounts[] = Stay::whereDate('check_out_date', $date)->count();
+        }
+
+        $movementData = [
+            'labels' => $movementLabels,
+            'check_ins' => $checkInCounts,
+            'check_outs' => $checkOutCounts
+        ];
+
+        // D) Konaklama Süresi Dağılımı (Aktifleri de kapsayan mantık)
+        $allStaysForDuration = Stay::select('check_in_date', 'check_out_date')->get();
+        $durationBuckets = ['1-7 Gün' => 0, '8-30 Gün' => 0, '1-6 Ay' => 0, '6+ Ay' => 0];
+
+        foreach ($allStaysForDuration as $s) {
+            if (!$s->check_in_date)
+                continue;
+            $endDate = $s->check_out_date ?? Carbon::now(); // Hala kalıyorsa bugünü baz al
+            $days = $s->check_in_date->diffInDays($endDate);
+
+            if ($days <= 7)
+                $durationBuckets['1-7 Gün']++;
+            elseif ($days <= 30)
+                $durationBuckets['8-30 Gün']++;
+            elseif ($days <= 180)
+                $durationBuckets['1-6 Ay']++;
+            else
+                $durationBuckets['6+ Ay']++;
+        }
+
+        // E) Aylık Trend
         $monthlyData = Stay::select(
             DB::raw('count(*) as count'),
             DB::raw("DATE_FORMAT(check_in_date, '%Y-%m') as month_year")
@@ -98,11 +112,12 @@ class ReportController extends Controller
             ->orderBy('month_year')
             ->pluck('count', 'month_year');
 
+
         return view('reports.index', compact(
             'stays',
             'locations',
             'ownershipData',
-            'deptData',
+            'movementData', // residentTypeData yerine movementData geldi
             'durationBuckets',
             'monthlyData',
             'totalUnits',
