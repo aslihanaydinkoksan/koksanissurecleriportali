@@ -20,39 +20,50 @@ class KanbanViewController extends Controller
      * Kullanıcının seçtiği modüle (scope) göre KENDİ panosunu getirir.
      */
 
-    public function index(Request $request)
+    public function index(Request $request, $board_id = null)
     {
         $user = auth()->user();
 
-        // 1. URL'den board_id veya scope parametrelerini al
-        $boardId = $request->query('board_id');
-        $scope = $request->query('scope');
+        // 1. GÜVENLİK VE BULMA:
+        // Eğer board_id rotadan gelmediyse (null ise), create sayfasına at.
+        if (!$board_id) {
+            // Opsiyonel: scope varsa ona göre create'e yönlendir
+            return redirect()->route('kanban-boards.create');
+        }
 
-        // 2. Panoyu bul (Sadece bu kullanıcıya ait olanlar arasında)
+        // 2. Panoyu bul (Admin ise hepsi, değilse sadece kendisininki)
         $boardQuery = KanbanBoard::with([
             'columns' => fn($q) => $q->orderBy('order_index'),
             'columns.cards' => fn($q) => $q->orderBy('sort_order'),
             'columns.cards.model'
-        ])->where('user_id', $user->id);
+        ]);
 
         if (!$user->isAdmin()) {
             $boardQuery->where('user_id', $user->id);
         }
-        if ($boardId) {
-            // Eğer belirli bir pano ID'si istenmişse onu getir
-            $board = $boardQuery->where('id', $boardId)->first();
-        } else {
-            // ID yoksa, scope'a göre ilk/varsayılan panoyu getir (Eski linkler bozulmasın diye)
-            $board = $boardQuery->where('module_scope', $scope ?: 'maintenance')->first();
-        }
 
-        // 3. Eğer pano bulunamazsa oluşturma ekranına yönlendir
+        // ID'ye göre panoyu çek
+        $board = $boardQuery->where('id', $board_id)->first();
+
+        // 3. Eğer pano bulunamazsa (Silinmişse veya yetkisi yoksa)
         if (!$board) {
-            $finalScope = $scope ?: ($this->kanbanService->resolveScopeFromUser($user) ?: 'maintenance');
-            return redirect()->route('kanban-boards.create', ['scope' => $finalScope])
-                ->with('info', 'Bu bölüm için henüz bir panonuz yok. Hemen oluşturun.');
+            return redirect()->route('kanban-boards.index')
+                ->with('error', 'Pano bulunamadı veya erişim yetkiniz yok.');
         }
+        if ($board->columns) {
+            foreach ($board->columns as $column) {
+                // Eğer sütunda kartlar varsa filtrele
+                if ($column->cards) {
+                    $filteredCards = $column->cards->filter(function ($card) {
+                        // Model (asıl iş kaydı) veritabanında duruyor mu?
+                        return $card->model !== null;
+                    });
 
+                    // Temizlenmiş listeyi sütuna geri yükle
+                    $column->setRelation('cards', $filteredCards);
+                }
+            }
+        }
         // View içinde kullanmak üzere asıl scope'u board üzerinden alalım
         $scope = $board->module_scope;
 

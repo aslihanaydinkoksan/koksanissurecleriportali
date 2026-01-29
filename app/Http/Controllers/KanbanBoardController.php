@@ -56,39 +56,58 @@ class KanbanBoardController extends Controller
 
     /**
      * Yeni pano oluşturma formu.
+     * (Akıllı Yönlendirme Eklendi: Zaten varsa direkt panoya atar)
      */
     public function create(Request $request)
     {
         $user = auth()->user();
+        $activeUnitId = session('active_unit_id') ?? $user->business_unit_id;
 
-        // 1. Kapsamı belirle (Önce URL parametresi, sonra departman tanımı)
+        // 1. İSTENEN KAPSAMI AL
+        // URL'den (örn: ?scope=logistics) veya kullanıcı departmanından
         $scope = $request->query('scope') ?: $this->kanbanService->resolveScopeFromUser($user);
 
-        // 2. Dinamik Yetki & Kapsam Kontrolü
+        // --- EKLENEN AKILLI YÖNLENDİRME BLOĞU (BAŞLANGIÇ) ---
+        // Eğer kullanıcı belirli bir modül için "Oluştur" sayfasına geldiyse,
+        // önce o modülde zaten bir panosu var mı diye bakıyoruz.
+        if ($scope && $activeUnitId) {
+            $existingBoard = \App\Models\KanbanBoard::where('user_id', $user->id)
+                ->where('business_unit_id', $activeUnitId)
+                ->where('module_scope', $scope)
+                ->first();
+
+            // Pano zaten varsa, oluşturma formunu gösterme, direkt panoya yönlendir!
+            if ($existingBoard) {
+                // Eğer URL'de 'force_create' yoksa yönlendir
+                if (!$request->has('force_new')) {
+                    return redirect()->route('kanban.board', ['board_id' => $existingBoard->id])
+                        ->with('info', 'Bu modülde zaten bir panonuz olduğu için sizi oraya yönlendirdik.');
+                }
+            }
+        }
+        // --- EKLENEN AKILLI YÖNLENDİRME BLOĞU (BİTİŞ) ---
+
+
+        // 2. Dinamik Yetki & Kapsam Kontrolü (Mevcut Kodların)
         if (!$user->isAdmin()) {
-            // Admin DEĞİLSE: Kapsam mutlaka olmalı ve geçerli olmalı
             if (!$scope || !$this->kanbanService->isValidScope($scope)) {
                 return redirect()->route('kanban-boards.index')
                     ->with('error', 'Departmanınıza tanımlı bir kapsam bulunamadı. Lütfen yöneticiye danışın.');
             }
         } else {
-            // Admin İSE: Kapsam geçersiz bir değerse (örn: URL'de hata yapılmışsa) temizle ki seçim yapabilsin
             if ($scope && !$this->kanbanService->isValidScope($scope)) {
                 $scope = null;
             }
         }
 
-        // 3. Tüm modülleri servisten al (Admin her şeyi seçebilsin diye)
+        // 3. View Verilerini Hazırla (Mevcut Kodların)
         $modules = $this->kanbanService->getAllModules();
-
-        // 4. Fabrika/Birim Tespiti
-        $userUnit = $user->businessUnits()->find(session('active_unit_id'))
-            ?? $user->businessUnits()->first();
+        $userUnit = $user->businessUnits()->find($activeUnitId) ?? $user->businessUnits()->first();
 
         $allUsers = $user->isAdmin()
             ? \App\Models\User::with('businessUnits')->orderBy('name')->get()
             : collect();
-        // Admin koruması: Admin bir birime atanmamış olsa bile sayfa patlamasın, ilk birimi ver
+
         if (!$userUnit && $user->isAdmin()) {
             $userUnit = \App\Models\BusinessUnit::first();
         }
@@ -97,7 +116,6 @@ class KanbanBoardController extends Controller
             return redirect()->route('home')->with('error', 'Herhangi bir fabrikaya bağlı değilsiniz.');
         }
 
-        // 5. View'a gönder (Eğer scope null ise, view tarafında kullanıcıya seçtireceğiz)
         return view('admin.kanban.create', compact('userUnit', 'modules', 'scope', 'allUsers'));
     }
 
@@ -249,6 +267,15 @@ class KanbanBoardController extends Controller
             return back()->withErrors(['error' => 'Güncelleme hatası: ' . $e->getMessage()]);
         }
     }
+    /**
+     * Merkezi Yönlendirici: Hatalı linkleri asıl Kanban sayfasına bağlar.
+     */
+    public function show($id)
+    {
+        dd("TUZAK 1 - Controller: KanbanBoardController, Metod: show", "Gelen ID: " . $id);
+        // Hiçbir kontrol yapmadan direkt asıl sayfaya fırlatıyoruz.
+        return redirect()->route('kanban.board', ['board_id' => $id]);
+    }
 
     public function destroy(KanbanBoard $kanbanBoard)
     {
@@ -257,5 +284,39 @@ class KanbanBoardController extends Controller
         }
         $kanbanBoard->delete();
         return redirect()->route('kanban-boards.index')->with('success', 'Pano silindi.');
+    }
+    /**
+     * AKILLI YÖNLENDİRME (Smart Redirect)
+     * Belirtilen kapsamda (scope) kullanıcının panosu varsa oraya,
+     * yoksa oluşturma sayfasına yönlendirir.
+     */
+    public function checkAndRedirect(Request $request)
+    {
+        $scope = $request->query('scope');
+        $user = auth()->user();
+        dd("TUZAK 2 - Controller: KanbanBoardController, Metod: checkAndRedirect", "İstenen Scope: " . $scope, "User ID: " . $user->id);
+        // Session'daki aktif fabrikayı veya kullanıcının birimini al
+        $activeUnitId = session('active_unit_id') ?? $user->business_unit_id;
+
+        if (!$activeUnitId || !$scope) {
+            return redirect()->route('kanban-boards.index')
+                ->with('error', 'Yönlendirme için kapsam veya fabrika bilgisi eksik.');
+        }
+
+        // Kullanıcının bu fabrikada ve bu kapsamda panosu var mı?
+        // NOT: Eğer "Admin herkesin panosunu görsün" dersen sorguyu değiştirebiliriz,
+        // ama "Kendi Panosu" mantığı için user_id kontrolü şart.
+        $existingBoard = \App\Models\KanbanBoard::where('user_id', $user->id)
+            ->where('business_unit_id', $activeUnitId)
+            ->where('module_scope', $scope)
+            ->first();
+
+        if ($existingBoard) {
+            // Pano varsa detayına git
+            return redirect()->route('kanban.board', ['board_id' => $existingBoard->id]);
+        }
+
+        // Pano yoksa oluşturma sayfasına git (Scope parametresiyle)
+        return redirect()->route('kanban-boards.create', ['scope' => $scope]);
     }
 }

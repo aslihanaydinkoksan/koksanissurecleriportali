@@ -247,7 +247,7 @@ class KanbanService
                 'scope' => $board->module_scope,
                 'column_count' => $board->columns->count(),
                 'total_tasks' => $activeTaskCount,
-                'route' => route('kanban.board', ['board' => $board->id]), // Route parametresi board model binding ise 'board' olmalı
+                'route' => route('kanban.board', ['board_id' => $board->id]), // Route parametresi board model binding ise 'board' olmalı
                 'icon' => $this->getIconForScope($board->module_scope),
                 'color' => $this->getColorForScope($board->module_scope)
             ];

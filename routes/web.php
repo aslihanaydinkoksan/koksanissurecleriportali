@@ -103,13 +103,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/important-items', [HomeController::class, 'showAllImportant'])->name('important.all');
 
     // --- KANBAN PANOSU YÖNETİMİ ---
-    // Panoyu Görüntüleme (Örn: /kanban/board?scope=maintenance)
-    Route::resource('kanban-boards', KanbanBoardController::class);
-    Route::get('/kanban/board', [KanbanViewController::class, 'index'])->name('kanban.board');
+    Route::get('/kanban/board/{board_id}', [KanbanViewController::class, 'index'])->name('kanban.board');
+    Route::get('/kanban/smart-redirect', [KanbanBoardController::class, 'checkAndRedirect'])->name('kanban.smart_redirect');
+    Route::resource('kanban-boards', KanbanBoardController::class)->except(['show']);
     Route::get('/kanban/card/{kanbanCard}', [KanbanViewController::class, 'show'])->name('kanban.show');
-    // Kart Taşıma (AJAX - API)
     Route::post('/kanban/move-card', [KanbanViewController::class, 'moveCard'])->name('kanban.move');
-
 
     // ==========================================================
     //  DEPARTMAN BAZLI YÖNETİMLER
