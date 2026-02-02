@@ -71,6 +71,7 @@ Route::get('/tv/check-updates', [TvDashboardController::class, 'checkUpdates'])-
 //  AUTH MIDDLEWARE GRUBU (Tüm İç Sayfalar)
 // ==================================================================================
 Route::middleware(['auth'])->group(function () {
+    Route::post('/ai/ask', [App\Http\Controllers\AIController::class, 'ask'])->name('ai.ask');
 
     // --- DASHBOARD VE ANA SAYFALAR ---
     Route::get('/home', [HomeController::class, 'index'])->name('home');
@@ -265,6 +266,7 @@ Route::middleware(['auth'])->group(function () {
 
         // Seferler
         Route::resource('schedules', ServiceScheduleController::class);
+
     });
 
 

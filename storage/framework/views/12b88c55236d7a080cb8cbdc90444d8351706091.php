@@ -243,7 +243,7 @@
             <div class="container-fluid px-lg-4">
                 <a class="navbar-brand d-flex align-items-center" href="<?php echo e(route('welcome')); ?>">
                     <img src="<?php echo e(asset('koksan-logo.png')); ?>" alt="Köksan Logo" class="me-2">
-                    <strong>Köksan İş Süreçleri Portalı</strong>
+                    <strong>KÖKSAN Takvim</strong>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                     data-bs-target="#navbarSupportedContent">
@@ -677,12 +677,39 @@
             <?php echo $__env->yieldContent('content'); ?>
         </main>
     </div>
+    <div id="ai-chat-wrapper" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+        <button id="chat-toggle" class="btn btn-primary rounded-circle shadow-lg"
+            style="width: 60px; height: 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+            <i class="fa-solid fa-robot fa-lg text-white"></i>
+        </button>
 
+        <div id="chat-window" class="card shadow-lg d-none"
+            style="position: absolute; bottom: 70px; right: 0; width: 350px; border-radius: 15px; border: none; backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.95);">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+                style="border-radius: 15px 15px 0 0;">
+                <span class="fw-bold"><i class="fa-solid fa-headset me-2"></i>Portal Asistanı</span>
+                <button type="button" class="btn-close btn-close-white" id="chat-close"></button>
+            </div>
+            <div id="chat-body" class="card-body"
+                style="height: 300px; overflow-y: auto; font-size: 0.9rem; display: flex; flex-direction: column; gap: 10px;">
+                <div class="ai-msg bg-light p-2 rounded">Merhaba! Size nasıl yardımcı olabilirim?</div>
+            </div>
+            <div class="card-footer bg-transparent border-top-0">
+                <div class="input-group">
+                    <input type="text" id="chat-input" class="form-control form-control-sm"
+                        placeholder="Sorunuzu yazın...">
+                    <button class="btn btn-primary btn-sm" id="chat-send"><i
+                            class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
     <?php echo $__env->yieldContent('page_scripts'); ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -752,13 +779,6 @@
                 });
             <?php endif; ?>
 
-            <?php if(session('warning')): ?>
-                Toast.fire({
-                    icon: 'warning',
-                    title: '<?php echo e(session('warning')); ?>'
-                });
-            <?php endif; ?>
-
             window.showToast = function(message, type = 'success') {
                 Toast.fire({
                     icon: type,
@@ -766,21 +786,13 @@
                 });
             }
 
-            // --- 4. AKILLI SİLME (DELETE CONFIRMATION) ---
-            document.querySelectorAll('form').forEach(form => {
-                if (form.getAttribute('onsubmit') && form.getAttribute('onsubmit').includes('confirm')) {
-                    form.removeAttribute('onsubmit');
-                }
-            });
-
+            // --- 4. AKILLI SİLME KONFİRMASYONU ---
             document.addEventListener('submit', function(e) {
                 const form = e.target;
                 const methodInput = form.querySelector('input[name="_method"]');
-
                 if (form.tagName === 'FORM' && methodInput && methodInput.value.toUpperCase() ===
                     'DELETE') {
                     e.preventDefault();
-
                     Swal.fire({
                         title: 'Emin misiniz?',
                         text: "Bu kaydı silmek istediğinize emin misiniz?",
@@ -791,126 +803,78 @@
                         confirmButtonText: 'Evet, Sil!',
                         cancelButtonText: 'İptal'
                     }).then((result) => {
-                        if (result.isConfirmed) {
-                            const btn = form.querySelector('button[type="submit"]');
-                            if (btn) btn.disabled = true;
-
-                            fetch(form.action, {
-                                    method: 'POST',
-                                    body: new FormData(form),
-                                    headers: {
-                                        'X-Requested-With': 'XMLHttpRequest',
-                                        'Accept': 'application/json'
-                                    }
-                                })
-                                .then(async response => {
-                                    if (response.status === 403) {
-                                        showToast(
-                                            '⛔ Bu işlemi yapmaya yetkiniz bulunmamaktadır!',
-                                            'error');
-                                        return;
-                                    }
-                                    if (response.ok) {
-                                        const contentType = response.headers.get(
-                                            "content-type");
-                                        if (contentType && contentType.indexOf(
-                                                "application/json") !== -1) {
-                                            await Swal.fire('Silindi!',
-                                                'Kayıt başarıyla silindi.', 'success');
-                                            window.location.reload();
-                                        } else {
-                                            const htmlText = await response.text();
-                                            const parser = new DOMParser();
-                                            const doc = parser.parseFromString(htmlText,
-                                                'text/html');
-                                            const errorAlert = doc.querySelector(
-                                                '.alert-danger');
-
-                                            if (errorAlert) {
-                                                let errorMsg = errorAlert.innerText.trim()
-                                                    .replace('×', '').trim();
-                                                showToast(errorMsg, 'error');
-                                            } else {
-                                                await Swal.fire('Silindi!',
-                                                    'Kayıt başarıyla silindi.',
-                                                    'success');
-                                                if (response.url && response.url !== window
-                                                    .location.href) {
-                                                    window.location.href = response.url;
-                                                } else {
-                                                    window.location.reload();
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        showToast('Bir hata oluştu.', 'error');
-                                    }
-                                })
-                                .catch(error => {
-                                    console.error(error);
-                                    showToast('Sunucu hatası.', 'error');
-                                })
-                                .finally(() => {
-                                    if (btn) btn.disabled = false;
-                                });
-                        }
+                        if (result.isConfirmed) form.submit();
                     });
                 }
             });
 
-            // --- 5. BİLDİRİM VE SİSTEM GÜNCELLEME KONTROLÜ ---
+            // --- 5. BİLDİRİM VE GÜNCELLEME KONTROLÜ ---
             setInterval(function() {
                 fetch("<?php echo e(route('notifications.check')); ?>")
                     .then(res => res.ok ? res.json() : Promise.reject(res))
                     .then(data => {
                         const badge = document.getElementById('notification-badge');
                         const icon = document.getElementById('notification-icon');
-                        const readAllLink = document.getElementById('mark-all-read');
                         const list = document.getElementById('notification-list');
-
                         if (badge) {
                             badge.style.display = data.count > 0 ? 'inline-block' : 'none';
                             badge.innerText = data.count;
                         }
                         if (icon) icon.style.color = data.count > 0 ? '#d11f1f' : '#0d6efd';
-                        if (readAllLink) readAllLink.style.display = data.count > 0 ? 'inline-block' :
-                            'none';
                         if (list && list.innerHTML !== data.html) list.innerHTML = data.html;
                     })
                     .catch(err => console.error('Bildirim hatası:', err));
-            }, 10000);
+            }, 30000);
 
-            // B) Global Akıllı Yenileme (Global Smart Refresh)
-            const initialHash = "<?php echo e($globalDataHash ?? ''); ?>";
-            if (initialHash) {
-                setInterval(function() {
-                    if (document.activeElement.tagName === 'INPUT' ||
-                        document.activeElement.tagName === 'TEXTAREA' ||
-                        document.activeElement.isContentEditable) {
-                        return;
+            // --- 6. PORTAL ASİSTANI (AI CHAT) ---
+            const toggle = document.getElementById('chat-toggle');
+            const windowDiv = document.getElementById('chat-window');
+            const close = document.getElementById('chat-close');
+            const input = document.getElementById('chat-input');
+            const send = document.getElementById('chat-send');
+            const body = document.getElementById('chat-body');
+
+            if (toggle) {
+                toggle.onclick = () => windowDiv.classList.toggle('d-none');
+                close.onclick = () => windowDiv.classList.add('d-none');
+
+                function linkify(text) {
+                    var urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+                    return text.replace(urlPattern,
+                        '<a href="$1" target="_blank" class="fw-bold" style="color: #667eea; text-decoration: underline;">$1</a>'
+                    );
+                }
+
+                async function sendMessage() {
+                    const text = input.value.trim();
+                    if (!text) return;
+
+                    body.innerHTML +=
+                        `<div class="user-msg text-end mb-2"><span class="bg-primary text-white p-2 rounded d-inline-block shadow-sm" style="font-size:0.85rem;">${text}</span></div>`;
+                    input.value = '';
+                    body.scrollTop = body.scrollHeight;
+
+                    const loaderId = 'loader_' + Date.now();
+                    body.innerHTML +=
+                        `<div class="ai-msg bg-light p-2 rounded shadow-sm mb-2" id="${loaderId}" style="font-size:0.85rem;"><i class="fa-solid fa-spinner fa-spin"></i> Düşünüyorum...</div>`;
+                    body.scrollTop = body.scrollHeight;
+
+                    try {
+                        const res = await axios.post("<?php echo e(route('ai.ask')); ?>", {
+                            message: text
+                        });
+                        // Düzeltme: innerText yerine innerHTML kullanıyoruz
+                        document.getElementById(loaderId).innerHTML = linkify(res.data.answer);
+                    } catch (e) {
+                        document.getElementById(loaderId).innerText = "Hata oluştu. Lütfen tekrar deneyin.";
                     }
+                    body.scrollTop = body.scrollHeight;
+                }
 
-                    fetch("<?php echo e(route('system.check_updates')); ?>", {
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest',
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/json'
-                            }
-                        })
-                        .then(res => {
-                            if (res.status === 401 || res.status === 419) {
-                                return null;
-                            }
-                            return res.json();
-                        })
-                        .then(data => {
-                            if (data && data.hash && data.hash !== initialHash) {
-                                console.log('Sistem güncellendi, sayfa yenileniyor...');
-                                window.location.reload();
-                            }
-                        })
-                        .catch(err => console.error('Güncelleme kontrolü başarısız:', err));
-                }, 1000000);
+                send.onclick = sendMessage;
+                input.onkeypress = (e) => {
+                    if (e.key === 'Enter') sendMessage();
+                };
             }
         });
     </script>

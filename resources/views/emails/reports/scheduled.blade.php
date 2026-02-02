@@ -2,7 +2,7 @@
 @component('mail::message')
 # {{ $reportName }}
 
-KÖKSAN İş Süreçleri Portalı periyodik raporunuz ektedir.
+KÖKSAN Takvim periyodik raporunuz ektedir.
 
 @component('mail::panel')
 **Rapor Özeti**
