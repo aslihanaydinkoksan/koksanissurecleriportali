@@ -862,6 +862,12 @@
                 },
                 displayEventEnd: true,
                 eventDisplay: 'list-item',
+                eventDataTransform: function(eventData) {
+                    if (eventData.title && eventData.title.includes("(kesin değil)")) {
+                        eventData.title = eventData.title.replace("(kesin değil)", "").trim();
+                    }
+                    return eventData;
+                },
                 eventSources: [{
                     url: calendarEventsUrl,
                     failure: () => alert('Veri hatası!')
