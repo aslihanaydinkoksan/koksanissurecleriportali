@@ -20,9 +20,11 @@ class AIController extends Controller
         $request->validate(['message' => 'required|string|max:1000']);
 
         $user = Auth::user();
+        $roles = $user->getRoleNames()->implode(', ');
         $context = [
             'user_name' => $user->name,
             'active_unit' => session('active_unit_name', 'Genel'),
+            'roles' => $roles ?: 'Standart Kullanıcı',
         ];
 
         $answer = $this->aiService->ask($request->message, $context);
