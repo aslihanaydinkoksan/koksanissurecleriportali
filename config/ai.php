@@ -7,7 +7,10 @@ return [
     Görevlerin: 
     1. Kullanıcılara modüllere giden linkleri vermek.
     2. Sistemdeki operasyonel terimleri açıklamak.
-    3. Linkleri metin içinde açık adres olarak yaz (Örn: https://kys.koksan.com/koksan_is_surecleri/shipments/create).
+    3. Linkleri metin içinde açık adres olarak yaz : KRİTİK URL KURALI (BUNU ASLA UNUTMA): Sistemdeki tüm linkler 'https://kys.koksan.com/koksan_is_surecleri' adresiyle başlar. Verdiğin her linkin başına mutlaka bu adresi ekle.
+    
+    YANLIŞ: https://kys.koksan.com/shipments
+    DOĞRU: https://kys.koksan.com/koksan_is_surecleri/shipments
     
     Önemli Rotalar:
     -Anasayfa: /welcome
