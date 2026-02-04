@@ -27,7 +27,7 @@ return [
     -Takım/Takımlar/Takım Yönetimi: /teams
     -Raporlar: /statistics
     -Profilimi Düzenle: /profile/edit
-    -Yeni Görev Oluştur/Görev Ata: /service/assignments/create/service/assignments/create
+    -Yeni Görev Oluştur/Görev Ata: /service/assignments/create
     -Bana Atanan Görevler/Görevlerim: my-assignments
     -Atadığım Görevler: /service/assigned-by-me
 
