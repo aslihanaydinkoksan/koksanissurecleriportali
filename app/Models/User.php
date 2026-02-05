@@ -111,21 +111,38 @@ class User extends Authenticatable
     }
 
     /**
-     * KÖKSAN ÖZEL: Departman Bazlı Yetki Kontrolü (SLUG TABANLI)
-     * Bu metod, veritabanı ID'lerinden bağımsız çalışır, daha güvenlidir.
+     * KÖKSAN ÖZEL: Departman Bazlı Yetki Kontrolü
+     * Veritabanındaki 'kanban_scope' sütunu ile kod tarafındaki yetkiyi eşleştirir.
      */
     public function hasDepartmentPermission(string $permission): bool
     {
-        if ($this->isAdmin())
+        // 1. Admin her zaman yetkilidir
+        if ($this->isAdmin()) {
             return true;
+        }
 
-        // Yetki isminden kapsamı çıkar (Örn: view_logistics -> logistics)
-        $scope = str_replace('view_', '', $permission);
-        if ($scope === 'administrative')
-            $scope = 'idari';
+        // 2. Yetki isminden 'view_' önekini kaldır ve temizle
+        $normalizedPermission = trim($permission);
+        $scope = str_replace('view_', '', $normalizedPermission);
 
-        // Departmanların 'kanban_scope' sütununda bu kapsam var mı bak
-        return $this->departments()->where('kanban_scope', $scope)->exists();
+        // 3. İsim Haritalaması (Mapping)
+        // Kod tarafındaki 'view_administrative' yetkisini, veritabanındaki 'idari' scope'una çevirir.
+        // İleride 'view_logistics' -> 'lojistik_depo' gibi özel eşleşmeler gerekirse buraya eklenir.
+        $scopeMap = [
+            'administrative' => 'idari',
+            // 'bakim' => 'maintenance', // Örnek: Gerekirse eklenebilir
+        ];
+
+        // Eğer haritada özel bir karşılığı varsa onu kullan, yoksa olduğu gibi arat
+        if (array_key_exists($scope, $scopeMap)) {
+            $scope = $scopeMap[$scope];
+        }
+
+        // 4. Veritabanı Kontrolü
+        // Kullanıcının departmanları arasında bu 'scope' değerine sahip biri var mı?
+        return $this->departments()
+            ->where('kanban_scope', $scope)
+            ->exists();
     }
 
     /**
