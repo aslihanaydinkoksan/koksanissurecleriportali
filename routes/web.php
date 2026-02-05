@@ -364,3 +364,48 @@ Route::get('/debug-yetki', function () {
 
     echo "</div>";
 });
+
+// --- GEÇİCİ VERİTABANI DÜZELTME ROTASI ---
+// Bu kodu işlem bittikten sonra sileceğiz.
+Route::get('/db-fix-scopes', function () {
+    // Güvenlik: Sadece giriş yapmış kullanıcı çalıştırabilsin
+    if (!Illuminate\Support\Facades\Auth::check()) {
+        return 'Lütfen önce sisteme giriş yapın.';
+    }
+
+    $updates = [
+        'İdari İşler' => 'idari',
+        'Lojistik' => 'logistics',
+        'Üretim' => 'production',
+        'Bakım' => 'maintenance',
+        'Ulaştırma' => 'idari'
+    ];
+
+    echo "<div style='font-family:sans-serif; padding:20px;'>";
+    echo "<h1>🛠️ Departman Scope Onarım Aracı</h1><hr>";
+
+    foreach ($updates as $name => $scope) {
+        // Departmanı bul ve güncelle
+        $affected = Illuminate\Support\Facades\DB::table('departments')
+            ->where('name', $name)
+            ->update(['kanban_scope' => $scope]);
+
+        if ($affected) {
+            echo "<div style='color:green; margin-bottom:10px;'>✅ <b>{$name}</b> departmanı güncellendi. Yeni Scope: <b>'{$scope}'</b></div>";
+        } else {
+            // Belki zaten doğrudur, kontrol edelim
+            $current = Illuminate\Support\Facades\DB::table('departments')->where('name', $name)->first();
+            if ($current && $current->kanban_scope === $scope) {
+                echo "<div style='color:blue; margin-bottom:10px;'>ℹ️ <b>{$name}</b> zaten güncel (Scope: '{$scope}'). İşlem yapılmadı.</div>";
+            } else {
+                echo "<div style='color:red; margin-bottom:10px;'>❌ <b>{$name}</b> departmanı bulunamadı veya güncellenemedi.</div>";
+            }
+        }
+    }
+
+    // Cache temizliği
+    Illuminate\Support\Facades\Artisan::call('optimize:clear');
+    echo "<hr>System Cache temizlendi.<br>";
+    echo "<a href='/'>Ana Sayfaya Dön ve Test Et</a>";
+    echo "</div>";
+});
