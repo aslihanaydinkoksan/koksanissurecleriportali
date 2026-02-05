@@ -313,3 +313,54 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/todos/{todo}', [App\Http\Controllers\TodoController::class, 'destroy'])->name('todos.destroy');
 
 }); // End of Auth Middleware
+
+// --- GEÇİCİ DEBUG ROTASI (Test bitince silinecek) ---
+Route::get('/debug-yetki', function () {
+    if (!Illuminate\Support\Facades\Auth::check()) {
+        return 'Lütfen önce giriş yapın!';
+    }
+
+    $user = Illuminate\Support\Facades\Auth::user();
+
+    echo "<div style='font-family:sans-serif; padding:20px; line-height:1.6'>";
+    echo "<h1 style='color:#2d3748'>🔍 Yetki Dedektörü</h1>";
+
+    // 1. KULLANICI BİLGİLERİ
+    echo "<h3>1. Kullanıcı Kimlik Kartı</h3>";
+    echo "<strong>ID:</strong> " . $user->id . "<br>";
+    echo "<strong>İsim:</strong> " . $user->name . "<br>";
+    echo "<strong>Email:</strong> " . $user->email . "<br>";
+    echo "<strong>Roller:</strong> " . implode(', ', $user->getRoleNames()->toArray()) . "<br>";
+
+    // 2. DEPARTMAN İLİŞKİSİ KONTROLÜ
+    echo "<hr><h3 style='color:#e53e3e'>2. Veritabanındaki Departman Bağlantıları</h3>";
+    $departments = $user->departments()->get(); // Cache bypass için direkt ilişki
+
+    if ($departments->isEmpty()) {
+        echo "<div style='background:#fff5f5; color:#c53030; padding:15px; border:2px solid #feb2b2; border-radius:8px;'>";
+        echo "❌ <strong>KRİTİK HATA:</strong> Kullanıcının 'department_user' tablosunda HİÇBİR kaydı yok.<br>";
+        echo "SQL İnsert komutu çalışmış görünse de kullanıcı ID veya Departman ID eşleşmemiş.";
+        echo "</div>";
+    } else {
+        foreach ($departments as $dept) {
+            echo "✅ <strong>Bağlı Olduğu Departman:</strong> " . $dept->name;
+            echo " | ID: " . $dept->id;
+            echo " | Kanban Scope Değeri: <span style='background:yellow; padding:2px 5px'>'" . $dept->kanban_scope . "'</span><br>";
+        }
+    }
+
+    // 3. KODSAL KONTROL
+    echo "<hr><h3 style='color:#3182ce'>3. Kod Tarafındaki Kontrol ('view_administrative')</h3>";
+
+    $hasPermission = $user->hasDepartmentPermission('view_administrative');
+
+    if ($hasPermission) {
+        echo "<h2 style='color:green'>SONUÇ: ✔️ YETKİ VAR (TRUE)</h2>";
+        echo "Kod 'TRUE' döndürüyor. Eğer menüyü hala görmüyorsanız sorun 'cache' veya 'blade' dosyasındadır.";
+    } else {
+        echo "<h2 style='color:red'>SONUÇ: ❌ YETKİ YOK (FALSE)</h2>";
+        echo "Kod 'FALSE' döndürüyor. Sebebi yukarıdaki 2. maddede gizli.";
+    }
+
+    echo "</div>";
+});
