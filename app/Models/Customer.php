@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Loggable;
 use App\Traits\HasBusinessUnit;
+use App\Models\CustomerContact;
+use App\Models\CustomerReturn;
 
 /**
  * App\Models\Customer
@@ -85,5 +87,16 @@ class Customer extends Model
     public function vehicleAssignments()
     {
         return $this->hasMany(VehicleAssignment::class)->orderBy('start_time', 'desc');
+    }
+    //  İletişim Kişileri
+    public function contacts()
+    {
+        return $this->hasMany(CustomerContact::class);
+    }
+
+    //  İadeler
+    public function returns()
+    {
+        return $this->hasMany(CustomerReturn::class)->orderBy('return_date', 'desc');
     }
 }

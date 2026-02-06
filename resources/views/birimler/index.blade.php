@@ -194,5 +194,3 @@
         </div>
     </div>
 @endsection
-
-{{-- Bu sayfada özel JavaScript olmadığı için @section('page_scripts') bloğu boş kalabilir veya silinebilir. --}}

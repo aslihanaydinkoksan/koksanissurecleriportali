@@ -150,10 +150,13 @@
                     </div>
 
                     <div class="card-body">
-                        <form action="{{ route('customers.store') }}" method="POST" autocomplete="off">
+                        {{-- Form Başlangıcı --}}
+                        <form action="{{ route('customers.store') }}" method="POST" autocomplete="off"
+                            enctype="multipart/form-data">
                             @csrf
 
                             <div class="form-section">
+                                {{-- Partial Form Çağırılıyor --}}
                                 @include('customers._form', ['customer' => null])
                             </div>
 
@@ -171,7 +174,6 @@
                     </div>
                 </div>
 
-                <!-- Bilgilendirme Kartı -->
                 <div class="mt-4 p-4 rounded-3"
                     style="background: rgba(255, 255, 255, 0.7); border: 2px dashed rgba(102, 126, 234, 0.3);">
                     <div class="d-flex align-items-start">
@@ -180,7 +182,7 @@
                             <h6 class="fw-bold mb-2" style="color: #2d3748;">İpucu</h6>
                             <p class="mb-0 text-muted small">
                                 Müşteri kaydını tamamladıktan sonra müşteri detay sayfasından makine, test sonucu ve şikayet
-                                bilgileri ekleyebilirsiniz.
+                                bilgileri ekleyebilirsiniz. Ayrıca sınırsız sayıda iletişim kişisi tanımlayabilirsiniz.
                             </p>
                         </div>
                     </div>

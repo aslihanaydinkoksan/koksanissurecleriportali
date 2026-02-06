@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use App\Traits\Loggable;
-use App\Traits\HasBusinessUnit; // <--- 1. Use ekle
-
+use App\Traits\HasBusinessUnit;
+use App\Models\CustomerReturn;
 /**
  * App\Models\Complaint
  *
@@ -48,5 +48,10 @@ class Complaint extends Model implements HasMedia
     public function customer()
     {
         return $this->belongsTo(Customer::class);
+    }
+    // Bir şikayete bağlı iadeler
+    public function returns()
+    {
+        return $this->hasMany(CustomerReturn::class);
     }
 }

@@ -1,30 +1,44 @@
-@if ($errors->any())
+<?php if($errors->any()): ?>
     <div class="alert alert-danger d-flex align-items-start" role="alert">
         <i class="fa-solid fa-triangle-exclamation me-3 fs-4 mt-1"></i>
         <div class="flex-grow-1">
             <strong>Lütfen aşağıdaki hataları düzeltin:</strong>
             <ul class="mb-0 mt-2">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
+                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <li><?php echo e($error); ?></li>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </ul>
         </div>
     </div>
-@endif
+<?php endif; ?>
 
-{{-- Müşteri Ana Bilgileri --}}
+
 <div class="row g-3">
     <div class="col-md-12">
         <div class="form-floating mb-3">
-            <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name"
-                value="{{ old('name', $customer->name ?? '') }}" placeholder="Müşteri Unvanı" autocomplete="off"
+            <input type="text" class="form-control <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="name" name="name"
+                value="<?php echo e(old('name', $customer->name ?? '')); ?>" placeholder="Müşteri Unvanı" autocomplete="off"
                 required>
             <label for="name">
                 <i class="fa-solid fa-building me-2 text-primary"></i>Müşteri Unvanı <span class="text-danger">*</span>
             </label>
-            @error('name')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
+            <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                <div class="invalid-feedback"><?php echo e($message); ?></div>
+            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
         </div>
     </div>
 </div>
@@ -32,22 +46,36 @@
 <div class="row g-3">
     <div class="col-md-6">
         <div class="form-floating mb-3">
-            <input type="email" class="form-control @error('email') is-invalid @enderror" id="email"
-                name="email" value="{{ old('email', $customer->email ?? '') }}" placeholder="Genel Email Adresi"
+            <input type="email" class="form-control <?php $__errorArgs = ['email'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="email"
+                name="email" value="<?php echo e(old('email', $customer->email ?? '')); ?>" placeholder="Genel Email Adresi"
                 autocomplete="off">
             <label for="email">
                 <i class="fa-solid fa-envelope me-2 text-primary"></i>Genel Email Adresi
             </label>
-            @error('email')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
+            <?php $__errorArgs = ['email'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                <div class="invalid-feedback"><?php echo e($message); ?></div>
+            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
         </div>
     </div>
 
     <div class="col-md-6">
         <div class="form-floating mb-3">
             <input type="tel" class="form-control" id="phone" name="phone"
-                value="{{ old('phone', $customer->phone ?? '') }}" placeholder="Genel Telefon Numarası"
+                value="<?php echo e(old('phone', $customer->phone ?? '')); ?>" placeholder="Genel Telefon Numarası"
                 autocomplete="off">
             <label for="phone">
                 <i class="fa-solid fa-phone me-2 text-primary"></i>Genel Telefon Numarası
@@ -58,13 +86,13 @@
 
 <div class="form-floating mb-4">
     <textarea class="form-control" id="address" name="address" placeholder="Adres" style="height: 120px"
-        autocomplete="off">{{ old('address', $customer->address ?? '') }}</textarea>
+        autocomplete="off"><?php echo e(old('address', $customer->address ?? '')); ?></textarea>
     <label for="address">
         <i class="fa-solid fa-location-dot me-2 text-primary"></i>Adres
     </label>
 </div>
 
-{{-- DİNAMİK İLETİŞİM KİŞİLERİ ALANI --}}
+
 <div class="card border-0 shadow-sm mb-4 bg-light">
     <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center py-3">
         <h6 class="mb-0 fw-bold text-primary"><i class="fa-solid fa-users me-2"></i>İletişim Kişileri</h6>
@@ -74,16 +102,16 @@
     </div>
     <div class="card-body p-3">
         <div id="contacts-container">
-            @if (isset($customer) && $customer->contacts->count() > 0)
-                {{-- Düzenleme Modu: Mevcut Kişileri Listele --}}
-                @foreach ($customer->contacts as $index => $contact)
-                    <div class="contact-row row g-2 mb-3 align-items-center" id="contact-row-{{ $index }}">
-                        <input type="hidden" name="contacts[{{ $index }}][id]" value="{{ $contact->id }}">
+            <?php if(isset($customer) && $customer->contacts->count() > 0): ?>
+                
+                <?php $__currentLoopData = $customer->contacts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $contact): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <div class="contact-row row g-2 mb-3 align-items-center" id="contact-row-<?php echo e($index); ?>">
+                        <input type="hidden" name="contacts[<?php echo e($index); ?>][id]" value="<?php echo e($contact->id); ?>">
 
                         <div class="col-md-3">
                             <div class="form-floating">
                                 <input type="text" class="form-control form-control-sm"
-                                    name="contacts[{{ $index }}][name]" value="{{ $contact->name }}"
+                                    name="contacts[<?php echo e($index); ?>][name]" value="<?php echo e($contact->name); ?>"
                                     placeholder="Ad Soyad" required>
                                 <label class="fs-7">Ad Soyad</label>
                             </div>
@@ -92,7 +120,7 @@
                         <div class="col-md-3">
                             <div class="form-floating">
                                 <input type="text" class="form-control form-control-sm"
-                                    name="contacts[{{ $index }}][title]" value="{{ $contact->title }}"
+                                    name="contacts[<?php echo e($index); ?>][title]" value="<?php echo e($contact->title); ?>"
                                     placeholder="Ünvan">
                                 <label class="fs-7">Ünvan</label>
                             </div>
@@ -101,7 +129,7 @@
                         <div class="col-md-3">
                             <div class="form-floating">
                                 <input type="email" class="form-control form-control-sm"
-                                    name="contacts[{{ $index }}][email]" value="{{ $contact->email }}"
+                                    name="contacts[<?php echo e($index); ?>][email]" value="<?php echo e($contact->email); ?>"
                                     placeholder="Email">
                                 <label class="fs-7">Email</label>
                             </div>
@@ -110,7 +138,7 @@
                         <div class="col-md-2">
                             <div class="form-floating">
                                 <input type="tel" class="form-control form-control-sm"
-                                    name="contacts[{{ $index }}][phone]" value="{{ $contact->phone }}"
+                                    name="contacts[<?php echo e($index); ?>][phone]" value="<?php echo e($contact->phone); ?>"
                                     placeholder="Telefon">
                                 <label class="fs-7">Telefon</label>
                             </div>
@@ -120,14 +148,14 @@
                             <button type="button" class="btn btn-sm btn-outline-danger border-0"
                                 onclick="removeContactRow(this)" title="Sil">
                                 <i class="fa-solid fa-trash fa-lg"></i>
-                                <input type="hidden" name="contacts[{{ $index }}][delete]" value="0"
+                                <input type="hidden" name="contacts[<?php echo e($index); ?>][delete]" value="0"
                                     class="delete-flag">
                             </button>
                         </div>
                     </div>
-                @endforeach
-            @else
-                {{-- Yeni Kayıt Modu veya Kişi Yoksa: Boş Bir Satır Göster --}}
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            <?php else: ?>
+                
                 <div class="contact-row row g-2 mb-3 align-items-center">
                     <div class="col-md-3">
                         <div class="form-floating">
@@ -158,14 +186,14 @@
                         </div>
                     </div>
                     <div class="col-md-1 text-center">
-                        {{-- İlk satırın silinmesini istemiyorsan butonu kaldırabilirsin, ama esneklik için kalsın --}}
+                        
                         <button type="button" class="btn btn-sm btn-outline-danger border-0"
                             onclick="this.closest('.contact-row').remove()">
                             <i class="fa-solid fa-trash fa-lg"></i>
                         </button>
                     </div>
                 </div>
-            @endif
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -253,7 +281,7 @@
 
 <script>
     // Başlangıç indeksini belirle (Mevcut sayısına göre)
-    let contactIndex = {{ isset($customer) ? $customer->contacts->count() : 1 }};
+    let contactIndex = <?php echo e(isset($customer) ? $customer->contacts->count() : 1); ?>;
     // Eğer hiç kayıt yoksa ve ilk satır (0) elle yazıldıysa, index 1'den başlasın.
     if (contactIndex === 0) contactIndex = 1;
 
@@ -308,3 +336,4 @@
         }
     }
 </script>
+<?php /**PATH C:\xampp82\htdocs\koksanissurecleriportali\resources\views/customers/_form.blade.php ENDPATH**/ ?>

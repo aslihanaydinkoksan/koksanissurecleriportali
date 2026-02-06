@@ -279,6 +279,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('customers.test-results', TestResultController::class)->shallow()->except(['index', 'show']);
     Route::get('/api/customers/{customer}/machines', [CustomerController::class, 'getMachinesJson'])->name('api.customers.machines');
     Route::post('/customers/{customer}/activities', [CustomerController::class, 'storeActivity'])->name('customers.activities.store');
+    Route::post('/customers/{customer}/returns', [App\Http\Controllers\CustomerController::class, 'storeReturn'])->name('customers.returns.store');
 
     // Seyahatler
     Route::get('/travels/export', [TravelController::class, 'export'])->name('travels.export');
