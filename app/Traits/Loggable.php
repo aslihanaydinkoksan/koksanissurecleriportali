@@ -2,41 +2,75 @@
 
 namespace App\Traits;
 
-use App\Models\SystemLog;
-use Illuminate\Support\Facades\Auth;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Support\Str;
 
 trait Loggable
 {
+    // Spatie'nin ana Trait'ini buraya dahil ediyoruz
+    use LogsActivity;
+
+    // --- BÖLÜM 1: v3/v4 STİLİ LOG ADI AYARLAMASI ---
+
+    /**
+     * Log adını tutacak statik özellik (v4.7.3'te Gerekli)
+     */
+    protected static $logName = 'default';
+
+    /**
+     * Bu 'boot' metodu, log adını model adından otomatik olarak atar.
+     */
     public static function bootLoggable()
     {
-        // Kayıt oluşturulduğunda
-        static::created(function ($model) {
-            self::logToDb($model, 'create');
-        });
-
-        // Kayıt güncellendiğinde
-        static::updated(function ($model) {
-            self::logToDb($model, 'update', $model->getOriginal(), $model->getChanges());
-        });
-
-        // Kayıt silindiğinde (Soft Delete)
-        static::deleted(function ($model) {
-            self::logToDb($model, 'delete');
-        });
+        // Model adını al (Örn: "CustomerVisit" -> "Customer Visit")
+        static::$logName = Str::of(class_basename(new static()))->snake(' ')->title();
     }
 
-    protected static function logToDb($model, $action, $old = null, $new = null)
+    // --- BÖLÜM 2: v4/v5 STİLİ DİĞER AYARLAR ---
+
+    /**
+     * Bu metod, v4.7.3'te ZORUNLUDUR.
+     * Logun 'içeriğini' ayarlar.
+     */
+    public function getActivitylogOptions(): LogOptions
     {
-        // Log tablosuna kaydet
-        SystemLog::create([
-            'user_id' => Auth::id(), // Giriş yapan kullanıcı
-            'action' => $action,
-            'loggable_id' => $model->id,
-            'loggable_type' => get_class($model),
-            'old_values' => $old ? json_encode($old) : null,
-            'new_values' => $new ? json_encode($new) : null,
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
+        // Model adını al (Örn: "CustomerVisit" -> "customer visit")
+        $modelNameLower = Str::of(class_basename($this))->snake(' ')->lower();
+
+        return LogOptions::defaults()
+
+            // DİKKAT: ->logName() METODU BURADAN KALDIRILDI! Hata buydu.
+
+            // Tüm alanları logla
+            ->logAll()
+
+            // Bu alanlar değişirse log atma (gereksiz kalabalık yapmasın)
+            ->dontLogIfAttributesChangedOnly([
+                'remember_token',
+                'created_at',
+                'updated_at',
+                'deleted_at'
+            ])
+
+            // 'password' alanını gizle
+            ->logOnlyDirty()
+
+            // Değişiklik yoksa boş log atma
+            ->dontSubmitEmptyLogs()
+
+            // Log mesajını ayarla
+            ->setDescriptionForEvent(function (string $eventName) use ($modelNameLower) {
+                if ($eventName === 'created') {
+                    return "yeni bir {$modelNameLower} kaydı oluşturdu.";
+                }
+                if ($eventName === 'updated') {
+                    return "bir {$modelNameLower} kaydını güncelledi.";
+                }
+                if ($eventName === 'deleted') {
+                    return "bir {$modelNameLower} kaydını sildi.";
+                }
+                return "bir {$modelNameLower} kaydı ile {$eventName} işlemi yaptı.";
+            });
     }
 }

@@ -1,0 +1,45 @@
+# 1. Çıktı dosyası adı
+$outputFile = "tum_proje_kodlari.txt"
+
+# 2. Hariç tutulacak klasörler
+$excludeFolders = @("vendor", "storage", "node_modules", ".git", "public", "tests", "bootstrap")
+
+# 3. Dahil edilecek dosya uzantıları
+$includeExtensions = @(".php", ".js", ".css", ".html", ".json", ".xml")
+
+# Dosya varsa önce silelim
+if (Test-Path $outputFile) { Remove-Item $outputFile }
+
+# Başlık yazalım
+Add-Content -Path $outputFile -Value "PROJE KOD DOKUMU - TARIH: $(Get-Date)"
+Add-Content -Path $outputFile -Value "========================================`n"
+
+# Dosyaları bul ve birleştir
+Get-ChildItem -Recurse -File | Where-Object {
+    $file = $_
+    $path = $file.FullName
+    $isExcluded = $false
+    foreach ($exclude in $excludeFolders) {
+        if ($path -like "*\$exclude\*") { $isExcluded = $true; break }
+    }
+    
+    $isCodeFile = $includeExtensions -contains $file.Extension
+    $isNotOutput = $file.Name -ne $outputFile
+
+    (-not $isExcluded) -and $isCodeFile -and $isNotOutput
+} | ForEach-Object {
+    Write-Host "Eklendi: $($_.FullName)" -ForegroundColor Cyan
+    
+    Add-Content -Path $outputFile -Value "`n----------------------------------------"
+    Add-Content -Path $outputFile -Value "DOSYA YOLU: $($_.FullName.Replace('C:\xampp82\htdocs\koksanissurecleriportali\', ''))"
+    Add-Content -Path $outputFile -Value "----------------------------------------`n"
+    
+    try {
+        $content = Get-Content $_.FullName -Raw
+        Add-Content -Path $outputFile -Value $content
+    } catch {
+        Add-Content -Path $outputFile -Value "[Dosya okunamadı]"
+    }
+}
+
+Write-Host "`nİşlem Tamamlandı! Dosya oluşturuldu: $outputFile" -ForegroundColor Green

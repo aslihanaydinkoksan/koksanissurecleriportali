@@ -2,27 +2,43 @@
 
 namespace App\Exports;
 
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
-class DynamicReportExport implements FromCollection, WithHeadings
+class DynamicReportExport implements WithMultipleSheets
 {
     protected $data;
     protected $headers;
 
+    /**
+     * Artık constructor daha esnek: mixed $data (Array veya Collection olabilir)
+     */
     public function __construct($data, $headers)
     {
         $this->data = $data;
         $this->headers = $headers;
     }
 
-    public function collection()
+    /**
+     * Maatwebsite/Excel bu metodu çağırarak sekmeleri oluşturur.
+     */
+    public function sheets(): array
     {
-        return $this->data;
-    }
+        $sheets = [];
+        $allData = $this->data->all();
 
-    public function headings(): array
-    {
-        return $this->headers;
+        if (is_array($allData) && !isset($allData[0])) {
+            foreach ($allData as $sheetName => $sheetData) {
+                $sheets[] = new DynamicReportSheet(
+                    $sheetName,
+                    $sheetData,
+                    $this->headers[$sheetName] ?? []
+                );
+            }
+        } else {
+            // Tek tablolu klasik raporlar için fallback
+            $sheets[] = new DynamicReportSheet('Rapor', $this->data, $this->headers);
+        }
+
+        return $sheets;
     }
 }

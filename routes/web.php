@@ -1,91 +1,317 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\LocationController;
-use App\Http\Controllers\ResidentController;
-use App\Http\Controllers\StayController;
-use App\Http\Controllers\AssetController;
-use App\Http\Controllers\ContactController;
+use Illuminate\Support\Facades\Auth;
+
+// Controller Importları
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\LogController;
-use App\Http\Controllers\ReportSettingController;
+use App\Http\Controllers\ShipmentController;
+use App\Http\Controllers\BirimController;
+use App\Http\Controllers\ProductionPlanController;
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\VehicleAssignmentController;
+use App\Http\Controllers\ServiceScheduleController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CustomerMachineController;
+use App\Http\Controllers\ComplaintController;
+use App\Http\Controllers\TestResultController;
+use App\Http\Controllers\TravelController;
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\TeamController;
+use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\LogisticsVehicleController;
+use App\Http\Controllers\MaintenanceController;
+use App\Http\Controllers\MaintenanceAssetController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\Approvals\MaintenanceApprovalController;
+use App\Http\Controllers\GeneralCalendarController;
+use App\Http\Controllers\TvDashboardController;
+use App\Http\Controllers\SystemController;
+use App\Http\Controllers\FileController;
+use App\Http\Controllers\StatisticsController;
+use App\Http\Controllers\CustomFieldDefinitionController;
+use App\Http\Controllers\KanbanBoardController;
+use App\Http\Controllers\KanbanViewController;
+use App\Http\Controllers\ExpenseController;
+use App\Services\KanbanService;
+use App\Models\Event;
+use App\Models\Travel;
+use App\Http\Controllers\ScheduledReportController;
 
-// --- MİSAFİR ROTALARI (Giriş yapmamışlar görebilir) ---
-Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
 
-// --- KORUNMUŞ ROTALAR (Sadece giriş yapanlar görebilir) ---
+// --- 1. GENEL ROTALAR (Auth Gerektirmeyenler) ---
+
+Route::get('/', [HomeController::class, 'welcome'])->name('index');
+
+Auth::routes(['register' => false]);
+
+Route::match(['get', 'post'], '/logout', function () {
+    Auth::logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+    return redirect('/login');
+})->name('logout.get');
+
+Route::view('/kvkk-aydinlatma-metni', 'auth.kvkk')->name('kvkk.show');
+
+// --- 2. TV DASHBOARD (Auth Gerekmez veya Özel Auth) ---
+Route::get('/tv-dashboard', [TvDashboardController::class, 'index'])->name('tv.dashboard');
+Route::get('/tv/check-updates', [TvDashboardController::class, 'checkUpdates'])->name('tv.check_updates');
+
+
+// ==================================================================================
+//  AUTH MIDDLEWARE GRUBU (Tüm İç Sayfalar)
+// ==================================================================================
 Route::middleware(['auth'])->group(function () {
+    Route::post('/ai/ask', [App\Http\Controllers\AIController::class, 'ask'])->name('ai.ask');
 
-    // Anasayfa Rotaları
-    Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard', [App\Http\Controllers\HomeController::class, 'index']);
-    Route::get('/locations/{parentId?}', [LocationController::class, 'index'])
-        ->where('parentId', '[0-9]+') // Sadece rakam kabul et (çakışmayı önler)
-        ->name('locations.index');
+    // --- DASHBOARD VE ANA SAYFALAR ---
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::get('/welcome', [HomeController::class, 'welcome'])->name('welcome');
+    Route::post('/switch-unit', [HomeController::class, 'switchUnit'])->name('switch.unit');
 
-    Route::get('/locations/create/{parentId?}', [LocationController::class, 'create'])->name('locations.create');
-    Route::post('/locations/store', [LocationController::class, 'store'])->name('locations.store');
-    // Usta Atama Rotaları
-    Route::post('/locations/{id}/assign', [LocationController::class, 'assignService'])->name('locations.assign');
-    Route::delete('/assignments/{id}', [LocationController::class, 'removeAssignment'])->name('assignments.destroy');
-    Route::get('/locations/{id}/show', [LocationController::class, 'show'])->name('locations.show');
-    Route::get('/locations/{id}/edit', [LocationController::class, 'edit'])->name('locations.edit');
-    Route::get('/locations/{id}/print', [LocationController::class, 'print'])->name('locations.print');
-    Route::put('/locations/{id}', [LocationController::class, 'update'])->name('locations.update');
-    Route::post('/locations/{id}/subscription', [LocationController::class, 'addSubscription'])->name('locations.addSubscription');
-    Route::delete('/locations/{id}', [LocationController::class, 'destroy'])->name('locations.destroy');
+    // --- SİSTEM KONTROLLERİ ---
+    Route::get('/system/check-updates', [SystemController::class, 'checkUpdates'])->name('system.check_updates');
+    Route::get('/statistics', [StatisticsController::class, 'index'])->name('statistics.index');
+    Route::get('/statistics/finance', [App\Http\Controllers\StatisticsController::class, 'financeDashboard'])
+        ->name('statistics.finance')
+        ->middleware(['auth', 'role:admin|yonetici']);
 
-    // --- MİSAFİR (RESIDENT) ROTALARI ---
-    Route::get('/residents', [ResidentController::class, 'index'])->name('residents.index');
-    Route::get('/residents/create', [ResidentController::class, 'create'])->name('residents.create');
-    Route::get('/residents/{id}/edit', [ResidentController::class, 'edit'])->name('residents.edit');
-    Route::put('/residents/{id}', [ResidentController::class, 'update'])->name('residents.update');
-    Route::post('/residents/store', [ResidentController::class, 'store'])->name('residents.store');
-    Route::post('/residents/store-ajax', [ResidentController::class, 'storeAjax'])->name('residents.storeAjax');
-    Route::delete('/residents/{id}', [ResidentController::class, 'destroy'])->name('residents.destroy');
+    // --- BİLDİRİMLER ---
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/check', [HomeController::class, 'checkNotifications'])->name('check');
+        Route::get('/read-all', [HomeController::class, 'readAllNotifications'])->name('readAll');
+        Route::get('/{id}/read', [HomeController::class, 'readNotification'])->name('read');
+    });
 
-    // --- KONAKLAMA (STAY/CHECK-IN) ROTALARI ---
-    // Bir odaya giriş yapmak için form aç
-    Route::get('/stays/create/{locationId}', [StayController::class, 'create'])->name('stays.create');
-    // Girişi kaydet
-    Route::post('/stays/store', [StayController::class, 'store'])->name('stays.store');
-    // Çıkış Formu
-    Route::get('/stays/checkout/{stayId}', [StayController::class, 'checkout'])->name('stays.checkout');
-    // Çıkışı Kaydet
-    Route::post('/stays/checkout/{stayId}', [StayController::class, 'processCheckout'])->name('stays.processCheckout');
+    // --- DOSYA İŞLEMLERİ (Polimorfik) ---
+    Route::post('/files/upload', [FileController::class, 'store'])->name('files.store');
+    Route::delete('/files/{file}', [FileController::class, 'destroy'])->name('files.destroy');
+    Route::get('/files/{file}/download', [FileController::class, 'download'])->name('files.download');
 
-    // --- DEMİRBAŞ (ASSET) ROTALARI ---
-    Route::get('/assets/create/{locationId}', [AssetController::class, 'create'])->name('assets.create');
-    Route::post('/assets/store', [AssetController::class, 'store'])->name('assets.store');
-    Route::delete('/assets/{id}', [AssetController::class, 'destroy'])->name('assets.destroy');
+    // --- GENEL TAKVİM ---
+    Route::get('/general-calendar', [GeneralCalendarController::class, 'showCalendar'])->name('general.calendar');
+    Route::get('/calendar-events-data', [GeneralCalendarController::class, 'getEvents'])->name('web.calendar.events');
+    Route::post('/calendar/toggle-important', [GeneralCalendarController::class, 'toggleImportant'])->name('calendar.toggleImportant');
+    Route::get('/important-items', [HomeController::class, 'showAllImportant'])->name('important.all');
 
-    // --- REHBER (CONTACT) ROTALARI ---
-    Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.index');
-    Route::post('/contacts', [ContactController::class, 'store'])->name('contacts.store');
-    Route::delete('/contacts/{id}', [ContactController::class, 'destroy'])->name('contacts.destroy');
+    // --- KANBAN PANOSU YÖNETİMİ ---
+    Route::get('/kanban/board/{board_id}', [KanbanViewController::class, 'index'])->name('kanban.board');
+    Route::get('/kanban/smart-redirect', [KanbanBoardController::class, 'checkAndRedirect'])->name('kanban.smart_redirect');
+    Route::resource('kanban-boards', KanbanBoardController::class)->except(['show']);
+    Route::get('/kanban/card/{kanbanCard}', [KanbanViewController::class, 'show'])->name('kanban.show');
+    Route::post('/kanban/move-card', [KanbanViewController::class, 'moveCard'])->name('kanban.move');
 
-    // --- KULLANICI YÖNETİMİ ROTALARI ---
-    Route::middleware(['auth', 'admin'])->group(function () {
+    // ==========================================================
+    //  DEPARTMAN BAZLI YÖNETİMLER
+    // ==========================================================
+
+    // 1. KULLANICI & YETKİ YÖNETİMİ (Sadece 'manage_users' yetkisi olanlar)
+    // Not: Spatie'de birden fazla rol kontrolü için | (pipe) kullanılır.
+    Route::middleware(['role:admin|yönetici'])->group(function () {
         Route::resource('users', UserController::class);
-        // Hareket Geçmişini Temizleme
-        Route::delete('/stays/clear-all', [StayController::class, 'clearAll'])->name('stays.clearAll');
-        // Tekli Hareket Silme
-        Route::delete('/stays/{id}', [StayController::class, 'destroy'])->name('stays.destroy');
+        Route::resource('roles', RoleController::class);
+        Route::resource('birimler', BirimController::class)->only(['index', 'store', 'destroy']);
+        Route::resource('departments', DepartmentController::class)->except(['show']);
+        Route::resource('business-units', \App\Http\Controllers\BusinessUnitController::class)
+            ->only(['index', 'store', 'destroy']);
+
+        // Loglar (Sadece Admin veya Global Manager)
+        Route::get('/system/logs', [ActivityLogController::class, 'index'])
+            ->middleware('can:is-global-manager') // Veya role:admin
+            ->name('logs.index');
+
+        Route::middleware(['role:admin|yönetici'])
+            ->prefix('admin')
+            ->name('admin.')
+            ->group(function () {
+                Route::resource('custom-fields', CustomFieldDefinitionController::class);
+            });
+
+        Route::get('/report-settings/create', [ScheduledReportController::class, 'create'])->name('report-settings.create');
+        Route::post('/report-settings', [ScheduledReportController::class, 'store'])->name('report-settings.store');
+        Route::get('/report-settings', [ScheduledReportController::class, 'index'])->name('report-settings.index');
+        Route::get('/report-settings/create', [ScheduledReportController::class, 'create'])->name('report-settings.create');
+        Route::post('/report-settings', [ScheduledReportController::class, 'store'])->name('report-settings.store');
+        Route::get('/report-settings/{report}/edit', [ScheduledReportController::class, 'edit'])->name('report-settings.edit');
+        Route::put('/report-settings/{report}', [ScheduledReportController::class, 'update'])->name('report-settings.update');
+        Route::post('/report-settings/{report}/toggle', [ScheduledReportController::class, 'toggleStatus'])->name('report-settings.toggle');
+        Route::delete('/report-settings/{report}', [ScheduledReportController::class, 'destroy'])->name('report-settings.destroy');
 
     });
 
-    // --- RAPORLAMA ROTALARI ---
-    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    // Profil (Herkes)
+    Route::prefix('profile')->group(function () {
+        Route::get('/edit', [UserController::class, 'profileEdit'])->name('profile.edit');
+        Route::put('/', [UserController::class, 'profileUpdate'])->name('profile.update');
+    });
 
-    Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
+    // 2. LOJİSTİK YÖNETİMİ
+    Route::prefix('shipments')->name('shipments.')->group(function () {
+        Route::get('/', [ShipmentController::class, 'listAllFiltered'])->name('index');
 
-    // --- MAIL ---
-    Route::resource('report-settings', ReportSettingController::class);
-    // Çıkış Yap
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+        // Standart CRUD İşlemleri
+        Route::get('/create', [ShipmentController::class, 'create'])->name('create');
+        Route::post('/', [ShipmentController::class, 'store'])->name('store');
 
-});
+        // DÜZELTME 1: Başındaki '/shipments' kalktı, name sadece 'show' oldu.
+        // Sonuç URL: /shipments/{id} | Route Name: shipments.show
+        Route::get('/{id}', [ShipmentController::class, 'show'])->name('show');
+
+        Route::get('/{shipment}/edit', [ShipmentController::class, 'edit'])->name('edit');
+        Route::put('/{shipment}', [ShipmentController::class, 'update'])->name('update');
+        Route::delete('/{shipment}', [ShipmentController::class, 'destroy'])->name('destroy');
+
+        // DÜZELTME 2: Durak İşlemleri (Controller yolunu kısalttım, yukarıda use ekleyebilirsin veya böyle kalabilir)
+        // URL: /shipments/{id}/stops
+        Route::post('/{id}/stops', [App\Http\Controllers\ShipmentStopController::class, 'store'])->name('stops.store');
+
+        // URL: /shipments/stops/{id} (Burada shipment id değil, stop id silindiği için prefix mantıklı)
+        Route::delete('/stops/{id}', [App\Http\Controllers\ShipmentStopController::class, 'destroy'])->name('stops.destroy');
+
+        // Diğer İşlemler
+        Route::get('/export-list', [ShipmentController::class, 'exportList'])->name('export_list');
+        Route::get('/{shipment}/export', [ShipmentController::class, 'export'])->name('export');
+        Route::post('/{shipment}/onayla', [ShipmentController::class, 'onayla'])->name('onayla');
+        Route::post('/{shipment}/onayi-geri-al', [ShipmentController::class, 'onayiGeriAl'])->name('onayiGeriAl');
+    });
+
+    // Ürün Listesi (Grup dışında kalmış, doğru)
+    Route::get('/products/products', [ShipmentController::class, 'listAllFiltered'])->name('products.list');
+
+
+    // 3. ÜRETİM YÖNETİMİ
+    Route::prefix('production')->name('production.')->group(function () {
+        Route::get('/plans/export-list', [ProductionPlanController::class, 'exportList'])->name('plans.export_list');
+        Route::get('/plans/{plan}/export', [ProductionPlanController::class, 'export'])->name('plans.export');
+        Route::resource('plans', ProductionPlanController::class);
+    });
+
+
+    // 4. BAKIM YÖNETİMİ
+    Route::prefix('maintenance')->name('maintenance.')->group(function () {
+        // Varlıklar
+        Route::get('/assets/export', [MaintenanceAssetController::class, 'export'])->name('assets.export');
+        Route::resource('assets', MaintenanceAssetController::class);
+
+        // Planlar - Custom Exportlar Resource'dan önce gelmeli
+        Route::get('/plans/export-list', [MaintenanceController::class, 'exportList'])->name('export_list');
+        Route::get('/plans/{maintenance_plan}/export', [MaintenanceController::class, 'export'])->name('export');
+
+        // Plan Resource (Sıralamaya Dikkat: Show, Edit vs. ID çakışmaması için)
+        Route::get('/', [MaintenanceController::class, 'index'])->name('index');
+        Route::get('/create', [MaintenanceController::class, 'create'])->name('create');
+        Route::post('/', [MaintenanceController::class, 'store'])->name('store');
+        Route::get('/{maintenance_plan}', [MaintenanceController::class, 'show'])->name('show');
+        Route::get('/{maintenance_plan}/edit', [MaintenanceController::class, 'edit'])->name('edit');
+        Route::put('/{maintenance_plan}', [MaintenanceController::class, 'update'])->name('update');
+        Route::delete('/{maintenance_plan}', [MaintenanceController::class, 'destroy'])->name('destroy');
+
+        // İşlemler
+        Route::post('/{id}/start-timer', [MaintenanceController::class, 'startTimer'])->name('start-timer');
+        Route::post('/{id}/stop-timer', [MaintenanceController::class, 'stopTimer'])->name('stop-timer');
+        Route::post('/{id}/upload-file', [MaintenanceController::class, 'uploadFile'])->name('upload-file');
+        Route::delete('/file/{file_id}', [MaintenanceController::class, 'deleteFile'])->name('delete-file');
+    });
+
+    // Bakım Onayları
+    Route::prefix('approvals')->name('approvals.')->group(function () {
+        Route::get('/maintenance', [MaintenanceApprovalController::class, 'index'])->name('maintenance');
+    });
+
+
+    // 5. HİZMET & İDARİ İŞLER YÖNETİMİ
+    Route::prefix('service')->name('service.')->group(function () {
+
+        // Etkinlikler
+        Route::get('/events/export', [EventController::class, 'export'])->name('events.export');
+        Route::resource('events', EventController::class);
+
+        // Etkinlik Rezervasyonu (Polimorfik)
+        Route::post('/events/{model}/bookings', [BookingController::class, 'store'])
+            ->defaults('model_type', Event::class)
+            ->name('events.bookings.store');
+
+        // Araçlar
+        Route::resource('vehicles', VehicleController::class);
+        Route::resource('logistics-vehicles', LogisticsVehicleController::class);
+
+        // Araç Görevlendirme
+        Route::get('/assignments/export', [VehicleAssignmentController::class, 'export'])->name('assignments.export');
+        Route::get('/assignments/{assignment}/export-detail', [VehicleAssignmentController::class, 'exportDetail'])->name('assignments.export_detail');
+        Route::resource('assignments', VehicleAssignmentController::class);
+
+        // Araç Atama & Durum
+        Route::put('/assignments/{assignment}/assign', [VehicleAssignmentController::class, 'assignVehicle'])->name('assignments.assign');
+        Route::patch('/assignments/{assignment}/status', [VehicleAssignmentController::class, 'updateStatus'])->name('assignments.update-status');
+        Route::get('/assigned-by-me', [VehicleAssignmentController::class, 'assignedByMe'])->name('assignments.created_by_me');
+
+        // Genel Görevler (Araçsız)
+        Route::prefix('general-tasks')->name('general-tasks.')->group(function () {
+            Route::get('/', [VehicleAssignmentController::class, 'generalIndex'])->name('index');
+            Route::get('/create', [VehicleAssignmentController::class, 'create'])->name('create');
+            Route::post('/', [VehicleAssignmentController::class, 'store'])->name('store');
+            Route::get('/{assignment}/edit', [VehicleAssignmentController::class, 'edit'])->name('edit');
+            Route::put('/{assignment}', [VehicleAssignmentController::class, 'update'])->name('update');
+            Route::delete('/{assignment}', [VehicleAssignmentController::class, 'destroy'])->name('destroy');
+        });
+
+        // Seferler
+        Route::resource('schedules', ServiceScheduleController::class);
+
+    });
+
+
+    // 6. MÜŞTERİ, SEYAHAT ve TAKIM YÖNETİMİ
+
+    // Müşteriler
+    Route::resource('customers', CustomerController::class);
+    Route::resource('customers.machines', CustomerMachineController::class)->shallow()->except(['index', 'show']);
+    Route::resource('customers.complaints', ComplaintController::class)->shallow()->except(['index', 'show']);
+    Route::resource('customers.test-results', TestResultController::class)->shallow()->except(['index', 'show']);
+    Route::get('/api/customers/{customer}/machines', [CustomerController::class, 'getMachinesJson'])->name('api.customers.machines');
+    Route::post('/customers/{customer}/activities', [CustomerController::class, 'storeActivity'])->name('customers.activities.store');
+    Route::post('/customers/{customer}/returns', [App\Http\Controllers\CustomerController::class, 'storeReturn'])->name('customers.returns.store');
+
+    // Seyahatler
+    Route::get('/travels/export', [TravelController::class, 'export'])->name('travels.export');
+    Route::resource('travels', TravelController::class);
+    Route::post('/travels/{model}/bookings', [BookingController::class, 'store'])
+        ->defaults('model_type', Travel::class)
+        ->name('travels.bookings.store');
+
+    // Genel Rezervasyonlar
+    Route::get('/bookings/export', [BookingController::class, 'export'])->name('bookings.export');
+    Route::resource('bookings', BookingController::class)->except(['create', 'store']);
+    // --- MASRAF YÖNETİMİ 
+    Route::post('/expenses', [ExpenseController::class, 'store'])->name('expenses.store');
+    Route::delete('/expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
+
+    // Takım Yönetimi
+    Route::resource('teams', TeamController::class);
+    Route::prefix('teams')->name('teams.')->group(function () {
+        Route::patch('/{team}/toggle-active', [TeamController::class, 'toggleActive'])->name('toggle-active');
+        Route::post('/{team}/add-member', [TeamController::class, 'addMember'])->name('add-member');
+        Route::delete('/{team}/remove-member', [TeamController::class, 'removeMember'])->name('remove-member');
+        Route::get('/user/{user}/teams', [TeamController::class, 'getUserTeams'])->name('user.teams');
+    });
+
+    // Bireysel
+    Route::get('/my-assignments', [VehicleAssignmentController::class, 'myAssignments'])->name('my-assignments.index');
+    Route::get('/my-tasks', [VehicleAssignmentController::class, 'myTasks'])->name('my.tasks');
+
+    // --- TO-DO LIST (YENİ) ---
+    Route::post('/todos', [App\Http\Controllers\TodoController::class, 'store'])->name('todos.store');
+    Route::post('/todos/{todo}/toggle', [App\Http\Controllers\TodoController::class, 'toggle'])->name('todos.toggle');
+    Route::delete('/todos/{todo}', [App\Http\Controllers\TodoController::class, 'destroy'])->name('todos.destroy');
+
+}); // End of Auth Middleware
+

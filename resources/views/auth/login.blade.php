@@ -1,126 +1,391 @@
-@extends('layouts.master')
+@extends('layouts.app')
 
-@section('title', 'Giriş Yap - KÖKSAN')
+@section('title', 'Giriş Yap')
 
 @section('content')
-    <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
-        <div class="col-md-6 col-lg-4">
-
-            {{-- GİRİŞ KARTI --}}
-            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-
-                {{-- Dekoratif Üst Çizgi --}}
-                <div class="h-1 bg-primary"></div>
-
-                <div class="card-body p-5">
-
-                    {{-- Logo ve Başlık Alanı --}}
-                    <div class="text-center mb-5">
-                        <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3"
-                            style="width: 70px; height: 70px;">
-                            <i class="fa fa-building fa-2x"></i>
-                        </div>
-                        <h3 class="fw-bold text-dark mb-1" style="letter-spacing: -0.5px;">KÖKSAN</h3>
-                        <p class="text-secondary small text-uppercase fw-bold" style="letter-spacing: 1px;">Misafirhane
-                            Yönetimi</p>
-                    </div>
-
-                    {{-- Hata Mesajları --}}
-                    @if ($errors->any())
-                        <div class="alert alert-danger border-0 d-flex align-items-center shadow-sm mb-4 rounded-3">
-                            <i class="fa fa-exclamation-circle me-2 fa-lg"></i>
-                            <ul class="mb-0 small list-unstyled">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
-
-                    {{-- Form --}}
-                    <form action="{{ route('login.post') }}" method="POST">
-                        @csrf
-
-                        <div class="mb-4">
-                            <label for="email" class="form-label small fw-bold text-secondary">E-Posta Adresi</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light border-0 text-muted ps-3">
-                                    <i class="fa fa-envelope"></i>
-                                </span>
-                                <input type="email" name="email" class="form-control bg-light border-0 py-2"
-                                    id="email" placeholder="ornek@koksan.com" required autofocus>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="password" class="form-label small fw-bold text-secondary">Şifre</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light border-0 text-muted ps-3">
-                                    <i class="fa fa-lock"></i>
-                                </span>
-                                <input type="password" name="password" class="form-control bg-light border-0 py-2"
-                                    id="password" placeholder="••••••••" required>
-
-                                {{-- ŞİFRE GÖSTER/GİZLE BUTONU --}}
-                                <button class="btn bg-light border-0 text-muted pe-3" type="button" id="togglePassword">
-                                    <i class="fa fa-eye"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="d-grid pt-2">
-                            <button type="submit"
-                                class="btn btn-primary rounded-pill py-2 shadow-sm fw-bold d-flex justify-content-center align-items-center">
-                                Giriş Yap <i class="fa fa-arrow-right ms-2"></i>
-                            </button>
-                        </div>
-
-                    </form>
-                </div>
-
-                {{-- Kart Altı Bilgi --}}
-                <div class="card-footer bg-light border-0 text-center py-3">
-                    <small class="text-muted" style="font-size: 0.75rem;">
-                        &copy; {{ date('Y') }} İdari İşler Departmanı
-                    </small>
-                </div>
-            </div>
-
-            {{-- Ekstra Linkler (Opsiyonel) --}}
-            {{-- <div class="text-center mt-4">
-                <a href="#" class="text-decoration-none text-muted small hover-underline">
-                    <i class="fa fa-question-circle me-1"></i> Şifremi Unuttum?
-                </a>
-            </div> --}}
-
-        </div>
-    </div>
-
     <style>
-        /* Sadece bu sayfaya özel ufak bir hover efekti */
-        .hover-underline:hover {
-            text-decoration: underline !important;
-            color: var(--primary-color) !important;
+        /* Ana içerik alanı - dikeyde ortalanmış */
+        #app>main.py-4 {
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            display: flex;
+            align-items: center;
+            min-height: calc(100vh - 72px);
+
+            /* Animasyonlu arka plan */
+            background: linear-gradient(-45deg,
+                    #dbe4ff,
+                    #fde2ff,
+                    #d9fcf7,
+                    #fff0d9);
+            background-size: 400% 400%;
+            animation: gradientWave 18s ease infinite;
+        }
+
+        /* Dalgalanma animasyonu */
+        @keyframes gradientWave {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Giriş Kartı - Modern glassmorphism */
+        .login-card {
+            border-radius: 1.5rem;
+            box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.15) !important;
+            border: 0;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        /* Kart başlığı */
+        .login-card .card-header {
+            background: rgba(255, 255, 255, 0.5);
+            border: none;
+            padding: 2rem 2rem 1rem;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .login-card .card-body {
+            padding: 1.5rem 2rem 2.5rem;
+        }
+
+        /* Form etiketleri */
+        .form-label-custom {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        /* Input kutuları */
+        .form-control-custom {
+            border-radius: 0.75rem;
+            border: 2px solid #e2e8f0;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-control-custom:focus {
+            border-color: #667EEA;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+            background: #ffffff;
+        }
+
+        /* Şifre input group */
+        .password-group {
+            position: relative;
+        }
+
+        .password-group .form-control-custom {
+            padding-right: 3rem;
+        }
+
+        .password-toggle-btn {
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 100%;
+            border: none;
+            background: transparent;
+            padding: 0 1rem;
+            color: #6c757d;
+            cursor: pointer;
+            border-top-right-radius: 0.75rem;
+            border-bottom-right-radius: 0.75rem;
+            transition: color 0.2s;
+        }
+
+        .password-toggle-btn:hover {
+            color: #667EEA;
+        }
+
+        /* Checkbox özelleştirme */
+        .form-check-custom {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-check-custom .form-check-input {
+            width: 1.2rem;
+            height: 1.2rem;
+            cursor: pointer;
+        }
+
+        .form-check-custom .form-check-label {
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #495057;
+        }
+
+        /* reCAPTCHA container */
+        .recaptcha-wrapper {
+            display: flex;
+            justify-content: center;
+            margin: 1.5rem 0;
+        }
+
+        /* Animasyonlu gradient buton */
+        .btn-animated-gradient {
+            background: linear-gradient(-45deg,
+                    #667EEA,
+                    #F093FB,
+                    #4FD1C5,
+                    #FBD38D);
+            background-size: 400% 400%;
+            animation: gradientWave 18s ease infinite;
+            border: none;
+            color: white;
+            font-weight: 700;
+            padding: 0.75rem 2.5rem;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+            width: 100%;
+        }
+
+        .btn-animated-gradient:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Şifremi unuttum linki */
+        .link-palette {
+            color: #667EEA;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-top: 1rem;
+            transition: all 0.2s;
+        }
+
+        .link-palette:hover {
+            color: #435EBE;
+            text-decoration: underline;
+            transform: translateX(3px);
+        }
+
+        /* Form grubu spacing */
+        .form-group-custom {
+            margin-bottom: 1.5rem;
+        }
+
+        /* Error mesajları */
+        .invalid-feedback {
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Responsive ayarlar */
+        @media (max-width: 768px) {
+            .login-card .card-header {
+                padding: 1.5rem 1.5rem 0.75rem;
+                font-size: 1.5rem;
+            }
+
+            .login-card .card-body {
+                padding: 1rem 1.5rem 2rem;
+            }
         }
     </style>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5 col-xl-4">
+                <div class="card login-card">
+                    <div class="card-header text-center">
+                        <i class="fa-solid fa-lock me-2" style="color: #667EEA;"></i>
+                        Giriş Yap
+                    </div>
+
+                    <div class="card-body">
+                        <form method="POST" action="{{ route('login') }}">
+                            @csrf
+
+                            <!-- E-posta Adresi -->
+                            <div class="form-group-custom">
+                                <label for="email" class="form-label-custom">
+                                    <i class="fa-solid fa-envelope me-1" style="color: #E8D5F2;"></i>
+                                    E-posta Adresi
+                                </label>
+                                <input id="email" type="email"
+                                    class="form-control form-control-custom @error('email') is-invalid @enderror"
+                                    name="email" value="{{ old('email') }}" required autocomplete="email" autofocus
+                                    placeholder="ornek@koksan.com">
+                                @error('email')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+                            </div>
+
+                            <!-- Şifre -->
+                            <div class="form-group-custom">
+                                <label for="password" class="form-label-custom">
+                                    <i class="fa-solid fa-key me-1" style="color: #FFE5EC;"></i>
+                                    Şifre
+                                </label>
+                                <div class="password-group">
+                                    <input id="password" type="password"
+                                        class="form-control form-control-custom @error('password') is-invalid @enderror"
+                                        name="password" required autocomplete="current-password" placeholder="••••••••">
+                                    <button class="password-toggle-btn" type="button" id="togglePassword">
+                                        <i class="fa-solid fa-eye" id="eyeIcon"></i>
+                                    </button>
+                                </div>
+                                @error('password')
+                                    <span class="invalid-feedback d-block" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+                            </div>
+
+                            <!-- Beni Hatırla -->
+                            <div class="form-group-custom">
+                                <div class="form-check-custom">
+                                    <input class="form-check-input" type="checkbox" name="remember" id="remember"
+                                        {{ old('remember') ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="remember">
+                                        Beni Hatırla
+                                    </label>
+                                </div>
+                            </div>
+                            @if ($showCaptcha ?? false)
+                                <div class="recaptcha-wrapper">
+                                    <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}">
+                                    </div>
+                                </div>
+                                @error('g-recaptcha-response')
+                                    <div class="text-center mb-3">
+                                        <span class="text-danger">
+                                            <strong>Lütfen robot olmadığınızı doğrulayın.</strong>
+                                        </span>
+                                    </div>
+                                @enderror
+                            @endif
+
+                            {{-- KVKK CHECKBOX (LİNK VERSİYONU) --}}
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input @error('kvkk_approval') is-invalid @enderror"
+                                        type="checkbox" name="kvkk_approval" id="kvkk_approval" required>
+
+                                    <label class="form-check-label small" for="kvkk_approval">
+                                        {{-- TETİKLEYİCİ LİNK --}}
+                                        <a href="#" class="text-decoration-none fw-bold" style="color: #667eea;"
+                                            data-bs-toggle="modal" data-bs-target="#kvkkModal"> {{-- Hedef ID Burası --}}
+                                            KVKK Aydınlatma Metnini
+                                        </a>
+                                        okudum ve onaylıyorum.
+                                    </label>
+                                </div>
+                                @error('kvkk_approval')
+                                    <div class="text-danger small mt-1"><strong>{{ $message }}</strong></div>
+                                @enderror
+                            </div>
+
+                            <!-- Giriş Butonu -->
+                            <div class="form-group-custom">
+                                <button type="submit" class="btn btn-animated-gradient">
+                                    <i class="fa-solid fa-right-to-bracket me-2"></i>
+                                    Giriş Yap
+                                </button>
+                            </div>
+
+                            <!-- Şifremi Unuttum Linki -->
+                            @if (Route::has('password.request'))
+                                <div class="text-center">
+                                    <a class="link-palette" href="{{ route('password.request') }}">
+                                        <i class="fa-solid fa-question-circle me-1"></i>
+                                        Şifreni mi unuttun?
+                                    </a>
+                                </div>
+                            @endif
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @include('auth.kvkk')
+@endsection
+
+@section('page_scripts')
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
     <script>
-        const togglePassword = document.querySelector('#togglePassword');
-        const password = document.querySelector('#password');
+        document.addEventListener('DOMContentLoaded', function() {
+            const togglePassword = document.getElementById('togglePassword');
+            const password = document.getElementById('password');
+            const eyeIcon = document.getElementById('eyeIcon');
 
-        togglePassword.addEventListener('click', function(e) {
-            // Şifre alanının tipini değiştir (password <-> text)
-            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
-            password.setAttribute('type', type);
+            togglePassword.addEventListener('click', function() {
+                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                password.setAttribute('type', type);
 
-            // İkonu değiştir (göz <-> üstü çizili göz)
-            const icon = this.querySelector('i');
+                // İkon değiştirme
+                if (type === 'password') {
+                    eyeIcon.classList.remove('fa-eye-slash');
+                    eyeIcon.classList.add('fa-eye');
+                } else {
+                    eyeIcon.classList.remove('fa-eye');
+                    eyeIcon.classList.add('fa-eye-slash');
+                }
+            });
+        });
+    </script>
+    {{-- KVKK OTOMATİK ONAY ve ZORUNLU MODAL SCRİPTİ --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementleri seç
+            const checkbox = document.getElementById('kvkk_approval');
+            const acceptBtn = document.getElementById('btn-kvkk-accept');
+            const modalElement = document.getElementById('kvkkModal');
 
-            if (type === 'password') {
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            } else {
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
+            // Bootstrap 5 Modal instance'ını oluştur (Programatik olarak açmak için)
+            // Not: Projende bootstrap objesi global ise çalışır. Eğer hata alırsan fallback yazarız.
+            let kvkkModal;
+            if (window.bootstrap) {
+                kvkkModal = new bootstrap.Modal(modalElement);
+            }
+
+            // 1. Checkbox'a tıklanma olayı
+            if (checkbox) {
+                checkbox.addEventListener('click', function(e) {
+                    if (this.checked) {
+                        e.preventDefault();
+                        this.checked = false;
+                        if (kvkkModal) {
+                            kvkkModal.show();
+                        } else {
+                            const triggerBtn = document.querySelector('[data-bs-target="#kvkkModal"]');
+                            if (triggerBtn) triggerBtn.click();
+                        }
+                    }
+                });
+            }
+            if (acceptBtn && checkbox) {
+                acceptBtn.addEventListener('click', function() {
+                    checkbox.checked = true;
+                    checkbox.focus();
+                });
             }
         });
     </script>

@@ -1,0 +1,244 @@
+@extends('layouts.app')
+
+@section('title', 'Yeni Araç Ekle')
+
+@push('styles')
+    <style>
+        /* Ana içerik alanına (main) animasyonlu arka planı uygula */
+        #app>main.py-4 {
+            padding: 2.5rem 0 !important;
+            min-height: calc(100vh - 72px);
+            background: linear-gradient(-45deg,
+                    #dbe4ff,
+                    #fde2ff,
+                    #d9fcf7,
+                    #fff0d9);
+            background-size: 400% 400%;
+            animation: gradientWave 18s ease infinite;
+        }
+
+        /* Arka plan dalgalanma animasyonu */
+        @keyframes gradientWave {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* === GÜNCELLENDİ (create-vehicle-card) === */
+        .create-vehicle-card {
+            border-radius: 1rem;
+            box-shadow: none !important;
+            border: 0;
+            background-color: transparent;
+            backdrop-filter: none;
+        }
+
+        .create-vehicle-card .card-header,
+        .create-vehicle-card .form-label {
+            color: #444;
+            font-weight: bold;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
+        }
+
+        .create-vehicle-card .card-header {
+            color: #000;
+        }
+
+        .create-vehicle-card .form-control,
+        .create-vehicle-card .form-select,
+        .create-vehicle-card .form-check-input {
+            border-radius: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .create-vehicle-card .form-check-input {
+            border: 1px solid rgba(0, 0, 0, .25);
+            /* Kenarlık */
+            cursor: pointer;
+            /* Mouse ile üzerine gelince el işareti çıksın */
+            position: relative;
+            /* Pozisyonu belirginleştir */
+            z-index: 10;
+            /* Diğer elementlerin üzerinde kalmasını sağla */
+        }
+
+        /* Label'a da tıklayınca çalışması için bunu ekleyin */
+        .create-vehicle-card .form-check-label {
+            cursor: pointer;
+            position: relative;
+            z-index: 10;
+            user-select: none;
+            /* Yazının seçilmesini engelle, tıklamayı kolaylaştır */
+        }
+
+        .create-vehicle-card .form-check-input:checked {
+            /* Arka planı temanıza uygun mor/mavi yap */
+            background-color: #667EEA !important;
+            border-color: #667EEA !important;
+
+            /* Tik işaretini (SVG) zorla göster ve beyaz yap */
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e") !important;
+
+            /* Gölge efekti ekle ki seçildiği belli olsun */
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+
+        /* Animasyonlu buton (Değişiklik yok) */
+        .btn-animated-gradient {
+            background: linear-gradient(-45deg,
+                    #667EEA, #F093FB, #4FD1C5, #FBD38D);
+            background-size: 400% 400%;
+            animation: gradientWave 18s ease infinite;
+            border: none;
+            color: white;
+            font-weight: bold;
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+        }
+
+        .btn-animated-gradient:hover {
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+@endpush
+
+@section('content')
+    <div class="container">
+        <div class="row justify-content-center">
+            {{-- Sütun genişliği ayarlandı (col-md-8) --}}
+            <div class="col-md-8">
+                {{-- CSS Sınıfı güncellendi --}}
+                <div class="card create-vehicle-card">
+                    {{-- Başlık güncellendi --}}
+                    <div class="card-header h4 bg-transparent border-0 pt-4">{{ __('Yeni Araç Ekle') }}</div>
+                    <div class="card-body p-4">
+                        @if (session('success'))
+                            <div class="alert alert-success" role="alert">{{ session('success') }}</div>
+                        @endif
+
+                        {{-- Form action güncellendi --}}
+                        <form method="POST" action="{{ route('service.vehicles.store') }}">
+                            @csrf
+                            {{-- Row kaldırıldı, tek sütunlu form --}}
+                            <div class="mb-3">
+                                <label for="plate_number" class="form-label">Plaka (*)</label>
+                                <input type="text" class="form-control @error('plate_number') is-invalid @enderror"
+                                    id="plate_number" name="plate_number" value="{{ old('plate_number') }}" required
+                                    placeholder="Örn: 34 ABC 123">
+                                @error('plate_number')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="type" class="form-label">Araç Tipi (*)</label>
+                                <input type="text" class="form-control @error('type') is-invalid @enderror"
+                                    id="type" name="type" value="{{ old('type') }}" required
+                                    placeholder="Örn: Kamyonet, Otomobil, Minibüs">
+                                @error('type')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="brand_model" class="form-label">Marka / Model</label>
+                                <input type="text" class="form-control @error('brand_model') is-invalid @enderror"
+                                    id="brand_model" name="brand_model" value="{{ old('brand_model') }}"
+                                    placeholder="Örn: Ford Transit, Fiat Doblo">
+                                @error('brand_model')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Açıklama / Notlar</label>
+                                <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description"
+                                    rows="3">{{ old('description') }}</textarea>
+                                @error('description')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            {{-- Aktif mi Checkbox'ı --}}
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="is_active" name="is_active"
+                                    value="1" {{ old('is_active', true) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="is_active">Araç Aktif (Kullanımda)</label>
+                            </div>
+
+                            <div class="mb-3 form-check border-top pt-3 mt-3">
+                                <input type="checkbox" class="form-check-input @error('kvkk_onay') is-invalid @enderror"
+                                    id="kvkk_onay" name="kvkk_onay" value="1" {{ old('kvkk_onay') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="kvkk_onay">
+                                    <!--
+                                                                    !!! DİKKAT !!!
+                                                                    Aşağıdaki 'href' adresini kendi KVKK metninizin
+                                                                    bulunduğu sayfanın URL'si ile değiştirin.
+                                                                -->
+                                    <a href="{{ url('/kvkk-aydinlatma-metni') }}" target="_blank"
+                                        class="text-decoration-underline" style="color: #0d6efd;">
+                                        KVKK Aydınlatma Metni'ni
+                                    </a>
+                                    okudum, anladım ve araç verilerinin (plaka, marka vb.)
+                                    kaydedilmesini ve işlenmesini kabul ediyorum.
+                                </label>
+                                @error('kvkk_onay')
+                                    {{-- Hata mesajı checkbox'ın altında görünür yapılır --}}
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+                            <div class="text-end mt-4">
+                                {{-- Buton metni güncellendi --}}
+                                <button type="submit" class="btn btn-animated-gradient rounded-3 px-4 py-2">Aracı
+                                    Kaydet</button>
+                                <a href="{{ route('service.vehicles.index') }}"
+                                    class="btn btn-outline-secondary rounded-3">İptal</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
+
+@section('page_scripts')
+    <script>
+        // Sayfa tamamen yüklendiğinde çalış
+        document.addEventListener('DOMContentLoaded', function() {
+            // Gerekli elementleri seç
+            const kvkkCheckbox = document.getElementById('kvkk_onay');
+            const submitButton = document.getElementById('submit-button');
+
+            // Kontrol: Bu elementler sayfada varsa devam et
+            if (kvkkCheckbox && submitButton) {
+
+                // Butonun mevcut durumunu ayarlamak için bir fonksiyon
+                function toggleSubmitButton() {
+                    // Checkbox seçiliyse 'disabled' özelliğini kaldır,
+                    // seçili değilse 'disabled' özelliğini ekle (true yap).
+                    submitButton.disabled = !kvkkCheckbox.checked;
+                }
+
+                // 1. Sayfa ilk yüklendiğinde butonun durumunu ayarla
+                //    (Eğer form hatadan dolayı geri dönerse ve checkbox işaretliyse, buton aktif kalır)
+                toggleSubmitButton();
+
+                // 2. Checkbox'ın durumunda herhangi bir değişiklik olduğunda
+                //    (tıklandığında) fonksiyonu tekrar çalıştır
+                kvkkCheckbox.addEventListener('change', toggleSubmitButton);
+            }
+        });
+    </script>
+@endsection

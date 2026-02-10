@@ -3,123 +3,124 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Models\ReportSchedule;
-use Illuminate\Support\Facades\Mail;
-use Carbon\Carbon;
+use App\Models\ScheduledReport;
 use App\Exports\DynamicReportExport;
+use App\Mail\DynamicReportMail;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class SendScheduledReports extends Command
 {
-    protected $signature = 'reports:send';
-    protected $description = 'Zamanlanmış e-posta raporlarını dinamik olarak gönderir.';
+    protected $signature = 'reports:send-scheduled';
+    protected $description = 'Zamanlanmış raporları kontrol eder ve gönderir.';
 
     public function handle()
     {
-        $schedules = \App\Models\ReportSchedule::where('is_active', true)->get();
+        $now = Carbon::now();
+        $currentTime = $now->format('H:i');
 
-        if ($schedules->isEmpty()) {
-            $this->info("Aktif bir rapor planı bulunamadı.");
-            return;
-        }
+        // Aktif raporları getir
+        $reports = ScheduledReport::where('is_active', true)->get();
 
-        foreach ($schedules as $schedule) {
-            if ($this->shouldSend($schedule)) {
-
-                $reportClass = $schedule->report_type;
-                if (!class_exists($reportClass)) {
-                    $this->error("Rapor sınıfı bulunamadı: {$reportClass}");
-                    continue;
-                }
-
-                $report = new $reportClass();
-                $data = $report->getData($schedule->data_scope);
-                $headers = $report->getHeaders();
-
-                // Dosya adını temizle (Slug)
-                $baseFileName = str($report->getName())->slug('_') . '_' . now()->format('d_m_Y_H_i');
-                $extension = ($schedule->file_format == 'pdf') ? '.pdf' : '.xlsx';
-                $fileName = $baseFileName . $extension;
-
-                // Klasörün varlığından emin ol (Laravel Disk üzerinden)
-                if (!\Illuminate\Support\Facades\Storage::disk('local')->exists('reports')) {
-                    \Illuminate\Support\Facades\Storage::disk('local')->makeDirectory('reports');
-                }
-
-                // Göreli yol (local disk içinde)
-                $relativeFilePath = 'reports/' . $fileName;
-
-                // Windows uyumlu tam yol (Laravel otomatik halleder)
-                $fullPath = \Illuminate\Support\Facades\Storage::disk('local')->path($relativeFilePath);
-
-                // FORMAT SEÇİMİ VE DOSYA OLUŞTURMA
-                if ($schedule->file_format == 'pdf') {
-                    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('emails.dynamic_report', [
-                        'reportName' => $report->getName(),
-                        'data' => $data,
-                        'headers' => $headers,
-                        'frequency' => $schedule->frequency
-                    ])->setPaper('a4', 'landscape');
-
-                    // PDF'i diske kaydet
-                    \Illuminate\Support\Facades\Storage::disk('local')->put($relativeFilePath, $pdf->output());
-                } else {
-                    // Excel'i diske kaydet
-                    \Maatwebsite\Excel\Facades\Excel::store(
-                        new \App\Exports\DynamicReportExport($data, $headers),
-                        $relativeFilePath,
-                        'local'
-                    );
-                }
-
-                // Dosyanın gerçekten orada olduğunu teyit et
-                if (!\Illuminate\Support\Facades\Storage::disk('local')->exists($relativeFilePath)) {
-                    $this->error("Dosya diskte bulunamadı: {$relativeFilePath}");
-                    continue;
-                }
-
-                // MAIL GÖNDERİMİ
-                \Illuminate\Support\Facades\Mail::send('emails.dynamic_report', [
-                    'reportName' => $report->getName(),
-                    'data' => $data,
-                    'headers' => $headers,
-                    'frequency' => $schedule->frequency
-                ], function ($message) use ($schedule, $report, $fullPath) {
-                    $message->to($schedule->recipients)
-                        ->subject($report->getName() . ' - ' . date('d.m.Y'))
-                        ->attach($fullPath);
-                });
-
-                // Log ve Güncelleme
-                $reportScheduleModel = \App\Models\ReportSchedule::find($schedule->id);
-                if ($reportScheduleModel) {
-                    $reportScheduleModel->update(['last_sent_at' => now()]);
-                }
-
-                // Gönderim sonrası temizlik
-                \Illuminate\Support\Facades\Storage::disk('local')->delete($relativeFilePath);
-
-                $this->info("Gönderildi: " . $report->getName() . " (" . strtoupper($schedule->file_format) . ")");
+        foreach ($reports as $report) {
+            if ($this->shouldSend($report, $now)) {
+                $this->processReport($report);
             }
         }
     }
 
-    private function shouldSend($schedule)
+    /**
+     * Raporun gönderilme vaktinin gelip gelmediğini kontrol eder.
+     */
+    private function shouldSend($report, $now)
     {
-        // Eğer hiç gönderilmemişse veya test modundaysa (every_minute) gönder
-        if (!$schedule->last_sent_at || $schedule->frequency === 'every_minute') {
-            return true;
+        $currentTime = $now->format('H:i');
+
+        // Zaman kontrolü (send_time veritabanında H:i formatında olmalı)
+        if (substr($report->send_time, 0, 5) !== $currentTime && $report->frequency !== 'minute') {
+            return false;
         }
 
-        $lastSent = Carbon::parse($schedule->last_sent_at);
-        $now = now();
+        // Frekans ve son gönderim tarihi kontrolü
+        switch ($report->frequency) {
+            case 'minute':
+                return true; // Test amaçlı her dakika
+            case 'daily':
+                return !$report->last_sent_at || !$report->last_sent_at->isToday();
+            case 'weekly':
+                return $now->isMonday() && (!$report->last_sent_at || !$report->last_sent_at->isCurrentWeek());
+            case 'monthly':
+                return $now->day == 1 && (!$report->last_sent_at || !$report->last_sent_at->isCurrentMonth());
+        }
 
-        return match ($schedule->frequency) {
-            'daily_morning' => $lastSent->diffInHours($now) >= 23 && $now->hour >= 9,
-            'daily_evening' => $lastSent->diffInHours($now) >= 23 && $now->hour >= 18,
-            'weekly_monday' => $now->isMonday() && $lastSent->diffInDays($now) >= 6,
-            'monthly_first' => $now->day === 1 && $lastSent->diffInDays($now) >= 27,
-            default => false,
-        };
+        return false;
+    }
+
+    /**
+     * Raporu oluşturur ve mail atar.
+     */
+    private function processReport($report)
+    {
+        try {
+            $reportClass = $report->report_class;
+            if (!class_exists($reportClass))
+                return;
+
+            $instance = new $reportClass();
+            $data = $instance->getData($report->filter_frequency);
+            $headers = $instance->getHeaders();
+
+            if ($data->isEmpty()) {
+                // Başlıkların karşısına "VERİ GİRİŞİ YAPILMAMIŞ" yazan bir satır oluşturuyoruz
+                $warningRow = [];
+                foreach ($headers as $header) {
+                    $warningRow[$header] = '--- SISTEME VERI GIRISI YAPILMAMISTIR ---';
+                }
+                $data = collect([$warningRow]);
+            }
+
+            if (!Storage::disk('local')->exists('temp_reports')) {
+                Storage::disk('local')->makeDirectory('temp_reports');
+            }
+
+            // Uzantıyı ve Export Formatını belirle
+            $extension = ($report->file_format === 'pdf') ? 'pdf' : 'xlsx';
+            $exportFormat = ($report->file_format === 'pdf')
+                ? \Maatwebsite\Excel\Excel::DOMPDF
+                : \Maatwebsite\Excel\Excel::XLSX;
+
+            $fileName = Str::slug($report->report_name) . '_' . now()->format('Y_m_d_His') . '.' . $extension;
+            $tempPath = 'temp_reports/' . $fileName;
+
+            // Excel veya PDF'i oluştur ve geçici depola
+            Excel::store(
+                new \App\Exports\DynamicReportExport($data, $headers),
+                $tempPath,
+                'local',
+                $exportFormat
+            );
+
+            if (!Storage::disk('local')->exists($tempPath)) {
+                throw new \Exception("Dosya diskte oluşturulamadı: " . $tempPath);
+            }
+
+            $fullPath = storage_path('app/' . $tempPath);
+
+            // Mail gönder (Format bilgisini de gönderiyoruz)
+            Mail::to($report->recipients)->send(
+                new DynamicReportMail($report->report_name, $fullPath, $fileName, $report->file_format)
+            );
+
+            $report->update(['last_sent_at' => now()]);
+            Storage::delete($tempPath);
+
+            $this->info("Rapor gönderildi ({$report->file_format}): {$report->report_name}");
+        } catch (\Exception $e) {
+            \Log::error("Rapor Gönderim Hatası ({$report->report_name}): " . $e->getMessage());
+            $this->error("Hata: " . $e->getMessage());
+        }
     }
 }

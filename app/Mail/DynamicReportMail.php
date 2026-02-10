@@ -3,51 +3,39 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 class DynamicReportMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    /**
-     * Create a new message instance.
-     */
-    public function __construct()
+    // Bu iki değişken public olduğu için Blade içinde doğrudan kullanılabilir
+    public $reportName;
+    public $fileFormat;
+
+    protected $filePath;
+    protected $fileName;
+
+    public function __construct($reportName, $filePath, $fileName, $fileFormat)
     {
-        //
+        $this->reportName = $reportName;
+        $this->filePath = $filePath;
+        $this->fileFormat = $fileFormat;
+        $this->fileName = $fileName;
     }
 
-    /**
-     * Get the message envelope.
-     */
-    public function envelope(): Envelope
+    public function build()
     {
-        return new Envelope(
-            subject: 'Dynamic Report Mail',
-        );
-    }
+        $mimeType = $this->fileFormat === 'pdf'
+            ? 'application/pdf'
+            : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
-    /**
-     * Get the message content definition.
-     */
-    public function content(): Content
-    {
-        return new Content(
-            view: 'view.name',
-        );
-    }
-
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
-    public function attachments(): array
-    {
-        return [];
+        return $this->subject('📊 Rapor: ' . $this->reportName)
+            ->markdown('emails.reports.scheduled')
+            ->attach($this->filePath, [
+                'as' => $this->fileName,
+                'mime' => $mimeType,
+            ]);
     }
 }
