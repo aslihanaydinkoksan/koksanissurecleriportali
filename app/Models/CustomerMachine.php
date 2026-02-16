@@ -36,7 +36,7 @@ use App\Traits\HasBusinessUnit;
 class CustomerMachine extends Model
 {
     use HasFactory, Loggable, HasBusinessUnit;
-    protected $fillable = ['customer_id', 'model', 'serial_number', 'installation_date', 'business_unit_id'];
+    protected $fillable = ['customer_id', 'customer_product_id','model', 'serial_number', 'installation_date', 'business_unit_id'];
     public function customer()
     {
         return $this->belongsTo(Customer::class);
@@ -45,5 +45,9 @@ class CustomerMachine extends Model
     public function files()
     {
         return $this->morphMany(File::class, 'fileable');
+    }
+    public function product()
+    {
+        return $this->belongsTo(CustomerProduct::class, 'customer_product_id');
     }
 }

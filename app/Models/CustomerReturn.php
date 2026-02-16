@@ -18,6 +18,8 @@ class CustomerReturn extends Model
         'complaint_id',
         'user_id',
         'product_name',
+        'shipped_quantity',
+        'shipped_unit',
         'batch_number',
         'quantity',
         'unit',

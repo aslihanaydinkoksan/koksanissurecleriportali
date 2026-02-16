@@ -58,12 +58,9 @@
             background-color: rgba(255, 255, 255, 0.8);
         }
 
-        /* === Dinamik satır CSS'leri (plan-detail-row) kaldırıldı === */
-
-        /* Animasyonlu buton (Değişiklik yok) */
+        /* Animasyonlu buton */
         .btn-animated-gradient {
-            background: linear-gradient(-45deg,
-                    #667EEA, #F093FB, #4FD1C5, #FBD38D);
+            background: linear-gradient(-45deg, #667EEA, #F093FB, #4FD1C5, #FBD38D);
             background-size: 400% 400%;
             animation: gradientWave 18s ease infinite;
             border: none;
@@ -105,18 +102,21 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-10">
-                {{-- CSS Sınıfı güncellendi --}}
                 <div class="card create-event-card">
-                    {{-- Başlık güncellendi --}}
                     <div class="card-header h4 bg-transparent border-0 pt-4">{{ __('Yeni Etkinlik Oluştur') }}</div>
                     <div class="card-body p-4">
                         @if (session('success'))
                             <div class="alert alert-success" role="alert">{{ session('success') }}</div>
                         @endif
 
-                        {{-- Form action güncellendi --}}
                         <form method="POST" action="{{ route('service.events.store') }}" enctype="multipart/form-data">
                             @csrf
+
+                            {{-- UX: Yönlendirme bilgisi için gizli input --}}
+                            @if (isset($selectedCustomerId) && $selectedCustomerId)
+                                <input type="hidden" name="redirect_to_customer" value="{{ $selectedCustomerId }}">
+                            @endif
+
                             <div class="row">
                                 {{-- Sol Sütun (Ana Etkinlik Bilgileri) --}}
                                 <div class="col-md-6">
@@ -139,16 +139,28 @@
 
                                     <div class="mb-3">
                                         <label for="event_type" class="form-label">Etkinlik Tipi (*)</label>
-                                        {{-- Controller'dan gelen $eventTypes değişkenini kullanıyoruz --}}
-                                        <select name="event_type" id="event_type"
-                                            class="form-select @error('event_type') is-invalid @enderror" required>
-                                            <option value="">Seçiniz...</option>
-                                            @foreach ($eventTypes as $key => $value)
-                                                <option value="{{ $key }}"
-                                                    @if (old('event_type') == $key) selected @endif>{{ $value }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        {{-- 
+                                           UX GELİŞTİRMESİ: Müşteri sayfasından geldiysek, tipi direkt 'Müşteri Ziyareti' yap ve kilitle 
+                                           Eğer kilitlersek form submit edildiğinde value gitmez, bu yüzden readonly yapıyoruz (pointer-events-none) veya gizli input kullanıyoruz.
+                                        --}}
+                                        @if (isset($selectedCustomerId) && $selectedCustomerId)
+                                            <input type="hidden" name="event_type" value="musteri_ziyareti">
+                                            <select id="event_type" class="form-select bg-light" disabled>
+                                                <option value="musteri_ziyareti" selected>Müşteri Ziyareti</option>
+                                            </select>
+                                        @else
+                                            <select name="event_type" id="event_type"
+                                                class="form-select @error('event_type') is-invalid @enderror" required>
+                                                <option value="">Seçiniz...</option>
+                                                @foreach ($eventTypes as $key => $value)
+                                                    <option value="{{ $key }}"
+                                                        @if (old('event_type') == $key) selected @endif>
+                                                        {{ $value }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        @endif
+
                                         <div id="crm-details-wrapper" style="display: none;">
                                             <hr class="my-4">
 
@@ -157,8 +169,7 @@
                                                 <div class="col-md-6">
                                                     <div class="mb-3">
                                                         <label for="travel_id" class="form-label">Bağlı Olduğu Seyahat
-                                                            Programı
-                                                            (Opsiyonel)</label>
+                                                            Programı (Opsiyonel)</label>
                                                         <select name="travel_id" id="travel_id" class="form-select">
                                                             <option value="">Bağımsız Ziyaret</option>
                                                             @foreach ($availableTravels as $travel)
@@ -176,18 +187,33 @@
                                                 <div class="col-md-6">
                                                     <div class="mb-3">
                                                         <label for="customer_id" class="form-label">Hangi Müşteri Ziyaret
-                                                            Edildi?
-                                                            (*)</label>
-                                                        <select name="customer_id" id="customer_id"
-                                                            class="form-select @error('customer_id') is-invalid @enderror">
-                                                            <option value="">Müşteri Seçiniz...</option>
-                                                            @foreach ($customers as $customer)
-                                                                <option value="{{ $customer->id }}"
-                                                                    @if (old('customer_id') == $customer->id) selected @endif>
-                                                                    {{ $customer->name }}
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
+                                                            Edildi? (*)</label>
+
+                                                        {{-- UX GELİŞTİRMESİ: Müşteri sayfasından geldiysek otomatik seç ve kilitle --}}
+                                                        @if (isset($selectedCustomerId) && $selectedCustomerId)
+                                                            <input type="hidden" name="customer_id"
+                                                                value="{{ $selectedCustomerId }}">
+                                                            <select id="customer_id" class="form-select bg-light" disabled>
+                                                                @foreach ($customers as $customer)
+                                                                    @if ($customer->id == $selectedCustomerId)
+                                                                        <option value="{{ $customer->id }}" selected>
+                                                                            {{ $customer->name }}</option>
+                                                                    @endif
+                                                                @endforeach
+                                                            </select>
+                                                        @else
+                                                            <select name="customer_id" id="customer_id"
+                                                                class="form-select @error('customer_id') is-invalid @enderror">
+                                                                <option value="">Müşteri Seçiniz...</option>
+                                                                @foreach ($customers as $customer)
+                                                                    <option value="{{ $customer->id }}"
+                                                                        @if (old('customer_id') == $customer->id) selected @endif>
+                                                                        {{ $customer->name }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        @endif
+
                                                         @error('customer_id')
                                                             <div class="invalid-feedback">{{ $message }}</div>
                                                         @enderror
@@ -206,22 +232,19 @@
                                                             <option value="">Seçiniz...</option>
                                                             <option value="satis_sonrasi_hizmet"
                                                                 @if (old('visit_purpose') == 'satis_sonrasi_hizmet') selected @endif>Satış
-                                                                Sonrası Hizmet
-                                                            </option>
+                                                                Sonrası Hizmet</option>
                                                             <option value="egitim"
-                                                                @if (old('visit_purpose') == 'egitim') selected @endif>
-                                                                Eğitim</option>
+                                                                @if (old('visit_purpose') == 'egitim') selected @endif>Eğitim
+                                                            </option>
                                                             <option value="rutin_ziyaret"
                                                                 @if (old('visit_purpose') == 'rutin_ziyaret') selected @endif>Rutin
-                                                                Ziyaret
-                                                            </option>
-                                                            <option value="pazarlama"
-                                                                @if (old('visit_purpose') == 'pazarlama') selected @endif>Pazarlama
-                                                                Amaçlı
                                                                 Ziyaret</option>
+                                                            <option value="pazarlama"
+                                                                @if (old('visit_purpose') == 'pazarlama') selected @endif>
+                                                                Pazarlama Amaçlı Ziyaret</option>
                                                             <option value="diger"
-                                                                @if (old('visit_purpose') == 'diger') selected @endif>
-                                                                Diğer</option>
+                                                                @if (old('visit_purpose') == 'diger') selected @endif>Diğer
+                                                            </option>
                                                         </select>
                                                     </div>
                                                 </div>
@@ -236,20 +259,21 @@
                                                             <label for="customer_machine_id" class="form-label">İlgili
                                                                 Makine (Opsiyonel)</label>
                                                             <select name="customer_machine_id" id="customer_machine_id"
-                                                                class="form-select" disabled> {{-- Başlangıçta devre dışı --}}
+                                                                class="form-select" disabled>
                                                                 <option value="">Önce bir müşteri seçiniz...</option>
                                                             </select>
                                                             @error('customer_machine_id')
-                                                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                                                                <div class="invalid-feedback d-block">{{ $message }}
+                                                                </div>
                                                             @enderror
                                                         </div>
                                                     </div>
 
-                                                    {{-- SATIŞ SONRASI NOTLARI (hep görünür, 'has_machine' kalktı) --}}
+                                                    {{-- SATIŞ SONRASI NOTLARI --}}
                                                     <div class="col-md-6">
                                                         <div class="mb-3">
-                                                            <label for="after_sales_notes" class="form-label">Satış Sonrası
-                                                                Notları</label>
+                                                            <label for="after_sales_notes" class="form-label">Satış
+                                                                Sonrası Notları</label>
                                                             <textarea class="form-control" id="after_sales_notes" name="after_sales_notes" rows="3">{{ old('after_sales_notes') }}</textarea>
                                                         </div>
                                                     </div>
@@ -328,7 +352,6 @@
                         <x-dynamic-fields :model="\App\Models\Event::class" />
                     </div>
                     <div class="text-end mt-4">
-                        {{-- Buton metni güncellendi --}}
                         <button type="submit" class="btn btn-animated-gradient rounded-3 px-4 py-2">Etkinliği
                             Oluştur</button>
                     </div>
@@ -344,36 +367,37 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Ana elemanlar
             const eventTypeDropdown = document.getElementById('event_type');
+            // Eğer selectedCustomerId varsa, readonly olan inputun value'sunu alabilmek için genel selector:
+            const eventTypeInput = document.querySelector('input[name="event_type"]') || eventTypeDropdown;
+
             const crmWrapper = document.getElementById('crm-details-wrapper');
 
             // CRM Elemanları
             const customerIdDropdown = document.getElementById('customer_id');
+            const customerIdInput = document.querySelector('input[name="customer_id"]') || customerIdDropdown;
+
             const visitPurposeDropdown = document.getElementById('visit_purpose');
 
             // Koşullu CRM Elemanları
             const afterSalesSection = document.getElementById('after-sales-details');
-            const machineDropdown = document.getElementById('customer_machine_id'); // Radio yerine bu geldi
+            const machineDropdown = document.getElementById('customer_machine_id');
 
             // Seçilen müşteriye ait makineleri AJAX ile çeken fonksiyon
             async function fetchCustomerMachines() {
-                const customerId = customerIdDropdown.value;
+                const customerId = customerIdInput.value;
 
-                // Müşteri seçilmemişse makine listesini sıfırla
                 if (!customerId) {
                     machineDropdown.innerHTML = '<option value="">Önce bir müşteri seçiniz...</option>';
                     machineDropdown.disabled = true;
                     return;
                 }
 
-                // Müşteri seçilmişse API'ye istek at
                 try {
-                    // API rotamızı 'customer' ID'si ile çağırıyoruz
                     const response = await fetch(`/api/customers/${customerId}/machines`);
                     if (!response.ok) throw new Error('Network response was not ok');
 
                     const machines = await response.json();
 
-                    // Makine dropdown'ını temizle ve doldur
                     machineDropdown.innerHTML = '<option value="">Makine seç (Opsiyonel)...</option>';
 
                     if (machines.length > 0) {
@@ -384,7 +408,7 @@
                                 `${machine.model} (Seri No: ${machine.serial_number || 'N/A'})`;
                             machineDropdown.appendChild(option);
                         });
-                        machineDropdown.disabled = false; // Dropdown'ı aktif et
+                        machineDropdown.disabled = false;
                     } else {
                         machineDropdown.innerHTML =
                             '<option value="">Bu müşteriye ait kayıtlı makine bulunamadı.</option>';
@@ -400,23 +424,19 @@
 
             // Etkinlik Tipi 'Müşteri Ziyareti' ise ana CRM bloğunu yönetir
             function toggleCrmWrapper() {
-                const selectedEventType = eventTypeDropdown.value;
+                const selectedEventType = eventTypeInput.value;
 
                 if (selectedEventType === 'musteri_ziyareti') {
                     crmWrapper.style.display = 'block';
-                    customerIdDropdown.required = true;
+                    if (customerIdDropdown) customerIdDropdown.required = true;
                     visitPurposeDropdown.required = true;
 
-                    // İç mantığı tetikle
                     togglePurposeDetails();
-                    // Müşteri seçiliyse makineleri de yükle (sayfa validation'dan dönerse)
                     fetchCustomerMachines();
                 } else {
                     crmWrapper.style.display = 'none';
-                    customerIdDropdown.required = false;
+                    if (customerIdDropdown) customerIdDropdown.required = false;
                     visitPurposeDropdown.required = false;
-
-                    // İç alanları gizle
                     afterSalesSection.style.display = 'none';
                 }
             }
@@ -427,20 +447,18 @@
 
                 if (selectedVisitPurpose === 'satis_sonrasi_hizmet') {
                     afterSalesSection.style.display = 'block';
-                    // Artık radio zorunluluğu yok, makine seçimi opsiyonel
                 } else {
                     afterSalesSection.style.display = 'none';
                 }
             }
 
-            // Olay dinleyicilerini ekle
-            eventTypeDropdown.addEventListener('change', toggleCrmWrapper);
+            // Olay dinleyicilerini ekle (Eğer dropdown disablesa bunlara gerek yok ama güvenlik için kalsın)
+            if (eventTypeDropdown) eventTypeDropdown.addEventListener('change', toggleCrmWrapper);
+            if (customerIdDropdown) customerIdDropdown.addEventListener('change', fetchCustomerMachines);
+
             visitPurposeDropdown.addEventListener('change', togglePurposeDetails);
 
-            // YENİ DİNLEYİCİ: Müşteri dropdown'ı değiştiğinde makineleri çek
-            customerIdDropdown.addEventListener('change', fetchCustomerMachines);
-
-            // Sayfa yüklendiğinde (validation hatasıyla geri dönerse diye)
+            // Sayfa yüklendiğinde kontrolleri çalıştır (URL'den müşteri geldiyse hemen açılır)
             toggleCrmWrapper();
         });
     </script>

@@ -6,36 +6,14 @@ use App\Models\Customer;
 use App\Models\Complaint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\RedirectResponse;
 
 class ComplaintController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
+     * Yeni Şikayet Kaydet
      */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request, Customer $customer)
+    public function store(Request $request, Customer $customer): RedirectResponse
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -64,47 +42,28 @@ class ComplaintController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Complaint  $complaint
-     * @return \Illuminate\Http\Response
+     * Mevcut Şikayeti Güncelle
      */
-    public function show(Complaint $complaint)
+    public function update(Request $request, Complaint $complaint): RedirectResponse
     {
-        //
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'status' => 'required|in:open,in_progress,resolved',
+            'description' => 'required|string',
+        ]);
+
+        $complaint->update($validated);
+
+        return back()->with('success', 'Şikayet başarıyla güncellendi.');
     }
 
     /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Complaint  $complaint
-     * @return \Illuminate\Http\Response
+     * Şikayeti Sil
      */
-    public function edit(Complaint $complaint)
+    public function destroy(Complaint $complaint): RedirectResponse
     {
-        //
-    }
+        $complaint->delete();
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Complaint  $complaint
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Complaint $complaint)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Complaint  $complaint
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Complaint $complaint)
-    {
-        //
+        return back()->with('success', 'Şikayet kaydı silindi.');
     }
 }

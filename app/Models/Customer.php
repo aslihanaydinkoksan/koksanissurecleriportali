@@ -9,6 +9,7 @@ use App\Traits\Loggable;
 use App\Traits\HasBusinessUnit;
 use App\Models\CustomerContact;
 use App\Models\CustomerReturn;
+use App\Models\CustomerSample;
 
 /**
  * App\Models\Customer
@@ -59,7 +60,10 @@ class Customer extends Model
         'contact_person',
         'email',
         'phone',
-        'address'
+        'address',
+        'is_active',
+        'start_date',
+        'end_date'
     ];
     public function machines()
     {
@@ -98,5 +102,17 @@ class Customer extends Model
     public function returns()
     {
         return $this->hasMany(CustomerReturn::class)->orderBy('return_date', 'desc');
+    }
+    public function samples()
+    {
+        return $this->hasMany(CustomerSample::class)->orderBy('created_at', 'desc');
+    }
+    public function opportunities()
+    {
+        return $this->hasMany(Opportunity::class)->orderBy('created_at', 'desc');
+    }
+    public function products()
+    {
+        return $this->hasMany(CustomerProduct::class)->orderBy('name', 'asc');
     }
 }

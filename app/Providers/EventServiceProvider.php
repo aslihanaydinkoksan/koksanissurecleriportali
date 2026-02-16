@@ -14,6 +14,8 @@ use App\Listeners\LogFailedLogin;
 use App\Listeners\LogLogout;
 use App\Models\Booking;
 use App\Observers\BookingObserver;
+use App\Models\CustomerActivity;
+use App\Observers\CustomerActivityObserver;
 class EventServiceProvider extends ServiceProvider
 {
     /**
@@ -25,8 +27,8 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
-        \Illuminate\Auth\Events\Failed::class => [
-            \App\Listeners\LogFailedLogin::class,
+        Failed::class => [
+            LogFailedLogin::class,
         ],
             // 1. Başarılı Giriş
         Login::class => [
@@ -53,6 +55,7 @@ class EventServiceProvider extends ServiceProvider
     public function boot()
     {
         Booking::observe(BookingObserver::class);
+        CustomerActivity::observe(CustomerActivityObserver::class);
     }
 
     /**

@@ -51,7 +51,6 @@
             z-index: 1000 !important;
             margin: 0 !important;
             padding: 0.5rem 0 !important;
-            /* Dikey padding azaltıldı */
             background: var(--navbar-bg) !important;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -84,15 +83,12 @@
         .nav-link {
             font-weight: 600;
             font-size: 0.85rem;
-            /* Font hafif küçültüldü */
             color: #4a5568 !important;
             padding: 0.4rem 0.6rem !important;
-            /* Yatay boşluk daraltıldı */
             border-radius: 8px;
             transition: var(--transition);
             position: relative;
             white-space: normal;
-            /* Yakınlaştırınca metnin aşağı kaymasına izin verir */
             display: flex;
             align-items: center;
             gap: 0.4rem;
@@ -123,16 +119,13 @@
             border-radius: 25px;
             font-size: 0.8rem;
             max-width: 150px;
-            /* Zoom'da taşmayı önlemek için sınırlandırıldı */
             display: inline-flex;
             align-items: center;
             justify-content: center;
         }
 
-        /* --- Responsive Düzenlemeler (Zoom ve Mobil Dostu) --- */
+        /* --- Responsive Düzenlemeler --- */
         @media (max-width: 991px) {
-
-            /* Mobil menü açıldığında ekranı kaplamaması için scroll eklendi */
             .navbar-collapse {
                 max-height: 80vh;
                 overflow-y: auto;
@@ -155,13 +148,11 @@
 
             #navbarDropdown {
                 max-width: 100% !important;
-                /* Mobilde tam genişlik */
                 width: 100%;
             }
 
             main {
                 margin-top: 80px !important;
-                /* Mobil navbar yüksekliğine göre ayar */
             }
         }
 
@@ -229,6 +220,211 @@
                 transform: translateY(0);
             }
         }
+
+        /* --- KÖKGPT GELİŞMİŞ UI --- */
+        #ai-chat-wrapper {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 9999;
+            font-family: 'Nunito', sans-serif;
+        }
+
+        #chat-toggle {
+            width: 65px;
+            height: 65px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s;
+        }
+
+        #chat-toggle:hover {
+            transform: scale(1.1) rotate(10deg);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4) !important;
+        }
+
+        #chat-window {
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            width: 380px;
+            height: 550px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform-origin: bottom right;
+            transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+            opacity: 0;
+            transform: scale(0.8) translateY(20px);
+            pointer-events: none;
+        }
+
+        #chat-window.active {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            pointer-events: all;
+        }
+
+        /* Header */
+        .chat-header {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9));
+            padding: 15px 20px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Body */
+        #chat-body {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: rgba(240, 242, 245, 0.5);
+            scroll-behavior: smooth;
+        }
+
+        /* Scrollbar */
+        #chat-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #chat-body::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        /* Mesaj Balonları */
+        .message-bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            font-size: 0.92rem;
+            line-height: 1.5;
+            position: relative;
+            animation: messagePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes messagePop {
+            0% {
+                opacity: 0;
+                transform: translateY(10px) scale(0.95);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .ai-msg {
+            align-self: flex-start;
+            background: white;
+            color: #2d3748;
+            border-radius: 18px 18px 18px 2px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.02);
+        }
+
+        .user-msg {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 18px 18px 2px 18px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.25);
+        }
+
+        .ai-msg a {
+            color: #667eea;
+            font-weight: 700;
+            text-decoration: none;
+            border-bottom: 1px dotted;
+        }
+
+        .ai-msg a:hover {
+            border-bottom: 1px solid;
+        }
+
+        .chat-footer {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .chat-input-group {
+            background: #f1f5f9;
+            border-radius: 30px;
+            padding: 5px 5px 5px 20px;
+            display: flex;
+            align-items: center;
+            transition: box-shadow 0.3s;
+        }
+
+        .chat-input-group:focus-within {
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+            background: white;
+        }
+
+        #chat-input {
+            border: none;
+            background: transparent;
+            box-shadow: none;
+            font-size: 0.95rem;
+        }
+
+        #chat-input:focus {
+            outline: none;
+        }
+
+        #chat-send {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        #chat-send:hover {
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 480px) {
+            #chat-window {
+                width: calc(100vw - 40px);
+                height: calc(100vh - 120px);
+                bottom: 90px;
+                right: 0;
+            }
+        }
+
+        .pulsing {
+            animation: pulse-red 1.5s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+            }
+        }
     </style>
     @stack('styles')
 </head>
@@ -257,7 +453,6 @@
                                             class="fa-solid fa-right-to-bracket"></i><span>Giriş Yap</span></a></li>
                             @endif
                         @else
-                            {{-- GLOBAL USER DEĞİŞKENİ --}}
                             @php $user = Auth::user(); @endphp
 
                             <li class="nav-item"><a class="nav-link" href="{{ route('general.calendar') }}"><i
@@ -267,7 +462,6 @@
                                             class="fa-solid fa-calendar-check"
                                         style="color: #4FD1C5;"></i><span>Takvimim</span></a></li> @endauth
 
-                            {{-- GÖREVLER & ATAMALAR (Herkes görebilir - Kısıtlama Yok) --}}
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" role="button"
                                     data-bs-toggle="dropdown"><i class="fa-solid fa-car-side"
@@ -301,7 +495,6 @@
                                 </ul>
                             </li>
 
-                            {{-- LOJİSTİK MENÜSÜ --}}
                             @if ($user->hasDepartmentPermission('view_logistics'))
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
@@ -318,7 +511,6 @@
                                 </li>
                             @endif
 
-                            {{-- ÜRETİM MENÜSÜ --}}
                             @if ($user->hasDepartmentPermission('view_production'))
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
@@ -336,7 +528,6 @@
                                 </li>
                             @endif
 
-                            {{-- BAKIM DEPARTMANI MENÜSÜ --}}
                             @if ($user->hasDepartmentPermission('view_maintenance'))
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
@@ -345,20 +536,12 @@
                                         <span>Bakım</span>
                                     </a>
                                     <ul class="dropdown-menu dropdown-menu-end">
-                                        <li>
-                                            <a class="dropdown-item" href="{{ route('maintenance.create') }}">
-                                                <i class="fa-solid fa-plus-circle" style="color: #48BB78;"></i>
-                                                Yeni Bakım Planı
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item" href="{{ route('maintenance.index') }}">
+                                        <li><a class="dropdown-item" href="{{ route('maintenance.create') }}">
+                                                <i class="fa-solid fa-plus-circle" style="color: #48BB78;"></i> Yeni Bakım
+                                                Planı</a></li>
+                                        <li><a class="dropdown-item" href="{{ route('maintenance.index') }}">
                                                 <i class="fa-solid fa-clipboard-list" style="color: #4299E1;"></i>
-                                                Planlanan Bakımlar Listesi
-                                            </a>
-                                        </li>
-
-                                        {{-- Onay Menüsü: Burası özel, sadece yetkisi olan görmeli --}}
+                                                Planlanan Bakımlar Listesi</a></li>
                                         @can('approve_maintenance')
                                             <li>
                                                 <hr class="dropdown-divider">
@@ -377,17 +560,13 @@
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
-                                        <li>
-                                            <a class="dropdown-item" href="{{ route('maintenance.assets.index') }}">
-                                                <i class="fa-solid fa-industry" style="color: #805AD5;"></i>
-                                                Makineler & Varlıklar
-                                            </a>
-                                        </li>
+                                        <li><a class="dropdown-item" href="{{ route('maintenance.assets.index') }}">
+                                                <i class="fa-solid fa-industry" style="color: #805AD5;"></i> Makineler &
+                                                Varlıklar</a></li>
                                     </ul>
                                 </li>
                             @endif
 
-                            {{-- İDARİ İŞLER MENÜSÜ --}}
                             @if ($user->hasDepartmentPermission('view_administrative'))
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
@@ -395,9 +574,7 @@
                                         <i class="fa-solid fa-concierge-bell" style="color: #d63384;"></i>
                                         <span>İdari İşler</span>
                                     </a>
-
                                     <ul class="dropdown-menu dropdown-menu-end">
-                                        {{-- ETKİNLİK YÖNETİMİ --}}
                                         <li><a class="dropdown-item" href="{{ route('service.events.create') }}">
                                                 <i class="fa-solid fa-calendar-plus" style="color: #3B82F6;"></i> Yeni
                                                 Etkinlik</a></li>
@@ -407,8 +584,6 @@
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
-
-                                        {{-- ARAÇ YÖNETİMİ --}}
                                         <li><a class="dropdown-item" href="{{ route('service.vehicles.index') }}">
                                                 <i class="fa-solid fa-car" style="color: #F59E0B;"></i> Şirket
                                                 Araçları</a></li>
@@ -416,8 +591,6 @@
                                                 href="{{ route('service.logistics-vehicles.index') }}">
                                                 <i class="fa-solid fa-truck" style="color: #EA580C;"></i> Nakliye
                                                 Araçları</a></li>
-
-                                        {{-- SEYAHAT YÖNETİMİ --}}
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
@@ -427,8 +600,6 @@
                                         <li><a class="dropdown-item" href="{{ route('travels.index') }}">
                                                 <i class="fa-solid fa-list-check" style="color: #A78BFA;"></i> Seyahat
                                                 Listesi</a></li>
-
-                                        {{-- FUAR YÖNETİMİ --}}
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
@@ -436,8 +607,6 @@
                                                 href="{{ route('service.events.index', ['event_type' => 'fuar']) }}">
                                                 <i class="fa-solid fa-tents" style="color: #10B981;"></i> Fuar
                                                 Yönetimi</a></li>
-
-                                        {{-- REZERVASYON & MÜŞTERİ --}}
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
@@ -454,13 +623,10 @@
                                 </li>
                             @endif
 
-                            {{-- BUSINESS UNIT SWITCHER (BİRİM DEĞİŞTİRİCİ) --}}
                             @auth
                                 @php
-                                    // Admin ise tüm aktif birimleri, değilse sadece bağlı olduklarını getirir
                                     $authorizedUnits = auth()->user()->getAuthorizedBusinessUnits();
                                 @endphp
-
                                 @if ($authorizedUnits->count() > 1)
                                     <li class="nav-item dropdown me-3 d-flex align-items-center">
                                         <a class="nav-link dropdown-toggle btn btn-sm shadow-sm border" href="#"
@@ -500,53 +666,43 @@
                                     <li class="nav-item me-3 d-flex align-items-center">
                                         <span class="badge bg-white text-primary border px-3 py-2 rounded-pill shadow-sm"
                                             style="font-size: 0.8rem;">
-                                            <i class="fa-solid fa-industry me-1"></i>
-                                            {{ $authorizedUnits->first()->name }}
+                                            <i class="fa-solid fa-industry me-1"></i> {{ $authorizedUnits->first()->name }}
                                         </span>
                                     </li>
                                 @else
-                                    {{-- Sadece Admin OLMAYAN ve hiçbir birime atanmamış personelde burası gözükür --}}
                                     <li class="nav-item me-3 d-flex align-items-center">
                                         <span class="badge bg-danger text-white border px-3 py-2 rounded-pill shadow-sm">
-                                            <i class="fa-solid fa-triangle-exclamation me-1"></i>
-                                            Yetkili Birim Yok!
+                                            <i class="fa-solid fa-triangle-exclamation me-1"></i> Yetkili Birim Yok!
                                         </span>
                                     </li>
                                 @endif
                             @endauth
 
-                            {{-- BİLDİRİM MENÜSÜ --}}
                             <li class="nav-item dropdown me-3">
                                 @php
                                     $unreadCount = auth()->user()->unreadNotifications->count();
                                     $iconColor = $unreadCount > 0 ? '#d11f1f' : '#0d6efd';
                                 @endphp
-
                                 <a class="nav-link position-relative" data-bs-toggle="dropdown" href="#"
                                     role="button">
                                     <i class="fa-solid fa-bell fa-lg" id="notification-icon"
                                         style="color: {{ $iconColor }}; transition: color 0.3s ease;"></i>
-
                                     <span id="notification-badge"
                                         class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                                         style="display: {{ $unreadCount > 0 ? 'inline-block' : 'none' }};">
                                         {{ $unreadCount }}
                                     </span>
                                 </a>
-
                                 <div class="dropdown-menu dropdown-menu-end shadow-lg border-0"
                                     style="width: 320px; border-radius: 1rem;">
                                     <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light"
                                         style="border-radius: 1rem 1rem 0 0;">
                                         <h6 class="mb-0 fw-bold text-dark">Bildirimler</h6>
-
                                         <a href="{{ route('notifications.readAll') }}" id="mark-all-read"
                                             class="text-decoration-none small fw-bold text-primary"
-                                            style="display: {{ $unreadCount > 0 ? 'inline-block' : 'none' }};">
-                                            Tümünü Oku
-                                        </a>
+                                            style="display: {{ $unreadCount > 0 ? 'inline-block' : 'none' }};">Tümünü
+                                            Oku</a>
                                     </div>
-
                                     <div id="notification-list" class="list-group list-group-flush"
                                         style="max-height: 300px; overflow-y: auto;">
                                         @forelse (auth()->user()->unreadNotifications as $notification)
@@ -562,9 +718,8 @@
                                                         {{ $notification->data['title'] ?? 'Bildirim' }}</div>
                                                     <p class="mb-1 small text-muted lh-sm">
                                                         {{ $notification->data['message'] ?? '' }}</p>
-                                                    <small class="text-secondary fw-bold" style="font-size: 0.7rem;">
-                                                        {{ $notification->created_at->diffForHumans() }}
-                                                    </small>
+                                                    <small class="text-secondary fw-bold"
+                                                        style="font-size: 0.7rem;">{{ $notification->created_at->diffForHumans() }}</small>
                                                 </div>
                                             </a>
                                         @empty
@@ -578,7 +733,6 @@
                                 </div>
                             </li>
 
-                            {{-- KULLANICI MENÜSÜ --}}
                             <li class="nav-item dropdown">
                                 <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button"
                                     data-bs-toggle="dropdown">
@@ -590,59 +744,34 @@
                                     <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i
                                                 class="fa-solid fa-user-pen" style="color: #4FD1C5;"></i> Profilimi
                                             Düzenle</a></li>
-                                    <li>
-                                        <a class="dropdown-item" href="{{ route('kanban-boards.index') }}">
-                                            <i class="fa-solid fa-chalkboard-user" style="color: #e65100;"></i>
-                                            İş Panoları (Kanban)
-                                        </a>
-                                    </li>
-
-                                    {{-- YÖNETİCİ MENÜLERİ (Spatie Güncellemesi) --}}
+                                    <li><a class="dropdown-item" href="{{ route('kanban-boards.index') }}"><i
+                                                class="fa-solid fa-chalkboard-user" style="color: #e65100;"></i> İş
+                                            Panoları (Kanban)</a></li>
                                     @role('admin')
                                         <li><a class="dropdown-item" href="{{ route('users.create') }}"><i
                                                     class="fa-solid fa-user-plus" style="color: #667EEA;"></i> Kullanıcı
                                                 Ekle</a></li>
-
                                         <li><a class="dropdown-item" href="{{ route('users.index') }}"><i
-                                                    class="fa-solid fa-list" style="color: #31317e;"></i>
-                                                Kullanıcıları
+                                                    class="fa-solid fa-list" style="color: #31317e;"></i> Kullanıcıları
                                                 Görüntüle</a></li>
-                                        <li>
-                                            <a class="dropdown-item" href="{{ route('business-units.index') }}">
-                                                <i class="fa-solid fa-industry" style="color: #FBD38D;"></i>
-                                                Fabrika Yönetimi
-                                            </a>
+                                        <li><a class="dropdown-item" href="{{ route('business-units.index') }}"><i
+                                                    class="fa-solid fa-industry" style="color: #FBD38D;"></i> Fabrika
+                                                Yönetimi</a></li>
+                                        <li><a class="dropdown-item" href="{{ route('birimler.index') }}"><i
+                                                    class="fa-solid fa-scale-balanced" style="color: #667EEA;"></i> Ölçü
+                                                Birimleri</a></li>
+                                        <li><a class="dropdown-item" href="{{ route('admin.custom-fields.index') }}"><i
+                                                    class="fa-solid fa-wpforms" style="color: #00177c;"></i> Form Alanları</a>
                                         </li>
-
-                                        <li>
-                                            <a class="dropdown-item" href="{{ route('birimler.index') }}">
-                                                <i class="fa-solid fa-scale-balanced" style="color: #667EEA;"></i>
-                                                Ölçü Birimleri
-                                            </a>
+                                        <li><a class="dropdown-item" href="{{ route('report-settings.index') }}"><i
+                                                    class="fa-solid fa-cogs" style="color: #8b8fa3;"></i> Rapor Yönetimi</a>
                                         </li>
-
-                                        <li>
-                                            <a class="dropdown-item" href="{{ route('admin.custom-fields.index') }}">
-                                                <i class="fa-solid fa-wpforms" style="color: #00177c;"></i>
-                                                Form Alanları
-                                            </a>
-                                        </li>
-
-                                        <li>
-                                            <a class="dropdown-item" href="{{ route('report-settings.index') }}">
-                                                <i class="fa-solid  fa-cogs" style="color: #8b8fa3;"></i>
-                                                Rapor Yönetimi
-                                            </a>
-                                        </li>
-
-
-
                                         <li><a class="dropdown-item" href="{{ route('departments.index') }}"><i
-                                                    class="fa-solid fa-building" style="color: #667EEA;"></i>
-                                                Departmanlar</a></li>
+                                                    class="fa-solid fa-building" style="color: #667EEA;"></i> Departmanlar</a>
+                                        </li>
                                         <li><a class="dropdown-item" href="{{ route('roles.index') }}"><i
-                                                    class="fa-solid fa-building-user" style="color: #8b0672;"></i>
-                                                Roller</a></li>
+                                                    class="fa-solid fa-building-user" style="color: #8b0672;"></i> Roller</a>
+                                        </li>
                                         <li><a class="dropdown-item" href="{{ route('logs.index') }}"><i
                                                     class="fa-solid fa-file-lines" style="color: #f78dfb;"></i> Loglar</a>
                                         </li>
@@ -650,7 +779,6 @@
                                             <hr class="dropdown-divider">
                                         </li>
                                     @endrole
-
                                     <li>
                                         <form method="POST" action="{{ route('logout') }}">
                                             @csrf
@@ -673,37 +801,57 @@
             @yield('content')
         </main>
     </div>
-    <div id="ai-chat-wrapper" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
-        <button id="chat-toggle" class="btn btn-primary rounded-circle shadow-lg"
-            style="width: 60px; height: 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
-            <i class="fa-solid fa-robot fa-lg text-white"></i>
-        </button>
 
-        <div id="chat-window" class="card shadow-lg d-none"
-            style="position: absolute; bottom: 70px; right: 0; width: 350px; border-radius: 15px; border: none; backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.95);">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
-                style="border-radius: 15px 15px 0 0;">
-                <span class="fw-bold"><i class="fa-solid fa-headset me-2"></i>Portal Asistanı</span>
-                <button type="button" class="btn-close btn-close-white" id="chat-close"></button>
+    {{-- KÖKGPT HTML YAPISI --}}
+    <div id="ai-chat-wrapper">
+        <div id="chat-window">
+            <div class="chat-header">
+                <div class="d-flex align-items-center">
+                    <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center me-2"
+                        style="width: 32px; height: 32px;">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold" style="font-size: 1rem;">KökGPT </div>
+                        <div class="small opacity-75" style="font-size: 0.75rem;">
+                            <span class="d-inline-block bg-success rounded-circle me-1"
+                                style="width: 6px; height: 6px;"></span> Çevrimiçi
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white shadow-none" id="chat-close"
+                    style="font-size: 0.8rem;"></button>
             </div>
-            <div id="chat-body" class="card-body"
-                style="height: 300px; overflow-y: auto; font-size: 0.9rem; display: flex; flex-direction: column; gap: 10px;">
-                <div class="ai-msg bg-light p-2 rounded">Merhaba! Size nasıl yardımcı olabilirim?</div>
+
+            <div id="chat-body">
+                <div class="message-bubble ai-msg">
+                    👋 Merhaba {{ Auth::user() ? Auth::user()->name : 'Misafir' }}! Ben KÖKSAN yapay zeka asistanı
+                    KökGPT!
+                    <br><br>
+                    Size nasıl yardımcı olabilirim?
+                </div>
             </div>
-            <div class="card-footer bg-transparent border-top-0">
-                <div class="input-group">
-                    <input type="text" id="chat-input" class="form-control form-control-sm"
-                        placeholder="Sorunuzu yazın...">
-                    <button class="btn btn-primary btn-sm" id="chat-send"><i
-                            class="fa-solid fa-paper-plane"></i></button>
+
+            <div class="chat-footer">
+                <div class="chat-input-group">
+                    <input type="text" id="chat-input" class="form-control shadow-none"
+                        placeholder="Bir soru sorun..." autocomplete="off">
+                    <button class="btn btn-primary shadow-sm ms-2" id="chat-send">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
                 </div>
             </div>
         </div>
+
+        <button id="chat-toggle"
+            class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center">
+            <i class="fa-solid fa-robot fa-xl text-white"></i>
+        </button>
     </div>
+
     @yield('page_scripts')
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
@@ -725,7 +873,7 @@
                 }, 3000);
             }
 
-            // --- 2. SCROLL EFEKTİ & MOBİL MENÜ ---
+            // --- 2. SCROLL EFEKTİ ---
             window.addEventListener('scroll', function() {
                 const navbar = document.querySelector('.navbar');
                 if (navbar) {
@@ -734,6 +882,7 @@
                 }
             });
 
+            // Mobil Menü Kapanma
             document.querySelectorAll('.navbar-nav .nav-link:not(.dropdown-toggle)').forEach(link => {
                 link.addEventListener('click', function() {
                     if (window.innerWidth < 992) {
@@ -748,7 +897,7 @@
                 });
             });
 
-            // --- 3. GLOBAL TOAST BİLDİRİMLERİ ---
+            // --- 3. TOAST BİLDİRİMLERİ ---
             const Toast = Swal.mixin({
                 toast: true,
                 position: 'top-end',
@@ -782,7 +931,7 @@
                 });
             }
 
-            // --- 4. AKILLI SİLME KONFİRMASYONU ---
+            // --- 4. SİLME ONAYI ---
             document.addEventListener('submit', function(e) {
                 const form = e.target;
                 const methodInput = form.querySelector('input[name="_method"]');
@@ -804,7 +953,8 @@
                 }
             });
 
-            // --- 5. BİLDİRİM VE GÜNCELLEME KONTROLÜ ---
+            // --- 5. BİLDİRİM KONTROLÜ ---
+            @auth
             setInterval(function() {
                 fetch("{{ route('notifications.check') }}")
                     .then(res => res.ok ? res.json() : Promise.reject(res))
@@ -821,58 +971,135 @@
                     })
                     .catch(err => console.error('Bildirim hatası:', err));
             }, 30000);
+        @endauth
 
-            // --- 6. PORTAL ASİSTANI (AI CHAT) ---
-            const toggle = document.getElementById('chat-toggle');
-            const windowDiv = document.getElementById('chat-window');
-            const close = document.getElementById('chat-close');
-            const input = document.getElementById('chat-input');
-            const send = document.getElementById('chat-send');
-            const body = document.getElementById('chat-body');
+        // --- 6. PORTAL ASİSTANI (AI CHAT) - GÜNCELLENMİŞ ---
+        const toggle = document.getElementById('chat-toggle');
+        const windowDiv = document.getElementById('chat-window');
+        const close = document.getElementById('chat-close');
+        const input = document.getElementById('chat-input');
+        const send = document.getElementById('chat-send');
+        const body = document.getElementById('chat-body');
 
-            if (toggle) {
-                toggle.onclick = () => windowDiv.classList.toggle('d-none');
-                close.onclick = () => windowDiv.classList.add('d-none');
-
-                function linkify(text) {
-                    var urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
-                    return text.replace(urlPattern,
-                        '<a href="$1" target="_blank" class="fw-bold" style="color: #667eea; text-decoration: underline;">$1</a>'
-                    );
+        if (toggle) {
+            toggle.onclick = () => {
+                windowDiv.classList.toggle('active');
+                if (windowDiv.classList.contains('active')) {
+                    setTimeout(() => input.focus(), 300);
                 }
+            };
 
-                async function sendMessage() {
-                    const text = input.value.trim();
-                    if (!text) return;
+            close.onclick = () => windowDiv.classList.remove('active');
 
-                    body.innerHTML +=
-                        `<div class="user-msg text-end mb-2"><span class="bg-primary text-white p-2 rounded d-inline-block shadow-sm" style="font-size:0.85rem;">${text}</span></div>`;
-                    input.value = '';
-                    body.scrollTop = body.scrollHeight;
-
-                    const loaderId = 'loader_' + Date.now();
-                    body.innerHTML +=
-                        `<div class="ai-msg bg-light p-2 rounded shadow-sm mb-2" id="${loaderId}" style="font-size:0.85rem;"><i class="fa-solid fa-spinner fa-spin"></i> Düşünüyorum...</div>`;
-                    body.scrollTop = body.scrollHeight;
-
-                    try {
-                        const res = await axios.post("{{ route('ai.ask') }}", {
-                            message: text
-                        });
-                        // Düzeltme: innerText yerine innerHTML kullanıyoruz
-                        document.getElementById(loaderId).innerHTML = linkify(res.data.answer);
-                    } catch (e) {
-                        document.getElementById(loaderId).innerText = "Hata oluştu. Lütfen tekrar deneyin.";
-                    }
-                    body.scrollTop = body.scrollHeight;
-                }
-
-                send.onclick = sendMessage;
-                input.onkeypress = (e) => {
-                    if (e.key === 'Enter') sendMessage();
-                };
+            function linkify(text) {
+                var urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+                return text.replace(urlPattern, '<a href="$1" target="_blank">$1</a>');
             }
+
+            async function sendMessage() {
+                const text = input.value.trim();
+                if (!text) return;
+
+                body.innerHTML += `
+                        <div class="message-bubble user-msg">
+                            ${text}
+                        </div>`;
+
+                input.value = '';
+                body.scrollTop = body.scrollHeight;
+
+                const loaderId = 'loader_' + Date.now();
+                body.innerHTML += `
+                        <div class="message-bubble ai-msg" id="${loaderId}">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                <span>Düşünüyorum...</span>
+                            </div>
+                        </div>`;
+                body.scrollTop = body.scrollHeight;
+
+                try {
+                    // BURASI KRİTİK: Eğer rotayı eklemezsen burası patlar.
+                    const res = await axios.post("{{ route('ai.ask') }}", {
+                        message: text
+                    });
+
+                    const answerHtml = linkify(res.data.answer).replace(/\n/g, '<br>');
+                    document.getElementById(loaderId).innerHTML = answerHtml;
+
+                } catch (e) {
+                    console.error(e);
+                    document.getElementById(loaderId).innerHTML =
+                        '<span class="text-danger"><i class="fa-solid fa-circle-exclamation me-1"></i> Bir hata oluştu.</span>';
+                }
+
+                body.scrollTop = body.scrollHeight;
+            }
+
+            send.onclick = sendMessage;
+
+            input.onkeypress = (e) => {
+                if (e.key === 'Enter') sendMessage();
+            };
+        }
         });
+    </script>
+    {{-- SPEECH TO TEXT (SESLİ NOT) MODÜLÜ --}}
+    <script>
+        function toggleVoiceInput(inputId, buttonId) {
+            // Tarayıcı desteği kontrolü
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert("Tarayıcınız sesli yazdırmayı desteklemiyor. Lütfen Google Chrome kullanın.");
+                return;
+            }
+
+            const recognition = new(window.SpeechRecognition || window.webkitSpeechRecognition)();
+            const inputField = document.getElementById(inputId);
+            const btnIcon = document.querySelector(`#${buttonId} i`);
+            const btnElement = document.getElementById(buttonId);
+
+            recognition.lang = 'tr-TR'; // Türkçe ayarı
+            recognition.continuous = false; // Konuşma bitince dursun mu? (False: Cümle bitince durur)
+            recognition.interimResults = false; // Anlık sonuçları gösterme, bitince yaz
+
+            // Dinleme Başladı
+            recognition.onstart = function() {
+                btnIcon.classList.remove('fa-microphone');
+                btnIcon.classList.add('fa-spinner', 'fa-spin'); // Döner ikon
+                btnElement.classList.remove('btn-outline-secondary', 'btn-secondary');
+                btnElement.classList.add('btn-danger', 'pulsing'); // Kırmızı yanıp sönme efekti
+            };
+
+            // Sonuç Geldi
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+
+                // Var olan metnin sonuna ekle (araya boşluk koyarak)
+                if (inputField.value.trim() === "") {
+                    inputField.value = transcript.charAt(0).toUpperCase() + transcript.slice(1);
+                } else {
+                    inputField.value += " " + transcript;
+                }
+            };
+
+            // Hata veya Bitiş
+            recognition.onend = function() {
+                btnIcon.classList.remove('fa-spinner', 'fa-spin');
+                btnIcon.classList.add('fa-microphone');
+                btnElement.classList.remove('btn-danger', 'pulsing');
+                btnElement.classList.add('btn-outline-secondary');
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Ses tanıma hatası:", event.error);
+                btnIcon.classList.remove('fa-spinner', 'fa-spin');
+                btnIcon.classList.add('fa-microphone-slash');
+                btnElement.classList.remove('btn-danger', 'pulsing');
+                btnElement.classList.add('btn-outline-danger');
+            };
+
+            recognition.start();
+        }
     </script>
 </body>
 

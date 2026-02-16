@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Loggable;
 use App\Traits\HasBusinessUnit;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * App\Models\CustomerVisit
@@ -39,17 +41,19 @@ use App\Traits\HasBusinessUnit;
  * @mixin \Eloquent
  * @mixin IdeHelperCustomerVisit
  */
-class CustomerVisit extends Model
+class CustomerVisit extends Model implements HasMedia
 {
-    use HasFactory, Loggable, HasBusinessUnit;
+    use HasFactory, Loggable, HasBusinessUnit, InteractsWithMedia;
     protected $fillable = [
-        'event_id',
-        'customer_id',
-        'travel_id',
-        'visit_purpose',
-        'has_machine',
-        'after_sales_notes',
-        'business_unit_id',
+        'customer_id', 'user_id', 'event_id', 'travel_id',
+        'visit_date', 
+        'visit_reason', 'visit_notes', 'contact_persons',
+        'customer_product_id', 'barcode', 'lot_no', 'complaint_id',
+        'findings', 'result'
+    ];
+    protected $casts = [
+        'visit_date' => 'datetime',
+        'contact_persons' => 'array', // JSON dizisi olarak çalışacak
     ];
     public function event()
     {
@@ -72,5 +76,14 @@ class CustomerVisit extends Model
     public function machine()
     {
         return $this->belongsTo(CustomerMachine::class, 'customer_machine_id');
+    }
+    public function user() { // Servis Veren
+        return $this->belongsTo(User::class);
+    }
+    public function product() { // Ürün Tanımı
+        return $this->belongsTo(CustomerProduct::class, 'customer_product_id');
+    }
+    public function complaint() { // Bağlı Şikayet
+        return $this->belongsTo(Complaint::class);
     }
 }

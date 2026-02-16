@@ -39,6 +39,7 @@ class HomeController extends Controller
      */
     public function index(Request $request)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         $activeUnitId = session('active_unit_id') ?? $user->business_unit_id;
 
@@ -115,6 +116,7 @@ class HomeController extends Controller
                     'model_type' => 'todo',
                     'id' => $todo->id,
                     'is_important' => ($todo->priority === 'high'),
+                    'type_label' => 'Yapılacak İş',
                     'details' => [
                         'Görev' => $todo->title,
                         'Durum' => $durumText,
@@ -152,6 +154,7 @@ class HomeController extends Controller
      */
     public function welcome(Request $request)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         // TV ekranı yönlendirmesi
@@ -172,8 +175,9 @@ class HomeController extends Controller
         $importantItemsCount = $allItems->count();
 
         // Departman slug tespiti
+        // DÜZELTME: isAdmin() yerine hasRole('admin') kullanıldı.
         $firstDept = $user->departments->first();
-        $departmentSlug = $firstDept ? trim($firstDept->slug) : ($user->isAdmin() ? 'admin' : null);
+        $departmentSlug = $firstDept ? trim($firstDept->slug) : ($user->hasRole('admin') ? 'admin' : null);
 
         // MİMARİ REFAKTÖR: Veri toplama mantığını ayırarak karmaşıklığı düşürüyoruz
         $dashboardData = $this->resolveDashboardData($user, $departmentSlug);
@@ -209,12 +213,12 @@ class HomeController extends Controller
 
         try {
             $modelClass = match ($validated['model_type']) {
-                'shipment' => \App\Models\Shipment::class,
-                'production_plan' => \App\Models\ProductionPlan::class,
-                'event' => \App\Models\Event::class,
-                'vehicle_assignment' => \App\Models\VehicleAssignment::class,
-                'travel' => \App\Models\Travel::class,
-                'maintenance_plan' => \App\Models\MaintenancePlan::class,
+                'shipment' => Shipment::class,
+                'production_plan' => ProductionPlan::class,
+                'event' => Event::class,
+                'vehicle_assignment' => VehicleAssignment::class,
+                'travel' => Travel::class,
+                'maintenance_plan' => MaintenancePlan::class,
                 default => null,
             };
 
@@ -243,7 +247,6 @@ class HomeController extends Controller
                 'message' => 'Durum güncellendi.',
                 'new_state' => $isImportant
             ]);
-
         } catch (\Exception $e) {
             Log::error('ToggleImportant Hatası: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Sunucu hatası oluştu.'], 500);
@@ -268,7 +271,6 @@ class HomeController extends Controller
     {
         $events = [];
         $now = Carbon::now();
-        // DÜZELTME: forUser kaldırıldı, with() kullanıldı
         $shipments = Shipment::with('onaylayanKullanici')->get()->unique('id');
 
         foreach ($shipments as $shipment) {
@@ -336,7 +338,6 @@ class HomeController extends Controller
     private function getUretimIndexData($user)
     {
         $events = [];
-        // DÜZELTME: forUser kaldırıldı
         $plans = ProductionPlan::with('user')->get()->unique('id');
 
         foreach ($plans as $plan) {
@@ -361,13 +362,14 @@ class HomeController extends Controller
     private function getHizmetIndexData($user)
     {
         $events = [];
-        // DÜZELTME: forUser kaldırıldı
+        // Etkinlikler
         $serviceEvents = Event::with('user')->get()->unique('id');
 
         foreach ($serviceEvents as $event) {
             $detaylar = [
                 'Etkinlik Başlığı' => $event->title,
-                'Tür' => $event->event_type ?? 'Genel',
+                // DÜZELTME: type_label kullanıldı
+                'Tür' => $event->type_label,
                 'Konum' => $event->location ?? '-',
                 'Başlangıç' => $event->start_datetime->format('d.m.Y H:i'),
                 'Bitiş' => $event->end_datetime->format('d.m.Y H:i'),
@@ -393,12 +395,17 @@ class HomeController extends Controller
             $detaylar['Açıklama'] = $event->description ?? null;
 
             $events[] = [
-                'title' => 'Etkinlik: ' . $event->title,
+                // DÜZELTME: Başlıkta da Türkçe tipi kullanabiliriz veya title
+                'title' => '📅 ' . ($event->title ?? $event->type_label),
                 'start' => $event->start_datetime->format('Y-m-d\TH:i:s'),
                 'end' => $event->end_datetime->format('Y-m-d\TH:i:s'),
-                'color' => '#F093FB',
+                // DÜZELTME: Modeldeki color_class
+                'className' => 'bg-' . $event->color_class,
                 'extendedProps' => [
-                    'eventType' => 'service_event',
+                    // DÜZELTME: Ham tip (örn: visit) - JS icon mapping için
+                    'eventType' => $event->event_type,
+                    // DÜZELTME: Türkçe etiket
+                    'type_label' => $event->type_label,
                     'model_type' => 'event',
                     'is_important' => $event->is_important,
                     'id' => $event->id,
@@ -407,7 +414,7 @@ class HomeController extends Controller
             ];
         }
 
-        // DÜZELTME: forUser kaldırıldı
+        // Araç Atamaları
         $assignments = VehicleAssignment::with(['vehicle', 'createdBy'])->get();
 
         foreach ($assignments as $assignment) {
@@ -449,12 +456,15 @@ class HomeController extends Controller
     private function getBakimIndexData($user)
     {
         $events = [];
-        // DÜZELTME: forUser kaldırıldı
         $plans = MaintenancePlan::with(['asset', 'type'])->get()->unique('id');
 
         foreach ($plans as $plan) {
             $color = match ($plan->status) {
-                'pending' => '#F6E05E', 'in_progress' => '#3182CE', 'completed' => '#48BB78', 'cancelled' => '#E53E3E', default => '#A0AEC0',
+                'pending' => '#F6E05E',
+                'in_progress' => '#3182CE',
+                'completed' => '#48BB78',
+                'cancelled' => '#E53E3E',
+                default => '#A0AEC0',
             };
             $baslik = 'Bakım: ' . ($plan->asset->name ?? 'Varlık Silinmiş');
             if (!empty($plan->title)) {
@@ -510,7 +520,7 @@ class HomeController extends Controller
 
         $allMappedItems = collect();
 
-        // 1. SEVKİYAT (DÜZELTME: forUser kaldırıldı)
+        // 1. SEVKİYAT
         if ($typeFilter == 'all' || $typeFilter == 'shipment') {
             $query = Shipment::where('is_important', true);
             if ($dateFrom)
@@ -528,7 +538,7 @@ class HomeController extends Controller
             ]));
         }
 
-        // 2. ÜRETİM PLANI (DÜZELTME: forUser kaldırıldı)
+        // 2. ÜRETİM PLANI
         if ($typeFilter == 'all' || $typeFilter == 'production_plan') {
             $query = ProductionPlan::where('is_important', true);
             if ($dateFrom)
@@ -546,7 +556,7 @@ class HomeController extends Controller
             ]));
         }
 
-        // 3. BAKIM PLANI (DÜZELTME: forUser kaldırıldı)
+        // 3. BAKIM PLANI
         if ($typeFilter == 'all' || $typeFilter == 'maintenance_plan') {
             $query = MaintenancePlan::whereIn('priority', ['high', 'critical']);
             if ($dateFrom)
@@ -562,7 +572,7 @@ class HomeController extends Controller
             ]));
         }
 
-        // 4. ETKİNLİK (DÜZELTME: forUser kaldırıldı)
+        // 4. ETKİNLİK
         if ($typeFilter == 'all' || $typeFilter == 'event') {
             $query = Event::where('is_important', true);
             if ($dateFrom)
@@ -578,7 +588,7 @@ class HomeController extends Controller
             ]));
         }
 
-        // 5. ARAÇ GÖREVİ (DÜZELTME: forUser kaldırıldı)
+        // 5. ARAÇ GÖREVİ
         if ($typeFilter == 'all' || $typeFilter == 'vehicle_assignment') {
             $query = VehicleAssignment::where('is_important', true);
             if ($dateFrom)
@@ -594,7 +604,7 @@ class HomeController extends Controller
             ]));
         }
 
-        // 6. SEYAHAT (DÜZELTME: forUser kaldırıldı)
+        // 6. SEYAHAT
         if ($typeFilter == 'all' || $typeFilter == 'travel') {
             $query = Travel::where('is_important', true);
             if ($dateFrom)
@@ -610,7 +620,7 @@ class HomeController extends Controller
             ]));
         }
 
-        // 7. GECİKEN GÖREVLER (DÜZELTME: forUser kaldırıldı)
+        // 7. GECİKEN GÖREVLER
         $overdueQuery = VehicleAssignment::where('start_time', '<', Carbon::today())
             ->whereIn('status', ['pending', 'in_progress']);
 
@@ -627,7 +637,7 @@ class HomeController extends Controller
         return $allMappedItems->sortByDesc('date');
     }
 
-    // --- WELCOME SANKEY GRAFİKLERİ İÇİN SERVİS ÇAĞRILARI (DÜZELTİLDİ) ---
+    // --- WELCOME SANKEY GRAFİKLERİ İÇİN SERVİS ÇAĞRILARI ---
 
     private function getLogisticsWelcomeData($user)
     {
@@ -635,11 +645,9 @@ class HomeController extends Controller
         $chartTitle = "Kargo İçeriği -> Araç Tipi Akışı ";
         $chartData = [];
 
-        // DÜZELTME: forUser kaldırıldı
         $todayItems = Shipment::whereBetween('tahmini_varis_tarihi', [Carbon::today()->startOfDay(), Carbon::today()->addDays(3)->endOfDay()])
             ->orderBy('tahmini_varis_tarihi', 'asc')->get();
 
-        // DÜZELTME: forUser kaldırıldı
         $sankeyFlow = Shipment::select(['kargo_icerigi', 'arac_tipi', DB::raw('COUNT(*) as weight')])
             ->whereNotNull('kargo_icerigi')
             ->whereNotNull('arac_tipi')
@@ -663,11 +671,9 @@ class HomeController extends Controller
         $chartTitle = "Makine -> Ürün Planlama Akışı (Toplam Adet)";
         $chartData = [];
 
-        // DÜZELTME: forUser kaldırıldı
         $todayItems = ProductionPlan::whereBetween('week_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
             ->orderBy('week_start_date', 'asc')->get();
 
-        // DÜZELTME: forUser kaldırıldı
         $plans = ProductionPlan::whereNotNull('plan_details')->get();
 
         $flowCounts = [];
@@ -704,14 +710,12 @@ class HomeController extends Controller
         $welcomeTitle = "Hizmet ve Operasyon Yönetimi";
         $chartTitle = "Etkinlik Durumu & Seyahat Dağılımı";
 
-        // DÜZELTME: forUser kaldırıldı
         $todayEvents = Event::whereDate('start_datetime', Carbon::today())->orderBy('start_datetime', 'asc')->get();
         $todayAssignments = VehicleAssignment::whereDate('start_time', Carbon::today())->with('vehicle')->orderBy('start_time', 'asc')->get();
         $todayTravels = Travel::whereDate('start_date', Carbon::today())->orderBy('start_date', 'asc')->get();
 
         $todayItems = $todayEvents->merge($todayAssignments)->merge($todayTravels)->sortBy(fn($item) => $item->start_datetime ?? $item->start_time ?? $item->start_date);
 
-        // Chart Verisi (DÜZELTME: forUser kaldırıldı)
         $chartData = [];
         $eventStats = Event::selectRaw('event_type, visit_status, count(*) as total')
             ->groupBy('event_type', 'visit_status')
@@ -720,7 +724,11 @@ class HomeController extends Controller
         foreach ($eventStats as $stat) {
             $source = $stat->event_type ? ucfirst($stat->event_type) : 'Diğer Etkinlikler';
             $target = match ($stat->visit_status) {
-                'planlandi' => 'Planlandı', 'gerceklesti' => 'Gerçekleşti', 'iptal' => 'İptal', 'ertelendi' => 'Ertelendi', default => 'Durum Belirsiz'
+                'planlandi' => 'Planlandı',
+                'gerceklesti' => 'Gerçekleşti',
+                'iptal' => 'İptal',
+                'ertelendi' => 'Ertelendi',
+                default => 'Durum Belirsiz'
             };
             if ($source === $target)
                 $target .= ' ';
@@ -735,7 +743,11 @@ class HomeController extends Controller
         foreach ($bookingStats as $stat) {
             $source = 'Seyahat Planlaması';
             $target = match ($stat->type) {
-                'flight' => 'Uçak Bileti', 'hotel' => 'Otel Konaklama', 'bus' => 'Otobüs/Transfer', 'car' => 'Araç Kiralama', default => 'Diğer Rezervasyon'
+                'flight' => 'Uçak Bileti',
+                'hotel' => 'Otel Konaklama',
+                'bus' => 'Otobüs/Transfer',
+                'car' => 'Araç Kiralama',
+                default => 'Diğer Rezervasyon'
             };
             $chartData[] = [$source, $target, (int) $stat->total];
         }
@@ -752,12 +764,10 @@ class HomeController extends Controller
         $chartTitle = "Bakım Türü -> Varlık Akışı";
         $chartData = [];
 
-        // DÜZELTME: forUser kaldırıldı
         $todayItems = MaintenancePlan::with(['asset', 'type'])
             ->whereBetween('planned_start_date', [Carbon::today()->startOfDay(), Carbon::today()->addDays(2)->endOfDay()])
             ->orderBy('planned_start_date', 'asc')->get();
 
-        // DÜZELTME: forUser kaldırıldı
         $plans = MaintenancePlan::with(['type', 'asset'])->get();
 
         $flowCounts = [];
@@ -783,7 +793,6 @@ class HomeController extends Controller
 
     private function getAdminDashboardData($user, $today, $weekStart, $weekEnd, $monthStart, $monthEnd)
     {
-        // Admin Dashboard Verileri - DÜZELTME: forUser kaldırıldı
         $kpiData = [
             'sevkiyat_sayisi' => Shipment::whereDate('tahmini_varis_tarihi', $today)->count(),
             'plan_sayisi' => ProductionPlan::whereDate('week_start_date', $today)->count(),
@@ -793,7 +802,6 @@ class HomeController extends Controller
             'kullanici_sayisi' => User::count()
         ];
 
-        // Chart Data - DÜZELTME: forUser kaldırıldı
         $chartData = [];
         $allLojistik = Shipment::count();
         $allUretim = ProductionPlan::count();
@@ -897,9 +905,13 @@ class HomeController extends Controller
             'unit_id' => 'required|exists:business_units,id'
         ]);
 
-        $user = auth()->user();
+        /** @var \App\Models\User $user */
+        $user = auth()->user(); // Kullanıcıyı değişkene atarken türünü belirttik
+        
         $unitId = $request->unit_id;
-        $isAuthorized = $user->isAdmin() || $user->businessUnits->contains('id', $unitId);
+
+        // hasRole artık hata vermeyecektir
+        $isAuthorized = $user->hasRole('admin') || $user->businessUnits->contains('id', $unitId);
 
         if (!$isAuthorized) {
             abort(403, 'Bu birime erişim yetkiniz yok.');

@@ -43,7 +43,7 @@ use App\Traits\HasBusinessUnit;
 class TestResult extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia, Loggable, HasBusinessUnit; // 2. Ekle
-    protected $fillable = ['customer_id', 'user_id', 'customer_machine_id', 'test_name', 'test_date', 'summary', 'business_unit_id'];
+    protected $fillable = ['customer_id', 'customer_product_id','user_id', 'customer_machine_id', 'test_name', 'test_date', 'summary', 'business_unit_id'];
     public function customer()
     {
         return $this->belongsTo(Customer::class);
@@ -52,5 +52,9 @@ class TestResult extends Model implements HasMedia
     public function files()
     {
         return $this->morphMany(File::class, 'fileable');
+    }
+    public function product()
+    {
+        return $this->belongsTo(CustomerProduct::class, 'customer_product_id');
     }
 }

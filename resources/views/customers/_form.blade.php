@@ -29,6 +29,52 @@
     </div>
 </div>
 
+{{-- YENİ EKLENEN: Müşteri Yaşam Döngüsü (Durum & Tarihler) --}}
+<div class="card border-0 shadow-sm mb-4"
+    style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);">
+    <div class="card-body p-3">
+        <div class="row g-3 align-items-center">
+            {{-- Aktif/Pasif Durumu --}}
+            <div class="col-md-4">
+                <div class="form-check form-switch d-flex align-items-center gap-2">
+                    {{-- Hidden input, eğer checkbox seçili değilse '0' gitmesi için --}}
+                    <input type="hidden" name="is_active" value="0">
+                    <input class="form-check-input mt-0" type="checkbox" role="switch" id="is_active" name="is_active"
+                        value="1" style="width: 2.5rem; height: 1.25rem; cursor: pointer;"
+                        {{ old('is_active', $customer->is_active ?? true) ? 'checked' : '' }}
+                        onchange="toggleEndDateVisibility()">
+                    <label class="form-check-label fw-bold mb-0" for="is_active" id="is_active_label"
+                        style="cursor: pointer;">
+                        {{ old('is_active', $customer->is_active ?? true) ? 'Aktif Müşteri' : 'Pasif Müşteri' }}
+                    </label>
+                </div>
+            </div>
+
+            {{-- Çalışmaya Başlama Tarihi --}}
+            <div class="col-md-4">
+                <div class="form-floating">
+                    <input type="date" class="form-control form-control-sm @error('start_date') is-invalid @enderror"
+                        id="start_date" name="start_date"
+                        value="{{ old('start_date', isset($customer->start_date) ? \Carbon\Carbon::parse($customer->start_date)->format('Y-m-d') : '') }}">
+                    <label for="start_date" class="text-primary"><i class="fa-solid fa-calendar-check me-1"></i>Çalışma
+                        Başlangıç Tarihi</label>
+                </div>
+            </div>
+
+            {{-- Çalışma Bitiş Tarihi (Sadece Pasifken Görünür) --}}
+            <div class="col-md-4" id="end_date_container" style="display: none;">
+                <div class="form-floating">
+                    <input type="date" class="form-control form-control-sm @error('end_date') is-invalid @enderror"
+                        id="end_date" name="end_date"
+                        value="{{ old('end_date', isset($customer->end_date) ? \Carbon\Carbon::parse($customer->end_date)->format('Y-m-d') : '') }}">
+                    <label for="end_date" class="text-danger"><i class="fa-solid fa-calendar-xmark me-1"></i>Çalışma
+                        Bitiş Tarihi</label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row g-3">
     <div class="col-md-6">
         <div class="form-floating mb-3">
@@ -158,7 +204,6 @@
                         </div>
                     </div>
                     <div class="col-md-1 text-center">
-                        {{-- İlk satırın silinmesini istemiyorsan butonu kaldırabilirsin, ama esneklik için kalsın --}}
                         <button type="button" class="btn btn-sm btn-outline-danger border-0"
                             onclick="this.closest('.contact-row').remove()">
                             <i class="fa-solid fa-trash fa-lg"></i>
@@ -249,6 +294,12 @@
         border-color: #dc3545;
         box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
     }
+
+    /* YENİ: Switch Renklendirmesi */
+    #is_active:checked {
+        background-color: #10b981;
+        border-color: #10b981;
+    }
 </style>
 
 <script>
@@ -307,4 +358,29 @@
             row.remove();
         }
     }
+
+    // YENİ: Aktif/Pasif durumuna göre "Bitiş Tarihi" alanını göster/gizle
+    function toggleEndDateVisibility() {
+        const isActiveCheckbox = document.getElementById('is_active');
+        const endDateContainer = document.getElementById('end_date_container');
+        const isActivelabel = document.getElementById('is_active_label');
+
+        if (isActiveCheckbox.checked) {
+            endDateContainer.style.display = 'none';
+            isActivelabel.textContent = 'Aktif Müşteri';
+            isActivelabel.classList.replace('text-danger', 'text-success');
+        } else {
+            endDateContainer.style.display = 'block';
+            isActivelabel.textContent = 'Pasif Müşteri';
+            isActivelabel.classList.replace('text-success', 'text-danger');
+        }
+    }
+
+    // Sayfa yüklendiğinde mevcut duruma göre çalıştır
+    document.addEventListener("DOMContentLoaded", function() {
+        const isActivelabel = document.getElementById('is_active_label');
+        isActivelabel.classList.add(document.getElementById('is_active').checked ? 'text-success' :
+            'text-danger');
+        toggleEndDateVisibility();
+    });
 </script>

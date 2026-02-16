@@ -36,10 +36,12 @@ use App\Http\Controllers\CustomFieldDefinitionController;
 use App\Http\Controllers\KanbanBoardController;
 use App\Http\Controllers\KanbanViewController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\CustomerVisitController;
 use App\Services\KanbanService;
 use App\Models\Event;
 use App\Models\Travel;
 use App\Http\Controllers\ScheduledReportController;
+use App\Models\CustomerReturn;
 
 /*
 |--------------------------------------------------------------------------
@@ -145,7 +147,6 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/report-settings/{report}', [ScheduledReportController::class, 'update'])->name('report-settings.update');
         Route::post('/report-settings/{report}/toggle', [ScheduledReportController::class, 'toggleStatus'])->name('report-settings.toggle');
         Route::delete('/report-settings/{report}', [ScheduledReportController::class, 'destroy'])->name('report-settings.destroy');
-
     });
 
     // Profil (Herkes)
@@ -184,7 +185,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{shipment}/onayi-geri-al', [ShipmentController::class, 'onayiGeriAl'])->name('onayiGeriAl');
     });
 
-    // Ürün Listesi (Grup dışında kalmış, doğru)
+    // Ürün Listesi 
     Route::get('/products/products', [ShipmentController::class, 'listAllFiltered'])->name('products.list');
 
 
@@ -233,6 +234,7 @@ Route::middleware(['auth'])->group(function () {
 
         // Etkinlikler
         Route::get('/events/export', [EventController::class, 'export'])->name('events.export');
+        Route::patch('/events/{event}/status', [EventController::class, 'updateStatus'])->name('events.update-status');
         Route::resource('events', EventController::class);
 
         // Etkinlik Rezervasyonu (Polimorfik)
@@ -244,6 +246,8 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('vehicles', VehicleController::class);
         Route::resource('logistics-vehicles', LogisticsVehicleController::class);
 
+        Route::post('/vehicle-assignments', [App\Http\Controllers\VehicleAssignmentController::class, 'store'])->name('vehicle-assignments.store');
+Route::delete('/vehicle-assignments/{id}', [App\Http\Controllers\VehicleAssignmentController::class, 'destroy'])->name('vehicle-assignments.destroy');
         // Araç Görevlendirme
         Route::get('/assignments/export', [VehicleAssignmentController::class, 'export'])->name('assignments.export');
         Route::get('/assignments/{assignment}/export-detail', [VehicleAssignmentController::class, 'exportDetail'])->name('assignments.export_detail');
@@ -266,7 +270,6 @@ Route::middleware(['auth'])->group(function () {
 
         // Seferler
         Route::resource('schedules', ServiceScheduleController::class);
-
     });
 
 
@@ -279,8 +282,30 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('customers.test-results', TestResultController::class)->shallow()->except(['index', 'show']);
     Route::get('/api/customers/{customer}/machines', [CustomerController::class, 'getMachinesJson'])->name('api.customers.machines');
     Route::post('/customers/{customer}/activities', [CustomerController::class, 'storeActivity'])->name('customers.activities.store');
+    Route::put('/customer-activities/{activity}', [App\Http\Controllers\CustomerController::class, 'updateActivity'])->name('customer-activities.update');
+    Route::delete('/customer-activities/{activity}', [App\Http\Controllers\CustomerController::class, 'destroyActivity'])->name('customer-activities.destroy');
     Route::post('/customers/{customer}/returns', [App\Http\Controllers\CustomerController::class, 'storeReturn'])->name('customers.returns.store');
-
+    Route::patch('/customer-returns/{customerReturn}/status', [App\Http\Controllers\CustomerController::class, 'updateReturnStatus'])
+        ->name('customer-returns.update-status');
+    Route::put('/customer-returns/{return}', [App\Http\Controllers\CustomerController::class, 'updateReturn'])->name('customer-returns.update');
+    Route::delete('/customer-returns/{return}', [App\Http\Controllers\CustomerController::class, 'destroyReturn'])->name('customer-returns.destroy');
+    // Customer Samples
+    Route::post('/customers/{customer}/samples', [App\Http\Controllers\CustomerController::class, 'storeSample'])->name('customers.samples.store');
+    Route::patch('/customer-samples/{customerSample}/status', [App\Http\Controllers\CustomerController::class, 'updateSampleStatus'])->name('customer-samples.update-status');
+    Route::put('/customer-samples/{sample}', [App\Http\Controllers\CustomerController::class, 'updateSample'])->name('customer-samples.update');
+    Route::delete('/customer-samples/{sample}', [App\Http\Controllers\CustomerController::class, 'destroySample'])->name('customer-samples.destroy');
+    // Fırsatlar & Duyumlar
+    Route::post('/customers/{customer}/opportunities', [App\Http\Controllers\OpportunityController::class, 'store'])->name('customers.opportunities.store');
+    Route::patch('/opportunities/{opportunity}/stage', [App\Http\Controllers\OpportunityController::class, 'updateStage'])->name('opportunities.update-stage');
+    Route::delete('/opportunities/{opportunity}', [App\Http\Controllers\OpportunityController::class, 'destroy'])->name('opportunities.destroy');
+    Route::put('/opportunities/{opportunity}', [App\Http\Controllers\OpportunityController::class, 'update'])->name('opportunities.update');
+    Route::post('/customers/{customer}/products', [App\Http\Controllers\CustomerController::class, 'storeProduct'])->name('customers.products.store');
+    Route::delete('/customer-products/{product}', [App\Http\Controllers\CustomerController::class, 'destroyProduct'])->name('customer-products.destroy');
+    Route::put('/customer-products/{product}', [App\Http\Controllers\CustomerController::class, 'updateProduct'])->name('customer-products.update');
+    Route::post('/customers/{customer}/visits', [App\Http\Controllers\CustomerVisitController::class, 'store'])->name('customers.visits.store');
+    Route::put('/customers/{customer}/visits/{visit}', [CustomerVisitController::class, 'update'])->name('customers.visits.update');
+    Route::delete('/visits/{visit}', [App\Http\Controllers\CustomerVisitController::class, 'destroy'])->name('visits.destroy');
+    Route::get('/visits/{visit}/print', [App\Http\Controllers\CustomerVisitController::class, 'print'])->name('visits.print');
     // Seyahatler
     Route::get('/travels/export', [TravelController::class, 'export'])->name('travels.export');
     Route::resource('travels', TravelController::class);
@@ -312,6 +337,4 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/todos', [App\Http\Controllers\TodoController::class, 'store'])->name('todos.store');
     Route::post('/todos/{todo}/toggle', [App\Http\Controllers\TodoController::class, 'toggle'])->name('todos.toggle');
     Route::delete('/todos/{todo}', [App\Http\Controllers\TodoController::class, 'destroy'])->name('todos.destroy');
-
 }); // End of Auth Middleware
-

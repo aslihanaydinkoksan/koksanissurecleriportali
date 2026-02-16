@@ -62,7 +62,6 @@ class GeminiService implements AIServiceInterface
 
             Log::error("Gemini API Hatası: " . $response->body());
             return "Sistem şu an yanıt veremiyor. (Model: {$activeModel})";
-
         } catch (\Exception $e) {
             Log::error('Gemini Discovery Exception: ' . $e->getMessage());
             return "Bağlantı hatası: " . $e->getMessage();
@@ -72,9 +71,30 @@ class GeminiService implements AIServiceInterface
     private function buildSystemPrompt(array $context): string
     {
         $prompt = config('ai.system_prompt');
+        $prompt .= "\n\n--- [SİSTEM ZAMANI: " . now()->format('d.m.Y H:i') . "] ---\n";
+
         if (!empty($context)) {
-            $prompt .= "\n\nKullanıcı Bilgileri:\n- İsim: {$context['user_name']}\n- Aktif Birim: {$context['active_unit']}";
+            $prompt .= "\n--- [KULLANICI VERİLERİ] ---\n";
+            $prompt .= "Kullanıcı: " . ($context['user_name'] ?? 'Misafir') . " (" . ($context['roles'] ?? '') . ")\n";
+
+            // Helper fonksiyon ile kod tekrarını önleyelim (DRY Prensibi)
+            $appendList = function ($title, $items) use (&$prompt) {
+                if (!empty($items)) {
+                    $prompt .= "\n$title:\n";
+                    foreach ($items as $item) {
+                        $prompt .= "- $item\n";
+                    }
+                }
+            };
+
+            $appendList("🗓️ Yaklaşan Etkinlikler", $context['events'] ?? []);
+            $appendList("📝 Yapılacak Görevler", $context['todos'] ?? []);
+            $appendList("🚚 Sevkiyatlar (Lojistik)", $context['shipments'] ?? []);
+            $appendList("🔧 Bakım Planları", $context['maintenances'] ?? []);
+            $appendList("🏭 Üretim Planları", $context['productions'] ?? []);
+            $appendList("✈️ Seyahat/Rezervasyonlar", $context['bookings'] ?? []);
         }
+        
         return $prompt;
     }
 }

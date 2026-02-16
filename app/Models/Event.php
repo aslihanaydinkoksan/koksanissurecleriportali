@@ -7,11 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Loggable;
-use App\Traits\HasBusinessUnit; // <--- 1. Use ekle
+use App\Traits\HasBusinessUnit;
 use App\Traits\HasDynamicAttributes;
 use App\Traits\HasKanban;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 /**
  * App\Models\Event
@@ -88,6 +89,47 @@ class Event extends Model implements HasMedia
         'is_important' => 'boolean',
         'extras' => 'array',
     ];
+    protected $appends = ['type_label', 'color_class'];
+    const TYPE_LABELS = [
+        'visit'            => 'Müşteri Ziyareti',
+        'meeting'          => 'Toplantı',
+        'call'             => 'Telefon Görüşmesi',
+        'phone'             => 'Telefon Görüşmesi',
+        'general'          => 'Genel Etkinlik',
+        'maintenance'      => 'Bakım',
+        'production'       => 'Üretim',
+        'logistics'        => 'Lojistik',
+        'musteri_ziyareti' => 'Müşteri Ziyareti', // Eski veriler için koruma
+    ];
+
+    /**
+     * Accessor: $event->type_label
+     * Blade içinde {{ $event->event_type }} yerine {{ $event->type_label }} kullanılacak.
+     */
+    public function getTypeLabelAttribute(): string
+    {
+        // Veritabanındaki değer
+        $type = $this->event_type;
+
+        // Listede varsa Türkçe karşılığını, yoksa baş harfini büyüterek kendisini döndür
+        return self::TYPE_LABELS[$type] ?? ucfirst($type);
+    }
+    
+    /**
+     * Accessor: $event->color_class
+     * Tiplere göre renk sınıfı döndürür (Bootstrap Badge için)
+     */
+    public function getColorClassAttribute(): string
+    {
+        return match($this->event_type) {
+            'visit', 'musteri_ziyareti' => 'info',    // Mavi
+            'meeting'                   => 'primary', // Koyu Mavi
+            'call'                      => 'warning', // Sarı
+            'maintenance'               => 'danger',  // Kırmızı
+            'production'                => 'secondary', // Gri
+            default                     => 'success', // Yeşil
+        };
+    }
 
     /**
      * Etkinliği oluşturan kullanıcı.

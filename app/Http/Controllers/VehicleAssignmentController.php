@@ -168,6 +168,50 @@ class VehicleAssignmentController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        if ($request->has('type') && $request->input('type') === 'logistics') {
+
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'customer_id' => 'required|exists:customers,id',
+                'vehicle_id' => 'nullable|exists:vehicles,id',
+                'start_time' => 'required|date', // Sadece başlangıç alıyoruz
+                'customer_product_id' => 'nullable|exists:customer_products,id',
+                'quantity' => 'nullable|numeric',
+                'unit' => 'nullable|string',
+                'description' => 'nullable|string',
+                'user_id' => 'nullable|exists:users,id',
+            ]);
+
+            // Bitiş saati girilmediği için varsayılan olarak Başlangıç + 4 saat yapalım
+            // Veya aynı gün sonu yapabiliriz.
+            $startTime = Carbon::parse($validated['start_time']);
+            $endTime = $startTime->copy()->addHours(4); // Tahmini süre
+
+            VehicleAssignment::create([
+                'business_unit_id' => 1,
+                'assignment_type' => 'logistics',
+                'title' => $validated['title'],
+                'customer_id' => $validated['customer_id'],
+                'vehicle_id' => $validated['vehicle_id'],
+                'vehicle_type' => $validated['vehicle_id'] ? Vehicle::class : null,
+                'user_id' => Auth::id(),
+                'assigned_by' => Auth::id(),
+                'start_time' => $startTime,
+                'end_time' => $endTime, // Otomatik doldurduk
+                'customer_product_id' => $validated['customer_product_id'] ?? null,
+                'quantity' => $validated['quantity'] ?? null,
+                'unit' => $validated['unit'] ?? null,
+                'task_description' => $validated['description'] ?? $validated['title'],
+                'status' => 'pending',
+
+                // Polymorphic Sorumlu (Formda user_id seçilmezse mevcut kullanıcı sorumlu olur)
+                'responsible_type' => User::class,
+                'responsible_id' => $validated['user_id'] ?? Auth::id(),
+                'is_important' => false
+            ]);
+
+            return back()->with('success', 'Lojistik görevi oluşturuldu ve takvime işlendi.');
+        }
         $vehicleTypeInput = $request->input('vehicle_type');
 
         // 1. Validasyon
@@ -311,7 +355,6 @@ class VehicleAssignmentController extends Controller
                     Log::warning('Alıcı listesi boş, bildirim gönderilmedi.');
                 }
             }
-
         } catch (\Exception $e) {
             Log::error('Bildirim gönderilirken hata oluştu: ' . $e->getMessage());
         }
@@ -434,8 +477,53 @@ class VehicleAssignmentController extends Controller
     /**
      * Güncelleme Metodu (Final Versiyon)
      */
+    /**
+     * Güncelleme Metodu (Final Versiyon - CRM Destekli)
+     */
     public function update(Request $request, VehicleAssignment $assignment)
     {
+        // --- SENARYO 1: CRM LOJİSTİK SEKMESİNDEN GELEN GÜNCELLEME ---
+        // (Formda hidden input name="type" value="logistics" olmalı)
+        if ($request->has('type') && $request->input('type') === 'logistics') {
+
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'customer_id' => 'required|exists:customers,id',
+                'vehicle_id' => 'nullable|exists:vehicles,id',
+                'start_time' => 'required|date',
+                'customer_product_id' => 'nullable|exists:customer_products,id',
+                'quantity' => 'nullable|numeric',
+                'unit' => 'nullable|string',
+                'description' => 'nullable|string',
+                'user_id' => 'nullable|exists:users,id', // Şoför
+                'status' => 'required|in:pending,on_road,completed,cancelled',
+            ]);
+
+            // Bitiş saati (Tahmini 4 saat ekle veya varsa kullan)
+            $startTime = Carbon::parse($validated['start_time']);
+            $endTime = $startTime->copy()->addHours(4);
+
+            $assignment->update([
+                'title' => $validated['title'],
+                'customer_id' => $validated['customer_id'],
+                'vehicle_id' => $validated['vehicle_id'],
+                'vehicle_type' => $validated['vehicle_id'] ? Vehicle::class : null,
+                'start_time' => $startTime,
+                'end_time' => $endTime,
+                'customer_product_id' => $validated['customer_product_id'],
+                'quantity' => $validated['quantity'],
+                'unit' => $validated['unit'],
+                'task_description' => $validated['description'] ?? $validated['title'],
+                'status' => $validated['status'],
+                // Şoför değiştiyse güncelle
+                'responsible_id' => $validated['user_id'] ?? $assignment->responsible_id,
+            ]);
+
+            return back()->with('success', 'Lojistik görevi güncellendi.');
+        }
+
+        // --- SENARYO 2: STANDART ARAÇ TALEP GÜNCELLEMESİ (Eski Kodun) ---
+
         // 1. Validasyon Kuralları
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
@@ -452,21 +540,18 @@ class VehicleAssignmentController extends Controller
             'final_fuel' => 'nullable|string',
         ]);
 
-        // 2. DEĞİŞİKLİK ÖNCESİ DURUMLARI SAKLA (Bildirimler İçin Kritik)
+        // 2. DEĞİŞİKLİK ÖNCESİ DURUMLARI SAKLA
         $oldStatus = $assignment->status;
-        $oldVehicleId = $assignment->vehicle_id; // Araç yeni mi atandı kontrolü için
+        $oldVehicleId = $assignment->vehicle_id;
 
         // 3. TEMEL BİLGİLERİ GÜNCELLE
         $assignment->title = $validatedData['title'];
         $assignment->task_description = $validatedData['task_description'];
         $assignment->status = $validatedData['status'];
 
-        if ($request->has('destination'))
-            $assignment->destination = $validatedData['destination'];
-        if ($request->has('customer_id'))
-            $assignment->customer_id = $validatedData['customer_id'];
-        if ($request->has('notes'))
-            $assignment->notes = $validatedData['notes'];
+        if ($request->has('destination')) $assignment->destination = $validatedData['destination'];
+        if ($request->has('customer_id')) $assignment->customer_id = $validatedData['customer_id'];
+        if ($request->has('notes')) $assignment->notes = $validatedData['notes'];
 
         // KM ve Yakıt Bilgileri
         $assignment->start_km = $request->input('start_km', $assignment->start_km);
@@ -475,69 +560,48 @@ class VehicleAssignmentController extends Controller
         $assignment->end_fuel_level = $request->input('final_fuel', $assignment->end_fuel_level);
         $assignment->fuel_cost = $request->input('fuel_cost', $assignment->fuel_cost);
 
-        // 4. ARAÇ VE LOJİSTİK BİLGİLERİ (BİRLEŞİK VERİ ÇÖZÜMÜ)
-        // Blade'den gelen veri formatı: "company_31" veya "logistics_5"
+        // 4. ARAÇ SEÇİMİ
         $selection = $request->input('vehicle_selection');
-
         if (!empty($selection)) {
             $parts = explode('_', $selection);
-
             if (count($parts) == 2) {
-                $typeKey = $parts[0]; // "company" veya "logistics"
-                $idVal = $parts[1];   // ID
-
-                // Model üzerine set et (Henüz save etmiyoruz)
+                $typeKey = $parts[0];
+                $idVal = $parts[1];
                 $assignment->vehicle_id = $idVal;
-
-                if ($typeKey === 'logistics') {
-                    $assignment->vehicle_type = 'App\Models\LogisticsVehicle';
-                } else {
-                    $assignment->vehicle_type = 'App\Models\Vehicle';
-                }
+                $assignment->vehicle_type = ($typeKey === 'logistics') ? 'App\Models\LogisticsVehicle' : 'App\Models\Vehicle';
             }
         } else {
-            // Seçim boşsa veya temizlendiyse araç bağını kopar
-            $assignment->vehicle_id = null;
-            $assignment->vehicle_type = null;
+            // Eğer seçim alanı formda yoksa (CRM'den geliyorsa) mevcudu koru, varsa ve boşsa sil
+            if ($request->has('vehicle_selection')) {
+                $assignment->vehicle_id = null;
+                $assignment->vehicle_type = null;
+            }
         }
 
-        // 5. TÜM DEĞİŞİKLİKLERİ KAYDET
         $assignment->save();
 
-        // 6. BİLDİRİM SİSTEMİ
+        // 6. BİLDİRİM SİSTEMİ (Aynen koruyoruz)
         try {
-            $creator = \App\Models\User::find($assignment->assigned_by);
+            $creator = User::find($assignment->assigned_by);
 
-            // A) Yeni Araç Ataması Bildirimi
-            // Eğer eskiden araç yoktuysa (null) VE şimdi varsa -> Bildirim At
             if (is_null($oldVehicleId) && !is_null($assignment->vehicle_id)) {
                 if ($creator && $creator->id !== auth()->id()) {
                     $creator->notify(new VehicleAssignedNotification($assignment));
-                    Log::info("Araç atama bildirimi gönderildi. Görev ID: {$assignment->id}");
                 }
             }
 
-            // B) Durum Değişikliği Bildirimi (Eski kodun)
             if ($assignment->status !== $oldStatus) {
-                Log::info('Durum Değişikliği', ['Eski' => $oldStatus, 'Yeni' => $assignment->status]);
-
                 if ($creator && $creator->id !== auth()->id()) {
                     $creator->notify(new TaskStatusUpdatedNotification($assignment, $oldStatus));
                 }
             }
-
         } catch (\Exception $e) {
-            // Bildirim hatası akışı bozmasın diye logluyoruz
             Log::error('Bildirim Gönderim Hatası: ' . $e->getMessage());
         }
 
         // 7. YÖNLENDİRME
-        $redirectRoute = $assignment->assignment_type === 'vehicle'
-            ? 'service.assignments.index'
-            : 'service.general-tasks.index';
-
-        return redirect()->route($redirectRoute)
-            ->with('success', 'Görev başarıyla güncellendi.');
+        $redirectRoute = $assignment->assignment_type === 'vehicle' ? 'service.assignments.index' : 'service.general-tasks.index';
+        return redirect()->route($redirectRoute)->with('success', 'Görev başarıyla güncellendi.');
     }
 
     /**
@@ -574,7 +638,7 @@ class VehicleAssignmentController extends Controller
             'createdBy',
             'responsible' => function ($morphTo) {
                 $morphTo->morphWith([
-                    \App\Models\Team::class => ['users', 'files'], // Takım üyelerini de yükle (Blade'de kullanıyoruz)
+                    Team::class => ['users', 'files'], // Takım üyelerini de yükle (Blade'de kullanıyoruz)
                 ]);
             }
         ])
@@ -590,7 +654,7 @@ class VehicleAssignmentController extends Controller
                 // B. Veya üyesi olduğu takıma atananlar
                 ->orWhere(function ($sub) use ($teamIds) {
                     if ($teamIds->isNotEmpty()) {
-                        $sub->where('responsible_type', \App\Models\Team::class)
+                        $sub->where('responsible_type', Team::class)
                             ->whereIn('responsible_id', $teamIds);
                     }
                 });

@@ -32,18 +32,13 @@ class EventController extends Controller
 
     /**
      * YARDIMCI METOD: Yetki Kontrolü
-     * authorize() yerine bunu kullanacağız çünkü gate tarafındaki hatayı baypas ediyoruz.
      */
     private function checkAuth()
     {
         $user = Auth::user();
-        // 1. Slug'daki boşlukları temizle
         $slug = $user->department ? trim($user->department->slug) : '';
-
-        // 2. Rolleri kontrol et (Hem 'yonetici' hem 'yönetici' ekledik ki hata olmasın)
         $isAuthorizedRole = in_array($user->role, ['admin', 'yonetici', 'yönetici']);
 
-        // 3. Admin, Yönetici VEYA Hizmet departmanı girebilsin
         if (!$isAuthorizedRole && $slug !== 'hizmet') {
             abort(403, 'Bu sayfaya erişim yetkiniz bulunmamaktadır.');
         }
@@ -51,7 +46,6 @@ class EventController extends Controller
 
     public function index(Request $request)
     {
-        // GÜNCEL YETKİ KONTROLÜ
         $this->checkAuth();
 
         $user = Auth::user();
@@ -59,7 +53,6 @@ class EventController extends Controller
         $activeUnitId = session('active_unit_id') ?? $user->businessUnits->first()?->id;
         $isImportantFilter = $request->input('is_important', 'all');
 
-        // Rol kontrolünü güncelledik: 'yonetici' ve 'yönetici' ikisi de eklendi
         if ($isImportantFilter !== 'all' && $user && in_array($user->role, ['admin', 'yonetici', 'yönetici'])) {
             if ($isImportantFilter === 'yes') {
                 $query->where('is_important', true);
@@ -80,11 +73,10 @@ class EventController extends Controller
         if ($request->filled('date_from')) {
             try {
                 $dateFrom = Carbon::parse($request->input('date_from'))->startOfDay();
-                $query->where(
-                    fn($q) =>
+                $query->where(function ($q) use ($dateFrom) {
                     $q->where('start_datetime', '>=', $dateFrom)
-                        ->orWhere('end_datetime', '>=', $dateFrom)
-                );
+                        ->orWhere('end_datetime', '>=', $dateFrom);
+                });
             } catch (\Exception $e) {
             }
         }
@@ -92,11 +84,10 @@ class EventController extends Controller
         if ($request->filled('date_to')) {
             try {
                 $dateTo = Carbon::parse($request->input('date_to'))->endOfDay();
-                $query->where(
-                    fn($q) =>
+                $query->where(function ($q) use ($dateTo) {
                     $q->where('start_datetime', '<=', $dateTo)
-                        ->orWhere('end_datetime', '<=', $dateTo)
-                );
+                        ->orWhere('end_datetime', '<=', $dateTo);
+                });
             } catch (\Exception $e) {
             }
         }
@@ -114,9 +105,8 @@ class EventController extends Controller
         return view('service.events.index', compact('events', 'filters', 'eventTypes', 'serviceBoards'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        // GÜNCEL YETKİ KONTROLÜ
         $this->checkAuth();
 
         $eventTypes = $this->eventTypes;
@@ -126,17 +116,19 @@ class EventController extends Controller
             ->orderBy('start_date', 'desc')
             ->get();
 
-        return view('service.events.create', compact('eventTypes', 'customers', 'availableTravels'));
+        // URL'den gelen 'customer_id' parametresini yakalıyoruz
+        $selectedCustomerId = $request->query('customer_id');
+
+        return view('service.events.create', compact('eventTypes', 'customers', 'availableTravels', 'selectedCustomerId'));
     }
 
     /**
-     * Store Metodu (HİBRİT YAPI GÜNCELLEMESİ YAPILDI)
+     * Store Metodu (AKILLI YÖNLENDİRME EKLENDİ)
      */
     public function store(Request $request)
     {
         $this->checkAuth();
 
-        // 1. Standart Kurallar
         $rules = [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -154,7 +146,7 @@ class EventController extends Controller
             ],
             'visit_purpose' => [
                 'nullable',
-                Rule::in(['satis_sonrasi_hizmet', 'egitim', 'rutin_ziyaret', 'pazarlama', 'diger']),
+                'string',
                 Rule::requiredIf($request->event_type === 'musteri_ziyareti')
             ],
             'customer_machine_id' => 'nullable|integer|exists:customer_machines,id',
@@ -162,19 +154,18 @@ class EventController extends Controller
             'visit_status' => 'nullable|string|in:planlandi,gerceklesti,ertelendi,iptal',
             'cancellation_reason' => 'nullable|required_if:visit_status,iptal,ertelendi|string',
             'attachments' => 'nullable|array',
-            'attachments.*' => 'nullable|file|mimes:jpeg,jpg,png,pdf,doc,docx,xls,xlsx|max:20480', // Her dosya max 20MB
+            'attachments.*' => 'nullable|file|mimes:jpeg,jpg,png,pdf,doc,docx,xls,xlsx|max:20480',
+
+            // Gizli input validasyonu (güvenlik için sadece integer olmasına izin verelim)
+            'redirect_to_customer' => 'nullable|integer|exists:customers,id',
         ];
 
-        // 2. [HİBRİT] Dinamik Kuralları Birleştir
         $rules = array_merge($rules, Event::getDynamicValidationRules());
-
-        // 3. Validasyon
         $validatedData = $request->validate($rules);
 
         try {
             DB::beginTransaction();
 
-            // 4. Event Kaydı (Extras alanını manuel ekliyoruz)
             $event = Event::create([
                 'user_id' => Auth::id(),
                 'title' => $validatedData['title'],
@@ -187,15 +178,15 @@ class EventController extends Controller
                 'customer_id' => $validatedData['customer_id'] ?? null,
                 'visit_status' => $validatedData['visit_status'] ?? 'planlandi',
                 'cancellation_reason' => $validatedData['cancellation_reason'] ?? null,
-                // [HİBRİT] Formdan gelen extras array'ini buraya ekliyoruz
                 'extras' => $validatedData['extras'] ?? [],
             ]);
+
             if ($request->hasFile('attachments')) {
                 foreach ($request->file('attachments') as $file) {
-                    $event->addMedia($file)
-                        ->toMediaCollection('event_attachments'); // 'media' tablosundaki collection_name
+                    $event->addMedia($file)->toMediaCollection('event_attachments');
                 }
             }
+
             if ($event->event_type === 'musteri_ziyareti') {
                 CustomerVisit::create([
                     'event_id' => $event->id,
@@ -209,14 +200,23 @@ class EventController extends Controller
 
             DB::commit();
 
+            // --- YÖNLENDİRME MANTIĞI ---
+
+            // 1. Eğer formdan 'redirect_to_customer' geldiyse o müşteriye dön
+            if ($request->filled('redirect_to_customer')) {
+                return redirect()->route('customers.show', $request->input('redirect_to_customer'))
+                    ->with('success', 'Ziyaret başarıyla kaydedildi ve müşteri kartına dönüldü.');
+            }
+
+            // 2. Fuar ise detayına git
             if ($event->event_type === 'fuar') {
                 return redirect()->route('service.events.show', $event)
                     ->with('success', 'Fuar etkinliği oluşturuldu. Rezervasyonları ekleyebilirsiniz.');
             }
 
+            // 3. Varsayılan liste
             return redirect()->route('service.events.index')
                 ->with('success', 'Yeni etkinlik başarıyla oluşturuldu!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()
@@ -227,9 +227,7 @@ class EventController extends Controller
 
     public function show(Event $event)
     {
-        // GÜNCEL YETKİ KONTROLÜ
         $this->checkAuth();
-
         $event->load(['user', 'bookings.media', 'customerVisit.customer', 'expenses']);
         $eventTypes = $this->eventTypes;
         return view('service.events.show', compact('event', 'eventTypes'));
@@ -237,38 +235,28 @@ class EventController extends Controller
 
     public function edit(Event $event)
     {
-        // GÜNCEL YETKİ KONTROLÜ
         $this->checkAuth();
 
-        // Rol kontrolünü güncelledik (yonetici + yönetici)
         if (Auth::id() !== $event->user_id && !in_array(Auth::user()->role, ['admin', 'yonetici', 'yönetici'])) {
-            return redirect()->route('home')
-                ->with('error', 'Bu etkinliği sadece oluşturan kişi düzenleyebilir.');
+            return redirect()->route('home')->with('error', 'Bu etkinliği sadece oluşturan kişi düzenleyebilir.');
         }
 
         $eventTypes = $this->eventTypes;
         $customers = Customer::orderBy('name')->get();
-        $availableTravels = Travel::where('status', '!=', 'completed')
-            ->where('user_id', Auth::id())
-            ->get();
+        $availableTravels = Travel::where('status', '!=', 'completed')->where('user_id', Auth::id())->get();
         $visitDetail = CustomerVisit::where('event_id', $event->id)->first();
 
         return view('service.events.edit', compact('event', 'eventTypes'));
     }
 
-    /**
-     * Update Metodu (HİBRİT YAPI GÜNCELLEMESİ YAPILDI)
-     */
     public function update(Request $request, Event $event)
     {
         $this->checkAuth();
 
         if (Auth::id() !== $event->user_id && !in_array(Auth::user()->role, ['admin', 'yonetici', 'yönetici'])) {
-            return redirect()->route('home')
-                ->with('error', 'Bu etkinliği sadece oluşturan kişi düzenleyebilir.');
+            return redirect()->route('home')->with('error', 'Bu etkinliği sadece oluşturan kişi düzenleyebilir.');
         }
 
-        // 1. Standart Kurallar
         $rules = [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -281,13 +269,9 @@ class EventController extends Controller
             'customer_id' => 'nullable|exists:customers,id',
         ];
 
-        // 2. [HİBRİT] Dinamik Kuralları Birleştir
         $rules = array_merge($rules, Event::getDynamicValidationRules());
-
-        // 3. Validasyon
         $validatedData = $request->validate($rules);
 
-        // 4. Güncelleme
         $event->update([
             'title' => $validatedData['title'],
             'description' => $validatedData['description'],
@@ -298,82 +282,76 @@ class EventController extends Controller
             'visit_status' => $validatedData['visit_status'] ?? $event->visit_status,
             'cancellation_reason' => $validatedData['cancellation_reason'] ?? null,
             'customer_id' => $validatedData['customer_id'] ?? $event->customer_id,
-            // [HİBRİT] Extras alanını güncelle
-            // Eğer formdan extras gelmediyse (boşsa) mevcut olanı koruyabiliriz veya null yapabiliriz.
-            // Validasyon kurallarına göre hareket ettiği için null gelebilir.
             'extras' => $validatedData['extras'] ?? $event->extras,
         ]);
 
-        return redirect()->route('service.events.index')
-            ->with('success', 'Etkinlik başarıyla güncellendi.');
+        return redirect()->route('service.events.index')->with('success', 'Etkinlik başarıyla güncellendi.');
     }
 
     public function destroy(Event $event)
     {
-        // GÜNCEL YETKİ KONTROLÜ
         $this->checkAuth();
 
-        // Rol kontrolünü güncelledik (yonetici + yönetici)
         if (Auth::id() !== $event->user_id && !in_array(Auth::user()->role, ['admin', 'yonetici', 'yönetici'])) {
-            return redirect()->route('home')
-                ->with('error', 'Bu etkinliği sadece oluşturan kişi silebilir.');
+            return redirect()->route('home')->with('error', 'Bu etkinliği sadece oluşturan kişi silebilir.');
         }
 
         $event->delete();
-
-        return redirect()->route('service.events.index')
-            ->with('success', 'Etkinlik başarıyla silindi.');
+        return redirect()->route('service.events.index')->with('success', 'Etkinlik başarıyla silindi.');
     }
-    /**
-     * Etkinlik Listesini CSV olarak dışa aktar
-     */
+
+    public function updateStatus(Request $request, Event $event)
+    {
+        $this->checkAuth();
+
+        // Sadece kendi etkinliğini veya admin/yönetici olan değiştirebilir
+        if (Auth::id() !== $event->user_id && !in_array(Auth::user()->role, ['admin', 'yonetici', 'yönetici'])) {
+            // Eğer JSON (AJAX) isteği ise JSON dön, değilse redirect
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Bu işlem için yetkiniz yok.'], 403);
+            }
+            return back()->with('error', 'Bu etkinliği sadece oluşturan kişi güncelleyebilir.');
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|string|in:planlandi,gerceklesti,ertelendi,iptal',
+        ]);
+
+        $event->update([
+            'visit_status' => $validated['status']
+        ]);
+
+        // İstek AJAX üzerinden geliyorsa JSON dön
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Durum başarıyla güncellendi.',
+                'new_status' => $event->visit_status
+            ]);
+        }
+
+        // Normal form submit (Müşteri detay sayfasından gelen)
+        return back()->with('success', 'Ziyaret/Etkinlik durumu başarıyla güncellendi.');
+    }
+
     public function export()
     {
         $fileName = 'etkinlik-listesi-' . date('d-m-Y') . '.csv';
-
-        // 1. SORGULAMA
-        // Modelindeki ilişki isimleri: 'user', 'customer', 'machine'
         $query = Event::with(['user', 'customer', 'machine'])->latest();
 
-        // 2. BAŞLIKLAR
-        $headers = [
-            'ID',
-            'Başlık',
-            'Konum',
-            'Müşteri',
-            'İlgili Makine',
-            'Etkinlik Türü',
-            'Ziyaret Amacı',  // Modelde var, ekleyelim
-            'Başlangıç',
-            'Bitiş',
-            'Durum',
-            'Önem',
-            'Oluşturan',
-            'Oluşturulma Tarihi'
-        ];
+        $headers = ['ID', 'Başlık', 'Konum', 'Müşteri', 'İlgili Makine', 'Etkinlik Türü', 'Ziyaret Amacı', 'Başlangıç', 'Bitiş', 'Durum', 'Önem', 'Oluşturan', 'Oluşturulma Tarihi'];
 
-        // 3. EXPORT İŞLEMİ
         return CsvExporter::streamDownload(
             query: $query,
             headers: $headers,
             fileName: $fileName,
             rowMapper: function ($event) {
-
-                // -- MÜŞTERİ BİLGİSİ --
                 $musteri = $event->customer ? $event->customer->name : '-';
-
-                // -- MAKİNE BİLGİSİ --
-                // Modeldeki ilişki adı: machine()
                 $makine = '-';
                 if ($event->machine) {
-                    // Makine modelinin name, code veya serial_number alanı olabilir.
-                    // Garantilemek için sırayla bakıyoruz.
-                    $makine = $event->machine->name
-                        ?? $event->machine->code
-                        ?? ('Makine #' . $event->customer_machine_id);
+                    $makine = $event->machine->name ?? $event->machine->code ?? ('Makine #' . $event->customer_machine_id);
                 }
 
-                // -- DURUM TÜRKÇELEŞTİRME --
                 $durum = match ($event->visit_status) {
                     'gerceklesti' => 'Gerçekleşti',
                     'planlandi' => 'Planlandı',
@@ -382,7 +360,6 @@ class EventController extends Controller
                     default => ucfirst($event->visit_status ?? '-'),
                 };
 
-                // -- TÜR TÜRKÇELEŞTİRME --
                 $tur = match ($event->event_type) {
                     'fuar' => 'Fuar',
                     'toplanti' => 'Toplantı',
@@ -390,7 +367,6 @@ class EventController extends Controller
                     default => ucfirst($event->event_type ?? '-'),
                 };
 
-                // -- SATIR VERİSİ --
                 return [
                     $event->id,
                     $event->title,

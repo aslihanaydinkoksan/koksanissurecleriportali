@@ -9,10 +9,11 @@ use Illuminate\Database\Eloquent\Model;
 class CustomerActivity extends Model
 {
     use HasFactory, HasBusinessUnit;
-    protected $fillable = ['customer_id', 'user_id', 'type', 'description', 'activity_date', 'business_unit_id'];
+    protected $fillable = ['customer_id', 'user_id', 'type', 'contact_persons','description', 'activity_date', 'business_unit_id'];
 
     protected $casts = [
         'activity_date' => 'datetime',
+        'contact_persons' => 'array',
     ];
 
     // Aktiviteyi giren personel

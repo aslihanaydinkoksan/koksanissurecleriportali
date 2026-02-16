@@ -164,36 +164,35 @@
             margin: 0 auto;
         }
 
-        .type-icon.fuar {
-            background: #f3e8ff;
-            color: #9333ea;
-        }
-
-        /* Mor */
-        .type-icon.toplanti {
-            background: #e0e7ff;
-            color: #4f46e5;
-        }
-
-        /* İndigo */
-        .type-icon.ziyaret {
+        /* Modelden gelen renk sınıflarını kullanacağız ama eski CSS uyumluluğu için bunları tutuyoruz */
+        .type-icon.bg-info {
             background: #dbeafe;
             color: #2563eb;
         }
 
-        /* Mavi */
-        .type-icon.egitim {
+        /* Ziyaret */
+        .type-icon.bg-primary {
+            background: #e0e7ff;
+            color: #4f46e5;
+        }
+
+        /* Toplantı */
+        .type-icon.bg-warning {
             background: #ffedd5;
             color: #c2410c;
         }
 
-        /* Turuncu */
-        .type-icon.diger {
-            background: #f3f4f6;
-            color: #4b5563;
+        /* Arama/Eğitim */
+        .type-icon.bg-success {
+            background: #dcfce7;
+            color: #16a34a;
         }
 
-        /* Gri */
+        /* Genel */
+        .type-icon.fuar {
+            background: #f3e8ff;
+            color: #9333ea;
+        }
 
         .btn-gradient {
             background: linear-gradient(135deg, #667EEA, #764BA2);
@@ -209,46 +208,6 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
             color: white;
-        }
-
-        .btn-action {
-            width: 32px;
-            height: 32px;
-            border-radius: 0.5rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            border: 1px solid transparent;
-        }
-
-        .btn-action:hover {
-            background-color: #f3f4f6;
-            border-color: #e5e7eb;
-        }
-
-        .btn-action.edit {
-            color: #2563eb;
-        }
-
-        .btn-action.delete {
-            color: #dc2626;
-        }
-
-        .btn-action.view {
-            color: #4b5563;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: #9ca3af;
-        }
-
-        .empty-state i {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
         }
 
         .btn-action-with-text {
@@ -307,7 +266,6 @@
             align-items: center;
             transition: all 0.3s ease;
             margin-right: 10px;
-            /* Butonlar arası boşluk */
         }
 
         .btn-export-global:hover {
@@ -357,7 +315,6 @@
                 {{-- 
                     ==================================================
                     MOD 1: FUAR YÖNETİMİ (Travels Tarzı Kartlar)
-                    Adres: /service/events?event_type=fuar
                     ==================================================
                 --}}
                 @if (request('event_type') == 'fuar')
@@ -404,10 +361,8 @@
                                         <div class="text-muted small"
                                             style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
                                             Başlangıç</div>
-                                        <div class="fw-bold text-dark">
-                                            {{ \Carbon\Carbon::parse($event->start_datetime)->format('d.m.Y') }}</div>
-                                        <div class="small text-muted">
-                                            {{ \Carbon\Carbon::parse($event->start_datetime)->format('H:i') }}</div>
+                                        <div class="fw-bold text-dark">{{ $event->start_datetime->format('d.m.Y') }}</div>
+                                        <div class="small text-muted">{{ $event->start_datetime->format('H:i') }}</div>
                                     </div>
 
                                     {{-- Bitiş --}}
@@ -415,10 +370,8 @@
                                         <div class="text-muted small"
                                             style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
                                             Bitiş</div>
-                                        <div class="fw-bold text-dark">
-                                            {{ \Carbon\Carbon::parse($event->end_datetime)->format('d.m.Y') }}</div>
-                                        <div class="small text-muted">
-                                            {{ \Carbon\Carbon::parse($event->end_datetime)->format('H:i') }}</div>
+                                        <div class="fw-bold text-dark">{{ $event->end_datetime->format('d.m.Y') }}</div>
+                                        <div class="small text-muted">{{ $event->end_datetime->format('H:i') }}</div>
                                     </div>
 
                                     {{-- Durum Badge --}}
@@ -465,7 +418,6 @@
                     {{-- 
                     ==================================================
                     MOD 2: STANDART ETKİNLİK LİSTESİ (Bookings Tarzı Tablo)
-                    Adres: /service/events
                     ==================================================
                 --}}
                 @else
@@ -474,16 +426,13 @@
                         <button class="btn btn-white border shadow-sm" type="button" data-bs-toggle="collapse"
                             data-bs-target="#eventFilters" aria-expanded="false" aria-controls="eventFilters">
                             <i class="fa-solid fa-filter me-1 text-primary"></i> Filtreleme Seçenekleri
-
-                            {{-- Eğer aktif bir filtre varsa Badge göster --}}
                             @if (request()->hasAny(['title', 'event_type', 'visit_status', 'date_from', 'date_to']))
                                 <span class="badge bg-primary ms-1">Aktif</span>
                             @endif
                         </button>
                     </div>
 
-                    {{-- 2. Filtre Alanı (Collapse içine alındı) --}}
-                    {{-- Eğer filtre varsa 'show' class'ı eklenir ve açık gelir --}}
+                    {{-- 2. Filtre Alanı --}}
                     <div class="collapse @if (request()->hasAny(['title', 'event_type', 'visit_status', 'date_from', 'date_to'])) show @endif" id="eventFilters">
                         <div class="filter-card">
                             <div class="section-title">
@@ -502,11 +451,19 @@
                                         <label class="form-label small fw-bold text-muted">Etkinlik Tipi</label>
                                         <select class="form-select" name="event_type">
                                             <option value="all">Tümü</option>
-                                            @foreach ($eventTypes as $key => $value)
-                                                <option value="{{ $key }}"
-                                                    {{ ($filters['event_type'] ?? '') == $key ? 'selected' : '' }}>
-                                                    {{ $value }}</option>
-                                            @endforeach
+                                            {{-- Event modelindeki TYPE_LABELS sabitini veya veritabanını kullanabiliriz, şimdilik manuel --}}
+                                            <option value="visit"
+                                                {{ ($filters['event_type'] ?? '') == 'visit' ? 'selected' : '' }}>Müşteri
+                                                Ziyareti</option>
+                                            <option value="meeting"
+                                                {{ ($filters['event_type'] ?? '') == 'meeting' ? 'selected' : '' }}>
+                                                Toplantı</option>
+                                            <option value="fuar"
+                                                {{ ($filters['event_type'] ?? '') == 'fuar' ? 'selected' : '' }}>Fuar
+                                            </option>
+                                            <option value="egitim"
+                                                {{ ($filters['event_type'] ?? '') == 'egitim' ? 'selected' : '' }}>Eğitim
+                                            </option>
                                         </select>
                                     </div>
                                     <div class="col-lg-2 col-md-6">
@@ -534,8 +491,6 @@
                                         <input type="date" class="form-control" name="date_to"
                                             value="{{ $filters['date_to'] ?? '' }}">
                                     </div>
-
-                                    {{-- Butonlar --}}
                                     <div class="col-lg-1 d-flex align-items-end">
                                         <button type="submit" class="btn btn-primary w-100"
                                             style="background-color: #667EEA; border-color: #667EEA;">
@@ -543,8 +498,6 @@
                                         </button>
                                     </div>
                                 </div>
-
-                                {{-- Temizle Butonu (Filtre varsa görünür) --}}
                                 @if (request()->hasAny(['title', 'event_type', 'visit_status', 'date_from', 'date_to']))
                                     <div class="row mt-3">
                                         <div class="col-12 text-end">
@@ -557,6 +510,7 @@
                             </form>
                         </div>
                     </div>
+
                     <div class="mb-4 text-end">
                         <a href="{{ route('service.events.export', request()->all()) }}" class="btn-export-global">
                             <i class="fas fa-file-excel me-2"></i>Listeyi Excel'e Aktar
@@ -585,6 +539,7 @@
                             </ul>
                         </div>
                     </div>
+
                     {{-- Tablo Görünümü --}}
                     <div class="content-card">
                         @if ($events->isEmpty())
@@ -608,38 +563,30 @@
                                     </thead>
                                     <tbody>
                                         @foreach ($events as $event)
-                                            {{-- HATA ÇÖZÜMÜ: Satır etiketi (tr) eklendi ve hiza için class verildi --}}
                                             <tr class="align-middle">
-
-                                                {{-- 1. TİP SÜTUNU --}}
+                                                {{-- 1. TİP SÜTUNU (REVİZE EDİLDİ) --}}
                                                 <td class="text-center">
                                                     @php
-                                                        $typeClass = match ($event->event_type) {
-                                                            'fuar' => 'fuar',
-                                                            'toplanti' => 'toplanti',
-                                                            'musteri_ziyareti' => 'ziyaret',
-                                                            'egitim' => 'egitim',
-                                                            default => 'diger',
-                                                        };
+                                                        // İkon seçimi için basit mapping (Color class modelden geliyor)
                                                         $typeIcon = match ($event->event_type) {
                                                             'fuar' => 'fa-ticket',
-                                                            'toplanti' => 'fa-briefcase',
-                                                            'musteri_ziyareti' => 'fa-handshake',
+                                                            'meeting', 'toplanti' => 'fa-briefcase',
+                                                            'visit', 'musteri_ziyareti' => 'fa-handshake',
                                                             'egitim' => 'fa-graduation-cap',
+                                                            'call' => 'fa-phone',
                                                             default => 'fa-calendar',
                                                         };
-                                                        $typeName =
-                                                            $eventTypes[$event->event_type] ??
-                                                            ucfirst($event->event_type);
                                                     @endphp
 
                                                     <div class="d-inline-flex align-items-center">
-                                                        <div class="type-icon {{ $typeClass }} me-2"
-                                                            title="{{ $typeName }}">
+                                                        {{-- Modeldeki color_class (primary, info vs.) kullanılarak stil veriliyor --}}
+                                                        <div class="type-icon bg-{{ $event->color_class }} me-2"
+                                                            title="{{ $event->type_label }}">
                                                             <i class="fa-solid {{ $typeIcon }}"></i>
                                                         </div>
                                                         <span class="fw-bold text-dark small">
-                                                            {{ $typeName }}
+                                                            {{-- Modeldeki Accessor Kullanılıyor --}}
+                                                            {{ $event->type_label }}
                                                         </span>
                                                     </div>
                                                 </td>
@@ -682,12 +629,11 @@
                                                 {{-- 5. ZAMAN SÜTUNU --}}
                                                 <td>
                                                     <div class="fw-bold text-dark">
-                                                        {{ \Carbon\Carbon::parse($event->start_datetime)->format('d.m.Y') }}
+                                                        {{ $event->start_datetime->format('d.m.Y') }}
                                                     </div>
                                                     <div class="small text-muted">
-                                                        {{ \Carbon\Carbon::parse($event->start_datetime)->format('H:i') }}
-                                                        -
-                                                        {{ \Carbon\Carbon::parse($event->end_datetime)->format('H:i') }}
+                                                        {{ $event->start_datetime->format('H:i') }} -
+                                                        {{ $event->end_datetime->format('H:i') }}
                                                     </div>
                                                 </td>
 
@@ -707,7 +653,6 @@
                                                                 <span>Düzenle</span>
                                                             </a>
 
-
                                                             <form action="{{ route('service.events.destroy', $event) }}"
                                                                 method="POST" class="d-inline"
                                                                 onsubmit="return confirm('Bu etkinliği silmek istediğinizden emin misiniz?');">
@@ -722,7 +667,7 @@
                                                         @endif
                                                     </div>
                                                 </td>
-                                            </tr> {{-- HATA ÇÖZÜMÜ: Satır kapatıldı --}}
+                                            </tr>
                                         @endforeach
                                     </tbody>
                                 </table>

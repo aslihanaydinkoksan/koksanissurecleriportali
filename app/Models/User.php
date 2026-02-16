@@ -13,12 +13,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Loggable;
 use Illuminate\Support\Str;
 use Spatie\Permission\Traits\HasRoles;
+use App\Traits\HasBusinessUnit;
 use App\Notifications\ResetPasswordNotification;
 use App\Models\Department;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, Loggable, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, Loggable,HasBusinessUnit, HasRoles;
 
     /**
      * Toplu atama yapılabilecek alanlar.
@@ -28,6 +29,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'department_id',
+        'business_unit_id',
     ];
 
     protected $hidden = [

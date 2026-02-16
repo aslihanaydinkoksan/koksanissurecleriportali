@@ -39,6 +39,7 @@ class VehicleAssignment extends Model
 
     protected $fillable = [
         'assignment_type',
+        'title',
         'responsible_type',
         'responsible_id',
         'vehicle_type',
@@ -58,6 +59,10 @@ class VehicleAssignment extends Model
         'created_by_user_id',
         'customer_id',
         'business_unit_id',
+        'customer_product_id',
+        'quantity',
+        'unit',
+        'user_id',
     ];
 
     protected $casts = [
@@ -183,7 +188,6 @@ class VehicleAssignment extends Model
     {
         return $this->vehicle_type === \App\Models\LogisticsVehicle::class
             || $this->assignment_type === 'logistics';
-
     }
 
     /**
@@ -231,5 +235,15 @@ class VehicleAssignment extends Model
     public function driver()
     {
         return $this->belongsTo(User::class, 'driver_id');
+    }
+    public function product()
+    {
+        return $this->belongsTo(CustomerProduct::class, 'customer_product_id');
+    }
+
+    // 2. Bu sefere yüklenen Resmi Siparişler (Shipments)
+    public function shipments()
+    {
+        return $this->hasMany(Shipment::class, 'vehicle_assignment_id');
     }
 }

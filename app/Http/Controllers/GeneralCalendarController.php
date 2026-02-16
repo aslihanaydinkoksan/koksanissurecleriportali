@@ -274,7 +274,7 @@ class GeneralCalendarController extends Controller
             foreach ($serviceEvents as $event) {
                 $detaylar = [
                     'Etkinlik Başlığı' => $event->title,
-                    'Tür' => $event->event_type ?? 'Genel',
+                    'Tür' => $event->type_label ?? 'Genel',
                     'Konum' => $event->location ?? '-',
                     'Başlangıç' => $event->start_datetime->format('d.m.Y H:i'),
                     'Bitiş' => $event->end_datetime->format('d.m.Y H:i'),
@@ -296,13 +296,14 @@ class GeneralCalendarController extends Controller
                 $detaylar['Açıklama'] = $event->description ?? null;
 
                 $events[] = [
-                    'title' => '📅 ' . $event->title,
+                    'title' => '📅 ' . $event->title ?? $event->type_label,
                     'start' => $event->start_datetime->format('Y-m-d\TH:i:s'),
                     'end' => $event->end_datetime->format('Y-m-d\TH:i:s'),
-                    'color' => '#F093FB',
+                    'className' => 'bg-' . $event->color_class,
                     'extendedProps' => [
-                        'eventType' => 'service_event',
+                        'eventType' => $event->event_type,
                         'model_type' => 'event',
+                        'type_label'   => $event->type_label,
                         'is_important' => $event->is_important,
                         'id' => $event->id,
                         'details' => $detaylar

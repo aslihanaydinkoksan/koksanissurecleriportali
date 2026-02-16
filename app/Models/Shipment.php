@@ -110,7 +110,8 @@ class Shipment extends Model
         'dosya_yolu',
         'is_important',
         'extras',
-        'shipment_status'
+        'shipment_status',
+        'vehicle_assignment_id',
     ];
     protected $casts = [
         'cikis_tarihi' => 'datetime',
@@ -170,5 +171,10 @@ class Shipment extends Model
     public function kanbanCard()
     {
         return $this->morphMany(KanbanCard::class, 'model');
+    }
+    // Bu sevkiyat hangi araç göreviyle (seferle) gidiyor?
+    public function vehicleAssignment()
+    {
+        return $this->belongsTo(VehicleAssignment::class, 'vehicle_assignment_id');
     }
 }
