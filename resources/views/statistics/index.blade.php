@@ -320,6 +320,49 @@
                     </div>
                 </div>
             </div>
+            {{-- YENİ EKLENEN: İdari İşler Altında Müşteri Yönetimi (CRM) Analizi --}}
+            <div class="row mt-5 mb-3">
+                <div class="col-12">
+                    <h3 class="fw-bold text-white border-bottom border-white pb-3" style="opacity: 0.95;">
+                        <i class="fa-solid fa-users-viewfinder me-2"></i> Müşteri Yönetimi (CRM) Analizi
+                    </h3>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <div class="chart-container">
+                        <div class="chart-header text-primary"><i class="fa-solid fa-filter me-2"></i> 🎯 Fırsat & Satış
+                            Hunisi</div>
+                        <div id="crm-funnel-chart" style="min-height: 300px;"></div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="chart-container">
+                        <div class="chart-header text-danger"><i class="fa-solid fa-chart-pie me-2"></i> 🥷 Rakip Pazar
+                            Payı</div>
+                        <div id="crm-competitor-chart" class="d-flex justify-content-center" style="min-height: 300px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-8">
+                    <div class="chart-container">
+                        <div class="chart-header text-warning"><i class="fa-solid fa-chart-area me-2"></i> 📈 6 Aylık
+                            Şikayet Trendi</div>
+                        <div id="crm-complaint-chart" style="min-height: 300px;"></div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="chart-container">
+                        <div class="chart-header text-success"><i class="fa-solid fa-medal me-2"></i> 🏆 Personel
+                            Aktiviteleri</div>
+                        <div id="crm-personnel-chart" style="min-height: 300px;"></div>
+                    </div>
+                </div>
+            </div>
         @elseif ($departmentSlug === 'ulastirma')
             <div class="row g-4 mb-4">
                 <div class="col-lg-6">
@@ -531,6 +574,131 @@
                     }],
                     xaxis: {
                         categories: chartData.expense_currency.labels
+                    }
+                });
+                // --- CRM GRAFİKLERİNİN RENDER EDİLMESİ ---
+                // 1. Satış Hunisi (Bar Chart)
+                if (chartData.crm_funnel) safeRender("#crm-funnel-chart", {
+                    chart: {
+                        type: 'bar',
+                        height: 320,
+                        toolbar: {
+                            show: false
+                        }
+                    },
+                    colors: ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981', '#ef4444'],
+                    plotOptions: {
+                        bar: {
+                            borderRadius: 4,
+                            horizontal: false,
+                            distributed: true,
+                            dataLabels: {
+                                position: 'top'
+                            }
+                        }
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function(val) {
+                            return val + " Adet";
+                        },
+                        offsetY: -20,
+                        style: {
+                            fontSize: '12px',
+                            colors: ["#304758"]
+                        }
+                    },
+                    series: [{
+                        name: 'Fırsat',
+                        data: chartData.crm_funnel.data
+                    }],
+                    xaxis: {
+                        categories: chartData.crm_funnel.labels
+                    },
+                    legend: {
+                        show: false
+                    }
+                });
+
+                // 2. Rakip Pazar Payı (Doughnut)
+                if (chartData.crm_competitors && chartData.crm_competitors.data.length > 0) {
+                    safeRender("#crm-competitor-chart", {
+                        ...pieDefaults,
+                        series: chartData.crm_competitors.data,
+                        labels: chartData.crm_competitors.labels,
+                        colors: ['#ef4444', '#f97316', '#3b82f6', '#8b5cf6', '#64748b']
+                    });
+                } else {
+                    document.getElementById('crm-competitor-chart').innerHTML =
+                        '<div class="alert alert-light w-100 text-center text-muted mt-5">Sisteme kayıtlı rakip analizi bulunamadı.</div>';
+                }
+
+                // 3. Aylık Şikayet Trendi (Area Chart)
+                if (chartData.crm_complaints) safeRender("#crm-complaint-chart", {
+                    chart: {
+                        type: 'area',
+                        height: 320,
+                        toolbar: {
+                            show: false
+                        }
+                    },
+                    colors: ['#ef4444', '#10b981'], // Açık Şikayet Kırmızı, Çözülen Yeşil
+                    stroke: {
+                        curve: 'smooth',
+                        width: 3
+                    },
+                    fill: {
+                        type: 'gradient',
+                        gradient: {
+                            shadeIntensity: 1,
+                            opacityFrom: 0.4,
+                            opacityTo: 0.05,
+                            stops: [0, 100]
+                        }
+                    },
+                    dataLabels: {
+                        enabled: false
+                    },
+                    series: [{
+                            name: 'Açık / İşlemde Şikayetler',
+                            data: chartData.crm_complaints.open
+                        },
+                        {
+                            name: 'Çözülen Şikayetler',
+                            data: chartData.crm_complaints.resolved
+                        }
+                    ],
+                    xaxis: {
+                        categories: chartData.crm_complaints.labels
+                    }
+                });
+
+                // 4. Personel Performansı (Horizontal Bar)
+                if (chartData.crm_personnel) safeRender("#crm-personnel-chart", {
+                    chart: {
+                        type: 'bar',
+                        height: 320,
+                        toolbar: {
+                            show: false
+                        }
+                    },
+                    colors: ['#6366f1'],
+                    plotOptions: {
+                        bar: {
+                            horizontal: true,
+                            borderRadius: 4,
+                            barHeight: '50%'
+                        }
+                    },
+                    dataLabels: {
+                        enabled: true
+                    },
+                    series: [{
+                        name: 'Gerçekleşen Aktivite',
+                        data: chartData.crm_personnel.data
+                    }],
+                    xaxis: {
+                        categories: chartData.crm_personnel.labels
                     }
                 });
             }

@@ -16,6 +16,7 @@ class CustomerReturn extends Model
         'business_unit_id',
         'customer_id',
         'complaint_id',
+        'customer_sample_id',
         'user_id',
         'product_name',
         'shipped_quantity',
@@ -45,5 +46,9 @@ class CustomerReturn extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+    public function sample()
+    {
+        return $this->belongsTo(CustomerSample::class, 'customer_sample_id');
     }
 }

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Loggable;
 use App\Traits\HasBusinessUnit;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * App\Models\CustomerActivityLog
@@ -36,7 +37,7 @@ use App\Traits\HasBusinessUnit;
  */
 class CustomerActivityLog extends Model
 {
-    use HasFactory, Loggable, HasBusinessUnit;
+    use HasFactory, Loggable, HasBusinessUnit , SoftDeletes;
     protected $fillable = ['user_id', 'model_type', 'model_id', 'action', 'changes', 'business_unit_id'];
     protected $casts = ['changes' => 'array'];
 }

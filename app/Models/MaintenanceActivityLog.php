@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\HasBusinessUnit; // <--- 1. Use ekle
+use App\Traits\HasBusinessUnit; 
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MaintenanceActivityLog extends Model
 {
-    use HasFactory, HasBusinessUnit; // <--- 2. Trait ekle
+    use HasFactory, HasBusinessUnit , SoftDeletes; // <--- 2. Trait ekle
     protected $guarded = [];
     public function user()
     {

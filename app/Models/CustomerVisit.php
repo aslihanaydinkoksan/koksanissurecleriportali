@@ -8,6 +8,7 @@ use App\Traits\Loggable;
 use App\Traits\HasBusinessUnit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * App\Models\CustomerVisit
@@ -43,7 +44,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  */
 class CustomerVisit extends Model implements HasMedia
 {
-    use HasFactory, Loggable, HasBusinessUnit, InteractsWithMedia;
+    use HasFactory, Loggable, HasBusinessUnit, InteractsWithMedia , SoftDeletes;
     protected $fillable = [
         'customer_id', 'user_id', 'event_id', 'travel_id',
         'visit_date', 

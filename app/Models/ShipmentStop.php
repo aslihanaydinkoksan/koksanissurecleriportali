@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\HasBusinessUnit;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ShipmentStop extends Model
 {
-    use HasFactory, HasBusinessUnit;
+    use HasFactory, HasBusinessUnit, SoftDeletes;
 
     protected $table = 'shipment_stops';
 

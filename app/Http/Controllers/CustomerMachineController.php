@@ -16,6 +16,8 @@ class CustomerMachineController extends Controller
         $validated = $request->validate([
             'product_name' => 'nullable|string|max:255', // Seçilen veya yazılan isim
             'model' => 'required|string|max:255',
+            'brand' => 'nullable|string|max:255',
+            'ownership_type' => 'required|in:koksan,customer,competitor',
             'serial_number' => 'nullable|string|max:255|unique:customer_machines,serial_number',
             'installation_date' => 'nullable|date',
         ]);
@@ -40,6 +42,8 @@ class CustomerMachineController extends Controller
         $validated = $request->validate([
             'product_name' => 'nullable|string|max:255',
             'model' => 'required|string|max:255',
+            'brand' => 'nullable|string|max:255',
+            'ownership_type' => 'required|in:koksan,customer,competitor',
             'serial_number' => ['nullable', 'string', 'max:255', Rule::unique('customer_machines')->ignore($machine->id)],
             'installation_date' => 'nullable|date',
         ]);

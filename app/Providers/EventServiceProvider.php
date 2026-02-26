@@ -16,6 +16,10 @@ use App\Models\Booking;
 use App\Observers\BookingObserver;
 use App\Models\CustomerActivity;
 use App\Observers\CustomerActivityObserver;
+use App\Models\Opportunity;
+use App\Observers\OpportunityObserver;
+use App\Models\VehicleAssignment;
+use App\Observers\VehicleAssignmentObserver;
 class EventServiceProvider extends ServiceProvider
 {
     /**
@@ -56,6 +60,8 @@ class EventServiceProvider extends ServiceProvider
     {
         Booking::observe(BookingObserver::class);
         CustomerActivity::observe(CustomerActivityObserver::class);
+        Opportunity::observe(OpportunityObserver::class);
+        VehicleAssignment::observe(VehicleAssignmentObserver::class);
     }
 
     /**

@@ -619,6 +619,11 @@
                                         <li><a class="dropdown-item" href="<?php echo e(route('customers.index')); ?>">
                                                 <i class="fa-solid fa-users" style="color: #06B6D4;"></i> Müşteri
                                                 Yönetimi</a></li>
+                                        <li>
+                                            <hr class="dropdown-divider">
+                                        </li>
+                                        <li><a class="dropdown-item" href="<?php echo e(route('competitors.index')); ?>">
+                                                <i class="fa-solid fa-user-ninja" style="color: #c30404;"></i> Rakipler </a></li>
                                     </ul>
                                 </li>
                             <?php endif; ?>

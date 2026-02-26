@@ -40,6 +40,7 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\RemoveHeaders::class,
             \App\Http\Middleware\SetBusinessUnit::class,
             \App\Http\Middleware\SetDefaultBusinessUnit::class,
+            \App\Http\Middleware\LogUserActivity::class,
         ],
 
         'api' => [

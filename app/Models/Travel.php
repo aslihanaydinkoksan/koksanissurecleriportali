@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Traits\HasBusinessUnit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
-
+use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * App\Models\Travel
  *
@@ -47,7 +47,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  */
 class Travel extends Model implements HasMedia
 {
-    use HasFactory, Loggable, HasBusinessUnit, InteractsWithMedia; // <--- 2. Trait ekle
+    use HasFactory, Loggable, HasBusinessUnit, InteractsWithMedia, SoftDeletes; // <--- 2. Trait ekle
 
     protected $table = 'travels';
     protected $fillable = [

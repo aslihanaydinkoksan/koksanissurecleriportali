@@ -5,10 +5,11 @@ namespace App\Models;
 use App\Traits\HasBusinessUnit;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CustomerActivity extends Model
 {
-    use HasFactory, HasBusinessUnit;
+    use HasFactory, HasBusinessUnit , SoftDeletes;
     protected $fillable = ['customer_id', 'user_id', 'type', 'contact_persons','description', 'activity_date', 'business_unit_id'];
 
     protected $casts = [

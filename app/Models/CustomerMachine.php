@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Loggable;
 use App\Traits\HasBusinessUnit;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * App\Models\CustomerMachine
@@ -35,8 +36,17 @@ use App\Traits\HasBusinessUnit;
  */
 class CustomerMachine extends Model
 {
-    use HasFactory, Loggable, HasBusinessUnit;
-    protected $fillable = ['customer_id', 'customer_product_id','model', 'serial_number', 'installation_date', 'business_unit_id'];
+    use HasFactory, Loggable, HasBusinessUnit, SoftDeletes;
+    protected $fillable = [
+        'customer_id',
+        'customer_product_id',
+        'model',
+        'serial_number',
+        'installation_date',
+        'business_unit_id',
+        'ownership_type',
+        'brand'
+    ];
     public function customer()
     {
         return $this->belongsTo(Customer::class);

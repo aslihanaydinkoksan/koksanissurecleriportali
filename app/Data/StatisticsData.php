@@ -3,7 +3,7 @@
 namespace App\Data;
 
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Support\Collection; // <-- BU SATIRI EKLEYİN
+use Illuminate\Support\Collection;
 
 class StatisticsData implements Arrayable
 {

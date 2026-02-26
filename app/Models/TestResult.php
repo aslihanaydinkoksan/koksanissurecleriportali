@@ -8,6 +8,7 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use App\Traits\Loggable;
 use App\Traits\HasBusinessUnit;
+use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * App\Models\TestResult
  *
@@ -42,7 +43,7 @@ use App\Traits\HasBusinessUnit;
  */
 class TestResult extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia, Loggable, HasBusinessUnit; // 2. Ekle
+    use HasFactory, InteractsWithMedia, Loggable, HasBusinessUnit , SoftDeletes; // 2. Ekle
     protected $fillable = ['customer_id', 'customer_product_id','user_id', 'customer_machine_id', 'test_name', 'test_date', 'summary', 'business_unit_id'];
     public function customer()
     {

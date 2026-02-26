@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Customer;
@@ -18,6 +17,11 @@ use App\Models\CustomerContact;
 use App\Models\CustomerReturn;
 use App\Models\Birim;
 use App\Models\CustomerSample;
+use App\Models\CustomerProduct;
+use App\Http\Requests\CustomerRequest;
+use App\Http\Requests\CustomerActivityRequest;
+use App\Models\Competitor;
+use App\Services\Dashboard\CustomerReportService;
 
 class CustomerController extends Controller
 {
@@ -57,28 +61,13 @@ class CustomerController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\CustomerRequest  $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request): RedirectResponse
+    public function store(CustomerRequest $request): RedirectResponse
     {
-        // 1. Validasyon
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'address' => 'nullable|string',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:20',
-
-            // Dinamik İletişim Kişileri Validasyonu
-            'contacts' => 'nullable|array',
-            'contacts.*.name' => 'required|string|max:255',
-            'contacts.*.title' => 'nullable|string|max:100',
-            'contacts.*.email' => 'nullable|email|max:255',
-            'contacts.*.phone' => 'nullable|string|max:20',
-            'is_active' => 'nullable|boolean',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after:start_date',
-        ]);
+        // 1. Validasyon (FormRequest tarafından otomatik yapıldı ve tertemiz geldi)
+        $validatedData = $request->validated();
 
         try {
             DB::beginTransaction();
@@ -95,7 +84,6 @@ class CustomerController extends Controller
             ]);
 
             // İletişim Kişilerini Kaydet
-            // DÜZELTME: $request->contacts yerine $validatedData['contacts'] kullanıldı
             if (!empty($validatedData['contacts'])) {
                 foreach ($validatedData['contacts'] as $index => $contactData) {
                     // Boş satırları atla (isim yoksa kaydetme)
@@ -128,7 +116,7 @@ class CustomerController extends Controller
      * @param  \App\Models\Customer  $customer
      * @return View
      */
-    public function show(Customer $customer): View
+    public function show(Customer $customer, CustomerReportService $reportService): View
     {
         $customer->load([
             'machines',
@@ -138,13 +126,19 @@ class CustomerController extends Controller
             'visits.travel',
             'contacts',
             'samples',
-            'returns.complaint'
+            'returns.complaint',
+            'opportunities.histories.user',
+            'opportunities.user',
+            'vehicleAssignments.histories.user',
+            'products.competitor',
+            'machines.product'
         ]);
 
+        $chartData = $reportService->getDashboardData($customer);
         // Birim listesini çekiyoruz
         $birimler = Birim::orderBy('ad')->get();
-
-        return view('customers.show', compact('customer', 'birimler'));
+        $competitors = Competitor::where('is_active', true)->orderBy('name')->get();
+        return view('customers.show', compact('customer', 'birimler', 'competitors', 'chartData'));
     }
 
     /**
@@ -161,29 +155,14 @@ class CustomerController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\CustomerRequest  $request
      * @param  \App\Models\Customer  $customer
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, Customer $customer): RedirectResponse
+    public function update(CustomerRequest $request, Customer $customer): RedirectResponse
     {
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => ['nullable', 'email', Rule::unique('customers')->ignore($customer->id)],
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'is_active' => 'nullable|boolean',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after:start_date',
-
-            'contacts' => 'nullable|array',
-            'contacts.*.id' => 'nullable|integer',
-            'contacts.*.name' => 'required_with:contacts|string|max:255',
-            'contacts.*.title' => 'nullable|string|max:100',
-            'contacts.*.email' => 'nullable|email|max:255',
-            'contacts.*.phone' => 'nullable|string|max:20',
-            'contacts.*.delete' => 'nullable|boolean',
-        ]);
+        // Doğrulanmış veriyi al
+        $validatedData = $request->validated();
 
         try {
             DB::beginTransaction();
@@ -200,7 +179,6 @@ class CustomerController extends Controller
             ]);
 
             // İletişim Kişilerini Senkronize Et
-            // DÜZELTME: $request->contacts yerine $validatedData['contacts'] kullanıldı
             if (!empty($validatedData['contacts'])) {
                 foreach ($validatedData['contacts'] as $contactData) {
 
@@ -267,38 +245,41 @@ class CustomerController extends Controller
     }
 
     /**
-     * Müşteri Aktivitesi Kaydetme
+     * Müşteri Aktivitesi Kaydetme (Refactored)
      */
-    public function storeActivity(Request $request, $customerId)
+    public function storeActivity(CustomerActivityRequest $request, $customerId)
     {
-        // DÜZELTME: Validasyon sonucunu değişkene atadık
-        $validated = $request->validate([
-            'type' => 'required|string',
-            'contact_persons' => 'nullable|array', 
-            'contact_persons.*' => 'string',
-            'other_contact_persons' => 'nullable|string',
-            'description' => 'required|string',
-            'activity_date' => 'required|date',
-        ]);
-        $contacts = $validated['contact_persons'] ?? [];
-        if (!empty($validated['other_contact_persons'])) {
-            // Virgülle ayrılmış isimleri diziye çevir, boşlukları temizle ve boş olanları at
-            $others = array_filter(array_map('trim', explode(',', $validated['other_contact_persons'])));
-            $contacts = array_merge($contacts, $others);
-        }
-        // Aynı isim iki kez yazıldıysa tekilleştir
-        $finalContacts = array_values(array_unique($contacts));
-
         CustomerActivity::create([
             'customer_id' => $customerId,
             'user_id' => Auth::id(),
-            'type' => $validated['type'],
-            'contact_persons' => $finalContacts,
-            'description' => $validated['description'],
-            'activity_date' => $validated['activity_date'],
+            'type' => $request->type,
+            'contact_persons' => $request->contact_persons, // Request sınıfı hazırladı
+            'description' => $request->description,
+            'activity_date' => $request->activity_date,
         ]);
 
         return back()->with('success', 'Aktivite başarıyla kaydedildi.');
+    }
+
+    /**
+     * Müşteri Aktivitesi Güncelleme (Refactored)
+     */
+    public function updateActivity(CustomerActivityRequest $request, CustomerActivity $activity)
+    {
+        $activity->update([
+            'type' => $request->type,
+            'contact_persons' => $request->contact_persons, // Request sınıfı hazırladı
+            'description' => $request->description,
+            'activity_date' => $request->activity_date,
+        ]);
+
+        return back()->with('success', 'İletişim kaydı güncellendi.');
+    }
+
+    public function destroyActivity(CustomerActivity $activity)
+    {
+        $activity->delete();
+        return back()->with('success', 'İletişim kaydı silindi.');
     }
 
     /**
@@ -308,12 +289,13 @@ class CustomerController extends Controller
     {
         $validated = $request->validate([
             'product_name' => 'required|string|max:255',
-            'shipped_quantity' => 'required|numeric|min:0.01', // Gönderilen
-            'shipped_unit' => 'required|string', // YENİ
+            'shipped_quantity' => 'required|numeric|min:0.01',
+            'shipped_unit' => 'required|string',
             'quantity' => 'required|numeric|min:0.01',
             'unit' => 'required|string|exists:birims,ad',
             'return_date' => 'required|date',
             'complaint_id' => 'nullable|exists:complaints,id',
+            'customer_sample_id' => 'nullable|exists:customer_samples,id',
             'reason' => 'required|string',
         ]);
 
@@ -327,6 +309,7 @@ class CustomerController extends Controller
             'unit' => $validated['unit'],
             'return_date' => $validated['return_date'],
             'complaint_id' => $validated['complaint_id'],
+            'customer_sample_id' => $validated['customer_sample_id'] ?? null,
             'reason' => $validated['reason'],
             'status' => 'pending'
         ]);
@@ -339,26 +322,48 @@ class CustomerController extends Controller
      */
     public function updateReturnStatus(Request $request, $id)
     {
-        // DÜZELTME: Tam namespace yerine import edilen Class kullanımı
         $return = CustomerReturn::findOrFail($id);
 
-        // DÜZELTME: Validasyon sonucunu değişkene atama
         $validated = $request->validate([
             'status' => 'required|in:pending,approved,rejected,completed'
         ]);
 
-        // DÜZELTME: $request->status yerine $validated['status'] kullanımı
         $return->update(['status' => $validated['status']]);
 
         return back()->with('success', 'İade durumu güncellendi.');
     }
+
+    public function updateReturn(Request $request, CustomerReturn $return)
+    {
+        $validated = $request->validate([
+            'product_name' => 'required|string|max:255',
+            'shipped_quantity' => 'required|numeric|min:0.01',
+            'shipped_unit' => 'required|string',
+            'quantity' => 'required|numeric|min:0.01',
+            'unit' => 'required|string',
+            'return_date' => 'required|date',
+            'complaint_id' => 'nullable|exists:complaints,id',
+            'customer_sample_id' => 'nullable|exists:customer_samples,id',
+            'reason' => 'required|string',
+        ]);
+
+        $return->update($validated);
+        return back()->with('success', 'İade kaydı güncellendi.');
+    }
+
+    public function destroyReturn(CustomerReturn $return)
+    {
+        $return->delete();
+        return back()->with('success', 'İade kaydı silindi.');
+    }
+
     /**
      * Yeni Numune Kaydetme
      */
     public function storeSample(Request $request, Customer $customer)
     {
         $validated = $request->validate([
-            'product_name' => 'nullable|string|max:255', // Değişti
+            'product_name' => 'nullable|string|max:255',
             'subject' => 'required|string|max:255',
             'product_info' => 'nullable|string|max:255',
             'quantity' => 'required|numeric|min:0',
@@ -378,7 +383,7 @@ class CustomerController extends Controller
         $customer->samples()->create([
             'user_id' => Auth::id(),
             'business_unit_id' => 1,
-            'customer_product_id' => $productId, // Yeni eklenen mantık
+            'customer_product_id' => $productId,
             'subject' => $validated['subject'],
             'product_info' => $validated['product_info'],
             'quantity' => $validated['quantity'],
@@ -406,29 +411,12 @@ class CustomerController extends Controller
 
         $sample->update([
             'status' => $request->status,
-            'feedback' => $request->feedback // Durum değişirken not da eklenebilir
+            'feedback' => $request->feedback
         ]);
 
         return back()->with('success', 'Numune durumu güncellendi.');
     }
-    public function storeProduct(Request $request, Customer $customer)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'category' => 'nullable|string|max:255',
-            'annual_volume' => 'nullable|string|max:255',
-            'notes' => 'nullable|string'
-        ]);
 
-        $customer->products()->create($validated);
-        return back()->with('success', 'Ürün grubu başarıyla eklendi.');
-    }
-
-    public function destroyProduct($id)
-    {
-        \App\Models\CustomerProduct::destroy($id);
-        return back()->with('success', 'Ürün grubu silindi.');
-    }
     public function updateSample(Request $request, CustomerSample $sample)
     {
         $validated = $request->validate([
@@ -444,7 +432,7 @@ class CustomerController extends Controller
 
         $productId = null;
         if (!empty($validated['product_name'])) {
-            $product = \App\Models\CustomerProduct::firstOrCreate([
+            $product = CustomerProduct::firstOrCreate([
                 'customer_id' => $sample->customer_id,
                 'name' => $validated['product_name']
             ]);
@@ -471,69 +459,64 @@ class CustomerController extends Controller
         return back()->with('success', 'Numune kaydı silindi.');
     }
 
-    public function updateReturn(Request $request, CustomerReturn $return)
-    {
-        $validated = $request->validate([
-            'product_name' => 'required|string|max:255',
-            'shipped_quantity' => 'required|numeric|min:0.01', // Gönderilen
-            'shipped_unit' => 'required|string', // YENİ
-            'quantity' => 'required|numeric|min:0.01',
-            'unit' => 'required|string',
-            'return_date' => 'required|date',
-            'complaint_id' => 'nullable|exists:complaints,id',
-            'reason' => 'required|string',
-        ]);
-
-        $return->update($validated);
-        return back()->with('success', 'İade kaydı güncellendi.');
-    }
-
-    public function destroyReturn(CustomerReturn $return)
-    {
-        $return->delete();
-        return back()->with('success', 'İade kaydı silindi.');
-    }
-    public function updateProduct(Request $request, \App\Models\CustomerProduct $product)
+    public function storeProduct(Request $request, Customer $customer)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'category' => 'nullable|string|max:255',
             'annual_volume' => 'nullable|string|max:255',
-            'notes' => 'nullable|string'
+            'notes' => 'nullable|string',
+            'supplier_type' => 'required|in:koksan,competitor',
+            'competitor_id' => 'nullable|required_if:supplier_type,competitor|exists:competitors,id',
+            'customer_contact_id' => 'nullable|exists:customer_contacts,id',
+            'performance_notes' => 'nullable|string',
         ]);
-        $product->update($validated);
-        return back()->with('success', 'Ürün bilgileri başarıyla güncellendi.');
+
+        // Dinamik Teknik Özellikleri Birleştirme
+        $specs = [];
+        if ($request->has('spec_keys') && $request->has('spec_values')) {
+            foreach ($request->spec_keys as $index => $key) {
+                if (!empty($key)) {
+                    $specs[$key] = $request->spec_values[$index] ?? '';
+                }
+            }
+        }
+        $validated['technical_specs'] = empty($specs) ? null : $specs;
+
+        $customer->products()->create($validated);
+        return back()->with('success', 'Ürün / Rakip bilgisi başarıyla eklendi.');
     }
 
-    public function updateActivity(Request $request, CustomerActivity $activity)
+    public function updateProduct(Request $request, CustomerProduct $product)
     {
         $validated = $request->validate([
-            'type' => 'required|string',
-            'contact_persons' => 'nullable|array', 
-            'contact_persons.*' => 'string',
-            'other_contact_persons' => 'nullable|string',
-            'description' => 'required|string',
-            'activity_date' => 'required|date',
+            'name' => 'required|string|max:255',
+            'category' => 'nullable|string|max:255',
+            'annual_volume' => 'nullable|string|max:255',
+            'notes' => 'nullable|string',
+            'supplier_type' => 'required|in:koksan,competitor',
+            'competitor_id' => 'nullable|required_if:supplier_type,competitor|exists:competitors,id',
+            'customer_contact_id' => 'nullable|exists:customer_contacts,id',
+            'performance_notes' => 'nullable|string',
         ]);
-        $contacts = $validated['contact_persons'] ?? [];
-        if (!empty($validated['other_contact_persons'])) {
-            $others = array_filter(array_map('trim', explode(',', $validated['other_contact_persons'])));
-            $contacts = array_merge($contacts, $others);
-        }
-        $finalContacts = array_values(array_unique($contacts));
 
-        $activity->update([
-            'type' => $validated['type'],
-            'contact_persons' => $finalContacts, 
-            'description' => $validated['description'],
-            'activity_date' => $validated['activity_date'],
-        ]);
-        return back()->with('success', 'İletişim kaydı güncellendi.');
+        $specs = [];
+        if ($request->has('spec_keys') && $request->has('spec_values')) {
+            foreach ($request->spec_keys as $index => $key) {
+                if (!empty($key)) {
+                    $specs[$key] = $request->spec_values[$index] ?? '';
+                }
+            }
+        }
+        $validated['technical_specs'] = empty($specs) ? null : $specs;
+
+        $product->update($validated);
+        return back()->with('success', 'Ürün / Rakip bilgileri başarıyla güncellendi.');
     }
 
-    public function destroyActivity(CustomerActivity $activity)
+    public function destroyProduct($id)
     {
-        $activity->delete();
-        return back()->with('success', 'İletişim kaydı silindi.');
+        CustomerProduct::destroy($id);
+        return back()->with('success', 'Ürün grubu silindi.');
     }
 }

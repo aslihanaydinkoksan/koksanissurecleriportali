@@ -42,6 +42,7 @@ use App\Models\Event;
 use App\Models\Travel;
 use App\Http\Controllers\ScheduledReportController;
 use App\Models\CustomerReturn;
+use App\Http\Controllers\CompetitorController;
 
 /*
 |--------------------------------------------------------------------------
@@ -247,7 +248,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('logistics-vehicles', LogisticsVehicleController::class);
 
         Route::post('/vehicle-assignments', [App\Http\Controllers\VehicleAssignmentController::class, 'store'])->name('vehicle-assignments.store');
-Route::delete('/vehicle-assignments/{id}', [App\Http\Controllers\VehicleAssignmentController::class, 'destroy'])->name('vehicle-assignments.destroy');
+        Route::delete('/vehicle-assignments/{id}', [App\Http\Controllers\VehicleAssignmentController::class, 'destroy'])->name('vehicle-assignments.destroy');
         // Araç Görevlendirme
         Route::get('/assignments/export', [VehicleAssignmentController::class, 'export'])->name('assignments.export');
         Route::get('/assignments/{assignment}/export-detail', [VehicleAssignmentController::class, 'exportDetail'])->name('assignments.export_detail');
@@ -312,6 +313,8 @@ Route::delete('/vehicle-assignments/{id}', [App\Http\Controllers\VehicleAssignme
     Route::post('/travels/{model}/bookings', [BookingController::class, 'store'])
         ->defaults('model_type', Travel::class)
         ->name('travels.bookings.store');
+    //Rakip
+    Route::resource('competitors', CompetitorController::class)->except(['create', 'show', 'edit']);
 
     // Genel Rezervasyonlar
     Route::get('/bookings/export', [BookingController::class, 'export'])->name('bookings.export');

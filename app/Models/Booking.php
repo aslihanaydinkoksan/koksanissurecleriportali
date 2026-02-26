@@ -8,6 +8,7 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use App\Traits\Loggable;
 use App\Traits\HasBusinessUnit;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * App\Models\Booking
@@ -52,7 +53,7 @@ use App\Traits\HasBusinessUnit;
  */
 class Booking extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia, Loggable, HasBusinessUnit;
+    use HasFactory, InteractsWithMedia, Loggable, HasBusinessUnit, SoftDeletes;
 
     // Hangi alanların veritabanına yazılabileceği (Sadece isimler)
     protected $fillable = [
@@ -72,6 +73,7 @@ class Booking extends Model implements HasMedia
         'status',
         'notes',
         'business_unit_id',
+
     ];
 
     protected $casts = [

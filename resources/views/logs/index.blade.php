@@ -3,167 +3,198 @@
 @section('title', 'Sistem Aktivite Logları')
 
 @section('content')
-    <div class="container py-4">
+    <div class="container-fluid py-4">
         <div class="row justify-content-center">
             <div class="col-lg-12">
-                <div class="customer-card shadow-sm">
-                    <div class="card-header bg-white border-0 px-4 pt-4">
-                        <h4 class="mb-0">Sistem Aktivite Logları</h4>
-                        <small class="text-muted">Projedeki aktiviteleri görüntüleyin.</small>
+                <div class="card shadow-sm border-0">
+                    <div
+                        class="card-header bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0 text-primary"><i class="bi bi-activity me-2"></i>Sistem Aktivite Logları</h5>
+                            <small class="text-muted">Kullanıcı hareketleri ve veri değişiklikleri.</small>
+                        </div>
                     </div>
-                    <div class="card-body px-4">
+                    <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
+                            <table class="table table-hover align-middle mb-0" style="font-size: 0.9rem;">
+                                <thead class="bg-light text-secondary">
                                     <tr>
-                                        <th style="width: 20%;">Kim (Causer)</th>
-                                        <th style="width: 35%;">Ne Yaptı (Description)</th>
-                                        <th style="width: 25%;">Neyi Etkiledi (Subject)</th>
-                                        <th style="width: 20%;">Zaman</th>
+                                        <th style="width: 5%;">#</th>
+                                        <th style="width: 15%;">Tarih</th>
+                                        <th style="width: 15%;">Kullanıcı</th>
+                                        <th style="width: 10%;">İşlem Türü</th>
+                                        <th style="width: 20%;">Modül / Kayıt</th>
+                                        <th style="width: 25%;">Açıklama</th>
+                                        <th style="width: 10%;">Detay</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse ($activities as $activity)
                                         <tr>
+                                            <td>{{ $loop->iteration + $activities->firstItem() - 1 }}</td>
                                             <td>
-                                                <span class="badge bg-primary">
-                                                    {{ $activity->causer->name ?? 'Sistem/Silinmiş Kullanıcı' }}
+                                                <div class="d-flex flex-column">
+                                                    <span
+                                                        class="fw-bold">{{ $activity->created_at->format('d.m.Y') }}</span>
+                                                    <small
+                                                        class="text-muted">{{ $activity->created_at->format('H:i:s') }}</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @if ($activity->causer)
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="avatar avatar-xs me-2 bg-primary text-white rounded-circle d-flex justify-content-center align-items-center"
+                                                            style="width:25px; height:25px;">
+                                                            {{ substr($activity->causer->name, 0, 1) }}
+                                                        </div>
+                                                        <span>{{ $activity->causer->name }}</span>
+                                                    </div>
+                                                @else
+                                                    <span class="badge bg-secondary">Sistem</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @php
+                                                    $badgeColor = match ($activity->event) {
+                                                        'created' => 'success',
+                                                        'updated' => 'warning',
+                                                        'deleted' => 'danger',
+                                                        'restored' => 'info',
+                                                        default => 'secondary',
+                                                    };
+                                                    $eventText = match ($activity->event) {
+                                                        'created' => 'Oluşturma',
+                                                        'updated' => 'Güncelleme',
+                                                        'deleted' => 'Silme',
+                                                        'restored' => 'Geri Yükleme',
+                                                        default => 'Erişim/Diğer',
+                                                    };
+                                                @endphp
+                                                <span class="badge bg-soft-{{ $badgeColor }} text-{{ $badgeColor }}">
+                                                    {{ $eventText }}
                                                 </span>
                                             </td>
                                             <td>
-                                                {{ $activity->description }}
-                                            </td>
-                                            <td>
-                                                @if ($activity->subject)
-                                                    <code class="text-dark">
-                                                        {{ class_basename($activity->subject_type) }} (ID:
-                                                        {{ $activity->subject_id }})
-                                                    </code>
+                                                @if ($activity->subject_type)
+                                                    <span class="fw-bold text-dark">
+                                                        {{ class_basename($activity->subject_type) }}
+                                                    </span>
+                                                    <br>
+                                                    <small class="text-muted">ID: {{ $activity->subject_id }}</small>
                                                 @else
                                                     <span class="text-muted">-</span>
                                                 @endif
                                             </td>
+                                            <td>{{ $activity->description }}</td>
                                             <td>
-                                                <small class="text-muted">
-                                                    {{ $activity->created_at->tz('Europe/Istanbul')->format('d/m/Y H:i:s') }}
-                                                </small>
+                                                <button class="btn btn-sm btn-light border" type="button"
+                                                    data-bs-toggle="collapse"
+                                                    data-bs-target="#logDetail{{ $activity->id }}" aria-expanded="false">
+                                                    <i class="bi bi-eye"></i> İncele
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {{-- Detay Satırı --}}
+                                        <tr>
+                                            <td colspan="7" class="p-0 border-0">
+                                                <div class="collapse bg-light" id="logDetail{{ $activity->id }}">
+                                                    <div class="p-3">
+                                                        @if (isset($activity->properties['old']) || isset($activity->properties['attributes']))
+                                                            <h6 class="fw-bold text-primary mb-2">Değişiklik Detayları</h6>
+                                                            <table class="table table-bordered table-sm bg-white mb-0">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th style="width: 30%">Alan (Sütun)</th>
+                                                                        <th style="width: 35%" class="text-danger">Eski
+                                                                            Değer</th>
+                                                                        <th style="width: 35%" class="text-success">Yeni
+                                                                            Değer</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @php
+                                                                        $attributes =
+                                                                            $activity->properties['attributes'] ?? [];
+                                                                        $old = $activity->properties['old'] ?? [];
+                                                                        $keys = array_unique(
+                                                                            array_merge(
+                                                                                array_keys($attributes),
+                                                                                array_keys($old),
+                                                                            ),
+                                                                        );
+                                                                    @endphp
+
+                                                                    @foreach ($keys as $key)
+                                                                        <tr>
+                                                                            <td class="fw-bold text-uppercase text-muted"
+                                                                                style="font-size: 0.8rem;">
+                                                                                {{ str_replace('_', ' ', $key) }}
+                                                                            </td>
+
+                                                                            {{-- ESKİ DEĞER HÜCRESİ --}}
+                                                                            <td class="text-break bg-soft-danger">
+                                                                                @php
+                                                                                    $oldVal = $old[$key] ?? null;
+                                                                                @endphp
+
+                                                                                @if (is_array($oldVal) || is_object($oldVal))
+                                                                                    <pre class="mb-0" style="font-size: 0.75rem;">{{ json_encode($oldVal, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) }}</pre>
+                                                                                @else
+                                                                                    {{ $oldVal ?? '-' }}
+                                                                                @endif
+                                                                            </td>
+
+                                                                            {{-- YENİ DEĞER HÜCRESİ --}}
+                                                                            <td class="text-break bg-soft-success">
+                                                                                @php
+                                                                                    $newVal = $attributes[$key] ?? null;
+                                                                                @endphp
+
+                                                                                @if (is_array($newVal) || is_object($newVal))
+                                                                                    <pre class="mb-0" style="font-size: 0.75rem;">{{ json_encode($newVal, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) }}</pre>
+                                                                                @else
+                                                                                    {{ $newVal ?? '-' }}
+                                                                                @endif
+                                                                            </td>
+                                                                        </tr>
+                                                                    @endforeach
+                                                                </tbody>
+                                                            </table>
+                                                        @elseif(isset($activity->properties['ip']))
+                                                            <div class="row g-2">
+                                                                <div class="col-md-3"><strong>IP Adresi:</strong>
+                                                                    {{ $activity->properties['ip'] }}</div>
+                                                                <div class="col-md-3"><strong>Tarayıcı:</strong>
+                                                                    {{ $activity->properties['agent'] }}</div>
+                                                                <div class="col-md-3"><strong>URL:</strong>
+                                                                    {{ $activity->properties['url'] }}</div>
+                                                                <div class="col-md-3"><strong>Method:</strong>
+                                                                    {{ $activity->properties['method'] }}</div>
+                                                            </div>
+                                                        @else
+                                                            <p class="text-muted mb-0">Ek veri bulunamadı.</p>
+                                                        @endif
+                                                    </div>
+                                                </div>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="4" class="text-center text-muted py-5">
-                                                <i class="bi bi-inbox fs-1"></i>
-                                                <p class="mb-0 mt-2">Görüntülenecek hiç log bulunamadı.</p>
+                                            <td colspan="7" class="text-center py-5 text-muted">
+                                                <i class="bi bi-clipboard-x fs-1"></i>
+                                                <p class="mt-2">Henüz kayıtlı bir aktivite yok.</p>
                                             </td>
                                         </tr>
                                     @endforelse
                                 </tbody>
                             </table>
                         </div>
-
-                        {{-- Geliştirilmiş Sayfalama --}}
-                        @if ($activities->hasPages())
-                            <div class="mt-4">
-                                <nav aria-label="Sayfa navigasyonu">
-                                    <ul class="pagination pagination-rounded justify-content-center mb-0">
-                                        {{-- Önceki Sayfa --}}
-                                        @if ($activities->onFirstPage())
-                                            <li class="page-item disabled">
-                                                <span class="page-link">
-                                                    <i class="bi bi-chevron-left"></i> Önceki
-                                                </span>
-                                            </li>
-                                        @else
-                                            <li class="page-item">
-                                                <a class="page-link" href="{{ $activities->previousPageUrl() }}">
-                                                    <i class="bi bi-chevron-left"></i> Önceki
-                                                </a>
-                                            </li>
-                                        @endif
-
-                                        {{-- Sayfa Numaraları --}}
-                                        @foreach ($activities->getUrlRange(1, $activities->lastPage()) as $page => $url)
-                                            @if ($page == $activities->currentPage())
-                                                <li class="page-item active">
-                                                    <span class="page-link">{{ $page }}</span>
-                                                </li>
-                                            @else
-                                                <li class="page-item">
-                                                    <a class="page-link" href="{{ $url }}">{{ $page }}</a>
-                                                </li>
-                                            @endif
-                                        @endforeach
-
-                                        {{-- Sonraki Sayfa --}}
-                                        @if ($activities->hasMorePages())
-                                            <li class="page-item">
-                                                <a class="page-link" href="{{ $activities->nextPageUrl() }}">
-                                                    Sonraki <i class="bi bi-chevron-right"></i>
-                                                </a>
-                                            </li>
-                                        @else
-                                            <li class="page-item disabled">
-                                                <span class="page-link">
-                                                    Sonraki <i class="bi bi-chevron-right"></i>
-                                                </span>
-                                            </li>
-                                        @endif
-                                    </ul>
-                                </nav>
-
-                                {{-- Sayfa Bilgisi --}}
-                                <div class="text-center mt-3">
-                                    <small class="text-muted">
-                                        Toplam {{ $activities->total() }} kayıttan
-                                        {{ $activities->firstItem() }}-{{ $activities->lastItem() }} arası gösteriliyor
-                                    </small>
-                                </div>
-                            </div>
-                        @endif
+                        <div class="d-flex justify-content-center mt-4">
+                            {{ $activities->links() }}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 @endsection
-
-@push('styles')
-    <style>
-        .pagination-rounded .page-link {
-            border-radius: 0.375rem;
-            margin: 0 3px;
-            border: 1px solid #dee2e6;
-            color: #4a5568;
-            padding: 0.5rem 0.75rem;
-            transition: all 0.2s ease;
-        }
-
-        .pagination-rounded .page-link:hover {
-            background-color: #f8f9fa;
-            border-color: #adb5bd;
-            transform: translateY(-1px);
-        }
-
-        .pagination-rounded .page-item.active .page-link {
-            background-color: #3b82f6;
-            border-color: #3b82f6;
-            color: white;
-            font-weight: 600;
-        }
-
-        .pagination-rounded .page-item.disabled .page-link {
-            color: #adb5bd;
-            background-color: white;
-            cursor: not-allowed;
-        }
-
-        .table-hover tbody tr:hover {
-            background-color: #f8f9fa;
-        }
-
-        .badge {
-            font-weight: 500;
-            padding: 0.35rem 0.65rem;
-        }
-    </style>
-@endpush

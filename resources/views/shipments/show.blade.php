@@ -5,8 +5,8 @@
 
     <style>
         /* ==========================================
-                           1. EKRAN GÖRÜNÜMÜ (STANDART ARAYÜZ)
-                           ========================================== */
+                                   1. EKRAN GÖRÜNÜMÜ (STANDART ARAYÜZ)
+                                   ========================================== */
         .shipment-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 12px;
@@ -187,8 +187,8 @@
 
 
         /* ==========================================
-                           2. YAZDIRMA (PRINT) TASARIMI
-                           ========================================== */
+                                   2. YAZDIRMA (PRINT) TASARIMI
+                                   ========================================== */
         @media print {
 
             /* --- GİZLEMELER --- */
@@ -504,7 +504,11 @@
                         </tr>
                         <tr>
                             <th><i class="fas fa-weight-hanging text-muted"></i> Başlangıç Yükü</th>
-                            <td><strong>{{ number_format($shipment->kargo_miktari, 2) }} Ton</strong></td>
+                            <td>
+                                <strong>
+                                    {{ is_numeric(trim($shipment->kargo_miktari)) ? number_format((float) $shipment->kargo_miktari, 2) . ' Ton' : $shipment->kargo_miktari }}
+                                </strong>
+                            </td>
                         </tr>
                         <tr>
                             <th><i class="fas fa-map-marker-alt text-muted"></i> Kalkış Noktası</th>
@@ -547,9 +551,16 @@
                     </table>
                 </div>
                 <div class="col-md-4">
-                    <div class="current-load-box {{ $shipment->latest_remaining_amount == 0 ? 'empty' : '' }}">
+                    @php
+                        // Yük değeri rakam mı yoksa metin mi kontrol ediyoruz
+                        $rawLoad = $shipment->latest_remaining_amount;
+                        $isNumericLoad = is_numeric(trim($rawLoad));
+                        $displayLoad = $isNumericLoad ? number_format((float) $rawLoad, 2) . ' Ton' : $rawLoad;
+                        $isEmptyLoad = $isNumericLoad && (float) $rawLoad == 0;
+                    @endphp
+                    <div class="current-load-box {{ $isEmptyLoad ? 'empty' : '' }}">
                         <small>Araçtaki Güncel Yük</small>
-                        <div class="load-amount">{{ number_format($shipment->latest_remaining_amount, 2) }} Ton</div>
+                        <div class="load-amount">{{ $displayLoad }}</div>
                     </div>
                 </div>
             </div>
@@ -560,7 +571,8 @@
                 <i class="fas fa-list-alt"></i>
                 <h6>Dağıtım Durakları (Teslimat Listesi)</h6>
                 <div class="ms-auto">
-                    @if ($shipment->latest_remaining_amount > 0)
+                    {{-- Eğer yük metinse (örn: 'Belirtilmedi') veya sıfırdan büyükse butonu göster --}}
+                    @if (!$isNumericLoad || (float) $rawLoad > 0)
                         <button type="button" class="btn btn-primary btn-sm no-print" data-bs-toggle="modal"
                             data-bs-target="#addStopModal">
                             <i class="fas fa-plus"></i> Yeni Durak Ekle
@@ -666,7 +678,7 @@
                     <div class="modal-body">
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle"></i> Güncel Yük:
-                            <strong>{{ number_format($shipment->latest_remaining_amount, 2) }} Ton</strong>
+                            <strong>{{ is_numeric(trim($shipment->latest_remaining_amount)) ? number_format((float)$shipment->latest_remaining_amount, 2) . ' Ton' : $shipment->latest_remaining_amount }}</strong>
                         </div>
 
                         <div class="form-group">

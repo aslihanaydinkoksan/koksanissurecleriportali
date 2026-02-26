@@ -12,42 +12,54 @@ trait HasBusinessUnit
 {
     /**
      * Model "boot" edildiğinde otomatik çalışacak metod.
-     * İsim standardı: boot[TraitAdi]
      */
     public static function bootHasBusinessUnit()
     {
-        // 1. OTOMATİK FİLTRELEME (READ)
         static::addGlobalScope('business_unit_scope', function (Builder $builder) {
 
-            // A) ÖNCE SESSION KONTROLÜ (En Yüksek Öncelik)
-            // Admin bile olsa, eğer yukarıdan "Levha" fabrikası seçildiyse sadece onu görmeli.
-            if (Session::has('active_unit_id')) {
-                $builder->where('business_unit_id', Session::get('active_unit_id'));
-                return; // Filtre uygulandı, işlem tamam.
+            // 🛑 1. GÜVENLİK FRENİ: SONSUZ DÖNGÜYÜ ENGELLER
+            // User modeli kendi içinde yetki kontrolü yaparken tekrar kendini çağırmasın.
+            if ($builder->getModel() instanceof \App\Models\User) {
+                return;
             }
 
-            // B) SESSION YOKSA -> ROL KONTROLÜ
-            $user = Auth::user();
-            if (!$user)
+            // A) SESSION KONTROLÜ (Levha Fabrikası vb. seçildiyse)
+            if (Session::has('active_unit_id')) {
+                $builder->where('business_unit_id', Session::get('active_unit_id'));
                 return;
+            }
 
-            // Admin ise ve birim seçmediyse her şeyi görsün
+            // B) KULLANICI KONTROLÜ
+            $userId = Auth::id();
+            if (!$userId) return;
+
+            $user = Auth::user();
+
+            // Admin ise her şeyi görsün
             if ($user->hasRole(['admin', 'super-admin'])) {
                 return;
             }
 
-            // C) ÖZEL YETKİ KONTROLÜ (Modele has yetki varsa)
-            // Örn: Event modelinde 'manage_all_events' yetkisi tanımlıysa
-            if (isset(static::$globalPermission) && $user->can(static::$globalPermission)) {
-                return;
+            // C) ÖZEL YETKİ KONTROLÜ (HATA BURADAYDI, DÜZELTİLDİ) ✅
+            // Statik değişkene doğrudan erişmek yerine, sınıf üzerinden güvenli erişim yapıyoruz.
+            $className = static::class;
+
+            if (property_exists($className, 'globalPermission')) {
+                // Değişken varsa değerini al (Örn: 'view_all_events')
+                $permission = $className::$globalPermission;
+
+                if ($user->can($permission)) {
+                    return;
+                }
             }
 
-            // D) STANDART KULLANICI KISITLAMASI
-            // Hiçbir seçim yoksa sadece yetkili olduğu birimleri görsün
+            // D) STANDART KISITLAMA
+            // Kullanıcı sadece yetkili olduğu birimleri görsün
+            // User modelini yukarıda (1. Fren) hariç tuttuğumuz için burası artık güvenli.
             $authorizedUnitIds = $user->businessUnits->pluck('id');
 
             if ($authorizedUnitIds->isEmpty()) {
-                // Yetkisi yoksa, imkansız bir sorgu (0=1) ile boş liste döndür
+                // Yetkisi yoksa, boş liste döndür (0=1)
                 $builder->whereRaw('1 = 0');
             } else {
                 $builder->whereIn('business_unit_id', $authorizedUnitIds);
@@ -55,7 +67,6 @@ trait HasBusinessUnit
         });
 
         // 2. OTOMATİK KAYIT (CREATE)
-        // Veri eklerken seçili birimi otomatik kaydet
         static::creating(function (Model $model) {
             if (Session::has('active_unit_id')) {
                 $model->business_unit_id = Session::get('active_unit_id');

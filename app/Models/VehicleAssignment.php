@@ -63,6 +63,8 @@ class VehicleAssignment extends Model
         'quantity',
         'unit',
         'user_id',
+        'shipment_type',
+        'customer_sample_id',
     ];
 
     protected $casts = [
@@ -245,5 +247,13 @@ class VehicleAssignment extends Model
     public function shipments()
     {
         return $this->hasMany(Shipment::class, 'vehicle_assignment_id');
+    }
+    public function sample()
+    {
+        return $this->belongsTo(CustomerSample::class, 'customer_sample_id');
+    }
+    public function histories()
+    {
+        return $this->hasMany(VehicleAssignmentHistory::class, 'vehicle_assignment_id')->orderBy('created_at', 'desc');
     }
 }

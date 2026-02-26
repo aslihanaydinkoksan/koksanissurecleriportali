@@ -284,7 +284,7 @@ class ShipmentController extends Controller
                     $shipment->varis_noktasi ?? $shipment->varis_limani ?? '-',
                     $shipment->kargo_icerigi,
                     $shipment->status ?? 'Aktif',
-                    $shipment->cikis_tarihi ? \Carbon\Carbon::parse($shipment->cikis_tarihi)->format('d.m.Y') : '-'
+                    $shipment->cikis_tarihi ? Carbon::parse($shipment->cikis_tarihi)->format('d.m.Y') : '-'
                 ];
             }
         );

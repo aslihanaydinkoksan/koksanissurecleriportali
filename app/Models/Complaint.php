@@ -9,6 +9,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use App\Traits\Loggable;
 use App\Traits\HasBusinessUnit;
 use App\Models\CustomerReturn;
+use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * App\Models\Complaint
  *
@@ -43,7 +44,7 @@ use App\Models\CustomerReturn;
  */
 class Complaint extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia, Loggable, HasBusinessUnit;
+    use HasFactory, InteractsWithMedia, Loggable, HasBusinessUnit , SoftDeletes;
     protected $fillable = ['customer_id', 'user_id', 'customer_machine_id', 'title', 'description', 'status'];
     public function customer()
     {

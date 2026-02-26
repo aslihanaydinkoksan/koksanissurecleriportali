@@ -19,6 +19,8 @@ class OpportunityController extends Controller
             'stage' => 'required|string|in:duyum,teklif,gorusme,kazanildi,kaybedildi',
             'expected_close_date' => 'nullable|date',
             'source' => 'nullable|string|max:255',
+            'competitor_id' => 'nullable|exists:competitors,id',
+            'loss_reason' => 'nullable|required_if:stage,kaybedildi|string|max:500',
         ]);
 
         $validated['user_id'] = Auth::id(); // Fırsatı ekleyen kullanıcı
@@ -36,6 +38,8 @@ class OpportunityController extends Controller
             'currency' => 'required|string|max:10',
             'stage' => 'required|string|in:duyum,teklif,gorusme,kazanildi,kaybedildi',
             'expected_close_date' => 'nullable|date',
+            'competitor_id' => 'nullable|exists:competitors,id',
+            'loss_reason' => 'nullable|required_if:stage,kaybedildi|string|max:500',
         ]);
         
         $opportunity->update($validated);
