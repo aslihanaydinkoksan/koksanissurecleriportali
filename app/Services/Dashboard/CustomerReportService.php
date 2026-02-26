@@ -61,6 +61,7 @@ class CustomerReportService
     {
         $distribution = $customer->products()
             ->select('supplier_type', DB::raw('count(*) as total'))
+            ->reorder()
             ->groupBy('supplier_type')
             ->pluck('total', 'supplier_type')->toArray();
 
@@ -86,12 +87,14 @@ class CustomerReportService
         $activities = $customer->activities()
             ->select(DB::raw("DATE_FORMAT(activity_date, '%Y-%m') as month"), DB::raw('count(*) as total'))
             ->where('activity_date', '>=', Carbon::now()->subMonths(5)->startOfMonth())
+            ->reorder()
             ->groupBy('month')
             ->pluck('total', 'month')->toArray();
 
         $visits = $customer->visits()
             ->select(DB::raw("DATE_FORMAT(visit_date, '%Y-%m') as month"), DB::raw('count(*) as total'))
             ->where('visit_date', '>=', Carbon::now()->subMonths(5)->startOfMonth())
+            ->reorder()
             ->groupBy('month')
             ->pluck('total', 'month')->toArray();
 
@@ -125,6 +128,7 @@ class CustomerReportService
                 DB::raw('SUM(shipped_quantity) as total_shipped'),
                 DB::raw('SUM(quantity) as total_returned')
             )
+            ->reorder()
             ->groupBy('product_name')
             ->orderBy('total_returned', 'desc')
             ->take(5)
