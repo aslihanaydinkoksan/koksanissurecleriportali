@@ -28,6 +28,7 @@ class CustomerReportService
     {
         $opportunities = $customer->opportunities()
             ->select('stage', DB::raw('count(*) as total'))
+            ->reorder()
             ->groupBy('stage')
             ->pluck('total', 'stage')->toArray();
 

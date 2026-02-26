@@ -20,6 +20,7 @@ use App\Models\Opportunity;
 use App\Observers\OpportunityObserver;
 use App\Models\VehicleAssignment;
 use App\Observers\VehicleAssignmentObserver;
+
 class EventServiceProvider extends ServiceProvider
 {
     /**
@@ -32,21 +33,21 @@ class EventServiceProvider extends ServiceProvider
             SendEmailVerificationNotification::class,
         ],
         Failed::class => [
-            LogFailedLogin::class,
+            // LogFailedLogin::class,
         ],
-            // 1. Başarılı Giriş
+        // 1. Başarılı Giriş
         Login::class => [
-            LogSuccessfulLogin::class,
+            // LogSuccessfulLogin::class,
         ],
 
-            // 2. Hatalı Giriş
+        // 2. Hatalı Giriş
         Failed::class => [
-            LogFailedLogin::class,
+            //  LogFailedLogin::class,
         ],
 
-            // 3. Çıkış (Henüz dosyan yok, aşağıda oluşturacağız)
+        // 3. Çıkış (Henüz dosyan yok, aşağıda oluşturacağız)
         Logout::class => [
-            LogLogout::class,
+            //  LogLogout::class,
         ],
 
     ];
