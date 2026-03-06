@@ -1,8 +1,6 @@
-@extends('layouts.app')
+<?php $__env->startSection('title', 'Yeni Rol Ekle'); ?>
 
-@section('title', 'Yeni Rol Ekle')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-md-6">
@@ -11,30 +9,20 @@
                         <h4 class="fw-bold text-secondary">Yeni Rol Tanımla</h4>
                     </div>
                     <div class="card-body p-4">
-                        <form action="{{ route('roles.store') }}" method="POST">
-                            @csrf
+                        <form action="<?php echo e(route('roles.store')); ?>" method="POST">
+                            <?php echo csrf_field(); ?>
                             <div class="mb-4">
                                 <label class="form-label text-muted fw-bold">Rol Adı</label>
                                 <input type="text" name="name" class="form-control form-control-lg"
                                     placeholder="Örn: Muhasebe Müdürü" required>
                                 <small class="text-muted">Slug (kod) otomatik oluşturulacaktır.</small>
                             </div>
-                            <div class="mb-4">
-                                <label class="form-label text-muted fw-bold">Bağlı Olduğu Departman</label>
-                                <select name="department_id" class="form-select form-select-lg border-2 shadow-sm">
-                                    <option value="">Sistem Rolü (Departman Bağımsız)</option>
-                                    @foreach ($departments as $dept)
-                                        <option value="{{ $dept->id }}">{{ $dept->name }} Departmanı</option>
-                                    @endforeach
-                                </select>
-                                <small class="text-muted">Örn: 'Satış Yöneticisi' için 'İdari İşler'i seçin. Admin/Kullanıcı
-                                    için boş bırakın.</small>
-                            </div>
+
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary btn-lg rounded-pill">Kaydet</button>
                             </div>
                             <div class="text-center mt-3">
-                                <a href="{{ route('roles.index') }}" class="text-decoration-none text-muted">İptal</a>
+                                <a href="<?php echo e(route('roles.index')); ?>" class="text-decoration-none text-muted">İptal</a>
                             </div>
                         </form>
                     </div>
@@ -42,4 +30,6 @@
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp\htdocs\koksanissurecleriportali-main\resources\views/roles/create.blade.php ENDPATH**/ ?>

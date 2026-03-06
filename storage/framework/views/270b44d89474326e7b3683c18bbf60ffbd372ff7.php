@@ -1,8 +1,6 @@
-@extends('layouts.app')
+<?php $__env->startSection('title', 'Yeni Kullanıcı Kaydı'); ?>
 
-@section('title', 'Yeni Kullanıcı Kaydı')
-
-@push('styles')
+<?php $__env->startPush('styles'); ?>
     <style>
         /* --- 1. ARKA PLAN VE ANİMASYONLAR --- */
         #app>main.py-4 {
@@ -174,9 +172,9 @@
             color: white;
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-10">
@@ -186,43 +184,43 @@
                     </div>
 
                     <div class="card-body p-5">
-                        @if ($errors->any())
+                        <?php if($errors->any()): ?>
                             <div class="alert alert-danger rounded-4">
                                 <ul class="mb-0">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
+                                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <li><?php echo e($error); ?></li>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </ul>
                             </div>
-                        @endif
+                        <?php endif; ?>
 
-                        <form method="POST" action="{{ route('users.store') }}" autocomplete="off">
-                            @csrf
+                        <form method="POST" action="<?php echo e(route('users.store')); ?>" autocomplete="off">
+                            <?php echo csrf_field(); ?>
 
                             <div class="row">
-                                {{-- AD SOYAD --}}
+                                
                                 <div class="col-md-6 mb-4">
                                     <label class="form-label text-muted fw-bold">Ad Soyad <span
                                             class="text-danger">*</span></label>
                                     <div class="custom-input-group">
                                         <input type="text" name="name" class="form-control"
-                                            value="{{ old('name') }}" required placeholder="Ad Soyad">
+                                            value="<?php echo e(old('name')); ?>" required placeholder="Ad Soyad">
                                         <span class="input-icon">👤</span>
                                     </div>
                                 </div>
 
-                                {{-- EMAIL --}}
+                                
                                 <div class="col-md-6 mb-4">
                                     <label class="form-label text-muted fw-bold">Kurumsal E-posta <span
                                             class="text-danger">*</span></label>
                                     <div class="custom-input-group">
                                         <input type="email" name="email" class="form-control"
-                                            value="{{ old('email') }}" required placeholder="ornek@koksan.com">
+                                            value="<?php echo e(old('email')); ?>" required placeholder="ornek@koksan.com">
                                         <span class="input-icon">✉️</span>
                                     </div>
                                 </div>
 
-                                {{-- ŞİFRE --}}
+                                
                                 <div class="col-md-6 mb-4">
                                     <label class="form-label text-muted fw-bold">Şifre <span
                                             class="text-danger">*</span></label>
@@ -233,7 +231,7 @@
                                     </div>
                                 </div>
 
-                                {{-- ŞİFRE ONAY --}}
+                                
                                 <div class="col-md-6 mb-4">
                                     <label class="form-label text-muted fw-bold">Şifre Tekrar <span
                                             class="text-danger">*</span></label>
@@ -247,7 +245,7 @@
 
                             <hr class="my-4" style="opacity: 0.1">
 
-                            {{-- DEPARTMAN SEÇİMİ VE ALT GÖREVLER --}}
+                            
                             <div class="mb-4">
                                 <label class="section-label">
                                     <i class="fas fa-building section-icon"></i> Çalıştığı Departmanlar ve Özel Görevler
@@ -256,20 +254,20 @@
 
                                     <h6 class="text-muted small fw-bold mb-2 border-bottom pb-1">Departmanlar</h6>
                                     <div class="row g-3 mb-4">
-                                        @foreach ($departments as $dept)
+                                        <?php $__currentLoopData = $departments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dept): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                             <div class="col-md-4">
-                                                <label class="modern-checkbox-item" for="dept_{{ $dept->id }}">
+                                                <label class="modern-checkbox-item" for="dept_<?php echo e($dept->id); ?>">
                                                     <input type="checkbox" name="departments[]"
-                                                        id="dept_{{ $dept->id }}" value="{{ $dept->id }}"
+                                                        id="dept_<?php echo e($dept->id); ?>" value="<?php echo e($dept->id); ?>"
                                                         class="modern-checkbox"
-                                                        {{ is_array(old('departments')) && in_array($dept->id, old('departments')) ? 'checked' : '' }}>
-                                                    <span class="checkbox-label small fw-bold">{{ $dept->name }}</span>
+                                                        <?php echo e(is_array(old('departments')) && in_array($dept->id, old('departments')) ? 'checked' : ''); ?>>
+                                                    <span class="checkbox-label small fw-bold"><?php echo e($dept->name); ?></span>
                                                 </label>
                                             </div>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </div>
 
-                                    @php
+                                    <?php
                                         // Ana roller ve sistem rolleri hariç kalan özel rolleri bul ("Satış Yöneticisi" buraya düşer)
                                         $excludedRoles = [
                                             'admin',
@@ -281,33 +279,33 @@
                                             'bakim_personeli',
                                         ];
                                         $extraRoles = $roles->whereNotIn('name', $excludedRoles);
-                                    @endphp
+                                    ?>
 
-                                    @if ($extraRoles->count() > 0)
+                                    <?php if($extraRoles->count() > 0): ?>
                                         <h6 class="text-primary small fw-bold mb-2 border-bottom pb-1">Departman İçi Ekstra
                                             Görevler / Rol Atamaları</h6>
                                         <div class="row g-3">
-                                            @foreach ($extraRoles as $extraRole)
+                                            <?php $__currentLoopData = $extraRoles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $extraRole): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                 <div class="col-md-4">
                                                     <label class="modern-checkbox-item border-primary"
                                                         style="background-color: rgba(102, 126, 234, 0.05);"
-                                                        for="extra_role_{{ $extraRole->id }}">
+                                                        for="extra_role_<?php echo e($extraRole->id); ?>">
                                                         <input type="checkbox" name="extra_roles[]"
-                                                            id="extra_role_{{ $extraRole->id }}"
-                                                            value="{{ $extraRole->name }}" class="modern-checkbox"
-                                                            {{ is_array(old('extra_roles')) && in_array($extraRole->name, old('extra_roles')) ? 'checked' : '' }}>
+                                                            id="extra_role_<?php echo e($extraRole->id); ?>"
+                                                            value="<?php echo e($extraRole->name); ?>" class="modern-checkbox"
+                                                            <?php echo e(is_array(old('extra_roles')) && in_array($extraRole->name, old('extra_roles')) ? 'checked' : ''); ?>>
                                                         <span
-                                                            class="checkbox-label small fw-bold text-primary">{{ $extraRole->name }}</span>
+                                                            class="checkbox-label small fw-bold text-primary"><?php echo e($extraRole->name); ?></span>
                                                     </label>
                                                 </div>
-                                            @endforeach
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </div>
-                                    @endif
+                                    <?php endif; ?>
 
                                 </div>
                             </div>
 
-                            {{-- FABRİKA SEÇİMİ --}}
+                            
                             <div class="mb-4">
                                 <label class="section-label">
                                     <i class="fas fa-industry section-icon" style="color: #764BA2"></i> Yetkili Olduğu
@@ -315,41 +313,42 @@
                                 </label>
                                 <div class="list-wrapper" style="border-color: rgba(118, 75, 162, 0.15)">
                                     <div class="row">
-                                        @foreach ($businessUnits as $unit)
+                                        <?php $__currentLoopData = $businessUnits; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $unit): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                             <div class="col-md-4">
-                                                <label class="modern-checkbox-item" for="unit_{{ $unit->id }}">
-                                                    <input type="checkbox" name="units[]" id="unit_{{ $unit->id }}"
-                                                        value="{{ $unit->id }}" class="modern-checkbox"
-                                                        {{ is_array(old('units')) && in_array($unit->id, old('units')) ? 'checked' : '' }}>
-                                                    <span class="checkbox-label small fw-bold">{{ $unit->name }}</span>
+                                                <label class="modern-checkbox-item" for="unit_<?php echo e($unit->id); ?>">
+                                                    <input type="checkbox" name="units[]" id="unit_<?php echo e($unit->id); ?>"
+                                                        value="<?php echo e($unit->id); ?>" class="modern-checkbox"
+                                                        <?php echo e(is_array(old('units')) && in_array($unit->id, old('units')) ? 'checked' : ''); ?>>
+                                                    <span class="checkbox-label small fw-bold"><?php echo e($unit->name); ?></span>
                                                 </label>
                                             </div>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </div>
                                 </div>
                             </div>
 
-                            {{-- ANA SİSTEM ROLÜ (HİYERARŞİ) --}}
+                            
                             <div class="mb-5">
                                 <label class="form-label text-muted fw-bold ms-1 d-block">
                                     <i class="fas fa-shield-alt text-primary me-1"></i> Yetki Seviyesi (Ana Hiyerarşi)
                                 </label>
                                 <div class="d-flex flex-wrap">
-                                    @php
+                                    <?php
                                         // Sadece ana rollerimizi listeliyoruz
                                         $mainRoles = ['admin', 'yonetici', 'user'];
-                                    @endphp
+                                    ?>
 
-                                    @foreach ($roles->whereIn('name', $mainRoles) as $role)
+                                    <?php $__currentLoopData = $roles->whereIn('name', $mainRoles); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $role): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <div class="me-2 mb-2">
-                                            <input type="radio" name="role" id="role_{{ $role->id }}"
-                                                value="{{ $role->name }}" class="role-radio"
-                                                {{ old('role', 'user') == $role->name ? 'checked' : '' }}>
-                                            <label for="role_{{ $role->id }}" class="role-label">
-                                                {{ \Illuminate\Support\Facades\Lang::has('roles.' . $role->name) ? __('roles.' . $role->name) : ucfirst($role->name) }}
+                                            <input type="radio" name="role" id="role_<?php echo e($role->id); ?>"
+                                                value="<?php echo e($role->name); ?>" class="role-radio"
+                                                <?php echo e(old('role', 'user') == $role->name ? 'checked' : ''); ?>>
+                                            <label for="role_<?php echo e($role->id); ?>" class="role-label">
+                                                <?php echo e(\Illuminate\Support\Facades\Lang::has('roles.' . $role->name) ? __('roles.' . $role->name) : ucfirst($role->name)); ?>
+
                                             </label>
                                         </div>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </div>
                             </div>
 
@@ -364,13 +363,15 @@
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('page_scripts')
+<?php $__env->startSection('page_scripts'); ?>
     <script>
         function togglePwd(id) {
             var input = document.getElementById(id);
             input.type = (input.type === "password") ? "text" : "password";
         }
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp\htdocs\koksanissurecleriportali-main\resources\views/users/create.blade.php ENDPATH**/ ?>

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str; // Slug oluşturmak için gerekli
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
+
 class RoleController extends Controller
 {
     // GÜVENLİK DUVARI: Sadece Adminler Erişebilir
@@ -30,21 +31,21 @@ class RoleController extends Controller
 
     public function create()
     {
-        return view('roles.create');
+        $departments = \App\Models\Department::orderBy('name')->get();
+        return view('roles.create', compact('departments'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:roles,name',
+            'department_id' => 'nullable|exists:departments,id' // YENİ
         ]);
-
-        // İsmi slug'a çevir (Örn: "Süper Yönetici" -> "super-yonetici")
-        $slug = Str::slug($request->name);
 
         Role::create([
             'name' => $request->name,
-            'slug' => $slug
+            'slug' => Str::slug($request->name),
+            'department_id' => $request->department_id // YENİ
         ]);
 
         return redirect()->route('roles.index')->with('success', 'Rol başarıyla oluşturuldu.');
@@ -57,7 +58,10 @@ class RoleController extends Controller
             return redirect()->back()->with('error', 'Admin rolü düzenlenemez.');
         }
 
-        return view('roles.edit', compact('role'));
+        // Departmanları view'a gönderiyoruz ki dropdown içinde listelensin
+        $departments = \App\Models\Department::orderBy('name')->get();
+
+        return view('roles.edit', compact('role', 'departments'));
     }
 
     public function update(Request $request, Role $role)
@@ -68,11 +72,13 @@ class RoleController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
+            'department_id' => 'nullable|exists:departments,id' // YENİ: Doğrulama kuralı eklendi
         ]);
 
         $role->update([
             'name' => $request->name,
-            'slug' => Str::slug($request->name)
+            'slug' => Str::slug($request->name),
+            'department_id' => $request->department_id // YENİ: Veritabanına kaydetme
         ]);
 
         return redirect()->route('roles.index')->with('success', 'Rol güncellendi.');
@@ -81,14 +87,14 @@ class RoleController extends Controller
     public function destroy(Role $role)
     {
         // Kritik Rolleri Silmeyi Engelle
-        if (in_array($role->slug, ['admin', 'kullanici'])) {
+        if (in_array($role->slug, ['admin'])) {
             return redirect()->back()->with('error', 'Bu temel rol silinemez.');
         }
 
         // Rolü kullanan kullanıcı var mı kontrolü (İsteğe bağlı)
-        if ($role->users()->count() > 0) {
-            return redirect()->back()->with('error', 'Bu role sahip kullanıcılar var, önce onları değiştirin.');
-        }
+        // if ($role->users()->count() > 0) {
+        //     return redirect()->back()->with('error', 'Bu role sahip kullanıcılar var, önce onları değiştirin.');
+        // }
 
         $role->delete();
         return redirect()->route('roles.index')->with('success', 'Rol silindi.');

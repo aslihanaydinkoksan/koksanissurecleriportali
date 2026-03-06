@@ -44,6 +44,9 @@ class CustomerController extends Controller
             })
             ->orderBy('name', 'asc')
             ->paginate(15);
+        activity()
+            ->causedBy(Auth::user())
+            ->log('Müşteri ana listesini görüntüledi. (Arama: ' . ($search ?: 'Yok') . ')');
 
         return view('customers.index', compact('customers', 'search'));
     }
@@ -138,6 +141,10 @@ class CustomerController extends Controller
         // Birim listesini çekiyoruz
         $birimler = Birim::orderBy('ad')->get();
         $competitors = Competitor::where('is_active', true)->orderBy('name')->get();
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($customer)
+            ->log('Müşteri detay kartını görüntüledi.');
         return view('customers.show', compact('customer', 'birimler', 'competitors', 'chartData'));
     }
 

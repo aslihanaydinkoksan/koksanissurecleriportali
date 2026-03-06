@@ -41,7 +41,7 @@ class UserController extends Controller
             abort(403);
         }
 
-        $roles = Role::all();
+        $roles = Role::all(); // Tüm rolleri çekiyoruz (Eski haline döndürdük)
         $departments = Department::all();
         $businessUnits = BusinessUnit::where('is_active', true)->get();
 
@@ -97,19 +97,19 @@ class UserController extends Controller
             abort(403);
         }
 
-        // Admin koruması: Admin olmayanlar admini düzenleyemez
         if ($user->hasRole('admin') && !Auth::user()->hasRole('admin')) {
             abort(403, 'Yeterli yetkiniz yok.');
         }
 
-        $roles = Role::all();
+        $roles = Role::all(); // Tüm rolleri çekiyoruz
         $departments = Department::all();
         $businessUnits = BusinessUnit::where('is_active', true)->get();
 
         $userUnits = $user->businessUnits->pluck('id')->toArray();
         $userDepartments = $user->departments->pluck('id')->toArray();
+        $userRoles = $user->roles->pluck('name')->toArray(); // Kullanıcının rolleri
 
-        return view('users.edit', compact('user', 'roles', 'departments', 'businessUnits', 'userUnits', 'userDepartments'));
+        return view('users.edit', compact('user', 'roles', 'departments', 'businessUnits', 'userUnits', 'userDepartments', 'userRoles'));
     }
 
     /**

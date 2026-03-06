@@ -277,6 +277,7 @@ Route::middleware(['auth'])->group(function () {
     // 6. MÜŞTERİ, SEYAHAT ve TAKIM YÖNETİMİ
 
     // Müşteriler
+    Route::middleware(['auth', 'crm.security'])->group(function () {
     Route::resource('customers', CustomerController::class);
     Route::resource('customers.machines', CustomerMachineController::class)->shallow()->except(['index', 'show']);
     Route::resource('customers.complaints', ComplaintController::class)->shallow()->except(['index', 'show']);
@@ -315,6 +316,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('travels.bookings.store');
     //Rakip
     Route::resource('competitors', CompetitorController::class)->except(['create', 'show', 'edit']);
+});
 
     // Genel Rezervasyonlar
     Route::get('/bookings/export', [BookingController::class, 'export'])->name('bookings.export');

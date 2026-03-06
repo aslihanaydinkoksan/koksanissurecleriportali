@@ -18,7 +18,7 @@ class UserObserver
      */
     public function created(User $user): void
     {
-        $this->assignRoleByDepartment($user);
+        //$this->assignRoleByDepartment($user);
     }
 
     /**
@@ -33,9 +33,9 @@ class UserObserver
     public function updated(User $user): void
     {
         // Eğer departman ID'si veya 'role' sütunu (admin vs) değiştiyse yetkileri tekrar ayarla
-        if ($user->isDirty('department_id') || $user->isDirty('role')) {
-            $this->assignRoleByDepartment($user);
-        }
+        // if ($user->isDirty('department_id') || $user->isDirty('role')) {
+        //     $this->assignRoleByDepartment($user);
+        // }
     }
     /**
      * Ana Mantık: Departman ID -> Spatie Rol Eşleşmesi
