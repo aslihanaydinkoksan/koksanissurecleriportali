@@ -7,7 +7,20 @@
                 <label class="form-label">Ziyaret Tarihi (*)</label>
                 <input type="datetime-local" name="visit_date" class="form-control" value="{{ now()->format('Y-m-d\TH:i') }}" required>
             </div>
-            <div class="col-md-9">
+            <div class="col-md-3">
+                <label class="form-label">Ziyareti Gerçekleştiren (*)</label>
+                <select name="visitor_id" class="form-select" id="visitorSelect" onchange="toggleOtherVisitor(this)">
+                    <option value="{{ Auth::id() }}">Kendim ({{ Auth::user()->name }})</option>
+                    @foreach($users as $user)
+                        @if($user->id !== Auth::id())
+                            <option value="{{ $user->id }}">{{ $user->name }}</option>
+                        @endif
+                    @endforeach
+                    <option value="other">Diğer (Manuel Giriş)</option>
+                </select>
+                <input type="text" name="visitor_name" id="otherVisitorInput" class="form-control mt-2 d-none" placeholder="Ziyaretçi İsmi Giriniz">
+            </div>
+            <div class="col-md-6">
                 <label class="form-label d-block">Ziyaret Sebebi (*)</label>
                 <div class="btn-group w-100" role="group">
                     <input type="radio" class="btn-check" name="visit_reason" id="reason1" value="Şikayet" autocomplete="off">
@@ -131,18 +144,43 @@
             <tbody>
                 @forelse ($customer->visits as $visit)
                     <tr class="visit-item" data-date="{{ $visit->visit_date ? $visit->visit_date->format('Y-m-d') : $visit->created_at->format('Y-m-d') }}" data-search="{{ mb_strtolower(($visit->product->name ?? '') . ' ' . implode(' ', $visit->contact_persons ?? []) . ' ' . $visit->result . ' ' . $visit->findings) }}" data-status="{{ $visit->visit_reason }}">
-                        <td>{{ $visit->visit_date ? $visit->visit_date->format('d.m.Y H:i') : $visit->created_at->format('d.m.Y H:i') }}</td>
+                        <td>
+                            {{ $visit->visit_date ? $visit->visit_date->format('d.m.Y H:i') : $visit->created_at->format('d.m.Y H:i') }}
+                            <div class="mt-1">
+                                @if($visit->visitor_name)
+                                    <span class="badge bg-light text-dark border small" title="Ziyaretçi">
+                                        <i class="fa-solid fa-user me-1"></i> {{ $visit->visitor_name }}
+                                    </span>
+                                @elseif($visit->visitor)
+                                    <span class="badge bg-light text-dark border small" title="Ziyaretçi">
+                                        <i class="fa-solid fa-user me-1"></i> {{ $visit->visitor->name }}
+                                    </span>
+                                @endif
+                            </div>
+                            @if($visit->remote_system === 'iaa')
+                                <div class="mt-1">
+                                    <a href="{{ $visit->remote_url }}" target="_blank" class="badge bg-info text-white text-decoration-none" title="İAA Projesine Git">
+                                        <i class="fa-solid fa-link me-1"></i> İAA Kaynaklı
+                                    </a>
+                                </div>
+                            @endif
+                        </td>
                         <td><span class="badge bg-light text-dark border">{{ $visit->visit_reason ?? 'Belirtilmedi' }}</span></td>
                         <td>
                             @if ($visit->product)
                                 <strong class="text-primary">{{ $visit->product->name }}</strong>
-                                @if ($visit->lot_no) <br><small class="text-muted">Lot: {{ $visit->lot_no }}</small> @endif
-                            @else - @endif
+                            @endif
+                            @if ($visit->lot_no)
+                                @if($visit->product) <br> @endif
+                                <small class="text-muted">Lot: {{ $visit->lot_no }}</small>
+                            @endif
+                            @if (!$visit->product && !$visit->lot_no) - @endif
                         </td>
                         <td>
-                            @if ($visit->contact_persons)
-                                @foreach ($visit->contact_persons as $p)
-                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border">{{ $p }}</span>
+                            @php $contacts = is_array($visit->contact_persons) ? $visit->contact_persons : json_decode($visit->contact_persons ?? '[]', true); @endphp
+                            @if ($contacts && count($contacts) > 0)
+                                @foreach ($contacts as $p)
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border small">{{ $p }}</span>
                                 @endforeach
                             @else - @endif
                         </td>
@@ -161,6 +199,7 @@
                         </td>
                         <td class="text-end">
                             <div class="d-flex justify-content-end gap-2">
+                                <a href="{{ route('visits.show', $visit->id) }}" class="btn btn-sm btn-outline-primary" title="Detay Görüntüle"><i class="fa-solid fa-eye"></i></a>
                                 <a href="{{ route('visits.print', $visit->id) }}" target="_blank" class="btn btn-sm btn-outline-dark" title="Yazdır / PDF"><i class="fa-solid fa-print"></i></a>
                                 <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editVisitModal{{ $visit->id }}" title="Düzenle"><i class="fa-solid fa-edit"></i></button>
                                 <form action="{{ route('visits.destroy', $visit->id) }}" method="POST" onsubmit="return confirm('Bu formu silmek istediğinize emin misiniz?');">
@@ -183,3 +222,17 @@
     </div>
     <x-history-timeline :activities="$historyService->getTechnicalHistory($customer)" />
 </div>
+
+<script>
+function toggleOtherVisitor(select) {
+    const otherInput = document.getElementById('otherVisitorInput');
+    if (select.value === 'other') {
+        otherInput.classList.remove('d-none');
+        otherInput.required = true;
+    } else {
+        otherInput.classList.add('d-none');
+        otherInput.required = false;
+        otherInput.value = '';
+    }
+}
+</script>

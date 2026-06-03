@@ -62,7 +62,6 @@ class VehicleAssignment extends Model
         'customer_product_id',
         'quantity',
         'unit',
-        'user_id',
         'shipment_type',
         'customer_sample_id',
     ];

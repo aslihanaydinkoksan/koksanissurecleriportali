@@ -18,18 +18,45 @@ class UserController extends Controller
     /**
      * Kullanıcı Listesi
      */
-    public function index()
+    public function index(Request $request)
     {
         if (!Auth::user()->can('manage_users')) {
             abort(403);
         }
 
-        // Eager Loading ile tüm ilişkileri tek sorguda çekiyoruz
-        $users = User::with(['roles', 'departments', 'businessUnits'])
-            ->latest()
-            ->paginate(15);
+        $search = $request->input('search');
+        $role_name = $request->input('role');
+        $department_id = $request->input('department_id');
+        $unit_id = $request->input('unit_id');
 
-        return view('users.index', compact('users'));
+        $users = User::with(['roles', 'departments', 'businessUnits'])
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                      ->orWhere('email', 'LIKE', "%{$search}%");
+                });
+            })
+            ->when($role_name, function ($query, $role_name) {
+                $query->role($role_name);
+            })
+            ->when($department_id, function ($query, $department_id) {
+                $query->whereHas('departments', function ($q) use ($department_id) {
+                    $q->where('departments.id', $department_id);
+                });
+            })
+            ->when($unit_id, function ($query, $unit_id) {
+                $query->whereHas('businessUnits', function ($q) use ($unit_id) {
+                    $q->where('business_units.id', $unit_id);
+                });
+            })
+            ->latest()
+            ->paginate(10);
+
+        $roles = Role::all();
+        $departments = Department::all();
+        $businessUnits = BusinessUnit::where('is_active', true)->get();
+
+        return view('users.index', compact('users', 'roles', 'departments', 'businessUnits', 'search', 'role_name', 'department_id', 'unit_id'));
     }
 
     /**
@@ -61,7 +88,9 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users', 'ends_with:@koksan.com'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => ['required', 'exists:roles,name'],
+            'role' => ['nullable', 'exists:roles,name'],
+            'extra_roles' => ['nullable', 'array'],
+            'extra_roles.*' => ['exists:roles,name'],
             'departments' => ['nullable', 'array'],
             'departments.*' => ['exists:departments,id'],
             'units' => ['nullable', 'array'],
@@ -77,7 +106,14 @@ class UserController extends Controller
             ]);
 
             // 2. Rol, Departman ve Birim senkronizasyonu
-            $user->assignRole($request->role);
+            $rolesToSync = [];
+            if ($request->filled('role')) {
+                $rolesToSync[] = $request->role;
+            }
+            if ($request->filled('extra_roles')) {
+                $rolesToSync = array_merge($rolesToSync, $request->extra_roles);
+            }
+            $user->syncRoles($rolesToSync);
             $user->departments()->sync($request->departments ?? []);
             $user->businessUnits()->sync($request->units ?? []);
 
@@ -128,7 +164,9 @@ class UserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'role' => ['required', 'exists:roles,name'],
+            'role' => ['nullable', 'exists:roles,name'],
+            'extra_roles' => ['nullable', 'array'],
+            'extra_roles.*' => ['exists:roles,name'],
             'departments' => ['nullable', 'array'],
             'units' => ['nullable', 'array'],
             'units.*' => ['exists:business_units,id'],
@@ -142,8 +180,15 @@ class UserController extends Controller
             }
             $user->update($userData);
 
-            // 2. Yetki (Sadece 3 rolden biri)
-            $user->syncRoles([$request->role]);
+            // 2. Yetki Rollerini Topla ve Senkronize Et
+            $rolesToSync = [];
+            if ($request->filled('role')) {
+                $rolesToSync[] = $request->role;
+            }
+            if ($request->filled('extra_roles')) {
+                $rolesToSync = array_merge($rolesToSync, $request->extra_roles);
+            }
+            $user->syncRoles($rolesToSync);
 
             // 3. Departmanlar (Hangi modülleri göreceği)
             $user->departments()->sync($request->departments ?? []);

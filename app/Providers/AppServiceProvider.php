@@ -16,6 +16,10 @@ use App\Models\Travel;
 use App\Models\MaintenancePlan;
 use App\Observers\BusinessUnitObserver;
 use App\Observers\KanbanModelObserver;
+use App\Models\Customer;
+use App\Observers\CustomerObserver;
+use Illuminate\Database\Eloquent\Relations\Relation;
+
 class AppServiceProvider extends ServiceProvider
 {
     public function register()
@@ -26,6 +30,33 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         Paginator::useBootstrap();
+
+        // Enforce Morph Maps for Polymorphic Relationships (Loggable Trait Uyumlu)
+        Relation::enforceMorphMap([
+            'user' => 'App\Models\User',
+            'team' => 'App\Models\Team',
+            'company' => 'App\Models\Vehicle',
+            'logistics' => 'App\Models\LogisticsVehicle',
+            'department' => 'App\Models\Department',
+            'customer' => 'App\Models\Customer',
+            'shipment' => 'App\Models\Shipment',
+            'production_plan' => 'App\Models\ProductionPlan',
+            'maintenance_plan' => 'App\Models\MaintenancePlan',
+            'event' => 'App\Models\Event',
+            'assignment' => 'App\Models\VehicleAssignment',
+            'travel' => 'App\Models\Travel',
+            'customer_visit' => 'App\Models\CustomerVisit',
+            'customer_contact' => 'App\Models\CustomerContact',
+            'customer_product' => 'App\Models\CustomerProduct',
+            'customer_sample' => 'App\Models\CustomerSample',
+            'complaint' => 'App\Models\Complaint',
+            'customer_return' => 'App\Models\CustomerReturn',
+            'customer_machine' => 'App\Models\CustomerMachine',
+            'test_result' => 'App\Models\TestResult',
+            'opportunity' => 'App\Models\Opportunity',
+            'birim' => 'App\Models\Birim',
+            'maintenance_type' => 'App\Models\MaintenanceType',
+        ]);
 
         // --- 1. AKILLI YENİLEME HASH'İ ---
         try {
@@ -47,8 +78,8 @@ class AppServiceProvider extends ServiceProvider
                 $maintenanceQuery = \App\Models\MaintenancePlan::where('status', 'pending_approval');
 
                 if ($user->role !== 'admin') {
-                    // User modelinde isManagerOrDirector fonksiyonu olduğundan emin olmalısın
-                    if (method_exists($user, 'isManagerOrDirector') && $user->isManagerOrDirector() && $user->department_id) {
+                    // User modelinde isManager fonksiyonu olduğundan emin olmalı
+                    if (method_exists($user, 'isManager') && $user->isManager() && $user->department_id) {
                         $maintenanceQuery->whereHas('user', fn($q) => $q->where('department_id', $user->department_id));
                     } else {
                         $maintenanceQuery->where('id', 0);
@@ -69,5 +100,6 @@ class AppServiceProvider extends ServiceProvider
         Shipment::observe(KanbanModelObserver::class);
         ProductionPlan::observe(KanbanModelObserver::class);
         Event::observe(KanbanModelObserver::class);
+        Customer::observe(CustomerObserver::class);
     }
 }

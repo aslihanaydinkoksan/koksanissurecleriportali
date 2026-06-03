@@ -71,8 +71,12 @@
                 </div>
             </div>
             <div class="timeline" id="activitiesList">
-                @forelse($customer->activities as $activity)
-                    <div class="card mb-3 border-0 shadow-sm activity-item" data-date="{{ $activity->activity_date->format('Y-m-d') }}" data-search="{{ mb_strtolower($activity->description . ' ' . ($activity->user->name ?? '') . ' ' . implode(' ', $activity->contact_persons ?? [])) }}" data-status="{{ $activity->type }}">
+                @forelse($customer->activities->sortByDesc('activity_date') as $index => $activity)
+                    @php $isHidden = $index >= 5; @endphp
+                    <div class="card mb-3 border-0 shadow-sm activity-item {{ $isHidden ? 'd-none load-more-act' : '' }}" 
+                         data-date="{{ $activity->activity_date->format('Y-m-d') }}" 
+                         data-search="{{ mb_strtolower($activity->description . ' ' . ($activity->user->name ?? '') . ' ' . implode(' ', $activity->contact_persons ?? [])) }}" 
+                         data-status="{{ $activity->type }}">
                         <div class="card-body position-relative">
                             <div class="position-absolute top-0 start-0 bottom-0 rounded-start" style="width: 5px; background: {{ $activity->type == 'phone' ? '#3b82f6' : ($activity->type == 'meeting' ? '#10b981' : ($activity->type == 'email' ? '#f59e0b' : '#6b7280')) }};"></div>
                             <div class="position-absolute top-0 end-0 mt-3 me-3 d-flex gap-2">
@@ -94,7 +98,7 @@
                                     </span>
                                     <span class="text-muted small">{{ $activity->activity_date->format('d.m.Y H:i') }}</span>
                                 </div>
-                                <small class="text-muted fst-italic"><i class="fas fa-user-circle me-1"></i>{{ $activity->user->name }}</small>
+                                <small class="text-muted fst-italic"><i class="fas fa-user-circle me-1"></i>{{ $activity->user->name ?? 'Sistem' }}</small>
                             </div>
                             <div class="ps-2 mt-2">
                                 @if (!empty($activity->contact_persons))
@@ -118,6 +122,41 @@
                     </div>
                 @endforelse
             </div>
+
+            @if($customer->activities->count() > 5)
+                <div class="text-center mt-3" id="actLoadMoreContainer">
+                    <button class="btn btn-outline-primary rounded-pill px-4" id="btnLoadMoreActivities">
+                        <i class="fas fa-chevron-down me-1"></i> Devamını Görüntüle
+                    </button>
+                    <button class="btn btn-outline-secondary rounded-pill px-4 d-none" id="btnCollapseActivities">
+                        <i class="fas fa-chevron-up me-1"></i> Gizle
+                    </button>
+                </div>
+
+                <script>
+                    document.getElementById('btnLoadMoreActivities').addEventListener('click', function() {
+                        const hiddenItems = document.querySelectorAll('.load-more-act.d-none');
+                        const itemsToShow = 5;
+                        
+                        for(let i = 0; i < itemsToShow && i < hiddenItems.length; i++) {
+                            hiddenItems[i].classList.remove('d-none');
+                        }
+                        
+                        if (document.querySelectorAll('.load-more-act.d-none').length === 0) {
+                            this.classList.add('d-none');
+                            document.getElementById('btnCollapseActivities').classList.remove('d-none');
+                        }
+                    });
+
+                    document.getElementById('btnCollapseActivities').addEventListener('click', function() {
+                        const allItems = document.querySelectorAll('.load-more-act');
+                        allItems.forEach(item => item.classList.add('d-none'));
+                        this.classList.add('d-none');
+                        document.getElementById('btnLoadMoreActivities').classList.remove('d-none');
+                        document.getElementById('activitiesList').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    });
+                </script>
+            @endif
         </div>
     </div>
 </div>

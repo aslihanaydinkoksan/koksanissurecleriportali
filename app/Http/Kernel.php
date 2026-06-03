@@ -39,13 +39,12 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\RemoveHeaders::class,
             \App\Http\Middleware\SetBusinessUnit::class,
-            \App\Http\Middleware\SetDefaultBusinessUnit::class,
             \App\Http\Middleware\LogUserActivity::class,
         ],
 
         'api' => [
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-            'throttle:api',
+            // 'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];

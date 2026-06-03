@@ -121,15 +121,34 @@
 @section('content')
     <div class="container-fluid modern-container">
 
-        {{-- Üst Navigasyon --}}
-        <div class="d-flex align-items-center mb-4">
-            <a href="{{ route('maintenance.index') }}" class="btn btn-light rounded-circle shadow-sm me-3"
-                style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-arrow-left text-primary"></i>
-            </a>
-            <div>
-                <h4 class="fw-bold text-white mb-0" style="text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Planı Güncelle</h4>
-                <small class="text-white-50">Düzenlenen Kayıt: {{ $plan->title }}</small>
+        {{-- Üst Navigasyon (Show sayfasındaki modern stile güncellendi) --}}
+        <div class="position-relative mb-4">
+            <div class="d-flex align-items-center justify-content-between p-3 rounded-4 shadow-sm"
+                style="background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.98) 100%); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);">
+
+                <div class="d-flex align-items-center gap-3">
+                    <a href="{{ route('maintenance.index') }}"
+                        class="btn btn-white border-0 shadow-sm rounded-circle d-flex align-items-center justify-content-center"
+                        style="width: 48px; height: 48px; transition: all 0.3s ease; background: white;">
+                        <i class="fas fa-arrow-left" style="color: #6366f1; font-size: 18px;"></i>
+                    </a>
+
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <div
+                                style="width: 4px; height: 24px; background: linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%); border-radius: 2px;">
+                            </div>
+                            <h4 class="fw-bold mb-0" style="color: #1e293b; font-size: 24px; letter-spacing: -0.5px;">
+                                Planı Güncelle
+                            </h4>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 ms-1">
+                            <span style="color: #64748b; font-size: 13px; font-weight: 500;">
+                                Düzenlenen Kayıt: <strong>{{ $plan->title }}</strong>
+                            </span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 

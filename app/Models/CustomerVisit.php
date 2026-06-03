@@ -44,17 +44,22 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class CustomerVisit extends Model implements HasMedia
 {
-    use HasFactory, Loggable, HasBusinessUnit, InteractsWithMedia , SoftDeletes;
+    use HasFactory, Loggable, HasBusinessUnit, InteractsWithMedia, SoftDeletes;
     protected $fillable = [
-        'customer_id', 'user_id', 'event_id', 'travel_id',
-        'visit_date', 
-        'visit_reason', 'visit_notes', 'contact_persons',
-        'customer_product_id', 'barcode', 'lot_no', 'complaint_id',
-        'findings', 'result'
+    'customer_id', 'user_id', 'event_id', 'travel_id',
+    'visit_date', 'estimated_return_date',
+    'visit_reason', 'visit_notes', 'contact_persons',
+    'customer_product_id', 'barcode', 'lot_no', 'complaint_id',
+    'findings', 'result',
+    'remote_id', 'remote_system', 'remote_url', 'is_locked',
+    'visitor_id', 'visitor_name', 'visit_files'
     ];
     protected $casts = [
-        'visit_date' => 'datetime',
-        'contact_persons' => 'array', // JSON dizisi olarak çalışacak
+    'visit_date' => 'datetime',
+    'estimated_return_date' => 'datetime',
+    'contact_persons' => 'array',
+    'visit_files' => 'array',
+    'is_locked' => 'boolean'
     ];
     public function event()
     {
@@ -71,20 +76,27 @@ class CustomerVisit extends Model implements HasMedia
     // Dosyalar İlişkisi
     public function files()
     {
-        return $this->morphMany(File::class, 'fileable');
+        return $this->morphMany(File::class , 'fileable');
     }
 
     public function machine()
     {
-        return $this->belongsTo(CustomerMachine::class, 'customer_machine_id');
+        return $this->belongsTo(CustomerMachine::class , 'customer_machine_id');
     }
-    public function user() { // Servis Veren
+    public function user()
+    { // Servis Veren
         return $this->belongsTo(User::class);
     }
-    public function product() { // Ürün Tanımı
-        return $this->belongsTo(CustomerProduct::class, 'customer_product_id');
+    public function product()
+    { // Ürün Tanımı
+        return $this->belongsTo(CustomerProduct::class , 'customer_product_id');
     }
-    public function complaint() { // Bağlı Şikayet
+    public function complaint()
+    { // Bağlı Şikayet
         return $this->belongsTo(Complaint::class);
+    }
+    public function visitor()
+    { // Ziyareti Gerçekleştiren (Takvim User)
+        return $this->belongsTo(User::class , 'visitor_id');
     }
 }

@@ -277,6 +277,52 @@
                         </a>
                     </div>
 
+                    {{-- Filtreleme Alanı --}}
+                    <div class="px-4 mt-3 mb-2">
+                        <form method="GET" action="{{ route('users.index') }}" class="row g-2 align-items-center" autocomplete="off">
+                            <div class="col-md-3">
+                                <div class="position-relative">
+                                    <input type="text" name="search" class="form-control" placeholder="İsim veya email ara..." value="{{ $search ?? '' }}" style="border-radius: 10px; padding-left: 10px;">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <select name="role" class="form-select" style="border-radius: 10px;">
+                                    <option value="">Tüm Roller</option>
+                                    @foreach($roles as $role)
+                                        <option value="{{ $role->name }}" {{ ($role_name ?? '') == $role->name ? 'selected' : '' }}>
+                                            @php
+                                                $langKey = 'roles.' . $role->name;
+                                                $translated = __($langKey);
+                                            @endphp
+                                            {{ $translated === $langKey ? $role->name : $translated }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select name="department_id" class="form-select" style="border-radius: 10px;">
+                                    <option value="">Tüm Departmanlar</option>
+                                    @foreach($departments as $dept)
+                                        <option value="{{ $dept->id }}" {{ ($department_id ?? '') == $dept->id ? 'selected' : '' }}>{{ $dept->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select name="unit_id" class="form-select" style="border-radius: 10px;">
+                                    <option value="">Tüm Birimler (Fabrikalar)</option>
+                                    @foreach($businessUnits as $unit)
+                                        <option value="{{ $unit->id }}" {{ ($unit_id ?? '') == $unit->id ? 'selected' : '' }}>{{ $unit->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-1">
+                                <button type="submit" class="btn btn-primary w-100" style="border-radius: 10px; background: #4f46e5; border: none;">
+                                    🔍
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
                     {{-- Tablo --}}
                     <div class="table-responsive">
                         <table class="table-custom">
@@ -358,7 +404,7 @@
                     {{-- Sayfalama --}}
                     @if ($users->hasPages())
                         <div class="pagination-container">
-                            {{ $users->links() }}
+                            {{ $users->appends(request()->query())->links() }}
                         </div>
                     @endif
                 </div>

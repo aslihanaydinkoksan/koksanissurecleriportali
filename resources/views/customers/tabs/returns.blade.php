@@ -83,7 +83,14 @@
             </select>
         </div>
     </div>
-    <div class="table-responsive">
+    <style>
+    .hover-primary:hover {
+        color: #0d6efd !important;
+        text-decoration: underline !important;
+    }
+</style>
+
+<div class="table-responsive">
         <table class="table table-hover align-middle" id="returnsTable">
             <thead class="bg-light">
                 <tr>
@@ -98,16 +105,40 @@
             </thead>
             <tbody>
                 @forelse($customer->returns as $return)
-                    <tr class="return-item" data-date="{{ $return->return_date->format('Y-m-d') }}"
+                    <tr class="return-item" 
+                        id="return-complaint-{{ $return->complaint_id }}"
+                        data-date="{{ $return->return_date->format('Y-m-d') }}"
                         data-search="{{ mb_strtolower($return->product_name . ' ' . $return->reason) }}"
                         data-status="{{ $return->status }}">
                         <td>{{ $return->return_date->format('d.m.Y') }}</td>
                         <td>
-                            <span class="fw-bold">{{ $return->product_name }}</span><br>
+                            @if($return->remote_system === 'iaa' && $return->remote_url)
+                                <a href="{{ $return->remote_url }}" target="_blank" class="fw-bold text-dark text-decoration-none hover-primary" title="IAA Proje Çalışma Alanında Görüntüle">
+                                    {{ $return->product_name }} <i class="fas fa-external-link-alt ms-1 text-info" style="font-size: 0.7rem;"></i>
+                                </a>
+                            @else
+                                <span class="fw-bold text-dark">{{ $return->product_name }}</span>
+                            @endif
+
+                            @if($return->remote_system === 'iaa')
+                                @if($return->remote_url)
+                                    <a href="{{ $return->remote_url }}" target="_blank" class="badge bg-info bg-opacity-10 text-info border border-info ms-1 text-decoration-none" style="font-size: 0.65rem;" title="IAA Proje Çalışma Alanında Görüntüle">
+                                        Kaynak: IAA <i class="fas fa-external-link-alt ms-1" style="font-size: 0.8em;"></i>
+                                    </a>
+                                @else
+                                    <span class="badge bg-info bg-opacity-10 text-info border border-info ms-1" style="font-size: 0.65rem;">Kaynak: IAA</span>
+                                @endif
+                            @endif
+                            <br>
                             <small class="text-muted">{{ Str::limit($return->reason, 30) }}</small>
                             @if ($return->complaint_id)
-                                <br><span class="badge bg-danger bg-opacity-10 text-danger border border-danger mt-1"
-                                    style="font-size: 0.65rem;">Şikayet #{{ $return->complaint_id }}</span>
+                                <br><a href="#complaint-{{ $return->complaint_id }}" 
+                                       onclick="event.preventDefault(); scrollToComplaint({{ $return->complaint_id }})" 
+                                       class="badge bg-danger bg-opacity-10 text-danger border border-danger mt-1 text-decoration-none"
+                                       style="font-size: 0.65rem; cursor: pointer;"
+                                       title="Şikayete Git">
+                                       <i class="fa-solid fa-circle-exclamation me-1"></i> Şikayet #{{ $return->complaint_id }}
+                                    </a>
                             @endif
                             @if ($return->customer_sample_id)
                                 <br><span
@@ -152,7 +183,7 @@
                             <form action="{{ route('customer-returns.update-status', $return->id) }}" method="POST">
                                 @csrf @method('PATCH')
                                 <select name="status" class="form-select status-select status-{{ $return->status }}"
-                                    onchange="this.form.submit()">
+                                    onchange="this.form.submit()" @if($return->remote_system === 'iaa') disabled @endif>
                                     <option value="pending" {{ $return->status == 'pending' ? 'selected' : '' }}>
                                         Beklemede</option>
                                     <option value="approved" {{ $return->status == 'approved' ? 'selected' : '' }}>
@@ -166,15 +197,19 @@
                         </td>
                         <td>
                             <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
-                                    data-bs-target="#editReturnModal{{ $return->id }}" title="Düzenle"><i
-                                        class="fa-solid fa-pen"></i></button>
-                                <form action="{{ route('customer-returns.destroy', $return->id) }}" method="POST"
-                                    onsubmit="return confirm('Silmek istediğinize emin misiniz?');">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i
-                                            class="fa-solid fa-trash-alt"></i></button>
-                                </form>
+                                @if($return->remote_system !== 'iaa')
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                                        data-bs-target="#editReturnModal{{ $return->id }}" title="Düzenle"><i
+                                            class="fa-solid fa-pen"></i></button>
+                                    <form action="{{ route('customer-returns.destroy', $return->id) }}" method="POST"
+                                        onsubmit="return confirm('Silmek istediğinize emin misiniz?');">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"><i
+                                                class="fa-solid fa-trash-alt"></i></button>
+                                    </form>
+                                @else
+                                    <span class="text-muted small italic">IAA'dan Düzenle</span>
+                                @endif
                             </div>
                         </td>
                     </tr>

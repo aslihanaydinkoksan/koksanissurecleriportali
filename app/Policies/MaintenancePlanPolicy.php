@@ -14,19 +14,9 @@ class MaintenancePlanPolicy
      */
     public function approve(User $user, MaintenancePlan $plan): bool
     {
-        // 1. Admin veya "Yönetici" rolündekiler HER ŞEYİ onaylayabilir (Departman bağımsız).
-        // Bu sayede Yönetici, başka departmanın işine de müdahale edebilir.
-        if (in_array($user->role, ['admin', 'yonetici'])) {
+        // 1. Admin veya Yönetici yetkisi olanlar (Bakım Müdürü dahil) HER ŞEYİ onaylayabilir.
+        if ($user->isAdmin() || $user->isManager()) {
             return true;
-        }
-
-        // 2. "Müdür" ise SADECE Kendi departmanını onaylayabilir.
-        // (Eğer "Yönetici" ile "Müdür"ü ayırıyorsanız bu blok işe yarar)
-        if ($user->role === 'mudur') {
-            $planDepartmentId = $plan->department_id ?? $plan->user->department_id;
-            if ($user->department_id === $planDepartmentId) {
-                return true;
-            }
         }
 
         return false;
@@ -47,22 +37,14 @@ class MaintenancePlanPolicy
 
         // --- 2. GENEL DÜZENLEME YETKİLERİ ---
 
-        // A) Admin ve Yönetici HER ZAMAN düzenler (Departman fark etmeksizin)
-        if (in_array($user->role, ['admin', 'yonetici'])) {
+        // A) Admin ve Yönetici HER ZAMAN düzenler
+        if ($user->isAdmin() || $user->isManager()) {
             return true;
         }
 
         // B) Planın SAHİBİ (Oluşturan) her zaman düzenler
         if ($user->id === $plan->user_id) {
             return true;
-        }
-
-        // C) Müdürler kendi departmanındaki işleri düzenleyebilir
-        if ($user->role === 'mudur') {
-            $planDepartmentId = $plan->department_id ?? $plan->user->department_id;
-            if ($user->department_id === $planDepartmentId) {
-                return true;
-            }
         }
 
         // D) AYNI DEPARTMAN PERSONELİ İZNİ (Opsiyonel):
@@ -81,30 +63,19 @@ class MaintenancePlanPolicy
      */
     public function delete(User $user, MaintenancePlan $plan): bool
     {
-        // 1. Admin ve Yönetici, tamamlanmış olsa bile silebilir (Temizlik yetkisi).
-        if (in_array($user->role, ['admin', 'yonetici'])) {
+        // 1. Admin ve Yönetici, tamamlanmış olsa bile silebilir.
+        if ($user->isAdmin() || $user->isManager()) {
             return true;
         }
 
-        // 2. Diğer kullanıcılar (Personel/Müdür) TAMAMLANMIŞ işi asla silemez.
+        // 2. Diğer kullanıcılar TAMAMLANMIŞ işi asla silemez.
         if ($plan->status === 'completed') {
             return false;
         }
 
-        // 3. Diğer durumlarda güncelleme yetkisi olan silebilir mi?
-        // Genelde silme yetkisi daha kısıtlıdır, sadece "Sahibi" veya "Yönetici" silmeli.
-
-        // Sahibi ise silebilir
+        // 3. Sahibi ise silebilir
         if ($user->id === $plan->user_id) {
             return true;
-        }
-
-        // Müdür ise kendi departmanındakini silebilir
-        if ($user->role === 'mudur') {
-            $planDepartmentId = $plan->department_id ?? $plan->user->department_id;
-            if ($user->department_id === $planDepartmentId) {
-                return true;
-            }
         }
 
         return false;

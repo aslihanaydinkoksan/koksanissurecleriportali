@@ -21,6 +21,33 @@
                                     class="form-control form-control-lg" required>
                             </div>
 
+                            <div class="mb-4">
+                                <label class="form-label text-muted fw-bold">Bağlı Olduğu Departman</label>
+                                <select name="department_id" class="form-select form-select-lg border-2 shadow-sm">
+                                    <option value="">Sistem Rolü (Departman Bağımsız)</option>
+                                    @foreach ($departments as $dept)
+                                        <option value="{{ $dept->id }}" {{ old('department_id', $role->department_id) == $dept->id ? 'selected' : '' }}>
+                                            {{ $dept->name }} Departmanı
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label text-muted fw-bold border-bottom pb-2 w-100"><i class="fas fa-shield-alt text-primary me-2"></i> Role Ait Yetkiler</label>
+                                <div class="row g-3 mt-1">
+                                    @foreach ($permissions as $permission)
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="form-check custom-control custom-checkbox p-3 border rounded shadow-sm bg-light h-100" style="transition: all 0.2s;">
+                                                <input class="form-check-input ms-1 me-2" type="checkbox" name="permissions[]" value="{{ $permission->name }}" id="perm_{{ $permission->id }}" {{ in_array($permission->name, $rolePermissions) ? 'checked' : '' }} style="transform: scale(1.2);">
+                                                <label class="form-check-label fw-bold text-dark pt-1" for="perm_{{ $permission->id }}" style="cursor:pointer;">
+                                                    {{ __('permissions.' . $permission->name) ?? $permission->name }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-success btn-lg rounded-pill">Güncelle</button>
                             </div>

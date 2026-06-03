@@ -48,7 +48,6 @@
 
         .table-hover tbody tr:hover {
             background-color: rgba(102, 126, 234, 0.08) !important;
-            transform: scale(1.01);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
@@ -207,11 +206,17 @@
                                 </h2>
                                 <p class="text-muted mb-0">Tüm müşterilerinizi görüntüleyin ve yönetin</p>
                             </div>
-                            <a href="{{ route('customers.create') }}"
-                                class="btn btn-primary-gradient rounded-pill px-4 py-2">
-                                <i class="fa-solid fa-plus me-2"></i>
-                                Yeni Müşteri Ekle
-                            </a>
+                            <div class="d-flex gap-2">
+                                <button id="syncBtn" onclick="syncFromIaa()" class="btn btn-outline-primary rounded-pill px-4 py-2">
+                                    <i class="fa-solid fa-rotate me-2"></i>
+                                    IAA'dan Senkronize Et
+                                </button>
+                                <a href="{{ route('customers.create') }}"
+                                    class="btn btn-primary-gradient rounded-pill px-4 py-2">
+                                    <i class="fa-solid fa-plus me-2"></i>
+                                    Yeni Müşteri Ekle
+                                </a>
+                            </div>
                         </div>
                     </div>
 
@@ -224,16 +229,31 @@
                             </div>
                         </form>
 
+                        <!-- Dinamik Alert Kapsayıcısı -->
+                        <div id="dynamicAlertContainer"></div>
+
+                        <!-- Progress Bar Kapsayıcısı -->
+                        <div id="syncProgressContainer" class="d-none mb-4">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="fw-bold text-primary" id="syncProgressText">Senkronizasyon Başlatılıyor...</span>
+                                <span class="fw-bold text-primary" id="syncProgressPercent">0%</span>
+                            </div>
+                            <div class="progress" style="height: 12px; border-radius: 6px;">
+                                <div id="syncProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+
                         @if (session('success'))
-                            <div class="alert success-alert d-flex align-items-center mb-4" role="alert">
+                            <div class="alert success-alert d-flex align-items-center mb-4 alert-dismissible fade show" role="alert">
                                 <i class="fa-solid fa-circle-check me-3 fs-4"></i>
                                 <div>
                                     <strong>Başarılı!</strong> {{ session('success') }}
                                 </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                         @endif
 
-                        <div class="table-responsive">
+                        <div class="table-responsive" style="overflow-x: hidden;">
                             <table class="table table-hover align-middle mb-0">
                                 <thead>
                                     <tr>
@@ -306,6 +326,16 @@
                                                         <i class="fa-solid fa-pen me-1"></i>
                                                         Düzenle
                                                     </a>
+                                                    @if(auth()->user()->hasRole(['super-admin', 'admin', 'yonetici']))
+                                                    <form action="{{ route('customers.destroy', $customer) }}" method="POST" class="d-inline" onsubmit="return confirm('Bu müşteriyi silmek istediğinize emin misiniz?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3 ms-2" title="Sil">
+                                                            <i class="fa-solid fa-trash me-1"></i>
+                                                            Sil
+                                                        </button>
+                                                    </form>
+                                                    @endif
                                                 </div>
                                             </td>
                                         </tr>
@@ -335,4 +365,181 @@
             </div>
         </div>
     </div>
+@endsection
+
+@section('page_scripts')
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Sayfa yüklendiğinde, sessionStorage'da saklanan kalıcı bir mesaj var mı kontrol et
+    const syncResult = sessionStorage.getItem('syncResult');
+    if (syncResult) {
+        try {
+            const resultData = JSON.parse(syncResult);
+            showPersistentAlert(resultData.type, resultData.message);
+        } catch (e) {
+            console.error("SessionStorage okuma hatası", e);
+        }
+        // Sayfa yenilendikten sonra bir daha görünmemesi için hemen temizliyoruz
+        sessionStorage.removeItem('syncResult'); 
+    }
+});
+
+function showPersistentAlert(type, message) {
+    const container = document.getElementById('dynamicAlertContainer');
+    // type: 'success' or 'danger'
+    const iconClass = type === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation';
+    const bgClass = type === 'success' ? 'success-alert' : 'bg-danger text-white rounded-3 shadow-sm border-0';
+    const title = type === 'success' ? 'Başarılı!' : 'Hata!';
+    
+    // Mesajdaki newline karakterlerini <br> ile değiştir (Daha temiz görünüm için)
+    const formattedMessage = message.replace(/\n/g, '<br>');
+
+    container.innerHTML = `
+        <div class="alert ${bgClass} d-flex align-items-center mb-4 alert-dismissible fade show" role="alert" style="animation: slideInDown 0.5s ease-out;">
+            <i class="fa-solid ${iconClass} me-3 fs-3"></i>
+            <div>
+                <strong class="d-block mb-1 fs-5">${title}</strong>
+                <span style="line-height: 1.5;">${formattedMessage}</span>
+            </div>
+            <button type="button" class="btn-close ${type === 'danger' ? 'btn-close-white' : ''}" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+}
+
+function syncFromIaa() {
+    console.log('Senkronizasyon başlatılıyor...');
+    const btn = document.getElementById('syncBtn');
+    if (!btn) return;
+    
+    // UI Elementleri
+    const progressContainer = document.getElementById('syncProgressContainer');
+    const progressBar = document.getElementById('syncProgressBar');
+    const progressText = document.getElementById('syncProgressText');
+    const progressPercent = document.getElementById('syncProgressPercent');
+    
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> İşleniyor...';
+
+    // Progress Bar Göster
+    progressContainer.classList.remove('d-none');
+    progressBar.style.width = '0%';
+    progressPercent.innerText = '0%';
+    progressText.innerText = 'Veriler toplanıyor ve aktarılıyor...';
+    progressBar.classList.remove('bg-danger', 'bg-success');
+    progressBar.classList.add('bg-primary');
+
+    // Sahte (Simüle Edilmiş) İlerleme Animasyonu (Maks %90'a kadar)
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        // Logaritmik yavaşlayan ilerleme simülasyonu
+        const increment = (95 - progress) * 0.05 + 1;
+        progress += increment;
+        
+        if (progress > 90) progress = Math.min(progress, 95); // 95'te takılı kalsın
+        
+        progressBar.style.width = Math.round(progress) + '%';
+        progressPercent.innerText = Math.round(progress) + '%';
+        
+        if (progress > 30 && progress < 60) progressText.innerText = 'Şikayetler eşitleniyor...';
+        if (progress >= 60) progressText.innerText = 'Müşteri formları güncelleniyor...';
+    }, 400);
+
+    let hostname = window.location.hostname;
+    let iaaBaseUrl1 = '';
+    let iaaBaseUrl2 = '';
+    
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        iaaBaseUrl1 = window.location.protocol + '//' + hostname + ':8000';
+        iaaBaseUrl2 = window.location.protocol + '//' + (hostname === '127.0.0.1' ? 'localhost' : '127.0.0.1') + ':8000';
+    } else {
+        iaaBaseUrl1 = window.location.protocol + '//' + hostname + '/iaa';
+        iaaBaseUrl2 = iaaBaseUrl1;
+    }
+
+    const trySync = (url) => {
+        return fetch(url + '/api/customers/bulk-sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+        });
+    };
+
+    // İlk deneme
+    trySync(iaaBaseUrl1)
+    .then(async response => {
+        if (!response.ok) throw new Error('Status: ' + response.status);
+        return response.json();
+    })
+    .catch(error => {
+        return trySync(iaaBaseUrl2).then(async response => {
+            if (!response.ok) throw new Error('Status: ' + response.status);
+            return response.json();
+        });
+    })
+    .then(data => {
+        clearInterval(progressInterval);
+        progressBar.style.width = '100%';
+        progressPercent.innerText = '100%';
+        
+        if (data.status === 'success') {
+            progressBar.classList.remove('bg-primary');
+            progressBar.classList.add('bg-success');
+            progressText.innerText = 'Tamamlandı!';
+            
+            let msg = 'Senkronizasyon Mükemmel Şekilde Tamamlandı!\n\n';
+            if (data.stats) {
+                const s = data.stats;
+                msg += `✅ Müşteriler: ${s.customer.success} başarılı`;
+                if (s.customer.error > 0) msg += ` (${s.customer.error} hatalı)`;
+                
+                msg += `\n✅ İlgili Kişiler: ${s.contact.success} başarılı`;
+                if (s.contact.error > 0) msg += ` (${s.contact.error} hatalı)`;
+                
+                msg += `\n✅ Kullanıcılar: ${s.user.success} başarılı`;
+                if (s.user.error > 0) msg += ` (${s.user.error} hatalı)`;
+
+                if (s.complaint && (s.complaint.success > 0 || s.complaint.error > 0)) {
+                   msg += `\n✅ Şikayetler: ${s.complaint.success} başarılı`;
+                   if (s.complaint.error > 0) msg += ` (${s.complaint.error} hatalı)`;
+                }
+            }
+
+            // Sayfa yenilemesinden sonra mesajı gösterebilmek için Storage'a yaz
+            sessionStorage.setItem('syncResult', JSON.stringify({ type: 'success', message: msg }));
+            
+            // Kullanıcı %100'ü 500ms görsün, sonra sayfa yenilensin
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
+
+        } else {
+            progressBar.classList.remove('bg-primary');
+            progressBar.classList.add('bg-danger');
+            progressText.innerText = 'Hata Oluştu!';
+            
+            const errMsg = 'Senkronizasyon Başarısız!\nSebep: ' + (data.message || 'Bilinmeyen hata');
+            sessionStorage.setItem('syncResult', JSON.stringify({ type: 'danger', message: errMsg }));
+            setTimeout(() => { window.location.reload(); }, 500);
+        }
+    })
+    .catch(error => {
+        clearInterval(progressInterval);
+        progressBar.style.width = '100%';
+        progressBar.classList.remove('bg-primary');
+        progressBar.classList.add('bg-danger');
+        progressPercent.innerText = 'X';
+        progressText.innerText = 'Bağlantı Hatası';
+        
+        const errMsg = '!!! KRİTİK HATA: IAA UYGULAMASINA BAĞLANILAMADI !!!\n\n' + 
+              'Hata Detayı: ' + error.message + '\n\n' +
+              'Lütfen IAA uygulamasının ve adresinin doğru çalıştığından emin olun.';
+              
+        showPersistentAlert('danger', errMsg);
+        
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+        // Bağlantı hatasında sayfayı yenilemiyoruz, hatayı direkt ekranda görsün.
+    });
+}
+</script>
 @endsection

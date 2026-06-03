@@ -18,7 +18,13 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        // --- 1. DEPARTMAN ERİŞİM YETKİSİ (ÇOKLU İLİŞKİ UYUMLU) ---
+        // --- 0. SUPER ADMIN BYPASS (GOD MODE) ---
+        // Eğer kullanıcı 'superadmin' ise tüm can() kontrolleri sorgusuz true döner.
+        Gate::before(function ($user, $ability) {
+            return $user->isSuperAdmin() ? true : null;
+        });
+
+        // --- 1. DEPARTMAN ERİŞİM YETKİSİ ---
         Gate::define('access-department', function (User $user, $departmentSlug) {
 
             // Admin her yere girebilir (User modelindeki isAdmin metodunu kullanır)
@@ -60,8 +66,8 @@ class AuthServiceProvider extends ServiceProvider
                 return true;
             }
 
-            // Kaydı oluşturan kişi ise
-            if ($user->id === $assignment->user_id) {
+            // Kaydı oluşturan kişi ise (VehicleAssignment hem user_id hem de assigned_by kullanabiliyor)
+            if (($assignment->user_id && $user->id === $assignment->user_id) || ($assignment->assigned_by && $user->id === $assignment->assigned_by)) {
                 return true;
             }
 

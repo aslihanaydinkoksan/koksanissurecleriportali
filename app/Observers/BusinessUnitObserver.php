@@ -14,9 +14,12 @@ class BusinessUnitObserver
             // 1. Önce Session'a bak (Middleware'in ayarladığı)
             $unitId = session('active_unit_id');
 
-            // 2. Session yoksa kullanıcının ilk yetkili birimini al
-            if (!$unitId && Auth::user()->businessUnits->count() > 0) {
-                $unitId = Auth::user()->businessUnits->first()->id;
+            // 2. Session yoksa kullanıcının ilk yetkili birimini al (Admin ise tümü, değilse pivot)
+            if (!$unitId) {
+                $authorizedUnits = Auth::user()->getAuthorizedBusinessUnits();
+                if ($authorizedUnits->count() > 0) {
+                    $unitId = $authorizedUnits->first()->id;
+                }
             }
 
             // 3. Bulduğun ID'yi modele yaz

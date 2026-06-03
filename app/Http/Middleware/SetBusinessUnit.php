@@ -15,12 +15,12 @@ class SetBusinessUnit
             // 1. Session'da seçili bir birim var mı?
             $activeUnitId = Session::get('active_unit_id');
 
-            // 2. Kullanıcının yetkili olduğu birimleri al
-            $userUnits = Auth::user()->businessUnits;
+            // 2. Kullanıcının yetkili olduğu birimleri al (Admin ise tümü, değilse pivot tablo)
+            $authorizedUnits = Auth::user()->getAuthorizedBusinessUnits();
 
             // 3. Eğer session boşsa veya kullanıcı o birimden atıldıysa, ilk yetkili olduğu birimi seç
-            if (!$activeUnitId || !$userUnits->contains('id', $activeUnitId)) {
-                $firstUnit = $userUnits->first();
+            if (!$activeUnitId || !$authorizedUnits->contains('id', $activeUnitId)) {
+                $firstUnit = $authorizedUnits->first();
                 if ($firstUnit) {
                     Session::put('active_unit_id', $firstUnit->id);
                     Session::put('active_unit_name', $firstUnit->name); // Ekranda göstermek için

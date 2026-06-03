@@ -59,10 +59,14 @@ class GeneralCalendarController extends Controller
             $events = array_merge($events, $data);
         }
 
-        // 4. İdari İşler / Hizmet Verileri (Etkinlik, Araç, Seyahat)
+        // 4. İdari İşler / Hizmet Verileri (Etkinlik, Araç, Seyahat, Ziyaret)
         if ($showHizmet && $user->can('view_administrative')) {
             $data = $this->getHizmetData($user, $start, $end, $importantOnly);
             $events = array_merge($events, $data);
+
+            // Yeni: Müşteri Ziyaretleri (CRM)
+            $visitData = $this->getCustomerVisitData($user, $start, $end);
+            $events = array_merge($events, $visitData);
         }
 
         // 5. Todo'lar (Eğer Hizmet filtresi açıksa veya kullanıcı istiyorsa gösterelim)
@@ -481,5 +485,50 @@ class GeneralCalendarController extends Controller
             Log::error('ToggleImportant Hatası: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Sunucu hatası oluştu.'], 500);
         }
+    }
+
+    private function getCustomerVisitData($user, $start, $end)
+    {
+        $events = [];
+        try {
+            // CRM modülünden ziyaretleri çek
+            $visits = \App\Models\CustomerVisit::with(['customer', 'representative'])
+                ->whereBetween('visit_date', [$start, $end])
+                ->get();
+
+            foreach ($visits as $visit) {
+                $statusColor = match ($visit->status) {
+                    'done', 'completed' => '#198754', // Yeşil
+                    'cancelled' => '#dc3545', // Kırmızı
+                    default => '#0dcaf0', // Mavi (Info)
+                };
+
+                $detaylar = [
+                    'Müşteri' => $visit->customer->name ?? 'Bilinmiyor',
+                    'Temsilci' => $visit->representative->name ?? '-',
+                    'Ziyaret Nedeni' => $visit->purpose ?? '-',
+                    'Görüşülen Kişiler' => $visit->contact_persons ?? '-',
+                    'Sonuç' => $visit->result ?? '-',
+                    'Tarih' => $visit->visit_date ? \Carbon\Carbon::parse($visit->visit_date)->format('d.m.Y H:i') : '-'
+                ];
+
+                $events[] = [
+                    'title' => '🤝 ' . ($visit->customer->name ?? 'Müşteri Ziyareti'),
+                    'start' => \Carbon\Carbon::parse($visit->visit_date)->toIso8601String(),
+                    'end' => \Carbon\Carbon::parse($visit->visit_date)->addHour()->toIso8601String(),
+                    'color' => $statusColor,
+                    'extendedProps' => [
+                        'eventType' => 'customer_visit',
+                        'model_type' => 'customer_visit',
+                        'id' => $visit->id,
+                        'is_important' => false,
+                        'details' => $detaylar
+                    ]
+                ];
+            }
+        } catch (\Exception $e) {
+            \Log::error('Takvim Müşteri Ziyareti Hatası', ['error' => $e->getMessage()]);
+        }
+        return $events;
     }
 }

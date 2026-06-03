@@ -224,4 +224,69 @@
             input.value = ''; // Farklı aşamaya geçilirse kayıp nedenini temizle
         }
     }
+
+    // Şikayete Odaklanma Fonksiyonu
+    function scrollToComplaint(complaintId) {
+        // 1. Şikayetler sekmesini aç
+        const tabBtn = document.getElementById('complaints-tab');
+        if (tabBtn) {
+            tabBtn.click();
+            
+            // Sekme animasyonu için kısa bir delay
+            setTimeout(() => {
+                const target = document.getElementById('complaint-' + complaintId);
+                if (target) {
+                    // 2. Eğer şikayet "Daha Fazla Göster" ile gizliyse, tüm gizli şikayetleri aç
+                    if (target.classList.contains('d-none')) {
+                        const loadMoreBtn = document.getElementById('btnLoadMoreComplaints');
+                        if (loadMoreBtn) {
+                            // Hedef şikayet görünür olana kadar "Daha Fazla" tetikle
+                            while (target.classList.contains('d-none')) {
+                                loadMoreBtn.click();
+                            }
+                        }
+                    }
+                    
+                    // 3. Yumuşak kaydırma
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // 4. Vurgulama efekti
+                    target.style.transition = 'all 0.5s ease';
+                    target.style.boxShadow = '0 0 20px rgba(220, 53, 69, 0.5)';
+                    target.style.transform = 'scale(1.02)';
+                    
+                    setTimeout(() => {
+                        target.style.boxShadow = '';
+                        target.style.transform = '';
+                    }, 2000);
+                }
+            }, 300);
+        }
+    }
+
+    // İadeye Odaklanma Fonksiyonu
+    function scrollToReturn(complaintId) {
+        // 1. İadeler sekmesini aç
+        const tabBtn = document.getElementById('returns-tab');
+        if (tabBtn) {
+            tabBtn.click();
+            
+            // Sekme animasyonu için kısa bir delay
+            setTimeout(() => {
+                const target = document.getElementById('return-complaint-' + complaintId);
+                if (target) {
+                    // 2. Yumuşak kaydırma
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // 3. Vurgulama efekti
+                    target.style.transition = 'all 0.5s ease';
+                    target.style.backgroundColor = 'rgba(25, 135, 84, 0.1)'; // Success rengi hafif
+                    
+                    setTimeout(() => {
+                        target.style.backgroundColor = '';
+                    }, 2000);
+                }
+            }, 300);
+        }
+    }
 </script>

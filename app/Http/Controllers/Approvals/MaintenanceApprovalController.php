@@ -19,14 +19,16 @@ class MaintenanceApprovalController extends Controller
 
         // EĞER ADMİN DEĞİLSE FİLTRELE
         if ($user->role !== 'admin') {
-
-            // Yönetici ise sadece kendi departmanını görsün
-            if ($user->isManagerOrDirector() && $user->department_id) {
-                $query->whereHas('user', function ($q) use ($user) {
-                    $q->where('department_id', $user->department_id);
-                });
+            // Yönetici yetkisi varsa
+            if ($user->isManager()) {
+                // Sadece departmanı varsa filtrele, yoksa (NULL) tümünü görsün (Sistem Rolü durumu)
+                if ($user->department_id) {
+                    $query->whereHas('user', function ($q) use ($user) {
+                        $q->where('department_id', $user->department_id);
+                    });
+                }
             } else {
-                // Yetkisiz kullanıcı boş liste görür
+                // Yönetici değilse ve admin değilse boş liste görür
                 return view('approvals.maintenance', ['plans' => collect()]);
             }
         }

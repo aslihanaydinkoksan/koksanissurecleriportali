@@ -85,19 +85,35 @@ class User extends Authenticatable
     // --- YETKİ KONTROLLERİ (AUTHORIZATION) ---
 
     /**
-     * Kullanıcı Admin mi? (Sadece Spatie Rolüne Bakar)
+     * Kullanıcı Admin veya Superadmin mi?
      */
     public function isAdmin(): bool
     {
-        return $this->hasRole('admin');
+        // 1. Spatie Roller Kontrolü (Öncelikli)
+        if ($this->hasAnyRole(['admin', 'superadmin', 'Admin', 'Superadmin'])) {
+            return true;
+        }
+
+        // 2. Veritabanı Sütun Yedeği (Fallback)
+        $legacyRole = strtolower($this->getRawOriginal('role') ?? '');
+        return in_array($legacyRole, ['admin', 'superadmin']);
     }
 
     /**
-     * Kullanıcı Yönetici mi?
+     * Kullanıcı Sadece Superadmin mi? (Tam Yetki)
+     */
+    public function isSuperAdmin(): bool
+    {
+        // Spatie rölü veya eski sütun değerine göre kontrol
+        return $this->hasRole('superadmin') || strtolower($this->getRawOriginal('role') ?? '') === 'superadmin';
+    }
+
+    /**
+     * Kullanıcı Yönetici mi? (Departman veya Ünite Yöneticisi)
      */
     public function isManager(): bool
     {
-        return $this->hasAnyRole(['yonetici', 'manager', 'müdür']);
+        return $this->hasAnyRole(['yonetici', 'manager', 'müdür', 'Bakım Müdürü', 'bakim_mudur']);
     }
     // 1. '$user->department' çağrıldığında çalışır
     public function getDepartmentAttribute()
@@ -114,38 +130,22 @@ class User extends Authenticatable
     }
 
     /**
-     * KÖKSAN ÖZEL: Departman Bazlı Yetki Kontrolü
-     * Veritabanındaki 'kanban_scope' sütunu ile kod tarafındaki yetkiyi eşleştirir.
+     * KÖKSAN ÖZEL: Departman/Modül Bazlı Yetki Kontrolü
+     * Sadece Spatie İzinlerine (can) ve Admin hiyerarşisine bakar.
      */
     public function hasDepartmentPermission(string $permission): bool
     {
-        // 1. Admin her zaman yetkilidir
+        // 1. Spatie Rolleri/İzinleri Üzerinden Kontrol (Paneldeki TİKLER)
+        if ($this->can($permission)) {
+            return true;
+        }
+ 
+        // 2. Admin/Superadmin her zaman yetkilidir
         if ($this->isAdmin()) {
             return true;
         }
-
-        // 2. Yetki isminden 'view_' önekini kaldır ve temizle
-        $normalizedPermission = trim($permission);
-        $scope = str_replace('view_', '', $normalizedPermission);
-
-        // 3. İsim Haritalaması (Mapping)
-        // Kod tarafındaki 'view_administrative' yetkisini, veritabanındaki 'idari' scope'una çevirir.
-        // İleride 'view_logistics' -> 'lojistik_depo' gibi özel eşleşmeler gerekirse buraya eklenir.
-        $scopeMap = [
-            'administrative' => 'idari',
-            // 'bakim' => 'maintenance', // Örnek: Gerekirse eklenebilir
-        ];
-
-        // Eğer haritada özel bir karşılığı varsa onu kullan, yoksa olduğu gibi arat
-        if (array_key_exists($scope, $scopeMap)) {
-            $scope = $scopeMap[$scope];
-        }
-
-        // 4. Veritabanı Kontrolü
-        // Kullanıcının departmanları arasında bu 'scope' değerine sahip biri var mı?
-        return $this->departments()
-            ->where('kanban_scope', $scope)
-            ->exists();
+ 
+        return false;
     }
 
     /**

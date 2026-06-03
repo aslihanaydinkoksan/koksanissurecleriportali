@@ -160,7 +160,7 @@ class VehicleAssignmentController extends Controller
         $user = Auth::user();
 
         $assignments = VehicleAssignment::with(['vehicle', 'responsible'])
-            ->where('user_id', $user->id) // user_id = Görevi Oluşturan (Creator)
+            ->where('assigned_by', $user->id) // assigned_by = Görevi Oluşturan (Creator)
             ->latest('created_at')
             ->paginate(15);
 
@@ -208,8 +208,7 @@ class VehicleAssignmentController extends Controller
                     'title' => $validated['title'],
                     'customer_id' => $validated['customer_id'],
                     'vehicle_id' => $validated['vehicle_id'],
-                    'vehicle_type' => $validated['vehicle_id'] ? Vehicle::class : null,
-                    'user_id' => Auth::id(),
+                    'vehicle_type' => $validated['vehicle_id'] ? ($request->input('vehicle_type') ?? 'logistics') : null,
                     'assigned_by' => Auth::id(),
                     'start_time' => $startTime,
                     'end_time' => $endTime,
@@ -220,7 +219,7 @@ class VehicleAssignmentController extends Controller
                     'unit' => $validated['unit'] ?? null,
                     'task_description' => $validated['description'] ?? $validated['title'],
                     'status' => 'pending',
-                    'responsible_type' => User::class,
+                    'responsible_type' => 'user',
                     'responsible_id' => $validated['user_id'] ?? Auth::id(),
                     'is_important' => false
                 ]);
@@ -299,16 +298,15 @@ class VehicleAssignmentController extends Controller
         $assignment->destination = $validatedData['destination'] ?? null;
         $assignment->requester_name = Auth::user()->name;
         $assignment->notes = $validatedData['notes'] ?? null;
-        $assignment->user_id = auth()->id();
         $assignment->assigned_by = auth()->id();
         $assignment->customer_id = $request->input('customer_id');
 
         // Sorumlu Ata (Polymorphic İlişki)
         if ($validatedData['responsible_type'] === 'user') {
-            $assignment->responsible_type = User::class;
+            $assignment->responsible_type = 'user';
             $assignment->responsible_id = $validatedData['responsible_user_id'];
         } else {
-            $assignment->responsible_type = Team::class;
+            $assignment->responsible_type = 'team';
             $assignment->responsible_id = $validatedData['responsible_team_id'];
         }
 
@@ -319,9 +317,9 @@ class VehicleAssignmentController extends Controller
             $assignment->vehicle_id = null;
 
             if ($vehicleTypeInput === 'logistics') {
-                $assignment->vehicle_type = LogisticsVehicle::class;
+                $assignment->vehicle_type = 'logistics';
             } else {
-                $assignment->vehicle_type = Vehicle::class;
+                $assignment->vehicle_type = 'company';
             }
             $successMessage = 'Araç talebiniz başarıyla oluşturuldu ve Ulaştırma birimine iletildi.';
         } else {
@@ -558,7 +556,8 @@ class VehicleAssignmentController extends Controller
                 'title' => $validated['title'],
                 'customer_id' => $validated['customer_id'],
                 'vehicle_id' => $validated['vehicle_id'],
-                'vehicle_type' => $validated['vehicle_id'] ? Vehicle::class : null,
+                'vehicle_type' => $validated['vehicle_id'] ? ($request->input('vehicle_type') ?? 'company') : null,
+                'assigned_by' => Auth::id(),
                 'start_time' => $startTime,
                 'end_time' => $endTime,
 
@@ -623,7 +622,7 @@ class VehicleAssignmentController extends Controller
                 $typeKey = $parts[0];
                 $idVal = $parts[1];
                 $assignment->vehicle_id = $idVal;
-                $assignment->vehicle_type = ($typeKey === 'logistics') ? 'App\Models\LogisticsVehicle' : 'App\Models\Vehicle';
+                $assignment->vehicle_type = ($typeKey === 'logistics') ? 'logistics' : 'company';
             }
         } else {
             // Eğer seçim alanı formda yoksa (CRM'den geliyorsa) mevcudu koru, varsa ve boşsa sil

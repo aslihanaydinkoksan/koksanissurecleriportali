@@ -546,13 +546,13 @@
                                 <i class="fas fa-eye"></i>
                                 Görüntüle
                             </a>
-                            @if (Auth::user()->role === 'admin' || Auth::id() === $assignment->user_id)
+                            @can('manage-assignment', $assignment)
                                 <a href="{{ route('service.assignments.edit', $assignment) }}"
                                     class="modern-btn modern-btn-edit">
                                     <i class="fas fa-edit"></i>
                                     Düzenle
                                 </a>
-                            @endif
+                            @endcan
                         </div>
                     </div>
 

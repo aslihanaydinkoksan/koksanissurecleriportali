@@ -21,6 +21,7 @@ use App\Models\CustomerProduct;
 use App\Http\Requests\CustomerRequest;
 use App\Http\Requests\CustomerActivityRequest;
 use App\Models\Competitor;
+use App\Models\User;
 use App\Services\Dashboard\CustomerReportService;
 
 class CustomerController extends Controller
@@ -43,7 +44,7 @@ class CustomerController extends Controller
                     ->orWhere('phone', 'LIKE', "%{$search}%");
             })
             ->orderBy('name', 'asc')
-            ->paginate(15);
+            ->paginate(10);
         activity()
             ->causedBy(Auth::user())
             ->log('Müşteri ana listesini görüntüledi. (Arama: ' . ($search ?: 'Yok') . ')');
@@ -125,8 +126,6 @@ class CustomerController extends Controller
             'machines',
             'complaints',
             'testResults',
-            'visits.event',
-            'visits.travel',
             'contacts',
             'samples',
             'returns.complaint',
@@ -137,15 +136,26 @@ class CustomerController extends Controller
             'machines.product'
         ]);
 
+        // Load visits WITHOUT global scopes so IAA-synced visits are always visible
+        $customer->setRelation(
+            'visits',
+            \App\Models\CustomerVisit::withoutGlobalScope('business_unit_scope')
+                ->where('customer_id', $customer->id)
+                ->with(['event', 'travel'])
+                ->orderBy('visit_date', 'desc')
+                ->get()
+        );
+
         $chartData = $reportService->getDashboardData($customer);
         // Birim listesini çekiyoruz
         $birimler = Birim::orderBy('ad')->get();
         $competitors = Competitor::where('is_active', true)->orderBy('name')->get();
+        $users = User::orderBy('name')->get();
         activity()
             ->causedBy(Auth::user())
             ->performedOn($customer)
             ->log('Müşteri detay kartını görüntüledi.');
-        return view('customers.show', compact('customer', 'birimler', 'competitors', 'chartData'));
+        return view('customers.show', compact('customer', 'birimler', 'competitors', 'chartData', 'users'));
     }
 
     /**

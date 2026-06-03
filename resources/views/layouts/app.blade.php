@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
@@ -48,7 +48,7 @@
             left: 0 !important;
             right: 0 !important;
             width: 100% !important;
-            z-index: 1000 !important;
+            z-index: 2000 !important;
             margin: 0 !important;
             padding: 0.5rem 0 !important;
             background: var(--navbar-bg) !important;
@@ -752,7 +752,7 @@
                                     <li><a class="dropdown-item" href="{{ route('kanban-boards.index') }}"><i
                                                 class="fa-solid fa-chalkboard-user" style="color: #e65100;"></i> İş
                                             Panoları (Kanban)</a></li>
-                                    @role('admin')
+                                    @hasanyrole('admin|superadmin')
                                         <li><a class="dropdown-item" href="{{ route('users.create') }}"><i
                                                     class="fa-solid fa-user-plus" style="color: #667EEA;"></i> Kullanıcı
                                                 Ekle</a></li>
@@ -783,7 +783,7 @@
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
-                                    @endrole
+                                    @endhasanyrole
                                     <li>
                                         <form method="POST" action="{{ route('logout') }}">
                                             @csrf

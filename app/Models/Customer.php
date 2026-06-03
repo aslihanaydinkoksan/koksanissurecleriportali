@@ -63,7 +63,9 @@ class Customer extends Model
         'address',
         'is_active',
         'start_date',
-        'end_date'
+        'end_date',
+        'remote_id',
+        'remote_system'
     ];
     public function machines()
     {

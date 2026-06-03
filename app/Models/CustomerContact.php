@@ -12,7 +12,7 @@ class CustomerContact extends Model
 {
     use HasFactory, SoftDeletes, Loggable, HasBusinessUnit;
 
-    protected $fillable = ['business_unit_id','customer_id', 'name', 'title', 'email', 'phone', 'is_primary'];
+    protected $fillable = ['business_unit_id','customer_id', 'name', 'title', 'email', 'phone', 'is_primary', 'remote_id', 'remote_system'];
 
     public function customer()
     {
